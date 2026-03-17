@@ -1,6 +1,7 @@
 // Library Imports
-import { Fragment } from 'react';
+import { Fragment, useMemo } from 'react';
 import { Route, Routes } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 // Local Imports
 import PrivateRoutes from './PrivateRoutes';
@@ -12,25 +13,38 @@ import {
   agentRoutes,
   castingDirectorRoutes,
   adminRoutes,
+  coachRoutes,
 } from './config';
-import { currentRole } from '../utils/utils';
+
 
 export const Router = () => {
+  const user = useSelector((state) => state?.auth?.user);
   
-  const dynamicDashboardRoute =
-    currentRole === 'actor'
-      ? [...commonRoutes, ...actorRoutes]
-      : currentRole === 'agent'
-      ? [...commonRoutes, ...agentRoutes]
-      : currentRole === 'castingDirector'
-      ? [...commonRoutes, ...castingDirectorRoutes]
-      : currentRole === 'admin'
-      ? [...commonRoutes, ...adminRoutes]
-      : commonRoutes;
+  // Get current active role (backward compatible)
+  const currentRole = user?.role || '';
+  
+  // Build routes based on current active role
+  // This maintains backward compatibility - existing flows work as before
+  const dynamicDashboardRoute = useMemo(() => {
+    // Priority order: use current active role first
+    if (currentRole === 'actor') {
+      return [...commonRoutes, ...actorRoutes];
+    } else if (currentRole === 'agent') {
+      return [...commonRoutes, ...agentRoutes];
+    } else if (currentRole === 'casting_director') {
+      return [...commonRoutes, ...castingDirectorRoutes];
+    } else if (currentRole === 'admin') {
+      return [...commonRoutes, ...adminRoutes];
+    } else if (currentRole === 'coach') {
+      return [...commonRoutes, ...coachRoutes];
+    }
+    return commonRoutes;
+  }, [currentRole]);
 
   return (
     <Fragment>
       <Routes>
+        
         <Route element={<PrivateRoutes />}>
           {dynamicDashboardRoute?.map((route, index) => {
             return route.child ? (

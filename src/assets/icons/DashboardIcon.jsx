@@ -1,9 +1,9 @@
-export const DashboardIcon = ({ width, height, ...props }) => (
+const DashboardIcon = ({ width, height, ...props }) => (
   <svg
     xmlns='http://www.w3.org/2000/svg'
-    width={width || 24}
-    height={height || 24}
-    viewBox='0 0 15 15'
+    width={width || 20}
+    height={height || 20}
+    viewBox='0 0 14 14'
     color='currentColor'
     {...props}
   >
@@ -23,3 +23,5 @@ export const DashboardIcon = ({ width, height, ...props }) => (
     </g>
   </svg>
 );
+
+export default DashboardIcon;

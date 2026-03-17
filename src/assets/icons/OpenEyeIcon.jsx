@@ -1,4 +1,4 @@
-export const OpenEyeIcon = ({ width, height, ...props }) => (
+const OpenEyeIcon = ({ width, height, ...props }) => (
   <svg
     xmlns='http://www.w3.org/2000/svg'
     width={width || 24}
@@ -18,3 +18,5 @@ export const OpenEyeIcon = ({ width, height, ...props }) => (
     </g>
   </svg>
 );
+
+export default OpenEyeIcon;

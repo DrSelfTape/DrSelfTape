@@ -1,0 +1,20 @@
+const StatisticsIcon = ({ width, height, ...props }) => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width={width || 24}
+    height={height || 24}
+    viewBox='0 0 24 24'
+    fill='none'
+    stroke='currentColor'
+    strokeWidth={2}
+    strokeLinecap='round'
+    strokeLinejoin='round'
+    className='lucide lucide-chart-no-axes-column-icon lucide-chart-no-axes-column'
+    {...props}
+  >
+    <path d='M5 21v-6' />
+    <path d='M12 21V3' />
+    <path d='M19 21V9' />
+  </svg>
+);
+export default StatisticsIcon;

@@ -1,14 +1,19 @@
-export const CrossIcon = ({ width, height, ...props }) => (
+const CrossIcon = ({ width, height, ...props }) => (
   <svg
     xmlns='http://www.w3.org/2000/svg'
-    width={width || 12}
-    height={height || 12}
-    viewBox='0 0 32 32'
+    width={width || 21}
+    height={height || 21}
+    viewBox='0 0 21 21'
     {...props}
   >
     <path
-      fill='currentColor'
-      d='M24.879 2.879A3 3 0 1 1 29.12 7.12l-8.79 8.79a.125.125 0 0 0 0 .177l8.79 8.79a3 3 0 1 1-4.242 4.243l-8.79-8.79a.125.125 0 0 0-.177 0l-8.79 8.79a3 3 0 1 1-4.243-4.242l8.79-8.79a.125.125 0 0 0 0-.177l-8.79-8.79A3 3 0 0 1 7.12 2.878l8.79 8.79a.125.125 0 0 0 .177 0z'
+      fill='none'
+      stroke='currentColor'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      d='m15.5 15.5l-10-10zm0-10l-10 10'
+      strokeWidth={1.5}
     />
   </svg>
 );
+export default CrossIcon;

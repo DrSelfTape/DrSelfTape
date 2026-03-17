@@ -1,4 +1,4 @@
-export const TickIcon = ({ width, height, ...props }) => (
+const TickIcon = ({ width, height, ...props }) => (
   <svg
     xmlns='http://www.w3.org/2000/svg'
     width={width || 26}
@@ -12,3 +12,4 @@ export const TickIcon = ({ width, height, ...props }) => (
     />
   </svg>
 );
+export default TickIcon;

@@ -1,12 +1,12 @@
 // Library imports
 import { useState } from 'react';
-
+import { CrossIcon } from '../../../assets/icons';
 // Local imports
 import { CloseEyeIcon, OpenEyeIcon } from '../../../assets/icons';
 
 export const CustomInput = ({
   label,
-  value,
+  value = '',
   name,
   onChange,
   type = 'text',
@@ -15,6 +15,15 @@ export const CustomInput = ({
   errorMsg = '',
   className = '',
   placeholder,
+  autoFocus = false,
+  autoComplete = 'off',
+  isSearch = false,
+  handleSearchClear,
+  onSearch,
+  required = false,
+  ref,
+  icon,
+  title
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -22,23 +31,46 @@ export const CustomInput = ({
     if (type === 'number' && !/[0-9]/.test(e.key) && e.key !== 'Backspace') {
       e.preventDefault();
     }
+    if (isSearch && e.key === 'Escape' && value?.length > 0) {
+      handleSearchClear?.();
+    }
+    if (isSearch && e.key === 'Enter' && value?.length > 0) {
+      e.preventDefault();
+      onSearch?.(value);
+    }
   };
 
   return (
     <div className={'relative w-full'}>
-      {label && (
+      {label && !title && (
         <label
-          className={`absolute left-3 text-xs -top-[8px] text-nowrap z-10 bg-white px-1 transition-all duration-200
+          className={`absolute left-3 text-xs ${
+            required ? '-top-[12px]' : '-top-[8px]'
+          } text-nowrap z-10 bg-white px-1 transition-all duration-200
             ${error ? 'text-danger' : 'text-input-title'}
           `}
         >
           {label}
+          {required && <span className='text-danger text-[16px] ml-1'>*</span>}
         </label>
       )}
+      {icon || title && (
+        <div className='flex gap-0.5 items-center mb-1'>
+          <div className='flex items-center gap-1 text-sm font-medium text-secondary-dark '>
+            {icon}
+          </div>
+          <p
+            className={`text-[14px] 
+           text-nowrap  px-1 transition-all duration-200
+            ${error ? 'text-danger' : 'text-secondary-dark'}
+          `}
+          >
+            {title}
+          </p>
+        </div>
+      )}
 
-      <div
-        className={`relative min-w-[300px] w-full`}
-      >
+      <div className={`relative w-full`}>
         <input
           type={
             type === 'password' ? (showPassword ? 'text' : 'password') : type
@@ -47,9 +79,12 @@ export const CustomInput = ({
           value={value}
           onChange={onChange}
           disabled={disabled}
+          autoFocus={autoFocus}
+          ref={ref}
+          autoComplete='off'
           onKeyDown={type === 'number' ? handleKeyDown : undefined}
-          className={`w-full px-3 py-2 min-w-[300px] h-[28px] sm:h-[36px] border text-input-size rounded transition-all text-black
-            ${disabled ? 'bg-input-disabled cursor-not-allowed' : 'bg-white'}
+          className={`w-full px-3 py-2 min-w-[180px] h-[36px] sm:h-[40px] border text-input-size rounded transition-all text-black
+            ${disabled ? 'bg-input-disabled cursor-not-allowed text-input-placeholder' : 'bg-white'}
             ${
               error
                 ? 'border-danger focus:border-danger'
@@ -62,17 +97,21 @@ export const CustomInput = ({
           placeholder={!value ? placeholder : ''}
         />
 
-        {type === 'password' && !disabled && (
+        {type === 'password' && !disabled && !isSearch && (
           <span
             className={`absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-input-placeholder`}
             onClick={() => setShowPassword((prev) => !prev)}
           >
-            {showPassword ? <CloseEyeIcon /> : <OpenEyeIcon />}
+            {showPassword ? (
+              <CloseEyeIcon className='size-5' />
+            ) : (
+              <OpenEyeIcon className='size-5' />
+            )}
           </span>
         )}
 
         {error && (
-          <span className='text-[11px] text-danger ml-3.5 block absolute'>
+          <span className='text-[11px] text-danger ml-1 block absolute top-[40px]'>
             {errorMsg}
           </span>
         )}

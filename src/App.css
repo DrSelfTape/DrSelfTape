@@ -1,3 +1,6 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 @import 'tailwindcss';
 
 html,
@@ -7,46 +10,59 @@ body {
 }
 
 @theme {
+/* Base Colors */
+--color-black: #000000;
+--color-white: #ffffff;
 
-  /* Base Colors */
-  --color-black: #000000;
-  --color-white: #ffffff;
+/* Primary Theme (Blue) */
+--color-primary: #2F80ED;        /* Main dashboard blue */
+--color-primary-light: #EAF2FE;  /* Light blue hover/active backgrounds */
+--color-primary-dark: #1E64C8;   /* Darker blue for hover states */
 
-  /* Primary Theme */
-  --color-primary: #1d4ed8;
-  --color-primary-light: #dbeafe;
-  --color-primary-dark: #1e3a8a;
+/* Secondary (Neutral Grays) */
+--color-secondary: #6B7280;      /* Medium gray for secondary text */
+--color-secondary-light: #F9FAFB;/* Light gray dashboard background */
+--color-secondary-dark: #111827; /* Very dark gray for headings */
 
-  /* Secondary */
-  --color-secondary: #374151;
-  --color-secondary-light: #e5e7eb;
-  --color-secondary-dark: #111827;
 
   /* Utility */
   --color-danger: #ef4444;
   --color-success: #22c55e;
-  --color-warning: #facc15;
 
   /* Input Colors */
   --color-input: #d1d5db;
   --color-input-hover: #9ca3af;
+    --color-input-hover-20: rgba(156,163,175,0.2);
+  --color-input-hover-30: rgba(156,163,175,0.3);
+  --color-input-hover-40: rgba(156,163,175,0.4);
   --color-input-active: #6366f1;
   --color-input-placeholder: #9ca3af;
   --color-input-disabled: #f3f4f6;
   --color-input-title: #737373;
 
-   /* Breakpoints */
-  --breakpoint-xs: 375px;
-  --breakpoint-sm: 640px;
+  /* Breakpoints */
+  --breakpoint-xxs: 320px;
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 575px;
+  --breakpoint-smd: 640px;
   --breakpoint-md: 768px;
+  --breakpoint-base: 992px;
   --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
+  --breakpoint-xl: 1296px;
+    --breakpoint-1xl: 1340px;
+  --breakpoint-2xl: 1440px;
+  --breakpoint-3xl: 1536px;
+  --breakpoint-btw-lg-xl-min: 1024px;
+  --breakpoint-btw-lg-xl-max: 1180px;
 
-  /* imput typography  */
+  /* Font */
   --font-input-font: 'Inter', sans-serif;
   --text-input-size: 14px;
   --text-input-title-size: 12px;
+  --font-jetbrains: "JetBrains Mono", monospace;
+  --font-bebas: "Bebas Neue", sans-serif;
+  --font-anton: "Anton", sans-serif;
+  --font-sans: "Space Grotesk", sans-serif;
 }
 
 /* Hide scrollbar  */
@@ -75,14 +91,77 @@ input:-webkit-autofill:active {
   -moz-appearance: textfield;
 }
 
-/* Hide default scrollbar */
-body::-webkit-scrollbar {
-  width: 8px;
+/* GLOBAL CUSTOM SCROLLBAR (visible everywhere unless hidden) */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-body::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: transparent;
 }
+
+::-webkit-scrollbar-thumb {
+  background-color: #999;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #666;
+}
+
+/* Hide scrollbar completely */
+.hidden-scrollbar {
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+}
+
+.hidden-scrollbar::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  /* Chrome/Safari */
+}
+
+.border-style {
+  @apply border-gray-200;
+}
+
+.center {
+  @apply flex justify-center items-center;
+}
+
+.card-section {
+  @apply bg-white rounded-xl shadow-sm p-6;
+}
+
+.topbar-style {
+  @apply border-b min-h-[55px] flex items-center justify-between px-4 bg-white overflow-auto;
+}
+
+.edit-booking-style {
+  @apply !px-4 !py-3 !rounded-lg !border-0 !bg-secondary-light !h-auto;
+}
+.edit-booking-text-area-style {
+  @apply !rounded-lg !border-0 !bg-secondary-light !h-auto;
+}
+/* Kill MUI's outlined border */
+.edit-booking-style  .MuiOutlinedInput-notchedOutline {
+  border: none !important;
+}
+
+/* Kill MUI's outlined border for Textarea */
+.edit-booking-text-area-style .MuiOutlinedInput-notchedOutline {
+  border: none !important;
+}
+/* Make sure it doesn’t come back on hover/focus */
+.edit-booking-style.Mui-focused .MuiOutlinedInput-notchedOutline,
+.edit-booking-style:hover .MuiOutlinedInput-notchedOutline {
+  border: none !important;
+}
+
 /* Namespace	Utility classes
 --color-*	Color utilities like bg-red-500, text-sky-300, and many more
 --font-*	Font family utilities like font-sans
@@ -102,3 +181,23 @@ body::-webkit-scrollbar-track {
 --aspect-*	Aspect ratio utilities like aspect-video
 --ease-*	Transition timing function utilities like ease-out
 --animate-*	Animation utilities like animate-spin */
+
+/* Notification highlight animation for invite cards */
+@keyframes notification-pulse {
+  0%, 100% { 
+    background-color: white;
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(47, 128, 237, 0.4);
+  }
+  50% { 
+    background-color: rgba(47, 128, 237, 0.15);
+    transform: scale(1.02);
+    box-shadow: 0 0 20px 5px rgba(47, 128, 237, 0.3);
+  }
+}
+
+.animate-notification-pulse {
+  animation: notification-pulse 0.8s ease-in-out 3 !important;
+  border-color: #2F80ED !important;
+  box-shadow: 0 4px 20px rgba(47, 128, 237, 0.25) !important;
+}

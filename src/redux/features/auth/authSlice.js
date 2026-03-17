@@ -3,33 +3,36 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 // Local Imports
 import axios from '../../http';
-import endPoints from '../../http';
+import endPoints from '../../constant';
 
 // Initial state for auth
 const initialState = {
-  login: {
-    user: null,
-    loading: false,
-    error: null,
-  },
-  register: {
-    user: null,
-    loading: false,
-    error: null,
-  },
+  user: null,
+  profileDetails: null,
+  loading: false,
+  updatePasswordLoading: false,
+  error: null,
+  isAuthenticated: false,
 };
 
-// Sign user API Function
+// Helper function to handle API errors consistently
+const handleApiError = (error) => {
+  const message =
+    error?.response?.data?.message ||
+    error?.message ||
+    'An unexpected error occurred';
+  return message;
+};
+
+// Sign Up User API Function
 export const registerUser = createAsyncThunk(
   'auth/register',
-  async (values, { rejectWithValue }) => {
+  async (formData, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(endPoints.register, {
-        ...values,
-      });
+      const { data } = await axios.post(endPoints.register, formData);
       return data?.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message);
+      return rejectWithValue(handleApiError(error));
     }
   }
 );
@@ -44,7 +47,104 @@ export const loginUser = createAsyncThunk(
       });
       return data?.data;
     } catch (error) {
-      return rejectWithValue(error?.response?.data?.message);
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Forgot Password API Function
+export const forgotPassword = createAsyncThunk(
+  'auth/forgotPassword',
+  async (values, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(endPoints.forgotPassword, {
+        ...values,
+      });
+      return data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Reset Password API Function
+export const resetPassword = createAsyncThunk(
+  'auth/resetPassword',
+  async (values, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(endPoints.resetPassword, {
+        ...values,
+      });
+      return data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Update Password API Function
+export const updatePassword = createAsyncThunk(
+  'auth/updatePassword',
+  async (values, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(endPoints.updatePassword, {
+        ...values,
+      });
+      return data;
+    } catch (error) {
+      return rejectWithValue(error);
+    }
+  }
+);
+
+// Get Profile Details API Function
+export const getProfileDetails = createAsyncThunk(
+  'auth/getProfileDetails',
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(endPoints.profileDetails);
+      return data?.data?.user;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Update Profile API Function
+export const updateProfile = createAsyncThunk(
+  'auth/updateProfile',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.put(endPoints.updateProfile, formData);
+      return data?.data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Add Coach Profile API Function
+export const addCoachProfile = createAsyncThunk(
+  'auth/addCoachProfile',
+  async (formData, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(endPoints.addCoachProfile, formData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
+// Switch Role API Function
+export const switchRole = createAsyncThunk(
+  'auth/switchRole',
+  async (roleData, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(endPoints.switchRole, roleData);
+      return data?.data || data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
     }
   }
 );
@@ -56,42 +156,175 @@ export const authSlice = createSlice({
   reducers: {
     logoutUser: (state) => {
       state.user = null;
+      state.isAuthenticated = false;
+    },
+    clearTempSession: (state) => {
+      state.user = null;
+      state.isAuthenticated = false;
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(registerUser.pending, (state) => {
-        state.register.loading = true;
-        state.register.error = null;
-        state.register.user = null;
+        state.loading = true;
+        state.error = null;
+        state.user = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
-        state.register.loading = false;
-        state.register.user = action.payload;
-        state.register.error = null;
+        console.log('registeruser', action);
+        const userData = {
+          id: action?.payload?.login_data?.id,
+          first_name: action?.payload?.login_data?.first_name,
+          last_name: action?.payload?.login_data?.last_name,
+          phone_no: action?.payload?.login_data?.phone_no,
+          email: action?.payload?.login_data?.email,
+          token: action?.payload?.login_data?.token?.access,
+          all_user_permissions:
+            action?.payload?.login_data?.all_user_permissions,
+          role: action?.payload?.login_data?.role,
+          is_active: action?.payload?.login_data?.is_active,
+          is_reset_password: action?.payload?.login_data?.is_reset_password,
+        };
+        state.loading = false;
+        state.user = action.payload?.is_reset_password ? null : userData;
+        state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
-        state.register.user = null;
+        state.user = null;
       })
       .addCase(loginUser.pending, (state) => {
-        state.login.loading = true;
-        state.login.error = null;
-        state.login.user = null;
+        state.loading = true;
+        state.error = null;
+        state.user = null;
       })
       .addCase(loginUser.fulfilled, (state, action) => {
-        state.login.loading = false;
-        state.login.user = action.payload;
-        state.login.error = null;
+        state.loading = false;
+        const userData = {
+          id: action.payload?.id,
+          first_name: action.payload?.first_name,
+          last_name: action.payload?.last_name,
+          phone_no: action.payload?.phone_no,
+          email: action.payload?.email,
+          token: action.payload?.token?.access,
+          all_user_permissions: action.payload?.all_user_permissions,
+          role: action.payload?.active_role || action.payload?.role, // Use active_role if available
+          is_active: action.payload?.is_active,
+          is_reset_password: action.payload?.is_reset_password,
+        };
+        state.user = action.payload?.is_reset_password ? null : userData;
+        state.error = null;
+        state.isAuthenticated = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
-        state.login.loading = false;
-        state.login.error = action.payload;
-        state.login.user = null;
+        state.loading = false;
+        state.error = action.payload;
+        state.user = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(forgotPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(forgotPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(resetPassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPassword.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        state.user = null;
+        state.isAuthenticated = false;
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updatePassword.pending, (state) => {
+        state.updatePasswordLoading = true;
+        state.error = null;
+      })
+      .addCase(updatePassword.fulfilled, (state, action) => {
+        state.updatePasswordLoading = false;
+        state.error = null;
+      })
+      .addCase(updatePassword.rejected, (state, action) => {
+        state.updatePasswordLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfile.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(updateProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(getProfileDetails.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getProfileDetails.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profileDetails = action.payload;
+        state.error = null;
+      })
+      .addCase(getProfileDetails.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(addCoachProfile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(addCoachProfile.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+        // Note: Token is revoked by backend, so we don't update user state here
+        // The logout will be handled in the component after showing success message
+      })
+      .addCase(addCoachProfile.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(switchRole.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(switchRole.fulfilled, (state, action) => {
+        state.loading = false;
+        state.error = null;
+        // Update user state with new token, role, and permissions
+        if (action.payload) {
+          const userData = {
+            ...state.user,
+            token: action.payload?.token?.access || action.payload?.access || state.user?.token,
+            role: action.payload?.role || state.user?.role,
+            all_user_permissions: action.payload?.all_user_permissions || state.user?.all_user_permissions,
+          };
+          state.user = userData;
+        }
+      })
+      .addCase(switchRole.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });
 
-export const { logoutUser } = authSlice.actions;
+export const { logoutUser, clearTempSession } = authSlice.actions;
+
 export default authSlice.reducer;

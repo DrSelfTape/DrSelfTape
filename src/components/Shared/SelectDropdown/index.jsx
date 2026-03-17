@@ -1,299 +1,272 @@
-// Library imports
-import { useState, useRef, useEffect } from 'react';
-
-// Local imports
-import { ArrowHeadIcon, CrossIcon, TickIcon } from '../../../assets/icons';
-
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
 export const SelectDropdown = ({
-  label,
-  multipleSelect = false,
+  label = '',
+  value = '',
+  name,
   onChange,
-  optionsArray = [],
   disabled = false,
   error = false,
   errorMsg = '',
-  limitTags = null,
-  value = null,
-  className = '',
+  placeholder = 'Click to select',
+  options = [],
+  sx = {},
+  required = false,
+  icon,
+  className,
+  title,
+  labelSx,
+  placeholderClassName,
+  multiSelect = false,
 }) => {
-  const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const [dropUp, setDropUp] = useState(false);
+  const labelId = `${name}-label`;
 
-  const dropdownRef = useRef(null);
-  const inputRef = useRef(null);
-  const scrollRef = useRef(null);
-
-  const getId = (item) => (typeof item === 'object' ? item.id : item);
-  const getName = (item) =>
-    item && typeof item === 'object' && item.name ? item.name : item;
-
-  const selectedValues = multipleSelect
+  const normalizedValue = multiSelect
     ? Array.isArray(value)
       ? value
       : []
-    : value;
+    : typeof value === 'object' && value !== null
+      ? value.value ?? ''
+      : value ?? '';
 
-  const isSelected = (option) => {
-    const optionId = getId(option);
-    if (multipleSelect) {
-      return selectedValues.some((val) => getId(val) === optionId);
-    }
-    return selectedValues && getId(selectedValues) === optionId;
-  };
+  const handleChange = (event) => {
+    const selectedValue = event.target.value;
 
-  const handleOptionClick = (option) => {
-    let updated;
-
-    if (multipleSelect) {
-      const isAlreadySelected = selectedValues.some(
-        (item) => getId(item) === getId(option)
+    if (multiSelect) {
+      const selectedOptions = options.filter((opt) =>
+        selectedValue.includes(opt.value)
       );
-
-      updated = isAlreadySelected
-        ? selectedValues.filter((item) => getId(item) !== getId(option))
-        : [...selectedValues, option];
+      onChange?.({
+        ...event,
+        target: { ...event.target, name, value: selectedOptions },
+      });
     } else {
-      updated = option;
-    }
-
-    const returnback =
-      typeof optionsArray[0] === 'object'
-        ? updated
-        : multipleSelect
-        ? updated.map(getId)
-        : getId(updated);
-
-    onChange?.(returnback);
-    if (!multipleSelect) setOpen(false);
-    setSearch('');
-  };
-
-  const handleRemove = (e, id) => {
-    e.stopPropagation();
-    const updated = selectedValues.filter((item) => getId(item) !== id);
-    const returnback =
-      typeof optionsArray[0] === 'object' ? updated : updated.map(getId);
-    onChange?.(returnback);
-  };
-
-  const handleClearAll = (e) => {
-    e.stopPropagation();
-    onChange?.(multipleSelect ? [] : null);
-    setSearch('');
-  };
-
-  const handleClickOutside = (e) => {
-    if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-      setOpen(false);
-      setSearch('');
-    }
-  };
-
-  const handleDropdown = () => {
-    if (!open) {
-      const selectDiv = dropdownRef.current.getBoundingClientRect();
-      const spaceBelow = window.innerHeight - selectDiv.bottom;
-      const spaceAbove = selectDiv.top;
-      setDropUp(spaceBelow < 240 && spaceAbove > 240);
-
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 0);
-    }
-    setOpen((prev) => !prev);
-  };
-
-  const filteredOptions = Array.isArray(optionsArray)
-    ? (() => {
-        const seen = new Set();
-        return optionsArray.filter((option) => {
-          const id = getId(option);
-          const name = getName(option);
-
-          if (seen.has(id)) return false;
-          seen.add(id);
-
-          return String(name).toLowerCase().includes(search.toLowerCase());
-        });
-      })()
-    : [];
-
-  useEffect(() => {
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (container) {
-      container.scrollTo({
-        left: container.scrollWidth,
-        behavior: 'smooth',
+      const selectedOption = options.find(
+        (opt) => opt.value === selectedValue
+      );
+      const returnValue = selectedOption ? selectedOption : selectedValue;
+      onChange?.({
+        ...event,
+        target: { ...event.target, name, value: returnValue },
       });
     }
-    inputRef.current?.focus();
-  }, [value]);
-
-  const limitDisplay =
-    multipleSelect && limitTags
-      ? selectedValues.slice(0, limitTags)
-      : selectedValues;
+  };
 
   return (
-    <div className={`relative w-full mt-4 ${className}`}>
-      {label && (
-        <label
-          className={`absolute left-3 -top-[10px] z-20 bg-white px-1 text-input-title-size transition-all duration-200
-            ${error ? 'text-danger' : 'text-input-title'}
-          `}
-        >
-          {label}
-        </label>
-      )}
-      <div
-        ref={dropdownRef}
-        className={`relative w-full`}
-      >
-        <div
-          onClick={disabled ? undefined : handleDropdown}
-          className={`border px-3 sm:py-2 min-w-[300px]  ${!multipleSelect ? 'h-[28px] sm:h-[36px]': 'h-[36px]'}  flex items-center gap-2 flex-wrap rounded transition-all
-            ${
-              open
-                ? dropUp
-                  ? 'rounded-t-none mb-[17px]'
-                  : 'rounded-t rounded-b-none'
-                : 'rounded'
-            }
-mb-[17px]
-
-            ${
-              disabled
-                ? 'bg-input-disabled cursor-not-allowed'
-                : 'bg-white cursor-pointer'
-            }
-            ${
-              error
-                ? 'border-danger'
-                : 'border-input hover:border-input-hover focus-within:border-input-active'
-            }
-          `}
-        >
-          {multipleSelect &&
-            Array.isArray(selectedValues) &&
-            selectedValues.length > 0 && (
-              <div
-                ref={scrollRef}
-                className='flex gap-2 max-w-[150px] overflow-auto invisible-scrollbar'
-              >
-                {limitDisplay.map((item) => (
-                  <div
-                    key={getId(item)}
-                    className='bg-primary-light text-primary text-input-size text-nowrap px-2 sm:py-1 rounded flex items-center gap-1'
-                  >
-                    <span>{getName(item)}</span>
-                    <span
-                      onClick={(e) => handleRemove(e, getId(item))}
-                      className='cursor-pointer pt-[2px]'
-                    >
-                      <CrossIcon width={12} height={12} />
-                    </span>
-                  </div>
-                ))}
-                {selectedValues.length > limitDisplay.length && (
-                  <div className='bg-primary-light text-primary text-xs px-2 py-1 rounded'>
-                    +{selectedValues.length - limitDisplay.length}
-                  </div>
-                )}
-              </div>
-            )}
-
-          {!multipleSelect && selectedValues && (
-            <span className='text-black text-sm'>
-              {getName(selectedValues)}
-            </span>
-          )}
-
-          <input
-            ref={inputRef}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onClick={(e) => {
-              e.stopPropagation();
-              setOpen(true);
+    <div className='custom-input-container relative'>
+      <FormControl fullWidth disabled={disabled} error={error}>
+        {label && !title && (
+          <InputLabel
+            htmlFor={labelId}
+            shrink
+            className='custom-input-label'
+            sx={{
+              fontFamily: '"Inter", sans-serif',
+              fontSize: '12px',
+              color: error
+                ? 'var(--color-danger)'
+                : 'var(--color-input-placeholder)',
+              '&.Mui-focused': {
+                color: error
+                  ? 'var(--color-danger)'
+                  : 'var(--color-input-placeholder)',
+              },
+              '&.Mui-disabled': { color: 'var(--color-input-placeholder)' },
+              position: 'absolute',
+              top: required ? '-8px' : '-6px',
+              left: '12px',
+              backgroundColor: 'white',
+              padding: '0 4px',
+              zIndex: 1,
+              transform: 'none',
+              lineHeight: '1',
+              ...labelSx,
             }}
-            placeholder={
-              (multipleSelect ? selectedValues.length === 0 : !selectedValues)
-                ? 'Select option'
-                : ''
-            }
-            className={`flex-1 min-w-[50px] outline-none text-sm px-1 bg-transparent
-              text-black placeholder-input-placeholder
-              ${disabled ? 'cursor-not-allowed pointer-events-none' : ''}
-            `}
-          />
-
-          {(multipleSelect ? selectedValues.length > 0 : selectedValues) &&
-            !disabled && (
-              <span
-                onClick={handleClearAll}
-                className='text-danger cursor-pointer ml-auto'
+          >
+            {label}
+           {required && <span className='text-danger text-[16px] ml-1'>*</span>}
+          </InputLabel>
+        )}
+        {icon ||
+          (title && (
+            <div className='flex gap-0.5 items-center mb-1'>
+              <div className='flex items-center gap-1 text-sm font-medium text-[var(--color-secondary-dark)] '>
+                {icon}
+              </div>
+              <p
+                className={`text-[14px] 
+                text-nowrap px-1 transition-all duration-200
+                ${error ? 'text-danger' : 'text-secondary-dark'}
+              `}
               >
-                <CrossIcon width={14} height={14} />
+                {title}
+              </p>
+            </div>
+          ))}
+        <Select
+          labelId={labelId}
+          id={labelId}
+          className={className}
+          displayEmpty
+          multiple={multiSelect}
+          value={
+            multiSelect
+              ? normalizedValue.map((v) => v.value || v)
+              : normalizedValue
+          }
+          name={name}
+          onChange={handleChange}
+          renderValue={(selected) => {
+            if (multiSelect) {
+              if (!selected.length) {
+                return (
+                  <em
+                    className={`text-input-placeholder not-italic text-[14px] font-sans ${placeholderClassName}`}
+                  >
+                    {placeholder}
+                  </em>
+                );
+              }
+              const labels = selected
+                .map(
+                  (val) =>
+                    options.find((opt) => opt.value === val)?.label || val
+                )
+                .join(', ');
+              return <span className='text-[12px]'>{labels}</span>;
+            }
+
+            if (!selected) {
+              return (
+                <em
+                  className={`text-input-placeholder not-italic text-[14px] font-sans ${placeholderClassName}`}
+                >
+                  {placeholder}
+                </em>
+              );
+            }
+            const option = options.find((opt) => opt.value === selected);
+            return (
+              <span className='text-[12px]'>
+                {option ? option.label : selected}
               </span>
-            )}
-
-          <span className='ml-2 text-input-placeholder'>
-            <ArrowHeadIcon
-              className={`transition-transform duration-200 ${
-                open && !disabled ? 'rotate-180' : ''
-              }`}
-            />
-          </span>
-        </div>
-
-        {error && !open && (
-          <span className='text-[11px] text-danger ml-3.5 block absolute'>
+            );
+          }}
+          inputProps={{
+            style: {
+              padding: '8px 40px 8px 12px',
+            },
+          }}
+          sx={{
+            height: { xs: '36px', sm: '40px' },
+            minWidth: '180px',
+            width: '100%',
+            '& .MuiSelect-select': {
+              fontSize: '14px',
+              fontFamily: '"Inter", sans-serif',
+              color: 'var(--color-secondary-dark)',
+              padding: '0',
+              paddingLeft: '10px',
+              '&.Mui-disabled': {
+                cursor: 'not-allowed',
+              },
+            },
+            backgroundColor: disabled
+              ? 'var(--color-input-disabled)'
+              : 'var(--color-white)',
+            borderRadius: '4px',
+            '&.Mui-disabled': {
+              cursor: 'not-allowed',
+            },
+            '& .MuiOutlinedInput-notchedOutline': {
+              borderColor: error
+                ? 'var(--color-danger)'
+                : 'var(--color-input)',
+              borderWidth: '1px',
+            },
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: error
+                ? 'var(--color-danger)'
+                : 'var(--color-input-hover)',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: error
+                ? 'var(--color-danger)'
+                : 'var(--color-input-active)',
+              borderWidth: '1px',
+            },
+            ...sx,
+          }}
+        >
+          {placeholder && (
+            <MenuItem
+              value=''
+              sx={{
+                fontSize: '14px',
+                fontFamily: '"Inter", sans-serif',
+                color: 'var(--color-input-secondary-dark)',
+                fontStyle: 'normal',
+                '&.Mui-selected': {
+                  color: 'var(--color-secondary-dark)',
+                  backgroundColor: 'var(--color-white)',
+                  fontStyle: 'normal',
+                },
+                '&:hover': {
+                  backgroundColor: 'var(--color-input-hover-20)',
+                },
+              }}
+            >
+              {placeholder}
+            </MenuItem>
+          )}
+          {options.map((option) => (
+            <MenuItem
+              key={option.value}
+              value={option.value}
+              sx={{
+                fontSize: '14px',
+                fontFamily: '"Inter", sans-serif',
+                color: 'var(--color-secondary-dark)',
+                fontStyle: 'normal',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                '&.Mui-selected': {
+                  color: 'var(--color-secondary-dark)',
+                  backgroundColor: 'var(--color-input-hover-30)',
+                  fontWeight: 500,
+                  '&:hover': {
+                    backgroundColor: 'var(--color-input-hover-40)',
+                  },
+                },
+                '&:hover': {
+                  backgroundColor: 'var(--color-input-hover-20)',
+                },
+              }}
+            >
+              <span>{option.label}</span>
+              {multiSelect
+                ? normalizedValue
+                    .map((v) => v.value || v)
+                    .includes(option.value) && (
+                    <CheckIcon
+                      sx={{ fontSize: '16px', color: 'var(--color-primary)' }}
+                    />
+                  )
+                : normalizedValue === option.value && (
+                    <CheckIcon
+                      sx={{ fontSize: '16px', color: 'var(--color-primary)' }}
+                    />
+                  )}
+            </MenuItem>
+          ))}
+        </Select>
+        {error && (
+          <span className='text-[11px] text-danger ml-1 block absolute top-[40px]'>
             {errorMsg}
           </span>
         )}
-
-        {open && !disabled && (
-          <div
-            className={`absolute z-30 w-full min-w-[300px] bg-white border max-h-60 overflow-auto invisible-scrollbar text-sm
-              ${error ? 'border-danger' : 'border-input'}
-              ${
-                dropUp
-                  ? 'bottom-full rounded-t border-b-0'
-                  : 'top-full rounded-b border-t-0'
-              }
-            `}
-          >
-            {filteredOptions.length > 0 ? (
-              filteredOptions.map((option) => (
-                <div
-                  key={getId(option)}
-                  onClick={() => handleOptionClick(option)}
-                  className={`px-4 py-2 cursor-pointer flex items-center hover:bg-primary-light ${
-                    isSelected(option) ? 'bg-primary-light' : ''
-                  }`}
-                >
-                  {getName(option)}
-                  {isSelected(option) && (
-                    <span className='ml-auto'>
-                      <TickIcon />
-                    </span>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className='px-4 py-2 text-input-placeholder'>
-                No options found
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      </FormControl>
     </div>
   );
 };
