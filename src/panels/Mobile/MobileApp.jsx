@@ -23,6 +23,8 @@ async function extractPdfText(file) {
 /* Lazy-load dashboard panels for the "More" menu */
 const CDSim = lazy(() => import("../Dashboard/CDSim"));
 const CastingDirectorAI = lazy(() => import("../Dashboard/CastingDirectorAI"));
+const FindAReader = lazy(() => import("../Dashboard/FindAReader"));
+const GreenRoom = lazy(() => import("../Dashboard/FindAReader/GreenRoom"));
 const LiveRehearsals = lazy(() => Promise.resolve({ default: () => null }));
 const Community = lazy(() => Promise.resolve({ default: () => null }));
 const Scripts = lazy(() => import("../Dashboard/Scripts"));
@@ -182,43 +184,35 @@ const TABS = [
   { id: "home", icon: "home", label: "Home" },
   { id: "auditions", icon: "auditions", label: "Auditions" },
   { id: "scenes", icon: "book", label: "Scene Study" },
-  { id: "live", icon: "mic", label: "Live Scene" },
+  { id: "find-a-reader", icon: "community", label: "Find Reader" },
   { id: "profile", icon: "profile", label: "Profile" },
   { id: "more", icon: "more", label: "More" },
 ];
 
 const MORE_FEATURES = [
-  { id: "cd-sim", label: "CD Sim", desc: "Casting director simulation", emoji: "🎬", color: CORAL },
-  { id: "cd-ai", label: "CD AI Studio", desc: "Scene breakdown & coaching", emoji: "🤖", color: MINT },
-  { id: "live-rehearsals", label: "Live Rehearsals", desc: "Video rooms with Daily.co", emoji: "📹", color: GOLD },
-  { id: "community", label: "Community", desc: "Posts, wins, tips", emoji: "🏆", color: "#b89aff" },
-  { id: "scripts", label: "Scripts", desc: "Your script library", emoji: "📝", color: CORAL_SOFT },
-  { id: "submissions", label: "Submissions", desc: "Track tape submissions", emoji: "📤", color: GREEN },
-  { id: "book-session", label: "Book Session", desc: "Studio bookings", emoji: "📅", color: MINT },
-  { id: "bookings", label: "My Bookings", desc: "Upcoming & past sessions", emoji: "🗓️", color: GOLD },
-  { id: "insights", label: "Career Insights", desc: "AI-powered analytics", emoji: "💡", color: BLUE },
+  { id: "find-a-reader", label: "Find a Reader", desc: "Match with scene partners", emoji: "🎭", color: "#C855F0" },
+  { id: "green-room", label: "Green Room", desc: "Chat with your matches", emoji: "💬", color: "#A7ECDA" },
+  { id: "cd-sim", label: "CD Sim", desc: "Casting director simulation", emoji: "🎬", color: "#C855F0" },
+  { id: "cd-ai", label: "CD AI Studio", desc: "Scene breakdown coaching", emoji: "🤖", color: "#A7ECDA" },
+  { id: "scripts", label: "Scripts", desc: "Your script library", emoji: "📝", color: "#FFB49A" },
+  { id: "submissions", label: "Submissions", desc: "Track tape submissions", emoji: "📤", color: "#5ee6b8" },
   { id: "reports", label: "Reports", desc: "Career statistics", emoji: "📊", color: "#b89aff" },
-  { id: "generator", label: "Scene Generator", desc: "AI custom scenes", emoji: "✨", color: CORAL },
-  { id: "membership", label: "Membership", desc: "Plans & billing", emoji: "👑", color: GOLD },
-  { id: "dash-profile", label: "Profile", desc: "Edit your profile", emoji: "🎭", color: MINT },
-  { id: "agent-portal", label: "Agent Portal", desc: "Agent & rep tools", emoji: "🏢", color: BLUE },
+  { id: "generator", label: "Scene Generator", desc: "AI custom scenes", emoji: "✨", color: "#C855F0" },
+  { id: "membership", label: "Membership", desc: "Plans and billing", emoji: "👑", color: "#FCE072" },
+  { id: "dash-profile", label: "My Profile", desc: "Edit your profile", emoji: "🎭", color: "#A7ECDA" },
 ];
 
 const PANEL_COMPONENTS = {
+  "find-a-reader": FindAReader,
+  "green-room": GreenRoom,
   "cd-sim": CDSim,
   "cd-ai": CastingDirectorAI,
-  "live-rehearsals": LiveRehearsals,
-  "community": Community,
   "scripts": Scripts,
   "submissions": Submissions,
-  "book-session": BookSession,
-  "bookings": Bookings,
-  "insights": Insights,
   "reports": Reports,
   "generator": AuditionGenerator,
   "membership": Membership,
   "dash-profile": DashProfile,
-  "agent-portal": AgentPortal,
 };
 
 /* ═══════════════════════════════════════════════════
@@ -728,10 +722,10 @@ function ProfileScreen({ setCurrentPanel }) {
   const scriptsCount = scripts.length || 0;
 
   const menu = [
+    { label: "Find a Reader", icon: "community", action: () => setCurrentPanel("find-a-reader") },
+    { label: "Green Room", icon: "mic", action: () => setCurrentPanel("green-room") },
     { label: "Edit profile", icon: "profile", action: () => setCurrentPanel("dash-profile") },
     { label: "Membership", icon: "star", action: () => setCurrentPanel("membership") },
-    { label: "Community", icon: "community", action: () => setCurrentPanel("community") },
-    { label: "Notifications", icon: "bell", action: null },
     { label: "Reports", icon: "auditions", action: () => setCurrentPanel("reports") },
   ];
 
@@ -818,7 +812,7 @@ function MoreScreen({ setCurrentPanel }) {
    PANEL SCREEN — Wraps a dashboard panel for mobile
    ═══════════════════════════════════════════════════ */
 // Panels that already use dark brand styling (inline dark bg/colors)
-const DARK_PANELS = new Set(["cd-ai", "generator"]);
+const DARK_PANELS = new Set(["cd-ai", "generator", "find-a-reader", "green-room"]);
 
 function PanelScreen({ panelId, onBack }) {
   const PanelComponent = PANEL_COMPONENTS[panelId];
@@ -887,6 +881,9 @@ export default function DrSelfTapeApp() {
     auditions: <AuditionsScreen />,
     scenes: <ScenesScreen />,
     live: <LiveScreen />,
+    "find-a-reader": (
+      <PanelScreen panelId="find-a-reader" onBack={() => handleSetTab("home")} />
+    ),
     profile: <ProfileScreen setCurrentPanel={setCurrentPanel} />,
     more: <MoreScreen setCurrentPanel={setCurrentPanel} />,
   };
@@ -993,8 +990,8 @@ export default function DrSelfTapeApp() {
                 );
               })}
               <div style={{ borderTop: `1px solid ${BORDER}`, margin: "12px 0", paddingTop: 12 }}>
-                {[{ id: "community", icon: "community", label: "Community" }, { id: "reports", icon: "auditions", label: "Reports" }].map(t => (
-                  <button key={t.id} style={{
+                {[{ id: "find-a-reader", icon: "community", label: "Find a Reader" }, { id: "green-room", icon: "mic", label: "Green Room" }].map(t => (
+                  <button key={t.id} onClick={() => setCurrentPanel(t.id)} style={{
                     display: "flex", alignItems: "center", gap: 12, padding: "11px 12px",
                     borderRadius: 12, border: "none", cursor: "pointer", background: "transparent", width: "100%", marginBottom: 2,
                   }}>
