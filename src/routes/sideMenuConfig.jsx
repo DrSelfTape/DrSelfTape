@@ -2,8 +2,6 @@
 import {
   AnalysisIcon,
   AuditionTrackerIcon,
-  BookingIcon,
-  BriefcaseIcon,
   CollaborationIcon,
   DashboardIcon,
   NotificationIcon,
@@ -12,8 +10,6 @@ import {
   VedioIcon,
 } from '../assets/icons';
 import Dashboard from '../panels/UserPanel/Dashboard';
-import { ActorBooking } from '../panels/UserPanel/Actor/Bookings';
-import { CastingDirectorBooking } from '../panels/UserPanel/CastingDirector/Bookings';
 import { AuditionTracker } from '../panels/UserPanel/Actor/AuditionTracker';
 import Notifications from '../panels/UserPanel/Notifications';
 import { Collaboration } from '../panels/UserPanel/Actor/SeceneStudy/Collaboration';
@@ -23,10 +19,9 @@ import CoachCollaboration from '../panels/UserPanel/Coach/Collaboration';
 
 const adminMenu = [
   {
-    path: '/dashboard',
+    path: '/admin/dashboard',
     text: 'Dashboard',
     icon: <DashboardIcon height={19} width={19} />,
-    element: <Dashboard />,
   },
   {
     path: '/notifications',
@@ -41,12 +36,6 @@ const actorMenu = [
     path: '/dashboard',
     text: 'Dashboard',
     icon: <DashboardIcon height={19} width={19} />,
-  },
-  {
-    path: '/bookings',
-    text: 'Bookings',
-    icon: <BookingIcon height={19} width={19} />,
-    element: <ActorBooking />,
   },
   {
     path: '/auditions-tracker',
@@ -67,6 +56,21 @@ const actorMenu = [
   {
     path: '/dashboard/generator',
     text: 'Scene Generator',
+    icon: <SparklesIcon height={19} width={19} />,
+  },
+  {
+    path: '/dashboard/find-a-reader',
+    text: 'Find a Reader',
+    icon: <SparklesIcon height={19} width={19} />,
+  },
+  {
+    path: '/dashboard/green-room',
+    text: 'Green Room',
+    icon: <SparklesIcon height={19} width={19} />,
+  },
+  {
+    path: '/dashboard/who-wants-to-read',
+    text: 'Who Wants to Read',
     icon: <SparklesIcon height={19} width={19} />,
   },
   {
@@ -110,12 +114,6 @@ const castingDirectorMenu = [
     icon: <DashboardIcon height={19} width={19} />,
   },
   {
-    path: '/bookings',
-    text: 'Bookings',
-    icon: <BookingIcon height={19} width={19} />,
-    element: <CastingDirectorBooking />,
-  },
-  {
     path: '/auditions-tracker',
     text: 'Audition Tracker',
     icon: <AuditionTrackerIcon height={19} width={19} />,
@@ -144,20 +142,6 @@ const coachMenu = [
   },
 ];
 
-const agentMenu = [
-  {
-    path: '/dashboard/agent-portal',
-    text: 'My Roster',
-    icon: <BriefcaseIcon height={19} width={19} />,
-  },
-  {
-    path: '/notifications',
-    text: 'Notifications',
-    icon: <NotificationIcon height={19} width={19} />,
-    element: <Notifications />,
-  },
-];
-
 export const sideMenuRoutes = (role) => {
   switch (role) {
     case 'admin':
@@ -168,9 +152,7 @@ export const sideMenuRoutes = (role) => {
       return castingDirectorMenu;
     case 'coach':
       return coachMenu;
-    case 'agent':
-      return agentMenu;
     default:
-      return agentMenu;
+      return actorMenu;
   }
 };

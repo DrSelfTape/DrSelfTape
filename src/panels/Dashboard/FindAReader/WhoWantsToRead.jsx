@@ -1,0 +1,92 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { Loader2, Heart } from 'lucide-react';
+import ActorProfileCard from './components/ActorProfileCard';
+import {
+  fetchWhoWantsToRead,
+  swipeOnReader,
+} from '../../../redux/features/readers/readersMatchSlice';
+
+const WhoWantsToRead = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { whoWantsToRead, likesLoading } = useSelector(
+    (state) => state.readersMatch
+  );
+
+  useEffect(() => {
+    dispatch(fetchWhoWantsToRead());
+  }, [dispatch]);
+
+  const handleAccept = async (actor) => {
+    try {
+      const result = await dispatch(
+        swipeOnReader({ reader_id: actor.id, action: 'right' })
+      ).unwrap();
+
+      if (result?.matched) {
+        navigate(`/dashboard/its-a-scene/${result.match_id}`);
+      } else {
+        dispatch(fetchWhoWantsToRead());
+      }
+    } catch {
+      // error handled in slice
+    }
+  };
+
+  const handlePass = async (actor) => {
+    try {
+      await dispatch(
+        swipeOnReader({ reader_id: actor.id, action: 'left' })
+      ).unwrap();
+      dispatch(fetchWhoWantsToRead());
+    } catch {
+      // error handled in slice
+    }
+  };
+
+  return (
+    <div className="min-h-[calc(100vh-80px)] bg-[#0f0f1a] px-4 py-8">
+      <div className="mx-auto max-w-2xl">
+        <h1 className="mb-6 text-xl font-bold text-white">
+          Who Wants to Read
+        </h1>
+
+        {likesLoading && (
+          <div className="flex h-60 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-[#FF8280]" />
+          </div>
+        )}
+
+        {!likesLoading && whoWantsToRead.length === 0 && (
+          <div className="flex h-60 flex-col items-center justify-center text-center">
+            <Heart className="mb-3 h-10 w-10 text-gray-500" />
+            <p className="text-sm font-semibold text-white">
+              No one yet
+            </p>
+            <p className="mt-1 text-xs text-gray-400">
+              When someone swipes right on you, they&apos;ll appear here.
+            </p>
+          </div>
+        )}
+
+        {!likesLoading && whoWantsToRead.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {whoWantsToRead.map((actor) => (
+              <ActorProfileCard
+                key={actor.id}
+                actor={actor}
+                onAccept={() => handleAccept(actor)}
+                onPass={() => handlePass(actor)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default WhoWantsToRead;

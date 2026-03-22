@@ -25,12 +25,6 @@ const AddCastingDirectorAudition = lazy(() =>
 const AddActorAudition = lazy(() =>
   import('../panels/UserPanel/Actor/Audition/AddAudition').then((m) => ({ default: m.AddActorAudition }))
 );
-const ActorBooking = lazy(() =>
-  import('../panels/UserPanel/Actor/Bookings').then((m) => ({ default: m.ActorBooking }))
-);
-const CastingDirectorBooking = lazy(() =>
-  import('../panels/UserPanel/CastingDirector/Bookings').then((m) => ({ default: m.CastingDirectorBooking }))
-);
 const AuditionTracker = lazy(() =>
   import('../panels/UserPanel/Actor/AuditionTracker').then((m) => ({ default: m.AuditionTracker }))
 );
@@ -53,23 +47,32 @@ const Notifications = lazy(() => import('../panels/UserPanel/Notifications'));
 // Lazy-loaded Dashboard panel imports
 const DashboardLayout = lazy(() => import('../panels/Dashboard/DashboardLayout'));
 const DashboardHome = lazy(() => import('../panels/Dashboard/Home'));
-const BookSession = lazy(() => import('../panels/Dashboard/BookSession'));
 const DashboardAuditions = lazy(() => import('../panels/Dashboard/Auditions'));
 const Membership = lazy(() => import('../panels/Dashboard/Membership'));
 const SceneStudy = lazy(() => import('../panels/Dashboard/SceneStudy'));
 const CDSim = lazy(() => import('../panels/Dashboard/CDSim'));
 const DashboardProfile = lazy(() => import('../panels/Dashboard/Profile'));
-const DashboardBookings = lazy(() => import('../panels/Dashboard/Bookings'));
 const Scripts = lazy(() => import('../panels/Dashboard/Scripts'));
-const LiveRehearsals = lazy(() => import('../panels/Dashboard/LiveRehearsals'));
-const RehearsalRoom = lazy(() => import('../panels/Dashboard/LiveRehearsals/RehearsalRoom'));
 const Reports = lazy(() => import('../panels/Dashboard/Reports'));
-const Insights = lazy(() => import('../panels/Dashboard/Insights'));
-const Community = lazy(() => import('../panels/Dashboard/Community'));
 const Submissions = lazy(() => import('../panels/Dashboard/Submissions'));
 const AuditionGenerator = lazy(() => import('../panels/Dashboard/AuditionGenerator'));
-const AgentPortal = lazy(() => import('../panels/Dashboard/AgentPortal'));
 const CastingDirectorAI = lazy(() => import('../panels/Dashboard/CastingDirectorAI'));
+
+// Lazy-loaded Find a Reader imports
+const FindAReader = lazy(() => import('../panels/Dashboard/FindAReader'));
+const ItsAScene = lazy(() => import('../panels/Dashboard/FindAReader/ItsAScene'));
+const GreenRoom = lazy(() => import('../panels/Dashboard/FindAReader/GreenRoom'));
+const GreenRoomChat = lazy(() => import('../panels/Dashboard/FindAReader/GreenRoomChat'));
+const WhoWantsToRead = lazy(() => import('../panels/Dashboard/FindAReader/WhoWantsToRead'));
+const ReaderProfile = lazy(() => import('../panels/Dashboard/FindAReader/ReaderProfile'));
+
+// Lazy-loaded Admin panel imports
+const AdminLayout = lazy(() => import('../panels/Admin/AdminLayout'));
+const AdminDashboard = lazy(() => import('../panels/Admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('../panels/Admin/AdminUsers'));
+const AdminPayments = lazy(() => import('../panels/Admin/AdminPayments'));
+const AdminMessages = lazy(() => import('../panels/Admin/AdminMessages'));
+const AdminBannedUsers = lazy(() => import('../panels/Admin/AdminBannedUsers'));
 
 export const commonRoutes = [
   {
@@ -107,48 +110,41 @@ export const commonRoutes = [
     children: [
       { index: true, moduleName: 'DashboardHome', element: <DashboardHome /> },
       { path: 'cd-sim', moduleName: 'CDSimMode', element: <CDSim /> },
-      { path: 'live-rehearsals', moduleName: 'LiveRehearsals', element: <LiveRehearsals /> },
-      { path: 'live-rehearsals/room/:id', moduleName: 'RehearsalRoom', element: <RehearsalRoom /> },
-      { path: 'community', moduleName: 'Community', element: <Community /> },
       { path: 'scene-study', moduleName: 'SceneStudy', element: <SceneStudy /> },
       { path: 'auditions', moduleName: 'Auditions', element: <DashboardAuditions /> },
       { path: 'submissions', moduleName: 'Submissions', element: <Submissions /> },
       { path: 'reports', moduleName: 'Reports', element: <Reports /> },
-      { path: 'marketing', moduleName: 'MarketingTools', element: <ComingSoon /> },
-      { path: 'bookings', moduleName: 'Bookings', element: <DashboardBookings /> },
-      { path: 'book-session', moduleName: 'BookSession', element: <BookSession /> },
-      { path: 'insights', moduleName: 'CustomerInsights', element: <Insights /> },
       { path: 'scripts', moduleName: 'Scripts', element: <Scripts /> },
       { path: 'membership', moduleName: 'Membership', element: <Membership /> },
       { path: 'profile', moduleName: 'Profile', element: <DashboardProfile /> },
       { path: 'generator', moduleName: 'AuditionGenerator', element: <AuditionGenerator /> },
-      { path: 'agent-portal', moduleName: 'AgentPortal', element: <AgentPortal /> },
       { path: 'casting-director-ai', moduleName: 'CastingDirectorAI', element: <CastingDirectorAI /> },
+      // Find a Reader
+      { path: 'find-a-reader', moduleName: 'FindAReader', element: <FindAReader /> },
+      { path: 'its-a-scene/:matchId', moduleName: 'ItsAScene', element: <ItsAScene /> },
+      { path: 'green-room', moduleName: 'GreenRoom', element: <GreenRoom /> },
+      { path: 'green-room/:matchId', moduleName: 'GreenRoomChat', element: <GreenRoomChat /> },
+      { path: 'who-wants-to-read', moduleName: 'WhoWantsToRead', element: <WhoWantsToRead /> },
+      { path: 'reader-profile/:readerId', moduleName: 'ReaderProfile', element: <ReaderProfile /> },
+    ],
+  },
+  // Admin routes (accessible to all authenticated users, guarded by AdminLayout)
+  {
+    path: '/admin',
+    moduleName: 'AdminLayout',
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      { path: 'dashboard', moduleName: 'AdminDashboard', element: <AdminDashboard /> },
+      { path: 'users', moduleName: 'AdminUsers', element: <AdminUsers /> },
+      { path: 'payments', moduleName: 'AdminPayments', element: <AdminPayments /> },
+      { path: 'messages', moduleName: 'AdminMessages', element: <AdminMessages /> },
+      { path: 'banned', moduleName: 'AdminBannedUsers', element: <AdminBannedUsers /> },
     ],
   },
 ];
 
 export const actorRoutes = [
-  {
-    path: '/bookings',
-    moduleName: '/bookings',
-    element: (
-      <Layout>
-        <ActorBooking />
-      </Layout>
-    ),
-    child: [
-      {
-        path: '/bookings/:action',
-        moduleName: 'Audition',
-        element: (
-          <Layout>
-            <AddActorAudition />
-          </Layout>
-        ),
-      },
-    ],
-  },
   {
     path: '/auditions-tracker',
     moduleName: '/Audition Tracker',
@@ -236,18 +232,6 @@ export const actorRoutes = [
   },
 ];
 
-export const agentRoutes = [
-  {
-    path: '/agent',
-    moduleName: 'Agent',
-    element: (
-      <Layout>
-        <ComingSoon />
-      </Layout>
-    ),
-  },
-];
-
 export const castingDirectorRoutes = [
   {
     path: '/auditions',
@@ -270,15 +254,6 @@ export const castingDirectorRoutes = [
     ],
   },
   {
-    path: '/bookings',
-    moduleName: '/bookings',
-    element: (
-      <Layout>
-        <CastingDirectorBooking />
-      </Layout>
-    ),
-  },
-  {
     path: '/castingDirector',
     moduleName: 'CastingDirector',
     element: (
@@ -291,22 +266,17 @@ export const castingDirectorRoutes = [
 
 export const adminRoutes = [
   {
-    path: '/dashboard',
-    moduleName: 'Dashboard',
-    element: (
-      <Layout>
-        <Dashboard />
-      </Layout>
-    ),
-  },
-  {
     path: '/admin',
-    moduleName: 'Admin',
-    element: (
-      <Layout>
-        <ComingSoon />
-      </Layout>
-    ),
+    moduleName: 'AdminLayout',
+    element: <AdminLayout />,
+    children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
+      { path: 'dashboard', moduleName: 'AdminDashboard', element: <AdminDashboard /> },
+      { path: 'users', moduleName: 'AdminUsers', element: <AdminUsers /> },
+      { path: 'payments', moduleName: 'AdminPayments', element: <AdminPayments /> },
+      { path: 'messages', moduleName: 'AdminMessages', element: <AdminMessages /> },
+      { path: 'banned', moduleName: 'AdminBannedUsers', element: <AdminBannedUsers /> },
+    ],
   },
 ];
 

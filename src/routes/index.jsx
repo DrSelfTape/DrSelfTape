@@ -10,7 +10,6 @@ import {
   authRoutes,
   commonRoutes,
   actorRoutes,
-  agentRoutes,
   castingDirectorRoutes,
   adminRoutes,
   coachRoutes,
@@ -29,8 +28,6 @@ export const Router = () => {
     // Priority order: use current active role first
     if (currentRole === 'actor') {
       return [...commonRoutes, ...actorRoutes];
-    } else if (currentRole === 'agent') {
-      return [...commonRoutes, ...agentRoutes];
     } else if (currentRole === 'casting_director') {
       return [...commonRoutes, ...castingDirectorRoutes];
     } else if (currentRole === 'admin') {

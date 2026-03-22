@@ -22,11 +22,10 @@ export const getFirstRouteByRole = (role) => {
 
   // Fallback routes if sideMenuRoutes fails or returns empty
   const fallbackRoutes = {
-    admin: '/dashboard',
+    admin: '/admin/dashboard',
     actor: '/dashboard',
     casting_director: '/dashboard',
     coach: '/collaboration',
-    agent: '/dashboard/agent-portal',
   };
 
   return fallbackRoutes[role] || '/login';

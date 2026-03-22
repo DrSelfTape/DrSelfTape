@@ -1,33 +1,27 @@
 import { NavLink } from 'react-router-dom'
 import {
   Monitor,
-  Video,
-  Users,
   BookOpen,
   Target,
   Send,
   BarChart3,
-  Megaphone,
-  Calendar,
-  Eye,
   LayoutDashboard,
-  Briefcase,
+  Users2,
+  MessageSquare,
+  HeartHandshake,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from './ui/avatar.jsx'
 
 const navItems = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'CD Sim Mode', path: '/dashboard/cd-sim', icon: Monitor, badge: 'PRO' },
-  { label: 'Live Rehearsals', path: '/dashboard/live-rehearsals', icon: Video, badge: 'NEW' },
-  { label: 'Community', path: '/dashboard/community', icon: Users },
   { label: 'Scene Study', path: '/dashboard/scene-study', icon: BookOpen },
   { label: 'Audition Tracker', path: '/dashboard/auditions', icon: Target },
   { label: 'Submissions', path: '/dashboard/submissions', icon: Send },
   { label: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
-  { label: 'Marketing Tools', path: '/dashboard/marketing', icon: Megaphone },
-  { label: 'Bookings', path: '/dashboard/bookings', icon: Calendar },
-  { label: 'Customer Insights', path: '/dashboard/insights', icon: Eye },
-  { label: 'Agent Portal', path: '/dashboard/agent-portal', icon: Briefcase },
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Find a Reader', path: '/dashboard/find-a-reader', icon: Users2, badge: 'NEW' },
+  { label: 'Green Room', path: '/dashboard/green-room', icon: MessageSquare },
+  { label: 'Who Wants to Read', path: '/dashboard/who-wants-to-read', icon: HeartHandshake },
 ]
 
 export default function Sidebar() {

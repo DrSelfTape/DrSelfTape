@@ -48,11 +48,6 @@ const endPoints = {
   getAuditionMaterial: `${baseURL}/v1/auditions/self-materials/get_audition_materials`,
   /************************* Auditions ****************************/
 
-  /************************* Bookings ****************************/
-  bookings: `${baseURL}/v1/bookings/`,
-  bookingDetail: (id) => `${baseURL}/v1/bookings/${id}/`,
-  availableSlots: `${baseURL}/v1/bookings/available-slots/`,
-  /************************* Bookings ****************************/
 
   /************************* Notifications ************************/
   myNotifications: `${baseURL}/v1/notifications/my-notifications/`,
