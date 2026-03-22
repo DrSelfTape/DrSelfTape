@@ -6,6 +6,7 @@ import GreenRoomMessage from './components/GreenRoomMessage';
 import {
   fetchGreenRoomMessages,
   sendGreenRoomMessage,
+  appendMessage,
 } from '../../../redux/features/readers/readersMatchSlice';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -15,9 +16,14 @@ const GreenRoomChat = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { greenRoomMessages, messagesLoading } = useSelector(
+  const { greenRoomMessages: allMessages, messagesLoading, matches } = useSelector(
     (state) => state.readersMatch
   );
+  const greenRoomMessages = (allMessages[matchId] || allMessages) instanceof Array
+    ? (allMessages[matchId] || allMessages)
+    : allMessages[matchId] || [];
+  const match = matches?.find((m) => String(m.id) === String(matchId));
+  const partnerName = match?.reader?.name || 'Reader';
   const currentUser = useSelector((state) => state.auth?.user);
 
   const [input, setInput] = useState('');
@@ -40,14 +46,26 @@ const GreenRoomChat = () => {
     const trimmed = input.trim();
     if (!trimmed || sending) return;
 
+    // Optimistic local append
+    const localMsg = {
+      id: Date.now(),
+      matchId,
+      senderId: currentUser?.id || 'me',
+      senderName: currentUser?.name || 'You',
+      text: trimmed,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      isMine: true,
+    };
+    dispatch(appendMessage(localMsg));
+    setInput('');
+
     setSending(true);
     try {
       await dispatch(
         sendGreenRoomMessage({ match_id: matchId, content: trimmed })
       ).unwrap();
-      setInput('');
     } catch {
-      // error handled in slice
+      // error handled in slice — local message already shown
     } finally {
       setSending(false);
     }

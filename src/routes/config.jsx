@@ -140,6 +140,7 @@ export const commonRoutes = [
       { path: 'payments', moduleName: 'AdminPayments', element: <AdminPayments /> },
       { path: 'messages', moduleName: 'AdminMessages', element: <AdminMessages /> },
       { path: 'banned', moduleName: 'AdminBannedUsers', element: <AdminBannedUsers /> },
+      { path: 'reports', moduleName: 'AdminReports', element: <Reports /> },
     ],
   },
 ];

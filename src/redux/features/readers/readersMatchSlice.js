@@ -124,15 +124,133 @@ export const updateReaderFilters = createAsyncThunk(
 
 // ========== Slice ==========
 
+// ─── Mock seed data (shown when API isn't connected) ───────────────────────
+const MOCK_READERS = [
+  {
+    id: 1,
+    name: 'Maya Chen',
+    experience: '8 years · Working Actor',
+    bio: 'SAG-AFTRA actress based in LA. Love drama and indie films. Happy to read opposite or take scenes. Looking for serious scene partners.',
+    genres: ['Drama', 'Thriller', 'Indie'],
+    unionStatus: 'SAG-AFTRA',
+    isAvailable: true,
+    headshotUrl: null,
+    match_score: 94,
+  },
+  {
+    id: 2,
+    name: 'Jordan Rivers',
+    experience: '3 years · Emerging Actor',
+    bio: 'Comedy and commercial actor. Trained at UCB and Groundlings. Great for comedic scenes, sitcom sides, or anything light and fun.',
+    genres: ['Comedy', 'Commercial', 'Sitcom'],
+    unionStatus: 'Non-Union',
+    isAvailable: true,
+    headshotUrl: null,
+    match_score: 88,
+  },
+  {
+    id: 3,
+    name: 'Dominique Pierce',
+    experience: '12 years · Veteran Actor',
+    bio: 'Theater background, moved into film and TV. Specializes in heavy dramatic material — Shakespeare, O\'Neill, prestige drama. Stage combat certified.',
+    genres: ['Drama', 'Theater', 'Period'],
+    unionStatus: 'SAG-AFTRA',
+    isAvailable: false,
+    headshotUrl: null,
+    match_score: 91,
+  },
+  {
+    id: 4,
+    name: 'Alex Torres',
+    experience: '5 years · Mid-Career',
+    bio: 'Versatile reader available for any genre. Bilingual (English/Spanish). Love helping actors prep for auditions — no ego, just good work.',
+    genres: ['Drama', 'Comedy', 'Horror'],
+    unionStatus: 'Non-Union',
+    isAvailable: true,
+    headshotUrl: null,
+    match_score: 85,
+  },
+  {
+    id: 5,
+    name: 'Simone Adeyemi',
+    experience: '6 years · Working Actor',
+    bio: 'Voice actor and on-camera actress. Excellent for voiceover sides, animation callbacks, and anything with strong character work.',
+    genres: ['Voiceover', 'Animation', 'Drama'],
+    unionStatus: 'SAG-AFTRA',
+    isAvailable: true,
+    headshotUrl: null,
+    match_score: 79,
+  },
+];
+
+const MOCK_MATCHES = [
+  {
+    id: 101,
+    reader: {
+      id: 2,
+      name: 'Jordan Rivers',
+      isAvailable: true,
+      headshotUrl: null,
+    },
+    lastMessage: 'Hey! Excited to run lines with you 🎬',
+    lastMessageTime: '2m ago',
+    unread: true,
+  },
+];
+
+const MOCK_GREEN_ROOM_MESSAGES = {
+  101: [
+    {
+      id: 1,
+      matchId: 101,
+      senderId: 2,
+      senderName: 'Jordan Rivers',
+      text: 'Hey! Just saw we matched — so excited to read with you!',
+      timestamp: '11:32 AM',
+      isMine: false,
+    },
+    {
+      id: 2,
+      matchId: 101,
+      senderId: 2,
+      senderName: 'Jordan Rivers',
+      text: 'What sides are you working on? I can do comedy, drama, whatever you need 🎭',
+      timestamp: '11:33 AM',
+      isMine: false,
+    },
+  ],
+};
+
+const MOCK_WHO_WANTS_TO_READ = [
+  {
+    id: 3,
+    name: 'Dominique Pierce',
+    experience: 'Veteran Actor',
+    genres: ['Drama', 'Theater'],
+    isAvailable: false,
+    headshotUrl: null,
+  },
+  {
+    id: 5,
+    name: 'Simone Adeyemi',
+    experience: 'Working Actor',
+    genres: ['Voiceover', 'Drama'],
+    isAvailable: true,
+    headshotUrl: null,
+  },
+];
+// ────────────────────────────────────────────────────────────────────────────
+
 const initialState = {
-  readers: [],
+  readers: MOCK_READERS,
   readersLoading: false,
-  matches: [],
+  matches: MOCK_MATCHES,
   matchesLoading: false,
-  greenRoomMessages: [],
+  greenRoomMessages: MOCK_GREEN_ROOM_MESSAGES,
   messagesLoading: false,
-  whoWantsToRead: [],
+  whoWantsToRead: MOCK_WHO_WANTS_TO_READ,
   likesLoading: false,
+  onlineCount: 12,
   filters: {},
   error: null,
 };
@@ -148,7 +266,12 @@ const readersMatchSlice = createSlice({
       state.filters = action.payload;
     },
     appendMessage: (state, action) => {
-      state.greenRoomMessages.push(action.payload);
+      const msg = action.payload;
+      const key = msg.matchId;
+      if (!Array.isArray(state.greenRoomMessages[key])) {
+        state.greenRoomMessages[key] = [];
+      }
+      state.greenRoomMessages[key].push(msg);
     },
   },
   extraReducers: (builder) => {
@@ -160,11 +283,14 @@ const readersMatchSlice = createSlice({
       })
       .addCase(fetchAvailableReaders.fulfilled, (state, action) => {
         state.readersLoading = false;
-        state.readers = action.payload;
+        // Only replace mock data if API returned real results
+        if (action.payload && action.payload.length > 0) {
+          state.readers = action.payload;
+        }
       })
-      .addCase(fetchAvailableReaders.rejected, (state, action) => {
+      .addCase(fetchAvailableReaders.rejected, (state) => {
         state.readersLoading = false;
-        state.error = action.payload;
+        // Keep mock data on error
       })
 
       // swipeOnReader
@@ -185,11 +311,13 @@ const readersMatchSlice = createSlice({
       })
       .addCase(fetchMatches.fulfilled, (state, action) => {
         state.matchesLoading = false;
-        state.matches = action.payload;
+        if (action.payload && action.payload.length > 0) {
+          state.matches = action.payload;
+        }
       })
-      .addCase(fetchMatches.rejected, (state, action) => {
+      .addCase(fetchMatches.rejected, (state) => {
         state.matchesLoading = false;
-        state.error = action.payload;
+        // Keep mock data on error
       })
 
       // fetchGreenRoomMessages
@@ -211,7 +339,13 @@ const readersMatchSlice = createSlice({
         state.error = null;
       })
       .addCase(sendGreenRoomMessage.fulfilled, (state, action) => {
-        state.greenRoomMessages.push(action.payload);
+        const msg = action.payload;
+        if (msg?.matchId) {
+          if (!Array.isArray(state.greenRoomMessages[msg.matchId])) {
+            state.greenRoomMessages[msg.matchId] = [];
+          }
+          state.greenRoomMessages[msg.matchId].push(msg);
+        }
       })
       .addCase(sendGreenRoomMessage.rejected, (state, action) => {
         state.error = action.payload;

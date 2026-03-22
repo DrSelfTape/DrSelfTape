@@ -18,7 +18,7 @@ const navItems = [
   { label: 'Scene Study', path: '/dashboard/scene-study', icon: BookOpen },
   { label: 'Audition Tracker', path: '/dashboard/auditions', icon: Target },
   { label: 'Submissions', path: '/dashboard/submissions', icon: Send },
-  { label: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
+
   { label: 'Find a Reader', path: '/dashboard/find-a-reader', icon: Users2, badge: 'NEW' },
   { label: 'Green Room', path: '/dashboard/green-room', icon: MessageSquare },
   { label: 'Who Wants to Read', path: '/dashboard/who-wants-to-read', icon: HeartHandshake },

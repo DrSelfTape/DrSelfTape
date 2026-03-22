@@ -8,12 +8,14 @@ import {
   CreditCard,
   MessageSquare,
   ShieldBan,
+  BarChart3,
 } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
   { label: 'Users', to: '/admin/users', icon: Users },
   { label: 'Payments', to: '/admin/payments', icon: CreditCard },
+  { label: 'Reports', to: '/admin/reports', icon: BarChart3 },
   { label: 'Messages', to: '/admin/messages', icon: MessageSquare },
   { label: 'Banned Users', to: '/admin/banned', icon: ShieldBan },
 ];
