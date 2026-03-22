@@ -227,7 +227,7 @@ function BreakdownScreen() {
       <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT, margin: "0 0 20px", fontFamily: "'Playfair Display', serif" }}>Scene breakdown</h2>
 
       {/* Scene Objective */}
-      <div style={{ background: MINT_DIM, borderRadius: 14, padding: "16px 18px", marginBottom: 14, borderLeft: `3px solid ${MINT}`, borderRadius: 0 }}>
+      <div style={{ background: MINT_DIM, borderRadius: 14, padding: "16px 18px", marginBottom: 14, borderLeft: `3px solid ${MINT}`, borderLeftRadius: 0 }}>
         <p style={{ fontSize: 11, fontWeight: 600, color: MINT, margin: "0 0 6px", textTransform: "uppercase", letterSpacing: "0.8px" }}>Scene objective</p>
         <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.6 }}>{d.objective}</p>
       </div>
@@ -277,7 +277,7 @@ function BreakdownScreen() {
       })}
 
       {/* Subtext */}
-      <div style={{ background: GOLD_DIM, borderRadius: 0, padding: "16px 18px", marginTop: 16, borderLeft: `3px solid ${GOLD}` }}>
+      <div style={{ background: GOLD_DIM, padding: "16px 18px", marginTop: 16, borderLeft: `3px solid ${GOLD}` }}>
         <p style={{ fontSize: 11, fontWeight: 600, color: GOLD, margin: "0 0 6px", textTransform: "uppercase", letterSpacing: "0.8px" }}>Subtext</p>
         <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.6, fontFamily: "'Playfair Display', serif", fontStyle: "italic" }}>{d.subtext}</p>
       </div>
@@ -333,7 +333,7 @@ function NotesScreen() {
       {notesData.map((n, i) => (
         <div key={i} style={{
           background: BG_CARD, borderRadius: 14, padding: "16px 18px", marginBottom: 10,
-          border: `1px solid ${BORDER}`, borderLeft: `3px solid ${typeColors[n.type]}`, borderRadius: 0,
+          border: `1px solid ${BORDER}`, borderLeft: `3px solid ${typeColors[n.type]}`,
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
             <p style={{ fontSize: 13, fontWeight: 600, color: TEXT, margin: 0, fontStyle: "italic" }}>"{n.line}"</p>
@@ -394,7 +394,7 @@ function PrepScreen() {
             <p style={{ fontSize: 11, fontWeight: 600, color: PURPLE, margin: "0 0 8px", textTransform: "uppercase", letterSpacing: "0.8px" }}>Suggestion</p>
             <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.6 }}>{d.wardrobe.suggestion}</p>
           </div>
-          <div style={{ background: CORAL_DIM, borderRadius: 0, padding: "14px 18px", marginBottom: 12, borderLeft: `3px solid ${CORAL}` }}>
+          <div style={{ background: CORAL_DIM, padding: "14px 18px", marginBottom: 12, borderLeft: `3px solid ${CORAL}` }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: CORAL, margin: "0 0 6px", textTransform: "uppercase" }}>Avoid</p>
             <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.5 }}>{d.wardrobe.avoid}</p>
           </div>
@@ -434,7 +434,7 @@ function PrepScreen() {
             <p style={{ fontSize: 11, fontWeight: 600, color: MINT, margin: "0 0 8px", textTransform: "uppercase" }}>Physical direction</p>
             <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.6 }}>{d.framing.movement}</p>
           </div>
-          <div style={{ background: GOLD_DIM, borderRadius: 0, padding: "14px 18px", borderLeft: `3px solid ${GOLD}` }}>
+          <div style={{ background: GOLD_DIM, padding: "14px 18px", borderLeft: `3px solid ${GOLD}` }}>
             <p style={{ fontSize: 11, fontWeight: 600, color: GOLD, margin: "0 0 6px", textTransform: "uppercase" }}>Slate tip</p>
             <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.5 }}>{d.slate}</p>
           </div>
@@ -488,7 +488,7 @@ function GeneratorScreen() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
             {genres.map(g => (
               <button key={g} onClick={() => setGenre(g.toLowerCase())} style={{
-                padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                padding: "8px 14px", borderRadius: 10, cursor: "pointer",
                 background: genre === g.toLowerCase() ? CORAL_DIM : BG_CARD,
                 color: genre === g.toLowerCase() ? CORAL : TEXT2,
                 fontSize: 13, fontWeight: 600, transition: "all 0.15s",
@@ -501,7 +501,7 @@ function GeneratorScreen() {
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 18 }}>
             {tones.map(t => (
               <button key={t} onClick={() => setTone(t.toLowerCase())} style={{
-                padding: "8px 14px", borderRadius: 10, border: "none", cursor: "pointer",
+                padding: "8px 14px", borderRadius: 10, cursor: "pointer",
                 background: tone === t.toLowerCase() ? GOLD_DIM : BG_CARD,
                 color: tone === t.toLowerCase() ? GOLD : TEXT2,
                 fontSize: 13, fontWeight: 600, transition: "all 0.15s",
@@ -594,7 +594,7 @@ function RehearseScreen() {
       </div>
 
       {/* Context-aware direction */}
-      <div style={{ background: GOLD_DIM, borderRadius: 0, padding: "14px 18px", marginBottom: 16, borderLeft: `3px solid ${GOLD}` }}>
+      <div style={{ background: GOLD_DIM, padding: "14px 18px", marginBottom: 16, borderLeft: `3px solid ${GOLD}` }}>
         <p style={{ fontSize: 11, fontWeight: 600, color: GOLD, margin: "0 0 4px", textTransform: "uppercase" }}>Direction for this take</p>
         <p style={{ fontSize: 13, color: TEXT, margin: 0 }}>Try playing the subtext — Maya is protecting someone, not defying authority. Let the loyalty drive the deflection.</p>
       </div>

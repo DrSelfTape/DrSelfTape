@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, BookOpen, RotateCcw, CheckCircle2 } from 'lucide-react';
+import SceneCompleteBadge from '../../SceneCompleteBadge';
 
 /**
  * SceneNavigator
@@ -103,9 +104,25 @@ const SceneNavigator = ({
     goToLine(scenes[currentSceneIndex + 1].startIndex);
   };
 
+  // ── Badge celebration trigger ────────────────────────────────
+  const [showBadge, setShowBadge] = useState(false);
+  const celebratedScenes = useRef(new Set()); // track which scenes already celebrated
+
+  useEffect(() => {
+    if (!currentScene || !sessionStarted) return;
+    const sid = currentScene.sceneId;
+    if (sceneProgress === 100 && !celebratedScenes.current.has(sid)) {
+      celebratedScenes.current.add(sid);
+      // Small delay so final line animation settles first
+      const t = setTimeout(() => setShowBadge(true), 600);
+      return () => clearTimeout(t);
+    }
+  }, [sceneProgress, currentScene, sessionStarted]);
+
   if (!currentScene || totalScenes === 0) return null;
 
   return (
+    <>
     <div
       className="rounded-xl border px-4 py-3 mb-3"
       style={{
@@ -247,6 +264,16 @@ const SceneNavigator = ({
         )}
       </div>
     </div>
+
+    {/* Scene complete celebration */}
+    {showBadge && (
+      <SceneCompleteBadge
+        sceneNumber={currentScene.sceneNumber}
+        sceneName={currentScene.sceneTitle}
+        onDismiss={() => setShowBadge(false)}
+      />
+    )}
+    </>
   );
 };
 
