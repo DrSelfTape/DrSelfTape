@@ -1,0 +1,18 @@
+import * as React from 'react';
+const SelectDropArrowIcon = (props) => (
+  <svg
+    width={20}
+    height={20}
+    viewBox='0 0 20 20'
+    fill='none'
+    xmlns='http://www.w3.org/2000/svg'
+    {...props}
+    className={props.className}
+  >
+    <path
+      d='M10.3536 11.6464L13.1464 8.85355C13.4614 8.53857 13.2383 8 12.7929 8L7.20711 8C6.76165 8 6.53857 8.53857 6.85355 8.85355L9.64645 11.6464C9.84171 11.8417 10.1583 11.8417 10.3536 11.6464Z'
+      fill='#222124'
+    />
+  </svg>
+);
+export default SelectDropArrowIcon;

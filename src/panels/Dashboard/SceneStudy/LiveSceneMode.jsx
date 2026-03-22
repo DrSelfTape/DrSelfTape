@@ -1,0 +1,766 @@
+import { useState, useEffect, useRef, useCallback } from 'react';
+import axios from '../../../redux/http';
+import endPoints from '../../../redux/constant';
+import PermissionsModal from '../../../components/PermissionsModal';
+
+const SILENCE_TIMEOUT = 1500;
+
+/**
+ * Voice picker modal shown before starting a live scene.
+ */
+function VoicePicker({ characters, userRole, onSelect, onCancel }) {
+  const partnerChars = characters.filter((c) => c !== userRole);
+  const [selected, setSelected] = useState('partner_male');
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+      <div className="bg-[#161628] rounded-2xl border border-[#2a2a4a] p-8 max-w-md w-full mx-4 shadow-2xl">
+        <h3 className="text-white text-xl font-bold mb-2">Who plays opposite you?</h3>
+        <p className="text-gray-400 text-sm mb-6">
+          {partnerChars.length > 0
+            ? `Your scene partner: ${partnerChars.join(', ')}`
+            : 'Choose a voice for the AI scene partner'}
+        </p>
+
+        <div className="space-y-3">
+          {[
+            { id: 'partner_male', label: 'Male Voice (George)', icon: '👨' },
+            { id: 'partner_female', label: 'Female Voice (Lily)', icon: '👩' },
+            { id: 'partner_neutral', label: 'Neutral Voice (River)', icon: '🧑' },
+          ].map((v) => (
+            <button
+              key={v.id}
+              onClick={() => setSelected(v.id)}
+              className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${
+                selected === v.id
+                  ? 'border-[#ff6b35] bg-[#ff6b35]/10'
+                  : 'border-[#2a2a4a] hover:border-[#3a3a5a] bg-[#1a1a2e]'
+              }`}
+            >
+              <span className="text-2xl">{v.icon}</span>
+              <span className={`font-medium ${selected === v.id ? 'text-white' : 'text-gray-300'}`}>
+                {v.label}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-3 mt-8">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-5 py-3 rounded-xl border border-[#2a2a4a] text-gray-400 hover:text-white hover:border-[#3a3a5a] transition-colors cursor-pointer font-medium"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onSelect(selected)}
+            className="flex-1 px-5 py-3 rounded-xl bg-[#ff6b35] hover:bg-[#e55a2b] text-white font-semibold transition-colors cursor-pointer"
+          >
+            Start Scene
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Pulsing mic/status indicator in the center of the scene.
+ */
+function StatusIndicator({ status }) {
+  const colors = {
+    listening: '#ff6b35',
+    thinking: '#ff6b35',
+    playing: '#ffffff',
+    idle: '#4b5563',
+    error: '#ef4444',
+  };
+  const color = colors[status] || colors.idle;
+  const isActive = status === 'listening' || status === 'thinking';
+
+  return (
+    <div className="flex items-center justify-center py-8">
+      <div className="relative">
+        {/* Outer pulse ring */}
+        {isActive && (
+          <div
+            className="absolute inset-0 rounded-full animate-ping opacity-20"
+            style={{ backgroundColor: color }}
+          />
+        )}
+        {/* Second ring */}
+        {status === 'listening' && (
+          <div
+            className="absolute -inset-3 rounded-full animate-pulse opacity-10"
+            style={{ backgroundColor: color }}
+          />
+        )}
+        {/* Main circle */}
+        <div
+          className="relative w-20 h-20 rounded-full flex items-center justify-center transition-colors duration-300 shadow-lg"
+          style={{ backgroundColor: `${color}20`, border: `3px solid ${color}` }}
+        >
+          {status === 'listening' && (
+            <svg className="w-8 h-8" fill={color} viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z" />
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            </svg>
+          )}
+          {status === 'thinking' && (
+            <div className="flex gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#ff6b35] animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 rounded-full bg-[#ff6b35] animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 rounded-full bg-[#ff6b35] animate-bounce" style={{ animationDelay: '300ms' }} />
+            </div>
+          )}
+          {status === 'playing' && (
+            <svg className="w-8 h-8" fill="white" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+            </svg>
+          )}
+          {status === 'idle' && (
+            <svg className="w-8 h-8" fill="#4b5563" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            </svg>
+          )}
+          {status === 'error' && (
+            <svg className="w-8 h-8" fill="#ef4444" viewBox="0 0 24 24">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
+            </svg>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const STATUS_MESSAGES = {
+  idle: 'Ready to start',
+  listening: 'Your turn — say your line',
+  thinking: 'is responding...',
+  playing: 'Playing response...',
+  error: 'Something went wrong',
+};
+
+export default function LiveSceneMode({ lines, userRole, characters, initialVoice, onExit }) {
+  const [status, setStatus] = useState('idle'); // idle | listening | thinking | playing | error
+  const [showVoicePicker, setShowVoicePicker] = useState(!initialVoice);
+  const [voice, setVoice] = useState(initialVoice || 'partner_male');
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const [conversationHistory, setConversationHistory] = useState([]);
+  const [currentLineIdx, setCurrentLineIdx] = useState(0);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [aiCurrentLine, setAiCurrentLine] = useState('');
+
+  const recognitionRef = useRef(null);
+  const silenceTimerRef = useRef(null);
+  const audioRef = useRef(null);
+  const audioContextRef = useRef(null);
+  const hasInterimRef = useRef(false);
+  const isActiveRef = useRef(false);
+  const scriptPanelRef = useRef(null);
+  const [sceneStarted, setSceneStarted] = useState(false);
+  const [showMicPermission, setShowMicPermission] = useState(false);
+
+  // Create AudioContext on mount — resumed on user gesture (not created inside it)
+  useEffect(() => {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) {
+      audioContextRef.current = new AC();
+    }
+    return () => {
+      if (audioContextRef.current) {
+        try { audioContextRef.current.close(); } catch(e) {}
+        audioContextRef.current = null;
+      }
+    };
+  }, []);
+
+  // Determine partner character name
+  const partnerName = characters.find((c) => c !== userRole) || 'Scene Partner';
+
+  // Check browser support
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  /**
+   * Scroll the script panel to the current line.
+   */
+  const scrollToLine = useCallback((idx) => {
+    const panel = scriptPanelRef.current;
+    if (!panel) return;
+    const lineEl = panel.querySelector(`[data-line-idx="${idx}"]`);
+    if (lineEl) {
+      lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, []);
+
+  /**
+   * Play TTS audio for the AI response.
+   */
+  const playTTS = useCallback(async (text, selectedVoice) => {
+    const ctx = audioContextRef.current;
+    if (!ctx) {
+      return;
+    }
+
+    // Resume if suspended
+    if (ctx.state === 'suspended') {
+      await ctx.resume();
+    }
+
+    let response;
+    try {
+      response = await axios.post(
+        endPoints.tts,
+        { text, voice: selectedVoice },
+        { responseType: 'arraybuffer', timeout: 25000 }
+      );
+    } catch (err) {
+      // Try to decode error response body as JSON for a better message
+      let errMsg = err.message;
+      try {
+        if (err?.response?.data) {
+          const decoded = JSON.parse(new TextDecoder().decode(err.response.data));
+          errMsg = decoded?.message || errMsg;
+        }
+      } catch {}
+      setErrorMsg(`Voice error: ${errMsg}. Continuing without audio.`);
+      setStatus('listening');
+      return;
+    }
+
+    const arrayBuf = response.data;
+    if (!arrayBuf || arrayBuf.byteLength === 0) {
+      setStatus('listening');
+      return;
+    }
+
+    let audioBuffer;
+    try {
+      // .slice(0) prevents "detached ArrayBuffer" crash in Chrome
+      audioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
+    } catch (decodeErr) {
+      try {
+        const blob = new Blob([arrayBuf], { type: 'audio/mpeg' });
+        const blobUrl = URL.createObjectURL(blob);
+        const audio = new Audio(blobUrl);
+        audioRef.current = audio;
+        await audio.play();
+        await new Promise((resolve) => {
+          audio.onended = () => {
+            URL.revokeObjectURL(blobUrl);
+            audioRef.current = null;
+            resolve();
+          };
+        });
+      } catch (fallbackErr) {
+        // fallback playback failed
+      }
+      return;
+    }
+
+    return new Promise((resolve) => {
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      audioRef.current = source;
+      source.onended = () => {
+        audioRef.current = null;
+        resolve();
+      };
+      source.start(0);
+    });
+  }, []);
+
+  /**
+   * Play ALL consecutive AI lines from startIdx, one line at a time.
+   * Each line: fetch GPT response for that exact script line → display → TTS → next line.
+   */
+  const playAiLinesFrom = useCallback(async (startIdx, historySnapshot) => {
+    let idx = startIdx;
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+
+    while (idx < lines.length && lines[idx].character !== userRole) {
+      if (!isActiveRef.current) return;
+
+      const scriptLine = lines[idx];
+      setCurrentLineIdx(idx);
+      scrollToLine(idx);
+      setStatus('thinking');
+
+      let aiText = scriptLine.dialogue; // fallback: use raw script line
+
+      try {
+        const { data } = await axios.post(endPoints.scenePartner, {
+          line: historySnapshot[historySnapshot.length - 1]?.text || '',
+          actor_line: historySnapshot[historySnapshot.length - 1]?.text || '',
+          next_script_line: scriptLine.dialogue,
+          script_context: lines.map((l) => `${l.character}: ${l.dialogue}`).join('\n'),
+          character: scriptLine.character,
+          previous_lines: historySnapshot.slice(-6),
+        });
+        aiText = data?.data?.response || data?.response || scriptLine.dialogue;
+      } catch {
+        // API failed — use raw script line so scene keeps moving
+        aiText = scriptLine.dialogue;
+      }
+
+      setAiCurrentLine(aiText);
+      setConversationHistory((prev) => [...prev, { role: 'ai', text: aiText }]);
+      setStatus('playing');
+
+      await playTTS(aiText, voice);
+
+      if (!isActiveRef.current) return;
+      idx++;
+    }
+
+    setAiCurrentLine('');
+
+    if (idx >= lines.length) {
+      setStatus('idle');
+      setAiCurrentLine('🎬 Scene complete!');
+      return;
+    }
+
+    setCurrentLineIdx(idx);
+    scrollToLine(idx);
+    setStatus('listening');
+    startRecognition();
+  }, [lines, userRole, voice, playTTS, scrollToLine]);  // eslint-disable-line
+
+  /**
+   * Called when actor finishes speaking. Records their line, then plays AI lines one by one.
+   */
+  const handleActorLineComplete = useCallback(
+    async (spokenText) => {
+      if (!spokenText.trim()) return;
+
+      const newHistory = [...conversationHistory, { role: 'actor', text: spokenText.trim() }];
+      setConversationHistory(newHistory);
+      setLiveTranscript('');
+
+      // Skip past any actor lines at current position to find next AI line
+      let nextIdx = currentLineIdx;
+      while (nextIdx < lines.length && lines[nextIdx].character === userRole) {
+        nextIdx++;
+      }
+
+      if (nextIdx >= lines.length) {
+        setStatus('idle');
+        setAiCurrentLine('🎬 Scene complete!');
+        return;
+      }
+
+      // Play all consecutive AI lines from this point, one at a time
+      await playAiLinesFrom(nextIdx, newHistory);
+    },
+    [conversationHistory, currentLineIdx, lines, userRole, playAiLinesFrom]
+  );
+
+  /**
+   * Initialize and start SpeechRecognition.
+   */
+  const startRecognition = useCallback(() => {
+    if (!SpeechRecognition) return;
+
+    // Clean up existing
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    recognitionRef.current = recognition;
+
+    recognition.onresult = (event) => {
+      let interim = '';
+      let final = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          final += transcript;
+        } else {
+          interim += transcript;
+        }
+      }
+
+      const displayText = final || interim;
+      if (displayText) {
+        hasInterimRef.current = true;
+        setLiveTranscript(displayText);
+      }
+
+      // Reset silence timer
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+
+      if (final) {
+        // Got a final result — trigger after silence
+        silenceTimerRef.current = setTimeout(() => {
+          if (isActiveRef.current) {
+            handleActorLineComplete(final);
+          }
+        }, SILENCE_TIMEOUT);
+      } else if (hasInterimRef.current) {
+        // Still getting interim results — set longer timeout
+        silenceTimerRef.current = setTimeout(() => {
+          if (isActiveRef.current && displayText) {
+            handleActorLineComplete(displayText);
+          }
+        }, SILENCE_TIMEOUT);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      if (event.error === 'not-allowed') {
+        setStatus('error');
+        setErrorMsg('Microphone access required. Please allow mic in browser settings.');
+        isActiveRef.current = false;
+      } else if (event.error !== 'aborted') {
+        // Auto-restart on non-fatal errors
+        setTimeout(() => {
+          if (isActiveRef.current && status === 'listening') {
+            startRecognition();
+          }
+        }, 500);
+      }
+    };
+
+    recognition.onend = () => {
+      // Auto-restart if we're still supposed to be listening
+      if (isActiveRef.current && status === 'listening') {
+        setTimeout(() => {
+          if (isActiveRef.current) {
+            try { recognition.start(); } catch {}
+          }
+        }, 100);
+      }
+    };
+
+    try {
+      recognition.start();
+    } catch (err) {
+      // recognition start failed
+    }
+  }, [SpeechRecognition, handleActorLineComplete, status]);
+
+  /**
+   * Start the live scene session.
+   */
+  const startScene = useCallback(
+    (selectedVoice) => {
+      if (!SpeechRecognition) {
+        setStatus('error');
+        setErrorMsg("Your browser doesn't support live mode. Try Chrome.");
+        return;
+      }
+
+      setVoice(selectedVoice);
+      setShowVoicePicker(false);
+      isActiveRef.current = true;
+
+      const firstLine = lines[0];
+      if (firstLine && firstLine.character !== userRole) {
+        // Scene starts with AI — play all opening AI lines one by one using playAiLinesFrom
+        playAiLinesFrom(0, []);
+      } else {
+        // Actor speaks first
+        setCurrentLineIdx(0);
+        scrollToLine(0);
+        setStatus('listening');
+        startRecognition();
+      }
+    },
+    [SpeechRecognition, lines, userRole, playAiLinesFrom, startRecognition, scrollToLine]
+  );
+
+  /**
+   * End the scene and clean up.
+   */
+  const endScene = useCallback(() => {
+    isActiveRef.current = false;
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (audioRef.current) {
+      try { audioRef.current.stop(); } catch(e) {}
+      audioRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch(e) {}
+      audioContextRef.current = null;
+    }
+    onExit();
+  }, [onExit]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isActiveRef.current = false;
+      if (recognitionRef.current) {
+        try { recognitionRef.current.stop(); } catch {}
+      }
+      if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+      if (audioRef.current) {
+        try { audioRef.current.stop(); } catch(e) {}
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  // Voice picker
+  if (showVoicePicker) {
+    return (
+      <VoicePicker
+        characters={characters}
+        userRole={userRole}
+        onSelect={startScene}
+        onCancel={onExit}
+      />
+    );
+  }
+
+  // Error state for unsupported browsers
+  if (!SpeechRecognition && status !== 'error') {
+    return (
+      <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <div className="text-5xl mb-4">🚫</div>
+          <h2 className="text-white text-xl font-bold mb-2">Browser Not Supported</h2>
+          <p className="text-gray-400 mb-6">
+            Your browser doesn&apos;t support the Web Speech API. Please use Google Chrome for Live Scene Mode.
+          </p>
+          <button
+            onClick={onExit}
+            className="bg-[#ff6b35] hover:bg-[#e55a2b] text-white px-6 py-3 rounded-xl font-semibold cursor-pointer transition-colors"
+          >
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const statusLabel =
+    status === 'thinking'
+      ? `${partnerName} ${STATUS_MESSAGES.thinking}`
+      : STATUS_MESSAGES[status];
+
+  return (
+    <div className="fixed inset-0 z-[60] bg-[#0f0f1a] flex flex-col overflow-hidden">
+      {/* Mic Permission Modal */}
+      <PermissionsModal
+        isOpen={showMicPermission}
+        requireCamera={false}
+        requireMic={true}
+        context="Live Scene Mode"
+        onGranted={() => {
+          // Just resume the already-created AudioContext inside the user gesture
+          if (audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume();
+          }
+          setShowMicPermission(false);
+          setSceneStarted(true);
+          startScene(voice);
+        }}
+        onDenied={() => {
+          setShowMicPermission(false);
+        }}
+      />
+      {/* Top Bar */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-[#ff6b35] animate-pulse" />
+          <span className="text-white font-semibold text-sm">Live Scene Mode</span>
+        </div>
+        <button
+          onClick={endScene}
+          className="px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors cursor-pointer"
+        >
+          End Scene
+        </button>
+      </div>
+
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left: Script Panel */}
+        <div
+          ref={scriptPanelRef}
+          className="w-80 border-r border-[#1a1a2e] overflow-y-auto p-4 hidden lg:block"
+        >
+          <h3 className="text-gray-500 text-xs font-bold uppercase tracking-wider mb-4">Script</h3>
+          <div className="space-y-2">
+            {lines.map((line, i) => {
+              const isUser = line.character === userRole;
+              const isCurrent = i === currentLineIdx;
+              return (
+                <div
+                  key={i}
+                  data-line-idx={i}
+                  className={`rounded-lg p-2.5 transition-all duration-300 ${
+                    isCurrent
+                      ? isUser
+                        ? 'bg-[#ff6b35]/15 border-l-2 border-[#ff6b35]'
+                        : 'bg-white/5 border-l-2 border-white/40'
+                      : 'opacity-40'
+                  }`}
+                >
+                  <span
+                    className={`text-[10px] font-bold uppercase tracking-wider block mb-0.5 ${
+                      isUser ? 'text-[#ff6b35]' : 'text-gray-500'
+                    }`}
+                  >
+                    {line.character}
+                  </span>
+                  <p className={`text-xs leading-relaxed ${isCurrent ? 'text-gray-200' : 'text-gray-500'}`}>
+                    {line.dialogue}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Main Stage */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+
+          {/* START SCREEN — shown before scene begins */}
+          {status === 'idle' && !sceneStarted && (
+            <div className="text-center max-w-md w-full">
+              <div className="w-20 h-20 rounded-full bg-[#ff6b35]/10 border border-[#ff6b35]/30 flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-[#ff6b35]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
+                </svg>
+              </div>
+              <h2 className="text-white text-2xl font-bold mb-2">Ready for Live Scene?</h2>
+              <p className="text-gray-400 text-sm mb-2">
+                Playing <span className="text-[#ff6b35] font-semibold">{userRole}</span> opposite <span className="text-white font-semibold">{partnerName}</span>
+              </p>
+              <p className="text-gray-500 text-xs mb-8">
+                Speak your lines naturally. The AI will respond automatically after a short pause.
+              </p>
+              <div className="bg-white/5 rounded-xl p-4 mb-8 text-left space-y-2">
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <span className="text-[#ff6b35]">🎙️</span> Speak your line — pause when done
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <span className="text-[#ff6b35]">🤖</span> AI responds as {partnerName}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <span className="text-[#ff6b35]">🔊</span> ElevenLabs voice reads it aloud
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <span className="text-[#ff6b35]">🔁</span> Scene flows hands-free
+                </div>
+              </div>
+              <button
+                onClick={() => setShowMicPermission(true)}
+                className="w-full bg-[#ff6b35] hover:bg-[#e55a2b] text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer flex items-center justify-center gap-3"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+                Start Scene
+              </button>
+            </div>
+          )}
+
+          {/* AI Character Line Display */}
+          {(sceneStarted || status !== 'idle') && (
+          <div className="text-center max-w-2xl w-full mb-4">
+            {status === 'playing' || aiCurrentLine ? (
+              <>
+                <span className="text-[#ff6b35] text-xs font-bold uppercase tracking-widest block mb-3">
+                  {partnerName}
+                </span>
+                <p className="text-white text-2xl md:text-3xl font-light leading-relaxed">
+                  {aiCurrentLine}
+                </p>
+              </>
+            ) : status === 'listening' ? (
+              <p className="text-gray-500 text-lg">Your turn...</p>
+            ) : null}
+          </div>
+          )}
+
+          {/* Status Indicator */}
+          <StatusIndicator status={status} />
+
+          {/* Status Label */}
+          <div className="mt-2 mb-6">
+            <span
+              className={`text-sm font-medium px-4 py-1.5 rounded-full ${
+                status === 'listening'
+                  ? 'bg-[#ff6b35]/10 text-[#ff6b35]'
+                  : status === 'thinking'
+                  ? 'bg-[#ff6b35]/10 text-[#ff6b35]'
+                  : status === 'playing'
+                  ? 'bg-white/5 text-gray-300'
+                  : status === 'error'
+                  ? 'bg-red-500/10 text-red-400'
+                  : 'text-gray-500'
+              }`}
+            >
+              {statusLabel}
+            </span>
+          </div>
+
+          {/* Live Transcript */}
+          <div className="max-w-xl w-full min-h-[60px] text-center">
+            {liveTranscript && status === 'listening' && (
+              <p className="text-gray-400 text-lg italic animate-pulse">&ldquo;{liveTranscript}&rdquo;</p>
+            )}
+          </div>
+
+          {/* Error Message */}
+          {status === 'error' && errorMsg && (
+            <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-xl px-6 py-3 max-w-md">
+              <p className="text-red-400 text-sm text-center">{errorMsg}</p>
+            </div>
+          )}
+
+          {/* Conversation History (last few lines) */}
+          {conversationHistory.length > 0 && (
+            <div className="mt-8 max-w-lg w-full space-y-2 lg:hidden">
+              {conversationHistory.slice(-4).map((turn, i) => (
+                <div
+                  key={i}
+                  className={`text-xs px-3 py-2 rounded-lg ${
+                    turn.role === 'actor'
+                      ? 'bg-[#ff6b35]/10 text-[#ff6b35]/70 text-right'
+                      : 'bg-white/5 text-gray-500 text-left'
+                  }`}
+                >
+                  <span className="font-bold uppercase text-[10px] block mb-0.5">
+                    {turn.role === 'actor' ? userRole : partnerName}
+                  </span>
+                  {turn.text}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Status Bar */}
+      <div className="px-6 py-3 border-t border-[#1a1a2e] flex items-center justify-between">
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <span>
+            Line {Math.min(currentLineIdx + 1, lines.length)} of {lines.length}
+          </span>
+          <span className="hidden sm:inline">|</span>
+          <span className="hidden sm:inline">{conversationHistory.length} exchanges</span>
+        </div>
+        <div className="text-xs text-gray-600">
+          {voice === 'partner_male' ? 'George' : voice === 'partner_female' ? 'Lily' : 'River'}
+        </div>
+      </div>
+    </div>
+  );
+}

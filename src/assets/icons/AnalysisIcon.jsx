@@ -1,0 +1,21 @@
+const AnalysisIcon = ({ width, height, props }) => (
+  <svg
+    xmlns='http://www.w3.org/2000/svg'
+    width={width || 20}
+    height={height || 20}
+    viewBox='0 0 14 14'
+    {...props}
+  >
+    <g
+      fill='none'
+      stroke='currentColor'
+      strokeLinecap='round'
+      strokeLinejoin='round'
+      strokeWidth={1}
+    >
+      <path d='M6.625 12.5a5.875 5.875 0 1 0 0-11.75a5.875 5.875 0 0 0 0 11.75m6.625.75l-2.467-2.467' />
+      <path d='m5.5 4.5l-2 2l2 2m2-4l2 2l-2 2' />
+    </g>
+  </svg>
+);
+export default AnalysisIcon;

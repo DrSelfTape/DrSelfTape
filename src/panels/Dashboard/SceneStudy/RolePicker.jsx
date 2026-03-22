@@ -1,0 +1,133 @@
+import { useState } from 'react';
+
+const VOICES = [
+  { id: 'partner_male',    label: 'George',  desc: 'Warm & Captivating',    accent: 'British',   gender: 'Male',    emoji: '👨' },
+  { id: 'partner_female',  label: 'Lily',    desc: 'Velvety Actress',       accent: 'British',   gender: 'Female',  emoji: '👩' },
+  { id: 'partner_neutral', label: 'River',   desc: 'Calm & Neutral',        accent: 'American',  gender: 'Neutral', emoji: '🧑' },
+  { id: 'cd_female',       label: 'Sarah',   desc: 'Mature & Confident',    accent: 'American',  gender: 'Female',  emoji: '👩‍💼' },
+  { id: 'cd_male',         label: 'Daniel',  desc: 'Steady Broadcaster',    accent: 'British',   gender: 'Male',    emoji: '👨‍💼' },
+];
+
+export default function RolePicker({
+  characters,
+  selectedRole,
+  onSelectRole,
+  selectedVoice,
+  onSelectVoice,
+  onStart,
+  onBack,
+}) {
+  const internalVoice = selectedVoice || 'partner_male';
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      {/* Role selection */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900">Pick Your Role</h2>
+        <p className="text-gray-500 text-sm mt-1">
+          Select the character you'll be reading for
+        </p>
+      </div>
+
+      {characters.length === 0 ? (
+        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+          No characters detected. Make sure your script uses the format{' '}
+          <code className="bg-yellow-100 px-1 rounded">CHARACTER: dialogue</code>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {characters.map((name) => {
+            const isSelected = selectedRole === name;
+            return (
+              <button
+                key={name}
+                onClick={() => onSelectRole(name)}
+                className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
+                  isSelected
+                    ? 'border-[#ff6b35] bg-orange-50 text-[#ff6b35] shadow-sm'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <svg
+                    className={`w-5 h-5 ${isSelected ? 'text-[#ff6b35]' : 'text-gray-400'}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                    />
+                  </svg>
+                  {name}
+                </div>
+                {isSelected && (
+                  <p className="text-[10px] mt-1 text-[#ff6b35] font-normal">Your role</p>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Divider */}
+      <div className="mt-8 mb-6 border-t border-gray-100" />
+
+      {/* AI Voice selection */}
+      <div className="mb-5">
+        <h3 className="text-base font-bold text-gray-900 mb-1">Choose Your AI Scene Partner's Voice</h3>
+        <p className="text-gray-500 text-sm">
+          This voice will read the other character's lines during practice and Live Scene Mode.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {VOICES.map((v) => {
+          const isSelected = internalVoice === v.id;
+          return (
+            <button
+              key={v.id}
+              onClick={() => onSelectVoice && onSelectVoice(v.id)}
+              className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
+                isSelected
+                  ? 'border-[#ff6b35] bg-orange-50 shadow-sm'
+                  : 'border-gray-200 bg-white hover:border-gray-300'
+              }`}
+            >
+              <span className="text-2xl">{v.emoji}</span>
+              <div className="flex-1 min-w-0">
+                <div className={`font-semibold text-sm ${isSelected ? 'text-[#ff6b35]' : 'text-gray-900'}`}>
+                  {v.label}
+                </div>
+                <div className="text-xs text-gray-500 truncate">{v.desc}</div>
+              </div>
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] text-gray-500">{v.gender}</span>
+                <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] text-gray-500">{v.accent}</span>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="flex gap-3 mt-6">
+        <button
+          onClick={onBack}
+          className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+        >
+          Back
+        </button>
+        <button
+          onClick={onStart}
+          disabled={!selectedRole}
+          className="flex-1 bg-[#ff6b35] hover:bg-[#e55a2b] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          Start Practice
+        </button>
+      </div>
+    </div>
+  );
+}
