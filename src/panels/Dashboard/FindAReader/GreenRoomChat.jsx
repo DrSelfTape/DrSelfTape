@@ -71,13 +71,13 @@ const GreenRoomChat = () => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] flex-col bg-[#0f0f1a]">
+    <div className="flex h-[calc(100vh-80px)] flex-col bg-[#0D0D0D]">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-gray-800 px-4 py-3">
+      <div className="flex items-center gap-3 border-b border-[#1E1E1E] px-4 py-3">
         <button
           type="button"
           onClick={() => navigate('/dashboard/green-room')}
-          className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-800 hover:text-white"
+          className="rounded-full p-1.5 text-gray-400 transition-colors hover:bg-[#1E1E1E] hover:text-white"
           aria-label="Back"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -102,7 +102,7 @@ const GreenRoomChat = () => {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {messagesLoading && (
           <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-6 w-6 animate-spin text-[#FF8280]" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#C855F0]" />
           </div>
         )}
 
@@ -129,19 +129,19 @@ const GreenRoomChat = () => {
       {/* Input bar */}
       <form
         onSubmit={handleSend}
-        className="flex items-center gap-2 border-t border-gray-800 bg-gray-900/60 px-4 py-3"
+        className="flex items-center gap-2 border-t border-[#1E1E1E] bg-[#1A1A1A] px-4 py-3"
       >
         <input
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Type a message..."
-          className="flex-1 rounded-full border border-gray-700 bg-gray-800 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-[#FF8280]"
+          className="flex-1 rounded-full border border-[#3A3A3A] bg-[#2A2A2A] px-4 py-2.5 text-sm text-white placeholder-[#666666] outline-none focus:border-[#C855F0]"
         />
         <button
           type="submit"
           disabled={!input.trim() || sending}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#FF8280] text-white transition-colors hover:bg-[#ff6e6c] disabled:opacity-40"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#C855F0] to-[#E88BF5] text-white transition-colors disabled:opacity-40"
           aria-label="Send"
         >
           {sending ? (

@@ -75,12 +75,12 @@ const TYPE_FILTERS = [
 ];
 
 const TYPE_BADGES = {
-  film: { bg: 'bg-orange-50 text-orange-700', dot: 'bg-orange-400' },
-  commercial: { bg: 'bg-blue-50 text-blue-700', dot: 'bg-blue-400' },
-  theatrical: { bg: 'bg-violet-50 text-violet-700', dot: 'bg-violet-400' },
-  industrial: { bg: 'bg-gray-50 text-gray-600', dot: 'bg-gray-400' },
-  theater: { bg: 'bg-green-50 text-green-700', dot: 'bg-green-400' },
-  voiceover: { bg: 'bg-yellow-50 text-yellow-700', dot: 'bg-yellow-400' },
+  film: { bg: 'bg-orange-500/10 text-orange-400', dot: 'bg-orange-400' },
+  commercial: { bg: 'bg-blue-500/10 text-blue-400', dot: 'bg-blue-400' },
+  theatrical: { bg: 'bg-violet-500/10 text-violet-400', dot: 'bg-violet-400' },
+  industrial: { bg: 'bg-[#2A2A2A] text-[#999999]', dot: 'bg-[#666666]' },
+  theater: { bg: 'bg-green-500/10 text-green-400', dot: 'bg-green-400' },
+  voiceover: { bg: 'bg-yellow-500/10 text-yellow-400', dot: 'bg-yellow-400' },
 };
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -134,10 +134,10 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
       ref={setNodeRef}
       style={style}
       className={`
-        group relative bg-white rounded-xl border border-gray-100 shadow-sm
+        group relative bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] shadow-sm
         transition-all duration-200 cursor-pointer
-        ${isDragging ? 'shadow-xl opacity-90 rotate-1 scale-105 z-50' : 'hover:shadow-md hover:border-gray-200'}
-        ${cb?.urgent ? 'ring-2 ring-[#ff6b35]/40 animate-[pulse-glow_2s_ease-in-out_infinite]' : ''}
+        ${isDragging ? 'shadow-xl opacity-90 rotate-1 scale-105 z-50' : 'hover:border-[#3A3A3A]'}
+        ${cb?.urgent ? 'ring-2 ring-[#C855F0]/40 animate-[pulse-glow_2s_ease-in-out_infinite]' : ''}
       `}
       onClick={() => onClick(audition)}
     >
@@ -145,7 +145,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-2.5 left-1.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing"
+        className="absolute top-2.5 left-1.5 text-[#666666] hover:text-[#999999] cursor-grab active:cursor-grabbing"
         onClick={(e) => e.stopPropagation()}
       >
         <GripVertical size={14} />
@@ -154,7 +154,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
       <div className="pl-6 pr-3 py-3">
         {/* Header */}
         <div className="flex items-start justify-between gap-2">
-          <h4 className="text-sm font-semibold text-gray-900 leading-tight line-clamp-1">
+          <h4 className="text-sm font-semibold text-white leading-tight line-clamp-1">
             {audition.project_title}
           </h4>
           {/* Quick Actions */}
@@ -162,7 +162,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
             {canAdvance && (
               <button
                 onClick={(e) => { e.stopPropagation(); onAdvance(audition); }}
-                className="p-1 rounded-lg text-green-500 hover:bg-green-50 transition-colors"
+                className="p-1 rounded-lg text-green-500 hover:bg-green-500/10 transition-colors"
                 title="Advance status"
               >
                 <CheckCircle2 size={15} />
@@ -170,7 +170,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
             )}
             <button
               onClick={(e) => { e.stopPropagation(); onPass(audition); }}
-              className="p-1 rounded-lg text-red-400 hover:bg-red-50 transition-colors"
+              className="p-1 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
               title="Move to passed"
             >
               <XCircle size={15} />
@@ -180,12 +180,12 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
 
         {/* Character & CD */}
         {audition.character && (
-          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
-            as <span className="font-medium text-gray-700">{audition.character}</span>
+          <p className="text-xs text-[#999999] mt-0.5 line-clamp-1">
+            as <span className="font-medium text-white">{audition.character}</span>
           </p>
         )}
         {audition.casting_director && (
-          <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">
+          <p className="text-xs text-[#666666] mt-0.5 line-clamp-1">
             CD: {audition.casting_director}
           </p>
         )}
@@ -197,7 +197,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
             {audition.project_type}
           </span>
           {cb && (
-            <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${cb.urgent ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-500'}`}>
+            <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${cb.urgent ? 'bg-orange-500/10 text-orange-400' : 'bg-[#2A2A2A] text-[#666666]'}`}>
               <Clock size={10} />
               {cb.text}
             </span>
@@ -215,11 +215,11 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
 function StaticCard({ audition }) {
   const badge = TYPE_BADGES[audition.project_type] || TYPE_BADGES.film;
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-xl opacity-90 rotate-1 scale-105 w-64">
+    <div className="bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] shadow-xl opacity-90 rotate-1 scale-105 w-64">
       <div className="px-4 py-3">
-        <h4 className="text-sm font-semibold text-gray-900">{audition.project_title}</h4>
+        <h4 className="text-sm font-semibold text-white">{audition.project_title}</h4>
         {audition.character && (
-          <p className="text-xs text-gray-500 mt-0.5">as {audition.character}</p>
+          <p className="text-xs text-[#999999] mt-0.5">as {audition.character}</p>
         )}
         <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mt-2 ${badge.bg}`}>
           <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
@@ -246,8 +246,8 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
           className="w-2.5 h-2.5 rounded-full shrink-0"
           style={{ backgroundColor: column.color }}
         />
-        <h3 className="text-sm font-semibold text-gray-700">{column.label}</h3>
-        <span className="text-xs text-gray-400 font-medium bg-gray-100 px-1.5 py-0.5 rounded-full ml-auto">
+        <h3 className="text-sm font-semibold text-[#999999]">{column.label}</h3>
+        <span className="text-xs text-[#666666] font-medium bg-[#2A2A2A] px-1.5 py-0.5 rounded-full ml-auto">
           {items.length}
         </span>
       </div>
@@ -258,7 +258,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
         className={`
           flex-1 flex flex-col gap-2 p-2 rounded-xl min-h-[200px]
           transition-colors duration-200
-          ${isOver ? 'bg-[#ff6b35]/5 ring-2 ring-[#ff6b35]/20' : 'bg-gray-50/60'}
+          ${isOver ? 'bg-[#C855F0]/5 ring-2 ring-[#C855F0]/20' : 'bg-[#0D0D0D]/60'}
         `}
       >
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
@@ -274,7 +274,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
         </SortableContext>
 
         {items.length === 0 && (
-          <div className="flex items-center justify-center h-24 text-xs text-gray-300">
+          <div className="flex items-center justify-center h-24 text-xs text-[#666666]">
             Drop here
           </div>
         )}
@@ -323,13 +323,13 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
 
   const Field = ({ label, field, type = 'text', options }) => (
     <div className="space-y-1">
-      <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">{label}</label>
+      <label className="text-xs font-medium text-[#666666] uppercase tracking-wider">{label}</label>
       {editing ? (
         type === 'select' ? (
           <select
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#ff6b35]/30 focus:border-[#ff6b35] outline-none transition-all"
+            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all"
           >
             {options.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -340,18 +340,18 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
             rows={3}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#ff6b35]/30 focus:border-[#ff6b35] outline-none transition-all resize-none"
+            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all resize-none"
           />
         ) : (
           <input
             type={type}
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#ff6b35]/30 focus:border-[#ff6b35] outline-none transition-all"
+            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all"
           />
         )
       ) : (
-        <p className="text-sm text-gray-800">{form[field] || '—'}</p>
+        <p className="text-sm text-white">{form[field] || '—'}</p>
       )}
     </div>
   );
@@ -366,32 +366,32 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
       {/* Panel */}
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-96 bg-white z-50 shadow-2xl border-l border-gray-100 overflow-y-auto animate-[slide-in_0.25s_ease-out]"
+        className="fixed top-0 right-0 h-full w-96 bg-[#0D0D0D] z-50 shadow-2xl border-l border-[#2A2A2A] overflow-y-auto animate-[slide-in_0.25s_ease-out]"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-5 py-4 flex items-center justify-between z-10">
-          <h2 className="text-base font-bold text-gray-900 line-clamp-1 pr-4">
+        <div className="sticky top-0 bg-[#0D0D0D] border-b border-[#2A2A2A] px-5 py-4 flex items-center justify-between z-10">
+          <h2 className="text-base font-bold text-white line-clamp-1 pr-4">
             {audition.project_title}
           </h2>
           <div className="flex items-center gap-1">
             {editing ? (
               <button
                 onClick={handleSave}
-                className="p-2 rounded-lg bg-[#ff6b35] text-white hover:bg-[#e55a2b] transition-colors"
+                className="p-2 rounded-lg bg-[#C855F0] text-white hover:bg-[#A040C8] transition-colors"
               >
                 <Save size={16} />
               </button>
             ) : (
               <button
                 onClick={() => setEditing(true)}
-                className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-[#1E1E1E] transition-colors"
               >
                 <Edit3 size={16} />
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-[#1E1E1E] transition-colors"
             >
               <X size={16} />
             </button>
@@ -401,7 +401,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
         <div className="p-5 space-y-5">
           {/* Callback Badge */}
           {cb && (
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${cb.urgent ? 'bg-orange-50 text-orange-700' : 'bg-gray-50 text-gray-600'}`}>
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${cb.urgent ? 'bg-orange-500/10 text-orange-400' : 'bg-[#1E1E1E] text-[#999999]'}`}>
               <Calendar size={14} />
               Callback {cb.text}
             </div>
@@ -409,11 +409,11 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
 
           {/* Move-to Status Dropdown */}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Status</label>
+            <label className="text-xs font-medium text-[#666666] uppercase tracking-wider">Status</label>
             <select
               value={audition._column}
               onChange={(e) => onStatusChange(audition.id, e.target.value)}
-              className="w-full text-sm font-medium border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#ff6b35]/30 focus:border-[#ff6b35] outline-none"
+              className="w-full text-sm font-medium border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none"
             >
               {COLUMNS.map((col) => (
                 <option key={col.id} value={col.id}>{col.label}</option>
@@ -443,7 +443,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
           <Field label="Notes" field="notes" type="textarea" />
 
           {/* Delete */}
-          <div className="pt-4 border-t border-gray-100">
+          <div className="pt-4 border-t border-[#2A2A2A]">
             {confirmDelete ? (
               <div className="flex items-center gap-2">
                 <span className="text-sm text-red-600 font-medium">Delete this audition?</span>
@@ -455,7 +455,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="px-3 py-1.5 bg-gray-100 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-1.5 bg-[#2A2A2A] text-[#999999] text-sm font-medium rounded-lg hover:bg-[#3A3A3A] transition-colors"
                 >
                   Cancel
                 </button>
@@ -501,7 +501,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     onClose();
   };
 
-  const inputCls = 'w-full text-sm border border-gray-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#ff6b35]/30 focus:border-[#ff6b35] outline-none transition-all';
+  const inputCls = 'w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all';
 
   return (
     <>
@@ -509,12 +509,12 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <form
           onSubmit={handleSubmit}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-[scale-in_0.2s_ease-out]"
+          className="bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-[scale-in_0.2s_ease-out]"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-900">New Audition</h2>
-            <button type="button" onClick={onClose} className="p-1 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100">
+            <h2 className="text-lg font-bold text-white">New Audition</h2>
+            <button type="button" onClick={onClose} className="p-1 rounded-lg text-[#666666] hover:text-white hover:bg-[#2A2A2A]">
               <X size={18} />
             </button>
           </div>
@@ -532,14 +532,14 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
             <option value="voiceover">Voice Over</option>
           </select>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Callback Date</label>
+            <label className="block text-xs text-[#666666] mb-1">Callback Date</label>
             <input type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} />
           </div>
           <textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className={`${inputCls} resize-none`} />
 
           <button
             type="submit"
-            className="w-full bg-[#ff6b35] hover:bg-[#e55a2b] text-white font-semibold py-2.5 rounded-xl transition-colors"
+            className="w-full bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold py-2.5 rounded-xl transition-colors"
           >
             Add Audition
           </button>
@@ -712,7 +712,7 @@ export default function DashboardAuditions() {
   if (loading && allAuditions.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-3 border-[#ff6b35] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -721,10 +721,10 @@ export default function DashboardAuditions() {
     <div className="space-y-4">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Audition Tracker</h1>
+        <h1 className="text-2xl font-bold text-white">Audition Tracker</h1>
         <button
           onClick={() => setShowNewForm(true)}
-          className="flex items-center gap-2 bg-[#ff6b35] hover:bg-[#e55a2b] text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm"
+          className="flex items-center gap-2 bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm"
         >
           <Plus size={16} />
           New Audition
@@ -744,14 +744,14 @@ export default function DashboardAuditions() {
                 flex items-center gap-1.5 text-sm font-medium px-3.5 py-1.5 rounded-full
                 transition-all duration-150
                 ${active
-                  ? 'bg-[#ff6b35] text-white shadow-sm'
-                  : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[#C855F0] text-white shadow-sm'
+                  : 'bg-[#1E1E1E] text-[#999999] border border-[#3A3A3A] hover:border-[#C855F0] hover:bg-[#2A2A2A]'
                 }
               `}
             >
               {f.icon && <f.icon size={13} />}
               {f.label}
-              <span className={`text-xs font-semibold ${active ? 'text-white/70' : 'text-gray-400'}`}>
+              <span className={`text-xs font-semibold ${active ? 'text-white/70' : 'text-[#666666]'}`}>
                 {count}
               </span>
             </button>
@@ -814,8 +814,8 @@ export default function DashboardAuditions() {
           to { transform: scale(1); opacity: 1; }
         }
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(255, 107, 53, 0); }
-          50% { box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.15); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(200, 85, 240, 0); }
+          50% { box-shadow: 0 0 0 4px rgba(200, 85, 240, 0.15); }
         }
       `}</style>
     </div>

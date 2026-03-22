@@ -23,8 +23,8 @@ export default function DashboardLayout() {
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <main className="flex-1 ml-64 overflow-auto bg-white p-8">
-        <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#ff6b35] border-t-transparent rounded-full animate-spin" /></div>}>
+      <main className="flex-1 ml-64 overflow-auto bg-[#0D0D0D] p-8">
+        <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" /></div>}>
           <Outlet />
         </Suspense>
       </main>

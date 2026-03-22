@@ -64,7 +64,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         transform,
         transition: dragState.current.isDragging ? 'none' : 'transform 0.3s ease',
         cursor: isTop ? 'grab' : 'default',
-        background: '#1C1C2E',
+        background: '#1A1A1A',
       }}
       onMouseDown={(e) => handleDragStart(e.clientX)}
       onMouseMove={(e) => handleDragMove(e.clientX)}
@@ -79,8 +79,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         {actor?.headshotUrl ? (
           <img src={actor.headshotUrl} alt={actor.name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gray-800 flex items-center justify-center">
-            <span className="text-7xl font-bold text-gray-600">{initials}</span>
+          <div className="w-full h-full bg-[#2A2A2A] flex items-center justify-center">
+            <span className="text-7xl font-bold text-[#666666]">{initials}</span>
           </div>
         )}
       </div>
@@ -96,7 +96,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
 
       {/* LIKE stamp */}
       <div
-        className="absolute top-8 left-6 border-2 border-[#FF8280] text-[#FF8280] text-2xl font-black uppercase px-3 py-1 rounded pointer-events-none"
+        className="absolute top-8 left-6 border-2 border-[#C855F0] text-[#C855F0] text-2xl font-black uppercase px-3 py-1 rounded pointer-events-none"
         style={{ opacity: likeOpacity, transform: 'rotate(-15deg)' }}
       >
         SCENE IT
@@ -104,7 +104,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
 
       {/* PASS stamp */}
       <div
-        className="absolute top-8 right-6 border-2 border-gray-400 text-gray-400 text-2xl font-black uppercase px-3 py-1 rounded pointer-events-none"
+        className="absolute top-8 right-6 border-2 border-[#3A3A3A] text-[#666666] text-2xl font-black uppercase px-3 py-1 rounded pointer-events-none"
         style={{ opacity: passOpacity, transform: 'rotate(15deg)' }}
       >
         PASS
@@ -124,7 +124,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
           <AvailabilityStatus online={actor?.isAvailable} />
           {actor?.experience && (
             <>
-              <span className="text-gray-500 text-xs">·</span>
+              <span className="text-[#666666] text-xs">·</span>
               <span className="text-gray-300 text-sm">{actor.experience}</span>
             </>
           )}

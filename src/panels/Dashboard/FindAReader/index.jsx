@@ -52,7 +52,7 @@ const FindAReader = () => {
   return (
     <div
       className="flex min-h-screen flex-col items-center px-4 py-6"
-      style={{ background: '#0f0f1a' }}
+      style={{ background: '#0D0D0D' }}
     >
       {/* Nav bar */}
       <div
@@ -83,7 +83,7 @@ const FindAReader = () => {
       <div className="relative flex w-full max-w-[340px] items-start justify-center" style={{ minHeight: 520 }}>
         {readersLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 size={36} color="#FF8280" className="animate-spin" />
+            <Loader2 size={36} color="#C855F0" className="animate-spin" />
           </div>
         )}
 
@@ -91,7 +91,7 @@ const FindAReader = () => {
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-              style={{ background: '#2A2A3C' }}
+              style={{ background: '#2A2A2A' }}
             >
               <Users size={32} color="#9CA3AF" />
             </div>
@@ -102,7 +102,7 @@ const FindAReader = () => {
             <button
               onClick={() => { setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
               className="px-6 py-2.5 rounded-full text-sm font-semibold text-white transition-transform active:scale-95"
-              style={{ background: '#FF8280' }}
+              style={{ background: 'linear-gradient(135deg, #C855F0, #E88BF5)' }}
             >
               Refresh
             </button>

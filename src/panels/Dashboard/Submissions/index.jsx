@@ -16,11 +16,11 @@ import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/audit
 const STATUS_TABS = ['all', 'sent', 'callback', 'booked', 'passed'];
 
 const STATUS_BADGE = {
-  sent: 'bg-blue-100 text-blue-700',
-  viewed: 'bg-purple-100 text-purple-700',
-  callback: 'bg-orange-100 text-orange-700',
-  passed: 'bg-gray-100 text-gray-600',
-  booked: 'bg-green-100 text-green-700',
+  sent: 'bg-blue-500/10 text-blue-400',
+  viewed: 'bg-purple-500/10 text-purple-400',
+  callback: 'bg-orange-500/10 text-orange-400',
+  passed: 'bg-[#2A2A2A] text-[#666666]',
+  booked: 'bg-green-500/10 text-green-400',
 };
 
 const STATUS_LABELS = {
@@ -32,12 +32,12 @@ const STATUS_LABELS = {
 };
 
 const VIA_BADGE = {
-  self_submitted: 'bg-gray-100 text-gray-600',
-  agent: 'bg-blue-100 text-blue-700',
-  manager: 'bg-purple-100 text-purple-700',
-  casting_network: 'bg-orange-100 text-orange-700',
-  actors_access: 'bg-amber-100 text-amber-700',
-  other: 'bg-gray-100 text-gray-500',
+  self_submitted: 'bg-[#2A2A2A] text-[#999999]',
+  agent: 'bg-blue-500/10 text-blue-400',
+  manager: 'bg-purple-500/10 text-purple-400',
+  casting_network: 'bg-orange-500/10 text-orange-400',
+  actors_access: 'bg-amber-500/10 text-amber-400',
+  other: 'bg-[#2A2A2A] text-[#666666]',
 };
 
 const VIA_LABELS = {
@@ -78,7 +78,7 @@ function deadlineClass(deadline) {
   const diff = new Date(deadline) - new Date();
   if (diff < 0) return 'text-red-600 font-semibold';
   if (diff < 86400000) return 'text-orange-500 font-medium';
-  return 'text-gray-500';
+  return 'text-[#999999]';
 }
 
 function formatDate(iso) {
@@ -103,13 +103,13 @@ function formatDateTime(iso) {
 // --- Skeleton ---
 
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl shadow-sm p-5 animate-pulse">
+  <div className="bg-[#1E1E1E] rounded-xl shadow-sm p-5 animate-pulse">
     <div className="flex justify-between mb-3">
-      <div className="h-5 bg-gray-200 rounded w-1/3" />
-      <div className="h-5 bg-gray-200 rounded w-16" />
+      <div className="h-5 bg-[#2A2A2A] rounded w-1/3" />
+      <div className="h-5 bg-[#2A2A2A] rounded w-16" />
     </div>
-    <div className="h-4 bg-gray-200 rounded w-1/2 mb-2" />
-    <div className="h-3 bg-gray-200 rounded w-2/3" />
+    <div className="h-4 bg-[#2A2A2A] rounded w-1/2 mb-2" />
+    <div className="h-3 bg-[#2A2A2A] rounded w-2/3" />
   </div>
 );
 
@@ -234,13 +234,13 @@ export default function Submissions() {
       )}
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Submissions</h1>
+        <h1 className="text-2xl font-bold text-white">Submissions</h1>
         <div className="flex items-center gap-3">
           {/* Import Agency Report button */}
           <button
             onClick={() => setShowImporter(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all cursor-pointer border-2"
-            style={{ borderColor: '#ff6b35', color: '#ff6b35', background: 'rgba(255,107,53,0.06)' }}
+            style={{ borderColor: '#C855F0', color: '#C855F0', background: 'rgba(200,85,240,0.06)' }}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -250,7 +250,7 @@ export default function Submissions() {
         <button
           onClick={openCreate}
           className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-white font-semibold text-sm transition-colors cursor-pointer"
-          style={{ backgroundColor: '#ff6b35' }}
+          style={{ backgroundColor: '#C855F0' }}
         >
           <svg
             className="w-4 h-4"
@@ -280,7 +280,7 @@ export default function Submissions() {
 
       {/* Filter Tabs + Sort */}
       <div className="flex items-center justify-between">
-        <div className="flex gap-6 border-b border-gray-200">
+        <div className="flex gap-6 border-b border-[#2A2A2A]">
           {STATUS_TABS.map((tab) => {
             const count =
               tab === 'all'
@@ -292,10 +292,10 @@ export default function Submissions() {
                 onClick={() => setActiveTab(tab)}
                 className={`pb-2.5 text-sm font-medium capitalize transition ${
                   activeTab === tab
-                    ? 'border-b-2 text-gray-900'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'border-b-2 text-white'
+                    : 'text-[#666666] hover:text-[#999999]'
                 }`}
-                style={activeTab === tab ? { borderColor: '#ff6b35' } : undefined}
+                style={activeTab === tab ? { borderColor: '#C855F0' } : undefined}
               >
                 {tab} ({count})
               </button>
@@ -306,7 +306,7 @@ export default function Submissions() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none"
+          className="text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-1.5 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -326,7 +326,7 @@ export default function Submissions() {
       ) : sorted.length === 0 ? (
         <div className="text-center py-16">
           <svg
-            className="mx-auto mb-4 text-gray-300 w-12 h-12"
+            className="mx-auto mb-4 text-[#666666] w-12 h-12"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -338,11 +338,11 @@ export default function Submissions() {
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <p className="text-gray-500 mb-1">No submissions yet.</p>
+          <p className="text-[#999999] mb-1">No submissions yet.</p>
           <button
             onClick={openCreate}
             className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white font-medium text-sm"
-            style={{ backgroundColor: '#ff6b35' }}
+            style={{ backgroundColor: '#C855F0' }}
           >
             Log Your First Submission
           </button>
@@ -352,28 +352,28 @@ export default function Submissions() {
           {sorted.map((sub) => (
             <div
               key={sub.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow"
+              className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-5 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-1">
-                    <h4 className="text-sm font-semibold text-gray-900 truncate">
+                    <h4 className="text-sm font-semibold text-white truncate">
                       {sub.project_name}
                     </h4>
                     {sub.role && (
-                      <span className="text-xs text-gray-500 truncate">
+                      <span className="text-xs text-[#999999] truncate">
                         — {sub.role}
                       </span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {sub.casting_office && (
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs text-[#999999]">
                         {sub.casting_office}
                       </span>
                     )}
                     {sub.casting_director && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-[#666666]">
                         CD: {sub.casting_director}
                       </span>
                     )}
@@ -400,7 +400,7 @@ export default function Submissions() {
                   {VIA_LABELS[sub.submitted_via] || sub.submitted_via}
                 </span>
 
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-[#666666]">
                   Sent {formatDate(sub.submitted_at)}
                 </span>
 
@@ -418,19 +418,19 @@ export default function Submissions() {
               </div>
 
               {sub.notes && (
-                <p className="text-xs text-gray-400 mt-2 line-clamp-2">
+                <p className="text-xs text-[#666666] mt-2 line-clamp-2">
                   {sub.notes}
                 </p>
               )}
 
-              <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-3">
+              <div className="flex items-center justify-between pt-3 border-t border-[#1E1E1E] mt-3">
                 {/* Promote to Audition */}
                 {sub.status !== 'viewed' && sub.status !== 'callback' && sub.status !== 'booked' ? (
                   <button
                     onClick={() => handlePromote(sub.id)}
                     disabled={promotingId === sub.id}
                     className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50"
-                    style={{ background: 'rgba(255,107,53,0.1)', color: '#ff6b35', border: '1px solid rgba(255,107,53,0.2)' }}
+                    style={{ background: 'rgba(200,85,240,0.1)', color: '#C855F0', border: '1px solid rgba(200,85,240,0.2)' }}
                   >
                     {promotingId === sub.id ? (
                       <>
@@ -442,7 +442,7 @@ export default function Submissions() {
                     )}
                   </button>
                 ) : (
-                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-50 text-green-600 border border-green-100">
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20">
                     ✓ In Audition Tracker
                   </span>
                 )}
@@ -450,13 +450,13 @@ export default function Submissions() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openEdit(sub)}
-                    className="text-xs text-gray-400 hover:text-[#ff6b35] transition-colors cursor-pointer"
+                    className="text-xs text-[#666666] hover:text-[#C855F0] transition-colors cursor-pointer"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => handleDelete(sub.id)}
-                    className="text-xs text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                    className="text-xs text-[#666666] hover:text-red-500 transition-colors cursor-pointer"
                   >
                     Delete
                   </button>
@@ -470,14 +470,14 @@ export default function Submissions() {
       {/* Log / Edit Submission Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-white">
                 {editingId ? 'Edit Submission' : 'Log Submission'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="text-[#666666] hover:text-[#999999] cursor-pointer"
               >
                 <svg
                   className="w-5 h-5"
@@ -498,7 +498,7 @@ export default function Submissions() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Project Name */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#999999] mb-1">
                   Project Name <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -509,13 +509,13 @@ export default function Submissions() {
                     setForm({ ...form, project_name: e.target.value })
                   }
                   placeholder="e.g. The Last Chapter"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                 />
               </div>
 
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#999999] mb-1">
                   Role
                 </label>
                 <input
@@ -523,14 +523,14 @@ export default function Submissions() {
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
                   placeholder="e.g. Detective Monroe"
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                 />
               </div>
 
               {/* Casting Office + CD */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[#999999] mb-1">
                     Casting Office
                   </label>
                   <input
@@ -540,11 +540,11 @@ export default function Submissions() {
                       setForm({ ...form, casting_office: e.target.value })
                     }
                     placeholder="e.g. Telsey"
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                    className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[#999999] mb-1">
                     Casting Director
                   </label>
                   <input
@@ -554,14 +554,14 @@ export default function Submissions() {
                       setForm({ ...form, casting_director: e.target.value })
                     }
                     placeholder="e.g. Jane Smith"
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                    className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                   />
                 </div>
               </div>
 
               {/* Submitted Via */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#999999] mb-1">
                   Submitted Via
                 </label>
                 <select
@@ -569,7 +569,7 @@ export default function Submissions() {
                   onChange={(e) =>
                     setForm({ ...form, submitted_via: e.target.value })
                   }
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                 >
                   {Object.entries(VIA_LABELS).map(([val, label]) => (
                     <option key={val} value={val}>
@@ -582,7 +582,7 @@ export default function Submissions() {
               {/* Date Submitted + Deadline */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[#999999] mb-1">
                     Date Submitted
                   </label>
                   <input
@@ -591,11 +591,11 @@ export default function Submissions() {
                     onChange={(e) =>
                       setForm({ ...form, submitted_at: e.target.value })
                     }
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                    className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[#999999] mb-1">
                     Deadline
                   </label>
                   <input
@@ -604,14 +604,14 @@ export default function Submissions() {
                     onChange={(e) =>
                       setForm({ ...form, deadline: e.target.value })
                     }
-                    className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                    className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                   />
                 </div>
               </div>
 
               {/* Video URL */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#999999] mb-1">
                   Video URL
                 </label>
                 <input
@@ -621,19 +621,19 @@ export default function Submissions() {
                     setForm({ ...form, video_url: e.target.value })
                   }
                   placeholder="https://..."
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                 />
               </div>
 
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#999999] mb-1">
                   Status
                 </label>
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                 >
                   {Object.entries(STATUS_LABELS).map(([val, label]) => (
                     <option key={val} value={val}>
@@ -645,7 +645,7 @@ export default function Submissions() {
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#999999] mb-1">
                   Notes
                 </label>
                 <textarea
@@ -653,13 +653,13 @@ export default function Submissions() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   rows={3}
                   placeholder="Any notes about this submission..."
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm resize-none"
+                  className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm resize-none"
                 />
               </div>
 
               {/* Follow-up Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[#999999] mb-1">
                   Follow-up Date
                 </label>
                 <input
@@ -668,7 +668,7 @@ export default function Submissions() {
                   onChange={(e) =>
                     setForm({ ...form, follow_up_date: e.target.value })
                   }
-                  className="w-full border border-gray-200 rounded-lg px-4 py-3 focus:border-[#ff6b35] focus:ring-2 focus:ring-orange-100 outline-none text-sm"
+                  className="w-full border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-4 py-3 focus:border-[#C855F0] focus:ring-2 focus:ring-[#C855F0]/20 outline-none text-sm"
                 />
               </div>
 
@@ -677,14 +677,14 @@ export default function Submissions() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+                  className="flex-1 px-4 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] hover:bg-[#3A3A3A] rounded-lg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={createLoading || !form.project_name.trim()}
-                  className="flex-1 bg-[#ff6b35] hover:bg-[#e55a2b] text-white px-4 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white px-4 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {createLoading
                     ? 'Saving...'

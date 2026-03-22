@@ -7,7 +7,7 @@ const SwipeActions = ({ onPass, onStar, onMatch, disabled }) => (
       onClick={onPass}
       disabled={disabled}
       className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 disabled:opacity-40"
-      style={{ background: '#2A2A3C', border: '1px solid #374151' }}
+      style={{ background: '#2A2A2A', border: '1px solid #3A3A3A' }}
       title="Pass"
     >
       <X size={24} color="#9CA3AF" />
@@ -18,7 +18,7 @@ const SwipeActions = ({ onPass, onStar, onMatch, disabled }) => (
       onClick={onStar}
       disabled={disabled}
       className="w-12 h-12 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
-      style={{ background: '#2A2A3C', border: '1px solid rgba(252,224,114,0.3)' }}
+      style={{ background: '#2A2A2A', border: '1px solid rgba(252,224,114,0.3)' }}
       title="Priority Read"
     >
       <Star size={20} color="#FCE072" fill="#FCE072" />
@@ -30,8 +30,8 @@ const SwipeActions = ({ onPass, onStar, onMatch, disabled }) => (
       disabled={disabled}
       className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
       style={{
-        background: '#FF8280',
-        boxShadow: '0 8px 20px rgba(255,130,128,0.35)',
+        background: 'linear-gradient(135deg, #C855F0, #E88BF5)',
+        boxShadow: '0 8px 20px rgba(200,85,240,0.35)',
       }}
       title="Want to Read"
     >

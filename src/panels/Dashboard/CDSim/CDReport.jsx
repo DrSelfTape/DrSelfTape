@@ -17,12 +17,12 @@ function SectionCard({ label, data }) {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+    <div className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] shadow-sm p-6">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="font-serif text-xl font-bold text-gray-900">{label}</h3>
+        <h3 className="font-serif text-xl font-bold text-white">{label}</h3>
         <button
           onClick={handleListen}
-          className="flex items-center gap-1.5 text-sm font-medium text-[#FF8280] hover:text-[#e06e6c] transition-colors shrink-0 ml-4"
+          className="flex items-center gap-1.5 text-sm font-medium text-[#C855F0] hover:text-[#E88BF5] transition-colors shrink-0 ml-4"
         >
           <Volume2 size={16} />
           Listen to Direction
@@ -30,11 +30,11 @@ function SectionCard({ label, data }) {
       </div>
 
       {data.title && (
-        <h4 className="text-base font-semibold text-gray-800 mb-2">{data.title}</h4>
+        <h4 className="text-base font-semibold text-white mb-2">{data.title}</h4>
       )}
 
       {data.content && (
-        <p className="text-gray-600 leading-relaxed mb-3">{data.content}</p>
+        <p className="text-[#999999] leading-relaxed mb-3">{data.content}</p>
       )}
 
       {data.details && (
@@ -65,24 +65,24 @@ export default function CDReport({ report, onRunAgain }) {
     <div className="max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="font-serif text-2xl font-bold text-gray-900">
+          <h2 className="font-serif text-2xl font-bold text-white">
             Your CD Direction Report
           </h2>
-          <p className="text-gray-500 mt-1">
+          <p className="text-[#999999] mt-1">
             AI-generated direction based on your scene and role.
           </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={handleDownloadPDF}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium text-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#3A3A3A] text-[#999999] hover:bg-[#1E1E1E] font-medium text-sm transition-colors"
           >
             <Download size={16} />
             Download as PDF
           </button>
           <button
             onClick={onRunAgain}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#FF8280] text-white font-semibold text-sm hover:bg-[#e06e6c] transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C855F0] text-white font-semibold text-sm hover:bg-[#A040C8] transition-colors"
           >
             <RotateCcw size={16} />
             Run Again

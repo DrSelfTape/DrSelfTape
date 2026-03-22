@@ -19,7 +19,7 @@ const MatchScore = ({ percentage = 0, size = 48 }) => {
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#FF8280"
+          stroke="#C855F0"
           strokeWidth={3}
           strokeDasharray={circumference}
           strokeDashoffset={offset}

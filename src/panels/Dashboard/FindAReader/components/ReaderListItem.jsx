@@ -18,9 +18,9 @@ const ReaderListItem = ({ match, onClick }) => {
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-gray-50"
+      className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-colors hover:bg-[#1E1E1E]"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-gray-600">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gray-200 text-sm font-bold text-[#999999]">
         {initials}
       </div>
 
@@ -30,11 +30,11 @@ const ReaderListItem = ({ match, onClick }) => {
             {otherActor.name || 'Actor'}
           </p>
           {time && (
-            <span className="ml-2 shrink-0 text-[10px] text-gray-400">{time}</span>
+            <span className="ml-2 shrink-0 text-[10px] text-[#666666]">{time}</span>
           )}
         </div>
         {match?.last_message && (
-          <p className="truncate text-xs text-gray-500">{match.last_message}</p>
+          <p className="truncate text-xs text-[#999999]">{match.last_message}</p>
         )}
       </div>
     </button>

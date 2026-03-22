@@ -26,14 +26,14 @@ const navItems = [
 
 export default function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[#0D0D0D] border-r border-[#1E1E1E] flex flex-col">
       {/* Logo */}
       <div className="p-6">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[hsl(262,83%,58%)] rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">DS</span>
+          <div className="w-9 h-9 bg-[#C855F0]/10 rounded-lg flex items-center justify-center">
+            <span className="text-[#C855F0] font-bold text-sm">DS</span>
           </div>
-          <span className="text-gray-900 text-lg font-bold tracking-tight">Dr. Self Tape</span>
+          <span className="text-white text-lg font-bold tracking-tight">Dr. Self Tape</span>
         </div>
       </div>
 
@@ -45,10 +45,10 @@ export default function Sidebar() {
             to={item.path}
             end={item.path === '/dashboard'}
             className={({ isActive }) =>
-              `flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              `flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-[hsl(262,83%,58%)] text-white'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-[#C855F0]/10 text-[#C855F0] font-medium'
+                  : 'text-[#999999] hover:text-white hover:bg-[#1E1E1E]'
               }`
             }
           >
@@ -58,8 +58,8 @@ export default function Sidebar() {
               <span
                 className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                   item.badge === 'PRO'
-                    ? 'bg-[hsl(262,83%,58%)]/10 text-[hsl(262,83%,58%)]'
-                    : 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-[#C855F0]/10 text-[#C855F0]'
+                    : 'bg-emerald-500/10 text-emerald-400'
                 }`}
               >
                 {item.badge}
@@ -70,14 +70,14 @@ export default function Sidebar() {
       </nav>
 
       {/* User */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-[#1E1E1E]">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
-            <AvatarFallback className="bg-[hsl(262,83%,58%)] text-white text-xs">AD</AvatarFallback>
+            <AvatarFallback className="bg-[#C855F0]/20 text-[#C855F0] text-xs">AD</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
-            <p className="text-xs text-gray-500 truncate">admin@drselftapes.com</p>
+            <p className="text-sm font-medium text-white truncate">Admin User</p>
+            <p className="text-xs text-[#999999] truncate">admin@drselftapes.com</p>
           </div>
         </div>
       </div>

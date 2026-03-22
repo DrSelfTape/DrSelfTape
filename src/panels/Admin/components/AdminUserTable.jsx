@@ -13,14 +13,14 @@ function getInitials(name = '') {
 }
 
 const statusColors = {
-  active: 'bg-green-100 text-green-700',
-  suspended: 'bg-yellow-100 text-yellow-700',
-  banned: 'bg-red-100 text-red-700',
-  inactive: 'bg-gray-100 text-gray-500',
-  completed: 'bg-green-100 text-green-700',
-  pending: 'bg-yellow-100 text-yellow-700',
-  failed: 'bg-red-100 text-red-700',
-  refunded: 'bg-blue-100 text-blue-700',
+  active: 'bg-green-500/10 text-green-400',
+  suspended: 'bg-yellow-500/10 text-yellow-400',
+  banned: 'bg-red-500/10 text-red-400',
+  inactive: 'bg-[#2A2A2A] text-[#666666]',
+  completed: 'bg-green-500/10 text-green-400',
+  pending: 'bg-yellow-500/10 text-yellow-400',
+  failed: 'bg-red-500/10 text-red-400',
+  refunded: 'bg-blue-500/10 text-blue-400',
 };
 
 export default function AdminUserTable({ columns, data = [], onRowClick, emptyMessage = 'No data found.' }) {
@@ -57,22 +57,22 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
 
   if (!data.length) {
     return (
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-12 text-center text-gray-400">
+      <div className="bg-[#1A1A1A] rounded-2xl border border-[#2A2A2A] p-12 text-center text-[#666666]">
         {emptyMessage}
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-[#1A1A1A] rounded-2xl border border-[#2A2A2A] overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/60">
+            <tr className="border-b border-[#2A2A2A] bg-[#0D0D0D]">
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-4 py-3 text-left font-semibold text-gray-600 whitespace-nowrap ${col.sortable !== false ? 'cursor-pointer select-none hover:text-gray-900' : ''}`}
+                  className={`px-4 py-3 text-left font-semibold text-[#666666] whitespace-nowrap ${col.sortable !== false ? 'cursor-pointer select-none hover:text-white' : ''}`}
                   onClick={() => col.sortable !== false && handleSort(col.key)}
                 >
                   <div className="flex items-center gap-1">
@@ -89,7 +89,7 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
             {pageData.map((row, ri) => (
               <tr
                 key={row.id ?? ri}
-                className={`border-b border-gray-50 hover:bg-gray-50/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
+                className={`border-b border-[#1E1E1E] hover:bg-[#1E1E1E]/50 transition-colors ${onRowClick ? 'cursor-pointer' : ''}`}
                 onClick={() => onRowClick?.(row)}
               >
                 {columns.map((col) => (
@@ -98,25 +98,25 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
                       col.render(row)
                     ) : col.type === 'avatar' ? (
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#FF8280]/10 text-[#FF8280] flex items-center justify-center text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-[#C855F0]/10 text-[#C855F0] flex items-center justify-center text-xs font-bold">
                           {getInitials(row[col.nameKey || 'name'])}
                         </div>
-                        <span className="font-medium text-gray-900">{row[col.nameKey || 'name']}</span>
+                        <span className="font-medium text-white">{row[col.nameKey || 'name']}</span>
                       </div>
                     ) : col.type === 'status' ? (
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusColors[row[col.key]?.toLowerCase()] || 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${statusColors[row[col.key]?.toLowerCase()] || 'bg-[#2A2A2A] text-[#666666]'}`}>
                         {row[col.key]}
                       </span>
                     ) : col.type === 'date' ? (
-                      <span className="text-gray-500">
+                      <span className="text-[#999999]">
                         {row[col.key] ? new Date(row[col.key]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
                       </span>
                     ) : col.type === 'currency' ? (
-                      <span className="font-medium text-gray-900">
+                      <span className="font-medium text-white">
                         ${typeof row[col.key] === 'number' ? row[col.key].toFixed(2) : row[col.key] ?? '0.00'}
                       </span>
                     ) : (
-                      <span className="text-gray-700">{row[col.key] ?? '—'}</span>
+                      <span className="text-[#999999]">{row[col.key] ?? '—'}</span>
                     )}
                   </td>
                 ))}
@@ -126,15 +126,15 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
         </table>
       </div>
       {totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-          <span className="text-sm text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-[#2A2A2A]">
+          <span className="text-sm text-[#999999]">
             Showing {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, sorted.length)} of {sorted.length}
           </span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPage((p) => Math.max(0, p - 1))}
               disabled={page === 0}
-              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg hover:bg-[#2A2A2A] disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -142,7 +142,7 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
               <button
                 key={i}
                 onClick={() => setPage(i)}
-                className={`w-8 h-8 rounded-lg text-sm font-medium ${page === i ? 'bg-[#FF8280] text-white' : 'hover:bg-gray-100 text-gray-600'}`}
+                className={`w-8 h-8 rounded-lg text-sm font-medium ${page === i ? 'bg-[#C855F0] text-white' : 'hover:bg-[#2A2A2A] text-[#999999]'}`}
               >
                 {i + 1}
               </button>
@@ -150,7 +150,7 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
             <button
               onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
               disabled={page === totalPages - 1}
-              className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="p-1.5 rounded-lg hover:bg-[#2A2A2A] disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

@@ -40,15 +40,15 @@ export default function AdminLayout() {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 flex flex-col" style={{ backgroundColor: '#0f0f1a' }}>
+      <aside className="w-64 flex-shrink-0 flex flex-col" style={{ backgroundColor: '#0D0D0D' }}>
         {/* Logo */}
         <div className="px-6 py-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#FF8280]/10 flex items-center justify-center">
-            <Clapperboard className="w-6 h-6 text-[#FF8280]" />
+          <div className="w-10 h-10 rounded-xl bg-[#C855F0]/10 flex items-center justify-center">
+            <Clapperboard className="w-6 h-6 text-[#C855F0]" />
           </div>
           <div>
             <h1 className="text-white font-bold text-lg leading-tight">DrSelfTape</h1>
-            <p className="text-gray-500 text-xs">Admin Panel</p>
+            <p className="text-[#999999] text-xs">Admin Panel</p>
           </div>
         </div>
 
@@ -61,8 +61,8 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#FF8280]/10 text-[#FF8280]'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-[#C855F0]/10 text-[#C855F0]'
+                    : 'text-[#999999] hover:text-white hover:bg-[#1E1E1E]'
                 }`
               }
             >
@@ -73,16 +73,16 @@ export default function AdminLayout() {
         </nav>
 
         {/* User Footer */}
-        <div className="px-4 py-4 border-t border-white/5">
+        <div className="px-4 py-4 border-t border-[#1E1E1E]">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-full bg-[#FF8280]/20 text-[#FF8280] flex items-center justify-center text-xs font-bold">
+            <div className="w-9 h-9 rounded-full bg-[#C855F0]/20 text-[#C855F0] flex items-center justify-center text-xs font-bold">
               {getInitials(user?.name || user?.first_name || 'A')}
             </div>
             <div className="min-w-0">
               <p className="text-white text-sm font-medium truncate">
                 {user?.name || user?.first_name || 'Admin'}
               </p>
-              <p className="text-gray-500 text-xs truncate">{user?.email || 'admin@drselftape.com'}</p>
+              <p className="text-[#999999] text-xs truncate">{user?.email || 'admin@drselftape.com'}</p>
             </div>
           </div>
         </div>
@@ -91,16 +91,16 @@ export default function AdminLayout() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header Bar */}
-        <header className="flex-shrink-0 h-16 bg-white border-b border-gray-100 flex items-center px-8">
-          <h2 className="text-xl font-bold text-gray-900">{pageTitle}</h2>
+        <header className="flex-shrink-0 h-16 bg-[#0D0D0D] border-b border-[#1E1E1E] flex items-center px-8">
+          <h2 className="text-xl font-bold text-white">{pageTitle}</h2>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-gray-50/50 p-8">
+        <main className="flex-1 overflow-auto bg-[#0D0D0D] p-8">
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
               </div>
             }
           >

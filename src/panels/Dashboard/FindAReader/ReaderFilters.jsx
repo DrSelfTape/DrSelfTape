@@ -92,14 +92,14 @@ const ReaderFilters = ({ onClose }) => {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-t-2xl bg-white p-6 sm:rounded-2xl">
+      <div className="relative w-full max-w-md rounded-t-2xl bg-[#1E1E1E] p-6 sm:rounded-2xl">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
           <h2 className="text-lg font-bold text-[#0f0f1a]">Filters</h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded-full p-1 text-[#666666] transition-colors hover:bg-[#2A2A2A] hover:text-[#999999]"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -123,7 +123,7 @@ const ReaderFilters = ({ onClose }) => {
                     className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                       selected
                         ? 'bg-[#A7ECDA] text-[#0f0f1a]'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
                     }`}
                   >
                     {genre}
@@ -141,7 +141,7 @@ const ReaderFilters = ({ onClose }) => {
             <select
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
-              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-[#0f0f1a] outline-none focus:border-[#FF8280]"
+              className="w-full rounded-lg border border-[#3A3A3A] px-3 py-2 text-sm text-[#0f0f1a] outline-none focus:border-[#C855F0]"
             >
               <option value="">Any</option>
               {EXPERIENCE_LEVELS.map((level) => (
@@ -166,7 +166,7 @@ const ReaderFilters = ({ onClose }) => {
                   className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     unionStatus === option
                       ? 'bg-[#0f0f1a] text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
                   }`}
                 >
                   {option}
@@ -189,7 +189,7 @@ const ReaderFilters = ({ onClose }) => {
                   className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     availability === option
                       ? 'bg-[#0f0f1a] text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
                   }`}
                 >
                   {option}
@@ -212,7 +212,7 @@ const ReaderFilters = ({ onClose }) => {
                   className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     gender === option
                       ? 'bg-[#0f0f1a] text-white'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
                   }`}
                 >
                   {option}
@@ -227,14 +227,14 @@ const ReaderFilters = ({ onClose }) => {
           <button
             type="button"
             onClick={handleReset}
-            className="flex-1 rounded-lg border border-gray-200 px-4 py-2.5 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50"
+            className="flex-1 rounded-lg border border-[#3A3A3A] px-4 py-2.5 text-sm font-medium text-[#999999] transition-colors hover:bg-[#1E1E1E]"
           >
             Reset
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="flex-1 rounded-lg bg-[#FF8280] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#ff6e6c]"
+            className="flex-1 rounded-lg bg-[#C855F0] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#ff6e6c]"
           >
             Apply Filters
           </button>

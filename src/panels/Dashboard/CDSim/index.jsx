@@ -152,15 +152,15 @@ export default function CDSim() {
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                   i <= currentStepIdx
-                    ? 'bg-[#FF8280] text-white'
-                    : 'bg-gray-200 text-gray-500'
+                    ? 'bg-[#C855F0] text-white'
+                    : 'bg-[#2A2A2A] text-[#666666]'
                 }`}
               >
                 {i + 1}
               </div>
               <span
                 className={`text-sm font-medium hidden sm:inline ${
-                  i <= currentStepIdx ? 'text-gray-900' : 'text-gray-400'
+                  i <= currentStepIdx ? 'text-white' : 'text-[#666666]'
                 }`}
               >
                 {STEP_LABELS[i]}
@@ -168,7 +168,7 @@ export default function CDSim() {
               {i < STEPS.length - 1 && (
                 <div
                   className={`w-8 h-0.5 ${
-                    i < currentStepIdx ? 'bg-[#FF8280]' : 'bg-gray-200'
+                    i < currentStepIdx ? 'bg-[#C855F0]' : 'bg-[#2A2A2A]'
                   }`}
                 />
               )}
@@ -208,9 +208,9 @@ export default function CDSim() {
 
       {step === 'analyzing' && (
         <div className="flex flex-col items-center justify-center py-24">
-          <div className="w-12 h-12 border-4 border-[#FF8280] border-t-transparent rounded-full animate-spin mb-6" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Analyzing your scene...</h2>
-          <p className="text-gray-500 text-sm">
+          <div className="w-12 h-12 border-4 border-[#C855F0] border-t-transparent rounded-full animate-spin mb-6" />
+          <h2 className="text-xl font-semibold text-white mb-2">Analyzing your scene...</h2>
+          <p className="text-[#999999] text-sm">
             Your casting director is reviewing the script and preparing direction.
           </p>
           {error && (
@@ -221,7 +221,7 @@ export default function CDSim() {
                   setError('');
                   setStep('analyzing');
                 }}
-                className="px-6 py-3 rounded-xl bg-[#FF8280] text-white font-semibold hover:bg-[#e06e6c] transition-colors"
+                className="px-6 py-3 rounded-xl bg-[#C855F0] text-white font-semibold hover:bg-[#A040C8] transition-colors"
               >
                 Retry
               </button>

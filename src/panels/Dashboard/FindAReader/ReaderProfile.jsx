@@ -29,7 +29,7 @@ const ReaderProfile = () => {
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-1.5 text-sm text-gray-400 transition-colors hover:text-white"
+          className="mb-6 flex items-center gap-1.5 text-sm text-[#666666] transition-colors hover:text-white"
         >
           <ArrowLeft className="h-4 w-4" />
           Back
@@ -37,18 +37,18 @@ const ReaderProfile = () => {
 
         {/* Headshot */}
         <div className="mb-6 flex h-64 w-full items-center justify-center rounded-xl bg-gray-200">
-          <span className="text-7xl font-bold text-gray-400">{initials}</span>
+          <span className="text-7xl font-bold text-[#666666]">{initials}</span>
         </div>
 
         {/* Info card */}
-        <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-[#2A2A2A] bg-[#1E1E1E] p-6 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-bold text-[#0f0f1a]">
                 {reader?.name || 'Actor'}
               </h1>
               {reader?.experience_level && (
-                <p className="mt-0.5 text-sm text-gray-500">
+                <p className="mt-0.5 text-sm text-[#999999]">
                   {reader.experience_level}
                 </p>
               )}
@@ -66,10 +66,10 @@ const ReaderProfile = () => {
           {/* Bio */}
           {reader?.bio && (
             <div className="mt-5">
-              <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-[#666666]">
                 Bio
               </h3>
-              <p className="text-sm leading-relaxed text-gray-700">
+              <p className="text-sm leading-relaxed text-[#999999]">
                 {reader.bio}
               </p>
             </div>
@@ -78,7 +78,7 @@ const ReaderProfile = () => {
           {/* Genres */}
           {reader?.genres?.length > 0 && (
             <div className="mt-5">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#666666]">
                 Genres
               </h3>
               <GenreTags genres={reader.genres} />
@@ -87,7 +87,7 @@ const ReaderProfile = () => {
 
           {/* Recent activity */}
           {reader?.recent_activity && (
-            <div className="mt-5 flex items-center gap-1.5 text-xs text-gray-400">
+            <div className="mt-5 flex items-center gap-1.5 text-xs text-[#666666]">
               <Clock className="h-3.5 w-3.5" />
               {reader.recent_activity}
             </div>

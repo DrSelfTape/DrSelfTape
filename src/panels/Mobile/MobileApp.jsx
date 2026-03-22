@@ -47,7 +47,7 @@ const GOLD = "#FCE072";
 const GOLD_DIM = "rgba(252,224,114,0.12)";
 const CORAL_SOFT = "#FFB49A";
 const CORAL_SOFT_DIM = "rgba(255,180,154,0.10)";
-const CORAL = "#FF8280";
+const CORAL = "#C855F0";
 const CORAL_DIM = "rgba(255,130,128,0.12)";
 const CORAL_GLOW = "rgba(255,130,128,0.25)";
 

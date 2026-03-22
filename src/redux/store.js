@@ -1,7 +1,13 @@
 // Library imports
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { persistReducer, persistStore } from 'redux-persist';
+import { persistReducer, persistStore, createMigrate } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+
+// Migrations — bump version in persistConfig when breaking state shape changes
+const migrations = {
+  2: (state) => ({ auth: state?.auth }), // v2: only keep auth, drop everything else
+};
+const migrationConfig = createMigrate(migrations, { debug: false });
 
 // Local imports
 import authSlice from './features/auth/authSlice';
@@ -29,8 +35,10 @@ import adminSlice from './features/admin/adminSlice';
 // Define the persist configuration
 const persistConfig = {
   key: 'root',
+  version: 2,
   storage,
   whitelist: ['auth'],
+  migrate: migrationConfig,
 };
 
 // Combine reducers

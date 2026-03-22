@@ -43,7 +43,7 @@ export default function AdminBannedUsers() {
               e.stopPropagation();
               handleUnban(row.id);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-xs font-medium hover:bg-green-100 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-green-500/10 text-green-400 rounded-lg text-xs font-medium hover:bg-green-500/20 transition-colors"
           >
             <ShieldOff className="w-3.5 h-3.5" />
             Unban
@@ -53,7 +53,7 @@ export default function AdminBannedUsers() {
               e.stopPropagation();
               window.open(`/admin/users?userId=${row.id}`, '_blank');
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-100 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#2A2A2A] text-[#999999] rounded-lg text-xs font-medium hover:bg-[#3A3A3A] transition-colors"
           >
             <ExternalLink className="w-3.5 h-3.5" />
             Profile
@@ -64,7 +64,7 @@ export default function AdminBannedUsers() {
               // In a full implementation this would open a ban history modal
               alert(`Ban history for ${row.name || 'user'}:\n\nBanned on: ${row.banned_date ? new Date(row.banned_date).toLocaleDateString() : 'N/A'}\nReason: ${row.reason || 'N/A'}\nBanned by: ${row.banned_by || 'N/A'}`);
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-medium hover:bg-blue-500/20 transition-colors"
           >
             <History className="w-3.5 h-3.5" />
             History
@@ -77,7 +77,7 @@ export default function AdminBannedUsers() {
   if (bannedUsersLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }

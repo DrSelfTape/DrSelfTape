@@ -25,8 +25,8 @@ function PillGroup({ label, options, selected, onSelect }) {
             onClick={() => onSelect(opt)}
             className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 cursor-pointer ${
               selected === opt
-                ? 'bg-[#ff6b35] text-white shadow-lg shadow-[#ff6b35]/30'
-                : 'bg-[#0f0f23] text-gray-400 border border-[#2a2a4a] hover:border-[#ff6b35]/50 hover:text-gray-200'
+                ? 'bg-[#C855F0] text-white shadow-lg shadow-[#C855F0]/30'
+                : 'bg-[#0f0f23] text-[#666666] border border-[#2a2a4a] hover:border-[#C855F0]/50 hover:text-gray-200'
             }`}
           >
             {opt}
@@ -42,9 +42,9 @@ function ScriptDisplay({ script, onLaunch, onCopy, copied }) {
 
   return (
     <div className="bg-[#1a1a2e] border border-[#2a2a4a] rounded-2xl overflow-hidden animate-in fade-in duration-500">
-      <div className="bg-gradient-to-r from-[#ff6b35]/10 to-transparent border-b border-[#2a2a4a] px-6 py-4">
+      <div className="bg-gradient-to-r from-[#C855F0]/10 to-transparent border-b border-[#2a2a4a] px-6 py-4">
         <h3 className="text-white font-semibold text-lg">Your Generated Scene</h3>
-        <p className="text-gray-500 text-sm mt-1">Ready to perform</p>
+        <p className="text-[#999999] text-sm mt-1">Ready to perform</p>
       </div>
 
       <div className="p-6 font-mono text-sm leading-relaxed max-h-[500px] overflow-y-auto custom-scrollbar">
@@ -52,7 +52,7 @@ function ScriptDisplay({ script, onLaunch, onCopy, copied }) {
           const trimmed = line.trim();
           // Scene headers like FADE IN, INT., EXT.
           if (/^(FADE IN|FADE OUT|INT\.|EXT\.|CUT TO|SMASH CUT|END SCENE)/i.test(trimmed)) {
-            return <p key={i} className="text-[#ff6b35] font-bold uppercase my-3">{trimmed}</p>;
+            return <p key={i} className="text-[#C855F0] font-bold uppercase my-3">{trimmed}</p>;
           }
           // Character names (ALL CAPS lines that aren't stage directions)
           if (trimmed === trimmed.toUpperCase() && trimmed.length > 1 && /^[A-Z\s]+$/.test(trimmed)) {
@@ -60,7 +60,7 @@ function ScriptDisplay({ script, onLaunch, onCopy, copied }) {
           }
           // Stage directions in parentheses
           if (/^\(.*\)$/.test(trimmed)) {
-            return <p key={i} className="text-gray-500 italic ml-8">{trimmed}</p>;
+            return <p key={i} className="text-[#999999] italic ml-8">{trimmed}</p>;
           }
           // Empty lines
           if (!trimmed) {
@@ -74,13 +74,13 @@ function ScriptDisplay({ script, onLaunch, onCopy, copied }) {
       <div className="border-t border-[#2a2a4a] px-6 py-4 flex flex-col sm:flex-row gap-3">
         <button
           onClick={onLaunch}
-          className="flex-1 bg-[#ff6b35] hover:bg-[#e85d2c] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#ff6b35]/30 cursor-pointer text-center"
+          className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#C855F0]/30 cursor-pointer text-center"
         >
           Launch in CD Sim
         </button>
         <button
           onClick={onCopy}
-          className="flex-1 bg-[#0f0f23] border border-[#2a2a4a] hover:border-[#ff6b35]/50 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 cursor-pointer text-center"
+          className="flex-1 bg-[#0f0f23] border border-[#2a2a4a] hover:border-[#C855F0]/50 text-gray-300 hover:text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 cursor-pointer text-center"
         >
           {copied ? 'Copied!' : 'Copy Script'}
         </button>
@@ -176,7 +176,7 @@ export default function AuditionGenerator() {
           <h1 className="text-3xl sm:text-4xl font-bold text-white">
             Instant Audition Generator
           </h1>
-          <p className="text-gray-400 mt-2 text-lg">
+          <p className="text-[#666666] mt-2 text-lg">
             Powered by AI — get a custom scene in seconds
           </p>
         </div>
@@ -195,8 +195,8 @@ export default function AuditionGenerator() {
         disabled={loading}
         className={`w-full py-4 rounded-2xl text-lg font-bold transition-all duration-300 cursor-pointer ${
           loading
-            ? 'bg-[#ff6b35]/60 text-white/80 cursor-wait'
-            : 'bg-[#ff6b35] text-white hover:bg-[#e85d2c] hover:shadow-xl hover:shadow-[#ff6b35]/25 active:scale-[0.99]'
+            ? 'bg-[#C855F0]/60 text-white/80 cursor-wait'
+            : 'bg-[#C855F0] text-white hover:bg-[#A040C8] hover:shadow-xl hover:shadow-[#C855F0]/25 active:scale-[0.99]'
         }`}
       >
         {loading ? (

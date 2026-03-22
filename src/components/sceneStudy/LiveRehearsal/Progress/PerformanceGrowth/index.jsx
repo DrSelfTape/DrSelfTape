@@ -23,7 +23,7 @@ const PerformanceGrowth = () => {
     {
       label: 'Memorization Speed',
       improvement: '+12% improvement',
-      color: '#FF8280',
+      color: '#C855F0',
       progress: 68,
     },
   ];

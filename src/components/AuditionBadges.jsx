@@ -108,12 +108,12 @@ function Badge({ badge, earned }) {
       className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
         earned
           ? 'border-transparent bg-gradient-to-br ' + badge.color + ' shadow-md'
-          : 'border-gray-200 bg-gray-50 opacity-50 grayscale'
+          : 'border-[#3A3A3A] bg-[#1E1E1E] opacity-50 grayscale'
       }`}
       title={badge.desc}
     >
       <span className="text-2xl">{badge.emoji}</span>
-      <span className={`text-[10px] font-bold text-center leading-tight ${earned ? 'text-white' : 'text-gray-500'}`}>
+      <span className={`text-[10px] font-bold text-center leading-tight ${earned ? 'text-white' : 'text-[#999999]'}`}>
         {badge.name}
       </span>
       {earned && (
@@ -148,7 +148,7 @@ export default function AuditionBadges({ stats, compact = false }) {
           </div>
         ))}
         {locked.length > 0 && (
-          <span className="text-xs text-gray-400">{locked.length} more to unlock</span>
+          <span className="text-xs text-[#666666]">{locked.length} more to unlock</span>
         )}
       </div>
     );
@@ -158,7 +158,7 @@ export default function AuditionBadges({ stats, compact = false }) {
     <div className="space-y-4">
       {earned.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+          <h4 className="text-xs font-bold text-[#999999] uppercase tracking-wider mb-3">
             Earned — {earned.length}/{BADGES.length}
           </h4>
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
@@ -168,7 +168,7 @@ export default function AuditionBadges({ stats, compact = false }) {
       )}
       {locked.length > 0 && (
         <div>
-          <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">
+          <h4 className="text-xs font-bold text-[#666666] uppercase tracking-wider mb-3">
             Locked
           </h4>
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">

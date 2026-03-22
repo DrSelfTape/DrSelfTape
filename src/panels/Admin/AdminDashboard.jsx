@@ -38,7 +38,7 @@ export default function AdminDashboard() {
   if (statsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -100,39 +100,40 @@ export default function AdminDashboard() {
       </div>
 
       {/* Signups Chart */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-        <h3 className="text-lg font-bold text-gray-900 mb-6">Signups Over Time</h3>
+      <div className="bg-[#1A1A1A] rounded-2xl border border-[#2A2A2A] p-6">
+        <h3 className="text-lg font-bold text-white mb-6">Signups Over Time</h3>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f1f1" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
               <XAxis
                 dataKey="month"
-                tick={{ fontSize: 12, fill: '#9ca3af' }}
-                axisLine={{ stroke: '#e5e7eb' }}
+                tick={{ fontSize: 12, fill: '#666666' }}
+                axisLine={{ stroke: '#3A3A3A' }}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fontSize: 12, fill: '#9ca3af' }}
-                axisLine={{ stroke: '#e5e7eb' }}
+                tick={{ fontSize: 12, fill: '#666666' }}
+                axisLine={{ stroke: '#3A3A3A' }}
                 tickLine={false}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: '#fff',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: '#1E1E1E',
+                  border: '1px solid #3A3A3A',
                   borderRadius: '12px',
                   fontSize: '13px',
+                  color: '#fff',
                   boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)',
                 }}
               />
               <Line
                 type="monotone"
                 dataKey="signups"
-                stroke="#FF8280"
+                stroke="#C855F0"
                 strokeWidth={2.5}
-                dot={{ r: 4, fill: '#FF8280', strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#FF8280', strokeWidth: 2, stroke: '#fff' }}
+                dot={{ r: 4, fill: '#C855F0', strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#C855F0', strokeWidth: 2, stroke: '#1A1A1A' }}
               />
             </LineChart>
           </ResponsiveContainer>

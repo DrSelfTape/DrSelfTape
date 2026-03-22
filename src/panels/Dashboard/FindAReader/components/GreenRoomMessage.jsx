@@ -11,8 +11,8 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
       <div
         className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
           isOwn
-            ? 'bg-[#FF8280] text-white rounded-br-md'
-            : 'bg-gray-100 text-[#0f0f1a] rounded-bl-md'
+            ? 'bg-[#C855F0] text-white rounded-br-md'
+            : 'bg-[#2A2A2A] text-[#0f0f1a] rounded-bl-md'
         }`}
       >
         {!isOwn && message.sender_name && (
@@ -23,7 +23,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
         <p className="text-sm leading-relaxed">{message.content}</p>
         <p
           className={`text-[10px] mt-1 ${
-            isOwn ? 'text-white/70' : 'text-gray-400'
+            isOwn ? 'text-white/70' : 'text-[#666666]'
           }`}
         >
           {time}

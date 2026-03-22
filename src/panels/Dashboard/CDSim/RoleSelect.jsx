@@ -2,16 +2,16 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Pick Your Role</h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <h2 className="text-2xl font-bold text-white">Pick Your Role</h2>
+        <p className="text-[#999999] text-sm mt-1">
           Select the character you'll be reading for — the AI will play all other roles as your Casting Director.
         </p>
       </div>
 
       {characters.length === 0 ? (
-        <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+        <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 px-4 py-3 rounded-lg text-sm">
           No characters detected. Make sure your sides use the format{' '}
-          <code className="bg-yellow-100 px-1 rounded">CHARACTER: dialogue</code>
+          <code className="bg-yellow-500/20 px-1 rounded">CHARACTER: dialogue</code>
         </div>
       ) : (
         <>
@@ -24,13 +24,13 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                   onClick={() => onSelectRole(name)}
                   className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-[#ff6b35] bg-orange-50 text-[#ff6b35] shadow-sm'
-                      : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      ? 'border-[#C855F0] bg-[#C855F0]/5 text-[#C855F0] shadow-sm'
+                      : 'border-[#3A3A3A] bg-[#1E1E1E] text-[#999999] hover:border-[#C855F0]'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <svg
-                      className={`w-5 h-5 ${isSelected ? 'text-[#ff6b35]' : 'text-gray-400'}`}
+                      className={`w-5 h-5 ${isSelected ? 'text-[#C855F0]' : 'text-[#666666]'}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -45,7 +45,7 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                     {name}
                   </div>
                   {isSelected && (
-                    <p className="text-[10px] mt-1 text-[#ff6b35] font-normal">Your role</p>
+                    <p className="text-[10px] mt-1 text-[#C855F0] font-normal">Your role</p>
                   )}
                 </button>
               );
@@ -53,8 +53,8 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
           </div>
 
           {selectedRole && (
-            <div className="mt-6 bg-gray-50 rounded-xl border border-gray-100 p-4 text-sm text-gray-600">
-              <span className="font-semibold text-gray-800">
+            <div className="mt-6 bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] p-4 text-sm text-[#999999]">
+              <span className="font-semibold text-white">
                 I will be reading all other roles as your Casting Director today.
               </span>{' '}
               When you're ready, hit Begin Session and we'll start from the top.
@@ -66,14 +66,14 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
       <div className="flex gap-3 mt-6">
         <button
           onClick={onBack}
-          className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+          className="flex-1 px-4 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] hover:bg-[#3A3A3A] rounded-lg transition-colors cursor-pointer"
         >
           Back
         </button>
         <button
           onClick={onStart}
           disabled={!selectedRole}
-          className="flex-1 bg-[#ff6b35] hover:bg-[#e55a2b] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Begin Session
         </button>

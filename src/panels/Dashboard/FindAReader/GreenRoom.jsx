@@ -18,13 +18,13 @@ const GreenRoom = () => {
   }, [dispatch]);
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0f0f1a] px-4 py-8">
+    <div className="min-h-[calc(100vh-80px)] bg-[#0D0D0D] px-4 py-8">
       <div className="mx-auto max-w-lg">
         <h1 className="mb-6 text-xl font-bold text-white">Green Room</h1>
 
         {matchesLoading && (
           <div className="flex h-60 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#FF8280]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#C855F0]" />
           </div>
         )}
 
@@ -39,7 +39,7 @@ const GreenRoom = () => {
         )}
 
         {!matchesLoading && matches.length > 0 && (
-          <div className="divide-y divide-gray-800 rounded-xl border border-gray-800 bg-gray-900/50">
+          <div className="divide-y divide-[#2A2A2A] rounded-2xl border border-[#2A2A2A] bg-[#1A1A1A]">
             {matches.map((match) => (
               <ReaderListItem
                 key={match.id}

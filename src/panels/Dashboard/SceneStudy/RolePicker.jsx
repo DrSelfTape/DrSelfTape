@@ -23,8 +23,8 @@ export default function RolePicker({
     <div className="max-w-2xl mx-auto">
       {/* Role selection */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Pick Your Role</h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <h2 className="text-2xl font-bold text-white">Pick Your Role</h2>
+        <p className="text-[#999999] text-sm mt-1">
           Select the character you'll be reading for
         </p>
       </div>
@@ -44,13 +44,13 @@ export default function RolePicker({
                 onClick={() => onSelectRole(name)}
                 className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                   isSelected
-                    ? 'border-[#ff6b35] bg-orange-50 text-[#ff6b35] shadow-sm'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    ? 'border-[#C855F0] bg-[#C855F0]/10 text-[#C855F0] shadow-sm'
+                    : 'border-[#3A3A3A] bg-[#1E1E1E] text-[#999999] hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <svg
-                    className={`w-5 h-5 ${isSelected ? 'text-[#ff6b35]' : 'text-gray-400'}`}
+                    className={`w-5 h-5 ${isSelected ? 'text-[#C855F0]' : 'text-[#666666]'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -65,7 +65,7 @@ export default function RolePicker({
                   {name}
                 </div>
                 {isSelected && (
-                  <p className="text-[10px] mt-1 text-[#ff6b35] font-normal">Your role</p>
+                  <p className="text-[10px] mt-1 text-[#C855F0] font-normal">Your role</p>
                 )}
               </button>
             );
@@ -74,12 +74,12 @@ export default function RolePicker({
       )}
 
       {/* Divider */}
-      <div className="mt-8 mb-6 border-t border-gray-100" />
+      <div className="mt-8 mb-6 border-t border-[#2A2A2A]" />
 
       {/* AI Voice selection */}
       <div className="mb-5">
-        <h3 className="text-base font-bold text-gray-900 mb-1">Choose Your AI Scene Partner's Voice</h3>
-        <p className="text-gray-500 text-sm">
+        <h3 className="text-base font-bold text-white mb-1">Choose Your AI Scene Partner's Voice</h3>
+        <p className="text-[#999999] text-sm">
           This voice will read the other character's lines during practice and Live Scene Mode.
         </p>
       </div>
@@ -93,20 +93,20 @@ export default function RolePicker({
               onClick={() => onSelectVoice && onSelectVoice(v.id)}
               className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
                 isSelected
-                  ? 'border-[#ff6b35] bg-orange-50 shadow-sm'
-                  : 'border-gray-200 bg-white hover:border-gray-300'
+                  ? 'border-[#C855F0] bg-[#C855F0]/10 shadow-sm'
+                  : 'border-[#3A3A3A] bg-[#1E1E1E] hover:border-gray-300'
               }`}
             >
               <span className="text-2xl">{v.emoji}</span>
               <div className="flex-1 min-w-0">
-                <div className={`font-semibold text-sm ${isSelected ? 'text-[#ff6b35]' : 'text-gray-900'}`}>
+                <div className={`font-semibold text-sm ${isSelected ? 'text-[#C855F0]' : 'text-white'}`}>
                   {v.label}
                 </div>
-                <div className="text-xs text-gray-500 truncate">{v.desc}</div>
+                <div className="text-xs text-[#999999] truncate">{v.desc}</div>
               </div>
               <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] text-gray-500">{v.gender}</span>
-                <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[10px] text-gray-500">{v.accent}</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#2A2A2A] text-[10px] text-[#999999]">{v.gender}</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#2A2A2A] text-[10px] text-[#999999]">{v.accent}</span>
               </div>
             </button>
           );
@@ -116,14 +116,14 @@ export default function RolePicker({
       <div className="flex gap-3 mt-6">
         <button
           onClick={onBack}
-          className="flex-1 px-4 py-3 text-sm font-semibold text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
+          className="flex-1 px-4 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] hover:bg-[#2A2A2A] rounded-lg transition-colors cursor-pointer"
         >
           Back
         </button>
         <button
           onClick={onStart}
           disabled={!selectedRole}
-          className="flex-1 bg-[#ff6b35] hover:bg-[#e55a2b] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Start Practice
         </button>

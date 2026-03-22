@@ -56,17 +56,17 @@ const WhoWantsToRead = () => {
 
         {likesLoading && (
           <div className="flex h-60 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#FF8280]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#C855F0]" />
           </div>
         )}
 
         {!likesLoading && whoWantsToRead.length === 0 && (
           <div className="flex h-60 flex-col items-center justify-center text-center">
-            <Heart className="mb-3 h-10 w-10 text-gray-500" />
+            <Heart className="mb-3 h-10 w-10 text-[#999999]" />
             <p className="text-sm font-semibold text-white">
               No one yet
             </p>
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-[#666666]">
               When someone swipes right on you, they&apos;ll appear here.
             </p>
           </div>

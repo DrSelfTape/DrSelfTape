@@ -29,7 +29,7 @@ export const ScriptAnalysisAnalysisTab = ({
           header='Scene Objectives'
           icon={<TargetIcon className='h-4 w-4 text-[#A7ECDA]' />}
         >
-          <ul className='list-disc list-inside pl-5 text-[#09090B] text-sm flex flex-col gap-1'>
+          <ul className='list-disc list-inside pl-5 text-[#999999] text-sm flex flex-col gap-1'>
             {sceneAnalysisData?.sceneObjectives?.length > 0 ? (
               sceneAnalysisData?.sceneObjectives?.map((item, index) => {
                 return (
@@ -51,9 +51,9 @@ export const ScriptAnalysisAnalysisTab = ({
         </CustomAccordion>
         <CustomAccordion
           header='Emotional Beats'
-          icon={<HeartIcon className='h-4 w-4 text-[#FF8280]' />}
+          icon={<HeartIcon className='h-4 w-4 text-[#C855F0]' />}
         >
-          <ul className='list-disc list-inside pl-5 text-[#09090B] text-sm flex flex-col gap-1'>
+          <ul className='list-disc list-inside pl-5 text-[#999999] text-sm flex flex-col gap-1'>
             {sceneAnalysisData?.emotionalBeats?.length > 0 ? (
               sceneAnalysisData?.emotionalBeats?.map((item, index) => {
                 return (
@@ -77,7 +77,7 @@ export const ScriptAnalysisAnalysisTab = ({
           header='Character Motivation'
           icon={<BrainIcon className='h-4 w-4 text-[#FCE072]' />}
         >
-          <div className='list-disc list-inside pl-5 text-[#09090B] text-sm'>
+          <div className='list-disc list-inside pl-5 text-[#999999] text-sm'>
             {sceneAnalysisData?.characterMotivation?.length > 0 ? (
               sceneAnalysisData?.characterMotivation?.map((item, index) => {
                 return (
@@ -112,7 +112,7 @@ export const ScriptAnalysisAnalysisTab = ({
           header='Subtext & Transitions'
           icon={<ArrowRightIcon className='h-4 w-4 text-[#FFB49A]' />}
         >
-          <ul className='list-disc list-inside pl-5 text-[#09090B] text-sm'>
+          <ul className='list-disc list-inside pl-5 text-[#999999] text-sm'>
             {sceneAnalysisData?.subtextTransitions?.length > 0 ? (
               sceneAnalysisData?.subtextTransitions?.map((item, index) => {
                 return (
@@ -136,7 +136,7 @@ export const ScriptAnalysisAnalysisTab = ({
           header='Tone & Energy Levels'
           icon={<StatisticsIcon className='!h-4 !w-4 !text-[#A7ECDA]' />}
         >
-          <ul className='list-disc list-inside pl-5 text-[#09090B] text-sm'>
+          <ul className='list-disc list-inside pl-5 text-[#999999] text-sm'>
             {sceneAnalysisData?.toneEnergy?.length > 0 ? (
               sceneAnalysisData?.toneEnergy?.map((item, index) => {
                 const energy = item?.energyMap

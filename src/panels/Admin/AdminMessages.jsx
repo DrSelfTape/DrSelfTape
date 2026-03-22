@@ -20,8 +20,8 @@ const statusIcon = {
 };
 
 const statusColor = {
-  unread: 'text-[#FF8280]',
-  read: 'text-gray-400',
+  unread: 'text-[#C855F0]',
+  read: 'text-[#666666]',
   resolved: 'text-green-500',
 };
 
@@ -57,23 +57,23 @@ export default function AdminMessages() {
   if (messagesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-12rem)] bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="flex h-[calc(100vh-12rem)] bg-[#1A1A1A] rounded-2xl border border-[#2A2A2A] overflow-hidden">
       {/* Message List (40%) */}
-      <div className="w-2/5 border-r border-gray-100 flex flex-col">
-        <div className="px-4 py-3 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-900 text-sm">
+      <div className="w-2/5 border-r border-[#2A2A2A] flex flex-col">
+        <div className="px-4 py-3 border-b border-[#2A2A2A]">
+          <h3 className="font-semibold text-white text-sm">
             Messages ({messageList.length})
           </h3>
         </div>
         <div className="flex-1 overflow-y-auto">
           {messageList.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-sm text-gray-400">
+            <div className="flex items-center justify-center h-full text-sm text-[#666666]">
               No messages
             </div>
           ) : (
@@ -84,33 +84,33 @@ export default function AdminMessages() {
                 <div
                   key={msg.id}
                   onClick={() => handleSelectMessage(msg)}
-                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer border-b border-gray-50 transition-colors ${
+                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer border-b border-[#1E1E1E] transition-colors ${
                     isSelected
-                      ? 'bg-[#FF8280]/5 border-l-2 border-l-[#FF8280]'
-                      : 'hover:bg-gray-50 border-l-2 border-l-transparent'
+                      ? 'bg-[#C855F0]/5 border-l-2 border-l-[#C855F0]'
+                      : 'hover:bg-[#1E1E1E] border-l-2 border-l-transparent'
                   }`}
                 >
                   {/* Avatar */}
-                  <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[#FF8280]/10 text-[#FF8280] flex items-center justify-center text-xs font-bold mt-0.5">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[#C855F0]/10 text-[#C855F0] flex items-center justify-center text-xs font-bold mt-0.5">
                     {getInitials(msg.user_name)}
                   </div>
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <span className={`text-sm font-medium truncate ${msg.status === 'unread' ? 'text-gray-900' : 'text-gray-600'}`}>
+                      <span className={`text-sm font-medium truncate ${msg.status === 'unread' ? 'text-white' : 'text-[#999999]'}`}>
                         {msg.user_name || 'Unknown'}
                       </span>
-                      <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                      <span className="text-xs text-[#666666] flex-shrink-0 ml-2">
                         {msg.date
                           ? new Date(msg.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                           : ''}
                       </span>
                     </div>
-                    <p className={`text-sm truncate ${msg.status === 'unread' ? 'font-medium text-gray-800' : 'text-gray-500'}`}>
+                    <p className={`text-sm truncate ${msg.status === 'unread' ? 'font-medium text-white' : 'text-[#999999]'}`}>
                       {msg.subject || 'No Subject'}
                     </p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">
+                    <p className="text-xs text-[#666666] truncate mt-0.5">
                       {msg.preview || msg.content || ''}
                     </p>
                   </div>
@@ -125,9 +125,9 @@ export default function AdminMessages() {
                           handleArchive(msg);
                         }}
                         title="Archive"
-                        className="p-1 rounded hover:bg-gray-100 transition-colors"
+                        className="p-1 rounded hover:bg-[#2A2A2A] transition-colors"
                       >
-                        <Archive className="w-3.5 h-3.5 text-gray-400" />
+                        <Archive className="w-3.5 h-3.5 text-[#666666]" />
                       </button>
                     )}
                   </div>
