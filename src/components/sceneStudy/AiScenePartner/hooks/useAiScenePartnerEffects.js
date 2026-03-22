@@ -292,6 +292,7 @@ export const useAiScenePartnerEffects = ({
     scriptAnalysis?.scenes?.forEach((scene) => {
       scene?.lines?.forEach((line) => {
         if (line?.is_stage_direction) return;
+        // Tag each line with its scene metadata for the scene navigator
 
         // Track character ID if this line has a character
         if (line?.character?.id) {
@@ -344,11 +345,15 @@ export const useAiScenePartnerEffects = ({
         
         lines.push({
           lineId: line?.id,
-          order_index: orderIndex, // Store order_index from API (preserve 0 if it's 0)
+          order_index: orderIndex,
           character: line?.character?.name || 'Character',
           line: line?.text || '',
           audio_by_tone: toneMap,
           baseAudio,
+          // Scene metadata — used by scene navigator
+          sceneId: scene?.id,
+          sceneNumber: scene?.scene_number ?? scene?.id,
+          sceneTitle: scene?.title || scene?.description || `Scene ${scene?.scene_number ?? ''}`,
         });
         
         // Debug log to verify order_index is being stored

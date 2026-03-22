@@ -8,6 +8,7 @@ import { SelectDropdown, CustomButton } from '../../Shared';
 import { TeleprompterIcon } from '../../../assets/icons';
 import AiScenePartnerScriptLines from './AiScenePartnerScriptLines';
 import AiScenePartnerProgressHeader from './AiScenePartnerProgressHeader';
+import SceneNavigator from './SceneNavigator';
 
 /**
  * Main Panel Component
@@ -192,8 +193,22 @@ const AiScenePartnerMainPanel = ({
         </div>
       </div>
 
+      {/* Scene Navigator */}
+      <div className='pt-3 lg:pt-4'>
+        <SceneNavigator
+          scriptLines={scriptLines}
+          currentLineIndex={currentLineIndex}
+          completedLines={completedLines}
+          sessionStarted={sessionConfig.sessionStarted}
+          audioPlayer={audioPlayer}
+          setCurrentLineIndex={stateSetters.setCurrentLineIndex}
+          stopAllPlayback={handlers.stopAllPlayback}
+          scrollToLine={handlers.scrollToLine}
+        />
+      </div>
+
       {/* Script Lines Container */}
-      <div className='pt-3 lg:pt-6'>
+      <div className='pt-2 lg:pt-3'>
         <div className='rounded-xl bg-white border border-gray-200 overflow-hidden shadow-sm'>
           <AiScenePartnerProgressHeader
             scriptLinesConfig={scriptLinesConfig}
