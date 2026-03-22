@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAuditionsThunk, fetchAuditionStatsThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
-import { fetchBookingsThunk } from "../../redux/features/bookings/bookingsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
 import { fetchScriptsThunk, createScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import * as pdfjsLib from "pdfjs-dist";
@@ -24,17 +23,17 @@ async function extractPdfText(file) {
 /* Lazy-load dashboard panels for the "More" menu */
 const CDSim = lazy(() => import("../Dashboard/CDSim"));
 const CastingDirectorAI = lazy(() => import("../Dashboard/CastingDirectorAI"));
-const LiveRehearsals = lazy(() => import("../Dashboard/LiveRehearsals"));
-const Community = lazy(() => import("../Dashboard/Community"));
+const LiveRehearsals = lazy(() => Promise.resolve({ default: () => null }));
+const Community = lazy(() => Promise.resolve({ default: () => null }));
 const Scripts = lazy(() => import("../Dashboard/Scripts"));
 const Submissions = lazy(() => import("../Dashboard/Submissions"));
 const Reports = lazy(() => import("../Dashboard/Reports"));
-const Insights = lazy(() => import("../Dashboard/Insights"));
+const Insights = lazy(() => Promise.resolve({ default: () => null }));
 const Membership = lazy(() => import("../Dashboard/Membership"));
-const BookSession = lazy(() => import("../Dashboard/BookSession"));
-const Bookings = lazy(() => import("../Dashboard/Bookings"));
+const BookSession = lazy(() => Promise.resolve({ default: () => null }));
+const Bookings = lazy(() => Promise.resolve({ default: () => null }));
 const DashProfile = lazy(() => import("../Dashboard/Profile"));
-const AgentPortal = lazy(() => import("../Dashboard/AgentPortal"));
+const AgentPortal = lazy(() => Promise.resolve({ default: () => null }));
 const AuditionGenerator = lazy(() => import("../Dashboard/AuditionGenerator"));
 const SceneStudy = lazy(() => import("../Dashboard/SceneStudy"));
 
@@ -238,7 +237,6 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
   useEffect(() => {
     dispatch(fetchAuditionStatsThunk());
-    dispatch(fetchBookingsThunk());
     dispatch(getScripts());
     dispatch(fetchSubmissionsThunk());
   }, [dispatch]);
