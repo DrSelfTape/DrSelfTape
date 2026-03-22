@@ -233,9 +233,10 @@ export default function CDSim() {
       {step === 'report' && report && (
         <CDReport
           report={report}
+          selectedVoice={selectedVoice}
           onRunAgain={() => {
             setReport(null);
-            setStep('analyzing');
+            setStep('upload');
           }}
         />
       )}
