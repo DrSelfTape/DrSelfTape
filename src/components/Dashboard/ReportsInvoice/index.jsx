@@ -5,7 +5,7 @@ import {
   SelectionDropArrowIcon,
   ThreeDotsIcon,
 } from '../../../assets/icons';
-import { Line, LineBarChat } from '../../shared';
+import { Line, LineBarChat } from '../../Shared';
 import { data } from '../../../utils/data';
 
 const ReportsInvoice = () => {

@@ -3,7 +3,7 @@ import TableBody from '@mui/material/TableBody';
 import { styled } from '@mui/material/styles';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
-import { CustomCheckbox, NoDataFound } from '../../shared';
+import { CustomCheckbox, NoDataFound } from '../../Shared';
 
 const BodyCell = styled(TableCell)(({ theme }) => ({
   color: 'var(--color-secondary-dark)',

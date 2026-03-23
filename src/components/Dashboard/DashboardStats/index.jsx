@@ -1,5 +1,5 @@
 import React from 'react';
-import { StatsCard } from '../../shared';
+import { StatsCard } from '../../Shared';
 import { data } from '../../../utils/data';
 
 const DashbaordStats = () => {

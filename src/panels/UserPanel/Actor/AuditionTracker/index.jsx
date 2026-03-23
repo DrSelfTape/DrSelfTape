@@ -21,7 +21,7 @@ import BookingRatioChart from '../../../../components/Audition/BookingRatioChart
 import {
   AddNewButton,
   StatsCard,
-} from '../../../../components/shared';
+} from '../../../../components/Shared';
 import { getAuditionTracker } from '../../../../redux/features/actorAuditions/auditionTrackerSlice';
 import { BadgeDetailModal } from '../../../../components/Booking/BadgeDetailModal';
 

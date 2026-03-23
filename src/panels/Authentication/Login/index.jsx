@@ -10,7 +10,7 @@ import { useSnackbar } from '../../../hooks/useSnackbar';
 import { AppleIcon, GoogleIcon } from '../../../assets/icons';
 import { getFirstRouteByRole } from '../../../routes/routeHelpers';
 import { setAuthToken } from '../../../redux/http';
-import { CustomButton, CustomInput, Logo } from '../../../components/shared';
+import { CustomButton, CustomInput, Logo } from '../../../components/Shared';
 
 export const Login = () => {
   const navigate = useNavigate();

@@ -4,7 +4,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import { styled } from '@mui/material/styles';
 import { Box } from '@mui/material';
-import { CustomCheckbox } from '../../shared';
+import { CustomCheckbox } from '../../Shared';
 
 const Cell = styled(TableCell)(() => ({
   color: 'var(--color-secondary-dark)',

@@ -1,7 +1,7 @@
 import React from 'react';
 // Local Imports
-import { Line } from '../../shared';
-import DonutChart from '../../shared/DonutChart';
+import { Line } from '../../Shared';
+import DonutChart from '../../Shared/DonutChart';
 import { data } from '../../../utils/data';
 
 const InvoicesOverview = () => {

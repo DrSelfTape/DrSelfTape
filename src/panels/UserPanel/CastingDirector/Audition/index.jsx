@@ -16,11 +16,11 @@ import {
 import {
   castingAuditionsColumnData,
   castingAuditionsColumnExtensionsData,
-} from '../../../../components/shared/CustomTable/dummyData';
+} from '../../../../components/Shared/CustomTable/dummyData';
 import {
   ActionUtil,
   AuditionStatusUtil,
-} from '../../../../components/shared/TableUtilities';
+} from '../../../../components/Shared/TableUtilities';
 import {
   getCastingAuditions,
   deleteCastingAudition,

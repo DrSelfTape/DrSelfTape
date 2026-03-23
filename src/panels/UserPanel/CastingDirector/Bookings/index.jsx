@@ -14,11 +14,11 @@ import {
   ActorBookingColumnData,
   ActorBookingColumnExtensionsData,
   ActorBookingRowData,
-} from '../../../../components/shared/CustomTable/dummyData';
+} from '../../../../components/Shared/CustomTable/dummyData';
 import {
   ActionUtil,
   AuditionStatusUtil,
-} from '../../../../components/shared/TableUtilities';
+} from '../../../../components/Shared/TableUtilities';
 import CustomFilter from '../../../../components/Shared/CustomFilter';
 
 export const CastingDirectorBooking = () => {

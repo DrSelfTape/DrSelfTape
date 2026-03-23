@@ -12,11 +12,11 @@ import {
 import {
   openAuditionColumnData,
   openAuditionColumnExtensionsData,
-} from '../../../../../components/shared/CustomTable/dummyData';
+} from '../../../../../components/Shared/CustomTable/dummyData';
 import {
   ActionUtil,
   AuditionStatusUtil,
-} from '../../../../../components/shared/TableUtilities';
+} from '../../../../../components/Shared/TableUtilities';
 import { getActorCastingAuditions } from '../../../../../redux/features/actorAuditions/actorAuditionsSlice';
 import CustomFilter from '../../../../../components/Shared/CustomFilter';
 import { AddIcon } from '../../../../../assets/icons';

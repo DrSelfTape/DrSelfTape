@@ -4,7 +4,7 @@ import { Navigate } from 'react-router-dom';
 
 // Local import
 import { RoleBasedRedirect } from './routeHelpers';
-import { ComingSoon, Layout } from '../components/shared/index.js';
+import { ComingSoon, Layout } from '../components/Shared/index.js';
 
 // Auth panels (keep static — small and needed immediately)
 import JoinPage from '../panels/Join';
