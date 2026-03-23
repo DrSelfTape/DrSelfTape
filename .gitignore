@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files — never commit API keys
+.env
+.env.*
+src/.env
+src/.env.*
