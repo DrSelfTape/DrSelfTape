@@ -126,10 +126,12 @@ export default function CDSim() {
       .catch((err) => {
         if (!cancelled) {
           const status = err?.response?.status;
-          const msg = err?.response?.data?.message || err?.response?.data?.detail;
+          // 402 is handled globally by the axios interceptor → NoTokensModal
+          // Just reset back to the voice picker step so user can retry after upgrading
           if (status === 402) {
-            setError('🎟️ You\'re out of tokens. Upgrade your plan to run more CD Sim sessions.');
+            setStep('voice');
           } else {
+            const msg = err?.response?.data?.message || err?.response?.data?.detail;
             setError(msg || err?.message || 'Something went wrong. Please try again.');
           }
         }
