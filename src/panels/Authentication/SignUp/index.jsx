@@ -34,7 +34,7 @@ export const Signup = () => {
     bio: '',
     headshot: null,
     reelUrl: '',
-    resumeFile: null,
+
     availability: {},
     metricsOptIn: false,
     // Casting Director fields
@@ -58,7 +58,7 @@ export const Signup = () => {
     password: useRef(null),
     confirmPassword: useRef(null),
     headshot: useRef(null),
-    resumeFile: useRef(null),
+
     logo: useRef(null),
     agencyEmail: useRef(null),
     reelUrl: useRef(null),
@@ -138,8 +138,6 @@ export const Signup = () => {
         newErrors.headshot =
           'Invalid file format. Allowed: jpg, jpeg, png, webp';
       }
-      if (formData.resumeFile && !validateFile(formData.resumeFile, ['pdf'])) {
-        newErrors.resumeFile = 'Invalid file format. Allowed: pdf';
       }
     }
 
@@ -200,8 +198,6 @@ export const Signup = () => {
         registrationPayload.append('headshot', formData.headshot);
       if (formData.reelUrl)
         registrationPayload.append('reel_url', formData.reelUrl);
-      if (formData.resumeFile)
-        registrationPayload.append('resume_file', formData.resumeFile);
       if (Object.keys(formData.availability).length > 0) {
         registrationPayload.append(
           'availability',
@@ -273,7 +269,7 @@ export const Signup = () => {
           bio: '',
           headshot: null,
           reelUrl: '',
-          resumeFile: null,
+      
           availability: {},
           metricsOptIn: false,
           companyName: '',
@@ -417,25 +413,40 @@ export const Signup = () => {
 
               {formData.accountType?.value === 'actor' && (
                 <div className='space-y-8'>
-                  <Textarea
-                    label='Bio'
-                    name='bio'
-                    type='text'
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder='Enter your bio'
-                    required
-                  />
-                  <FilePicker
-                    label='Headshot'
-                    name='headshot'
-                    type='file'
-                    accept='.jpg,.jpeg,.png,.webp'
-                    onChange={handleChange}
-                    error={!!errors.headshot}
-                    errorMsg={errors.headshot}
-                    ref={fieldRefs.headshot}
-                  />
+                  {/* Bio — dark */}
+                  <div className='flex flex-col gap-1'>
+                    <label className='text-sm font-medium text-[#999999]'>Bio</label>
+                    <textarea
+                      name='bio'
+                      value={formData.bio}
+                      onChange={handleChange}
+                      placeholder='Tell us about yourself as an actor...'
+                      rows={3}
+                      className='w-full bg-[#111318] border border-[#2a2d35] rounded-lg px-4 py-3 text-white text-sm placeholder-[#555] focus:border-[#C855F0]/60 focus:ring-1 focus:ring-[#C855F0]/30 outline-none resize-none transition-colors'
+                    />
+                  </div>
+
+                  {/* Headshot — dark file picker */}
+                  <div className='flex flex-col gap-1'>
+                    <label className='text-sm font-medium text-[#999999]'>Headshot</label>
+                    <label className='flex items-center gap-3 w-full bg-[#111318] border border-[#2a2d35] rounded-lg px-4 py-3 cursor-pointer hover:border-[#C855F0]/50 transition-colors'>
+                      <svg className='w-5 h-5 text-[#666]' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={1.5}>
+                        <path strokeLinecap='round' strokeLinejoin='round' d='M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5' />
+                      </svg>
+                      <span className={`text-sm ${formData.headshot ? 'text-white' : 'text-[#555]'}`}>
+                        {formData.headshot ? formData.headshot.name : 'Upload headshot (.jpg, .png, .webp)'}
+                      </span>
+                      <input
+                        type='file'
+                        name='headshot'
+                        accept='.jpg,.jpeg,.png,.webp'
+                        onChange={handleChange}
+                        className='hidden'
+                      />
+                    </label>
+                    {errors.headshot && <p className='text-red-400 text-xs mt-1'>{errors.headshot}</p>}
+                  </div>
+
                   <CustomInput dark
                     label='Reel URL'
                     name='reelUrl'
@@ -446,16 +457,6 @@ export const Signup = () => {
                     error={!!errors.reelUrl}
                     errorMsg={errors.reelUrl}
                     ref={fieldRefs.reelUrl}
-                  />
-                  <FilePicker
-                    label='Portfolio'
-                    name='resumeFile'
-                    type='file'
-                    accept='.pdf'
-                    onChange={handleChange}
-                    error={!!errors.resumeFile}
-                    errorMsg={errors.resumeFile}
-                    ref={fieldRefs.resumeFile}
                   />
                   {/* <CustomCheckbox
                     label='Opt-in for Metrics'
