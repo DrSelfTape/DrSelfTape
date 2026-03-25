@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import ModePicker from './ModePicker';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import PermissionsModal from '../../../components/PermissionsModal';
@@ -67,7 +68,7 @@ function VoicePicker({ characters, userRole, onSelect, onCancel }) {
 /**
  * Pulsing mic/status indicator in the center of the scene.
  */
-function StatusIndicator({ status }) {
+function StatusIndicator({ status, compact = false }) {
   const colors = {
     listening: '#C855F0',
     thinking: '#C855F0',
@@ -97,11 +98,11 @@ function StatusIndicator({ status }) {
         )}
         {/* Main circle */}
         <div
-          className="relative w-20 h-20 rounded-full flex items-center justify-center transition-colors duration-300 shadow-lg"
+          className={`relative ${compact ? 'w-12 h-12' : 'w-20 h-20'} rounded-full flex items-center justify-center transition-colors duration-300 shadow-lg`}
           style={{ backgroundColor: `${color}20`, border: `3px solid ${color}` }}
         >
           {status === 'listening' && (
-            <svg className="w-8 h-8" fill={color} viewBox="0 0 24 24">
+            <svg className={`${compact ? 'w-5 h-5' : 'w-8 h-8'}`} fill={color} viewBox="0 0 24 24">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5z" />
               <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
             </svg>
@@ -114,18 +115,18 @@ function StatusIndicator({ status }) {
             </div>
           )}
           {status === 'playing' && (
-            <svg className="w-8 h-8" fill="white" viewBox="0 0 24 24">
+            <svg className={`${compact ? 'w-5 h-5' : 'w-8 h-8'}`} fill="white" viewBox="0 0 24 24">
               <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
             </svg>
           )}
           {status === 'idle' && (
-            <svg className="w-8 h-8" fill="#4b5563" viewBox="0 0 24 24">
+            <svg className={`${compact ? 'w-5 h-5' : 'w-8 h-8'}`} fill="#4b5563" viewBox="0 0 24 24">
               <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
               <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
             </svg>
           )}
           {status === 'error' && (
-            <svg className="w-8 h-8" fill="#ef4444" viewBox="0 0 24 24">
+            <svg className={`${compact ? 'w-5 h-5' : 'w-8 h-8'}`} fill="#ef4444" viewBox="0 0 24 24">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" />
             </svg>
           )}
@@ -146,6 +147,10 @@ const STATUS_MESSAGES = {
 export default function LiveSceneMode({ lines, userRole, characters, initialVoice, onExit }) {
   const [status, setStatus] = useState('idle'); // idle | listening | thinking | playing | error
   const [showVoicePicker, setShowVoicePicker] = useState(!initialVoice);
+  const [showModePicker, setShowModePicker] = useState(false);
+  const [readerMode, setReaderMode] = useState(null); // 'pretimed' | 'voice'
+  const [pendingVoice, setPendingVoice] = useState(null);
+  const [prePauseSeconds, setPrePauseSeconds] = useState(3); // pause after AI line before next
   const [voice, setVoice] = useState(initialVoice || 'partner_male');
   const [liveTranscript, setLiveTranscript] = useState('');
   const [conversationHistory, setConversationHistory] = useState([]);
@@ -159,8 +164,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const audioContextRef = useRef(null);
   const hasInterimRef = useRef(false);
   const isActiveRef = useRef(false);
+  const isProcessingRef = useRef(false);
   const scriptPanelRef = useRef(null);
   const [sceneStarted, setSceneStarted] = useState(false);
+  const [sceneComplete, setSceneComplete] = useState(false);
   const [showMicPermission, setShowMicPermission] = useState(false);
 
   // Create AudioContext on mount — resumed on user gesture (not created inside it)
@@ -339,6 +346,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const handleActorLineComplete = useCallback(
     async (spokenText) => {
       if (!spokenText.trim()) return;
+      if (isProcessingRef.current) return; // prevent double-fire
+      isProcessingRef.current = true;
 
       const newHistory = [...conversationHistory, { role: 'actor', text: spokenText.trim() }];
       setConversationHistory(newHistory);
@@ -353,11 +362,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (nextIdx >= lines.length) {
         setStatus('idle');
         setAiCurrentLine('🎬 Scene complete!');
+        isProcessingRef.current = false;
         return;
       }
 
       // Play all consecutive AI lines from this point, one at a time
-      await playAiLinesFrom(nextIdx, newHistory);
+      try {
+        await playAiLinesFrom(nextIdx, newHistory);
+      } finally {
+        isProcessingRef.current = false;
+      }
     },
     [conversationHistory, currentLineIdx, lines, userRole, playAiLinesFrom]
   );
@@ -453,6 +467,15 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   /**
    * Start the live scene session.
    */
+  // Called after voice is picked — show mode picker
+  const onVoiceSelected = useCallback((selectedVoice) => {
+    setPendingVoice(selectedVoice);
+    setVoice(selectedVoice);
+    setShowVoicePicker(false);
+    setShowModePicker(true);
+  }, []);
+
+  // Start voice-activated mode (original behavior)
   const startScene = useCallback(
     (selectedVoice) => {
       if (!SpeechRecognition) {
@@ -463,14 +486,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
       setVoice(selectedVoice);
       setShowVoicePicker(false);
+      setShowModePicker(false);
+      setReaderMode('voice');
       isActiveRef.current = true;
 
       const firstLine = lines[0];
       if (firstLine && firstLine.character !== userRole) {
-        // Scene starts with AI — play all opening AI lines one by one using playAiLinesFrom
         playAiLinesFrom(0, []);
       } else {
-        // Actor speaks first
         setCurrentLineIdx(0);
         scrollToLine(0);
         setStatus('listening');
@@ -478,6 +501,55 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       }
     },
     [SpeechRecognition, lines, userRole, playAiLinesFrom, startRecognition, scrollToLine]
+  );
+
+  // Start pre-timed mode — AI reads, then pauses for actor, then auto-advances
+  const startPreTimedScene = useCallback(
+    (selectedVoice, pauseSecs) => {
+      setVoice(selectedVoice);
+      setShowModePicker(false);
+      setReaderMode('pretimed');
+      setSceneStarted(true);
+      isActiveRef.current = true;
+
+      const runPreTimed = async (idx) => {
+        if (!isActiveRef.current) return;
+        if (idx >= lines.length) {
+          setStatus('idle');
+          setSceneComplete(true);
+          return;
+        }
+
+        const line = lines[idx];
+        setCurrentLineIdx(idx);
+        scrollToLine(idx);
+
+        if (line.character !== userRole) {
+          // AI line — play TTS then auto-advance after pause
+          setStatus('playing');
+          setAiCurrentLine(line.dialogue);
+          await playTTS(line.dialogue, selectedVoice);
+          if (!isActiveRef.current) return;
+          // Pause for actor to absorb / react
+          setStatus('idle');
+          setAiCurrentLine('');
+          await new Promise((res) => setTimeout(res, pauseSecs * 1000));
+          runPreTimed(idx + 1);
+        } else {
+          // Actor's line — show it highlighted, wait for manual "Next" tap
+          setStatus('listening'); // repurpose as "your turn"
+          setAiCurrentLine('');
+          // Auto-advance after actor has time to deliver their line (pauseSecs * 2)
+          if (isActiveRef.current) {
+            await new Promise((res) => setTimeout(res, pauseSecs * 2000));
+            runPreTimed(idx + 1);
+          }
+        }
+      };
+
+      runPreTimed(0);
+    },
+    [lines, userRole, playTTS, scrollToLine]
   );
 
   /**
@@ -521,8 +593,21 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       <VoicePicker
         characters={characters}
         userRole={userRole}
-        onSelect={startScene}
+        onSelect={onVoiceSelected}
         onCancel={onExit}
+      />
+    );
+  }
+
+  // ── Mode Picker ─────────────────────────────────────────────────────────────
+  if (showModePicker) {
+    return (
+      <ModePicker
+        prePauseSeconds={prePauseSeconds}
+        setPrePauseSeconds={setPrePauseSeconds}
+        onPreTimed={() => startPreTimedScene(pendingVoice, prePauseSeconds)}
+        onVoice={() => startScene(pendingVoice)}
+        onBack={onExit}
       />
     );
   }
@@ -548,10 +633,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     );
   }
 
-  const statusLabel =
-    status === 'thinking'
-      ? `${partnerName} ${STATUS_MESSAGES.thinking}`
-      : STATUS_MESSAGES[status];
+  const statusLabel = readerMode === 'pretimed' && status === 'listening'
+    ? '🎬 Your line — deliver it now'
+    : status === 'thinking'
+    ? `${partnerName} ${STATUS_MESSAGES.thinking}`
+    : STATUS_MESSAGES[status];
 
   return (
     <div className="fixed inset-0 z-[60] bg-[#0f0f1a] flex flex-col overflow-hidden">
@@ -578,7 +664,17 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-[#C855F0] animate-pulse" />
-          <span className="text-white font-semibold text-sm">Live Scene Mode</span>
+            <span className="text-white font-semibold text-sm">Live Scene Mode</span>
+          {readerMode === 'pretimed' && (
+            <span className="text-xs bg-[#C855F0]/20 text-[#C855F0] border border-[#C855F0]/30 px-2 py-0.5 rounded-full font-semibold ml-2">
+              ⏱ Pre-Timed
+            </span>
+          )}
+          {readerMode === 'voice' && (
+            <span className="text-xs bg-[#A7ECDA]/15 text-[#A7ECDA] border border-[#A7ECDA]/20 px-2 py-0.5 rounded-full font-semibold ml-2">
+              🎙 Voice
+            </span>
+          )}
         </div>
         <button
           onClick={endScene}
@@ -588,12 +684,21 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         </button>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Mobile "your turn" indicator — only shows on mobile when it's actor's line */}
+        {status === 'listening' && lines[currentLineIdx]?.character === userRole && (
+          <div className="lg:hidden flex items-center justify-center gap-2 py-1.5 bg-[#C855F0]/20 border-b border-[#C855F0]/30 text-[#C855F0] text-xs font-bold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C855F0] animate-pulse" />
+            Your line
+          </div>
+        )}
         {/* Left: Script Panel */}
         <div
           ref={scriptPanelRef}
-          className="w-80 border-r border-[#1a1a2e] overflow-y-auto p-4 hidden lg:block"
+          className="lg:w-80 lg:h-auto lg:border-r lg:border-b-0 border-b border-[#1a1a2e] overflow-y-auto p-3 block"
+          style={{ height: 'var(--script-panel-h, 45vh)' }}
         >
+          <style>{`@media (min-width: 1024px) { :root { --script-panel-h: 100%; } }`}</style>
           <h3 className="text-[#999999] text-xs font-bold uppercase tracking-wider mb-4">Script</h3>
           <div className="space-y-2">
             {lines.map((line, i) => {
@@ -603,7 +708,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 <div
                   key={i}
                   data-line-idx={i}
-                  className={`rounded-lg p-2.5 transition-all duration-300 ${
+                  className={`rounded-lg p-1.5 lg:p-2.5 transition-all duration-300 ${
                     isCurrent
                       ? isUser
                         ? 'bg-[#C855F0]/15 border-l-2 border-[#C855F0]'
@@ -628,7 +733,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         </div>
 
         {/* Main Stage */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 lg:px-6 min-h-0">
 
           {/* START SCREEN — shown before scene begins */}
           {status === 'idle' && !sceneStarted && (
@@ -673,7 +778,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
           {/* AI Character Line Display */}
           {(sceneStarted || status !== 'idle') && (
-          <div className="text-center max-w-2xl w-full mb-4">
+          <div className="text-center max-w-2xl w-full mb-2 lg:mb-4">
             {status === 'playing' || aiCurrentLine ? (
               <>
                 <span className="text-[#C855F0] text-xs font-bold uppercase tracking-widest block mb-3">
@@ -690,10 +795,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           )}
 
           {/* Status Indicator */}
-          <StatusIndicator status={status} />
+          <>
+            <span className="hidden lg:block"><StatusIndicator status={status} /></span>
+            <span className="lg:hidden"><StatusIndicator status={status} compact={true} /></span>
+          </>
 
           {/* Status Label */}
-          <div className="mt-2 mb-6">
+          <div className="mt-2 mb-3 lg:mb-6">
             <span
               className={`text-sm font-medium px-4 py-1.5 rounded-full ${
                 status === 'listening'

@@ -48,17 +48,19 @@ import {
 const COLUMNS = [
   { id: 'submitted',  label: 'Submitted',  color: '#6b7280' },
   { id: 'in_review',  label: 'In Review',  color: '#3b82f6' },
+  { id: 'audition',   label: 'Audition',   color: '#C855F0' },
   { id: 'callback',   label: 'Callback',   color: '#f59e0b' },
   { id: 'booked',     label: 'Booked',     color: '#22c55e' },
   { id: 'passed',     label: 'Passed',     color: '#ef4444' },
 ];
 
-const STATUS_ORDER = ['submitted', 'in_review', 'callback', 'booked'];
+const STATUS_ORDER = ['submitted', 'in_review', 'audition', 'callback', 'booked'];
 
 // Map internal status → API status (backend uses "reviewed" not "in_review")
 const STATUS_TO_API = {
   submitted: 'submitted',
   in_review: 'reviewed',
+  audition: 'audition',
   callback: 'callback',
   booked: 'booked',
   passed: 'passed',
@@ -481,69 +483,203 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
    ═══════════════════════════════════════════════════════════════════ */
 
 function NewAuditionModal({ open, onClose, onSubmit }) {
+  const [mode, setMode] = useState('manual'); // 'manual' | 'paste' | 'pdf'
+  const [pasteText, setPasteText] = useState('');
+  const [parsing, setParsing] = useState(false);
+  const [parseError, setParseError] = useState('');
+  const fileInputRef = useRef(null);
   const [form, setForm] = useState({
-    project: '',
-    role: '',
-    casting_director: '',
-    agency: '',
-    project_type: 'film',
-    callback_date: '',
-    notes: '',
+    project: '', role: '', casting_director: '', agency: '',
+    project_type: 'film', callback_date: '', notes: '',
   });
 
   if (!open) return null;
+
+  const inputCls = 'w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all';
+
+  const resetForm = () => {
+    setForm({ project: '', role: '', casting_director: '', agency: '', project_type: 'film', callback_date: '', notes: '' });
+    setPasteText(''); setMode('manual'); setParseError('');
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.project.trim()) return;
     onSubmit(form);
-    setForm({ project: '', role: '', casting_director: '', agency: '', project_type: 'film', callback_date: '', notes: '' });
+    resetForm();
     onClose();
   };
 
-  const inputCls = 'w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all';
+  const parseWithAI = async (text) => {
+    if (!text.trim()) return;
+    setParsing(true);
+    setParseError('');
+    try {
+      const axiosInstance = (await import('../../../redux/http')).default;
+      const endPoints = (await import('../../../redux/constant')).default;
+      const { data } = await axiosInstance.post(endPoints.parseBreakdown, { text });
+      const parsed = data?.data || {};
+      setForm((prev) => ({
+        ...prev,
+        project: parsed.project || prev.project,
+        role: parsed.role || prev.role,
+        casting_director: parsed.casting_director || prev.casting_director,
+        agency: parsed.agency || prev.agency,
+        project_type: parsed.project_type || prev.project_type,
+        notes: parsed.notes || prev.notes,
+      }));
+      setMode('manual'); // switch to form to review/edit
+    } catch (err) {
+      setParseError('Could not parse breakdown — please fill in manually.');
+    } finally {
+      setParsing(false);
+    }
+  };
+
+  const handlePDFFile = async (file) => {
+    if (!file) return;
+    setParsing(true);
+    setParseError('');
+    try {
+      const pdfjsLib = await import('pdfjs-dist');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+      const { cleanScriptText } = await import('../../../utils/scriptCleaner');
+      const arrayBuffer = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        pages.push(content.items.map((item) => item.str).join(' '));
+      }
+      const text = cleanScriptText(pages.join('\n'));
+      await parseWithAI(text);
+    } catch (err) {
+      setParseError('Could not read PDF — try pasting the text instead.');
+      setParsing(false);
+    }
+  };
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-        <form
-          onSubmit={handleSubmit}
-          className="bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-[scale-in_0.2s_ease-out]"
+        <div
+          className="bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-[scale-in_0.2s_ease-out]"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center justify-between">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#2A2A2A]">
             <h2 className="text-lg font-bold text-white">New Audition</h2>
-            <button type="button" onClick={onClose} className="p-1 rounded-lg text-[#666666] hover:text-white hover:bg-[#2A2A2A]">
+            <button type="button" onClick={() => { resetForm(); onClose(); }} className="p-1 rounded-lg text-[#666666] hover:text-white hover:bg-[#2A2A2A]">
               <X size={18} />
             </button>
           </div>
 
-          <input placeholder="Project name *" value={form.project} onChange={(e) => setForm({ ...form, project: e.target.value })} className={inputCls} required />
-          <input placeholder="Role / Character" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputCls} />
-          <input placeholder="Casting Director" value={form.casting_director} onChange={(e) => setForm({ ...form, casting_director: e.target.value })} className={inputCls} />
-          <input placeholder="Agency" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} className={inputCls} />
-          <select value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} className={inputCls}>
-            <option value="film">Film/TV</option>
-            <option value="commercial">Commercial</option>
-            <option value="theatrical">Theatrical</option>
-            <option value="industrial">Industrial</option>
-            <option value="theater">Theater</option>
-            <option value="voiceover">Voice Over</option>
-          </select>
-          <div>
-            <label className="block text-xs text-[#666666] mb-1">Callback Date</label>
-            <input type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} />
+          {/* Mode Tabs */}
+          <div className="flex gap-1 px-6 pt-4 pb-2">
+            {[
+              { id: 'manual', label: '✏️ Manual' },
+              { id: 'paste', label: '📋 Paste Breakdown' },
+              { id: 'pdf', label: '📄 Import PDF' },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => { setMode(tab.id); setParseError(''); }}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  mode === tab.id
+                    ? 'bg-[#C855F0] text-white'
+                    : 'text-[#666] hover:text-white hover:bg-[#2A2A2A]'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
-          <textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className={`${inputCls} resize-none`} />
 
-          <button
-            type="submit"
-            className="w-full bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold py-2.5 rounded-xl transition-colors"
-          >
-            Add Audition
-          </button>
-        </form>
+          <div className="px-6 pb-6 pt-2">
+            {/* Paste Mode */}
+            {mode === 'paste' && (
+              <div className="space-y-3">
+                <p className="text-xs text-[#888]">Paste the full casting breakdown — the AI will extract project, role, CD, and notes automatically.</p>
+                <textarea
+                  value={pasteText}
+                  onChange={(e) => setPasteText(e.target.value)}
+                  placeholder="Paste breakdown here...&#10;&#10;e.g. SEEKING: MALE/FEMALE, 25-35&#10;Project: UNTITLED DRAMA PILOT&#10;Network: HBO&#10;Casting: Randi Hiller CSA&#10;Role: DETECTIVE WALSH — A seasoned cop hiding a dark secret..."
+                  rows={10}
+                  className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none resize-none"
+                />
+                {parseError && <p className="text-xs text-red-400">{parseError}</p>}
+                <button
+                  onClick={() => parseWithAI(pasteText)}
+                  disabled={parsing || !pasteText.trim()}
+                  className="w-full bg-[#C855F0] hover:bg-[#A040C8] disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                >
+                  {parsing ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/><span>Extracting...</span></> : '✨ Extract with AI'}
+                </button>
+              </div>
+            )}
+
+            {/* PDF Mode */}
+            {mode === 'pdf' && (
+              <div className="space-y-3">
+                <p className="text-xs text-[#888]">Upload the breakdown PDF — the AI will pull out all the key details.</p>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#C855F0] rounded-xl p-8 text-center cursor-pointer transition-colors"
+                >
+                  {parsing ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="w-8 h-8 border-2 border-[#C855F0]/30 border-t-[#C855F0] rounded-full animate-spin" />
+                      <p className="text-sm text-white">Reading PDF...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-2xl mb-2">📄</p>
+                      <p className="text-sm font-medium text-white">Drop or click to upload breakdown PDF</p>
+                      <p className="text-xs text-[#555] mt-1">PDF files only</p>
+                    </>
+                  )}
+                </div>
+                <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={(e) => handlePDFFile(e.target.files?.[0])} />
+                {parseError && <p className="text-xs text-red-400">{parseError}</p>}
+              </div>
+            )}
+
+            {/* Manual Form */}
+            {mode === 'manual' && (
+              <form onSubmit={handleSubmit} className="space-y-3 mt-2">
+                {/* Show success hint if just parsed */}
+                {(form.project || form.role) && (
+                  <div className="bg-[#1A2A1A] border border-green-500/20 rounded-lg px-3 py-2 flex items-center gap-2">
+                    <span className="text-green-400 text-sm">✓</span>
+                    <p className="text-xs text-green-400">Fields populated from breakdown — review and edit below</p>
+                  </div>
+                )}
+                <input placeholder="Project name *" value={form.project} onChange={(e) => setForm({ ...form, project: e.target.value })} className={inputCls} required />
+                <input placeholder="Role / Character" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputCls} />
+                <input placeholder="Casting Director" value={form.casting_director} onChange={(e) => setForm({ ...form, casting_director: e.target.value })} className={inputCls} />
+                <input placeholder="Agency / Production Company" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} className={inputCls} />
+                <select value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} className={inputCls}>
+                  <option value="film">Film/TV</option>
+                  <option value="commercial">Commercial</option>
+                  <option value="theatrical">Theatrical</option>
+                  <option value="industrial">Industrial</option>
+                  <option value="theater">Theater</option>
+                  <option value="voiceover">Voice Over</option>
+                </select>
+                <div>
+                  <label className="block text-xs text-[#666666] mb-1">Callback Date</label>
+                  <input type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} />
+                </div>
+                <textarea placeholder="Notes (character description, rate, union status, shoot dates...)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className={`${inputCls} resize-none`} />
+                <button type="submit" className="w-full bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold py-2.5 rounded-xl transition-colors">
+                  Add Audition
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );

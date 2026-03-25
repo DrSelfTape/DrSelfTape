@@ -8,7 +8,7 @@ import {
   swipeOnReader,
 } from '../../../redux/features/readers/readersMatchSlice';
 
-const WhoWantsToRead = () => {
+const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -20,20 +20,30 @@ const WhoWantsToRead = () => {
     dispatch(fetchWhoWantsToRead());
   }, [dispatch]);
 
-  const handleAccept = async (actor) => {
+  const handleSlate = async (actor) => {
     try {
       const result = await dispatch(
         swipeOnReader({ reader_id: actor.id, action: 'right' })
       ).unwrap();
-
       if (result?.matched) {
-        navigate(`/dashboard/its-a-scene/${result.match_id}`);
+        if (onMatchNavigate) {
+          onMatchNavigate(result.match_id);
+        } else {
+          navigate(`/dashboard/its-a-scene/${result.match_id}`);
+        }
       } else {
         dispatch(fetchWhoWantsToRead());
       }
-    } catch {
-      // error handled in slice
-    }
+    } catch { /* handled in slice */ }
+  };
+
+  const handleStar = async (actor) => {
+    try {
+      await dispatch(
+        swipeOnReader({ reader_id: actor.id, action: 'star' })
+      ).unwrap();
+      dispatch(fetchWhoWantsToRead());
+    } catch { /* handled in slice */ }
   };
 
   const handlePass = async (actor) => {
@@ -42,9 +52,7 @@ const WhoWantsToRead = () => {
         swipeOnReader({ reader_id: actor.id, action: 'left' })
       ).unwrap();
       dispatch(fetchWhoWantsToRead());
-    } catch {
-      // error handled in slice
-    }
+    } catch { /* handled in slice */ }
   };
 
   return (
@@ -78,7 +86,8 @@ const WhoWantsToRead = () => {
               <ActorProfileCard
                 key={actor.id}
                 actor={actor}
-                onAccept={() => handleAccept(actor)}
+                onSlate={() => handleSlate(actor)}
+                onStar={() => handleStar(actor)}
                 onPass={() => handlePass(actor)}
               />
             ))}

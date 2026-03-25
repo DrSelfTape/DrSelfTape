@@ -171,22 +171,23 @@ export const authSlice = createSlice({
         state.user = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
-        console.log('registeruser', action);
+        // API returns user data directly (no login_data wrapper)
+        const src = action?.payload?.login_data || action?.payload;
         const userData = {
-          id: action?.payload?.login_data?.id,
-          first_name: action?.payload?.login_data?.first_name,
-          last_name: action?.payload?.login_data?.last_name,
-          phone_no: action?.payload?.login_data?.phone_no,
-          email: action?.payload?.login_data?.email,
-          token: action?.payload?.login_data?.token?.access,
-          all_user_permissions:
-            action?.payload?.login_data?.all_user_permissions,
-          role: action?.payload?.login_data?.role,
-          is_active: action?.payload?.login_data?.is_active,
-          is_reset_password: action?.payload?.login_data?.is_reset_password,
+          id: src?.id,
+          first_name: src?.first_name,
+          last_name: src?.last_name,
+          phone_no: src?.phone_no,
+          email: src?.email,
+          token: src?.token?.access || src?.token,
+          all_user_permissions: src?.all_user_permissions,
+          role: src?.active_role || src?.role,
+          is_active: src?.is_active,
+          is_reset_password: src?.is_reset_password,
         };
         state.loading = false;
-        state.user = action.payload?.is_reset_password ? null : userData;
+        state.user = src?.is_reset_password ? null : userData;
+        state.isAuthenticated = !!userData.id;
         state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {

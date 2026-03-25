@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { createAuditionThunk } from '../../../redux/features/auditions/auditionsSlice';
+import VideoTrimmer from './VideoTrimmer';
 
 export default function RecordTake({ onBack }) {
   const dispatch = useDispatch();
@@ -9,7 +10,7 @@ export default function RecordTake({ onBack }) {
   const streamRef = useRef(null);
   const chunksRef = useRef([]);
 
-  const [status, setStatus] = useState('idle'); // idle | recording | recorded
+  const [status, setStatus] = useState('idle'); // idle | recording | recorded | trimming
   const [recordedUrl, setRecordedUrl] = useState(null);
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [cameraError, setCameraError] = useState(null);
@@ -20,7 +21,7 @@ export default function RecordTake({ onBack }) {
     try {
       setCameraError(null);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
+        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: true,
       });
       streamRef.current = stream;
@@ -77,12 +78,33 @@ export default function RecordTake({ onBack }) {
     await startCamera();
   };
 
-  const handleDownload = () => {
-    if (!recordedUrl) return;
+  const handleSaveToPhone = (blobToSave = recordedBlob, url = recordedUrl) => {
+    if (!url) return;
+    // Try to detect iOS — use MP4 if possible
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const mimeType = blobToSave?.type || 'video/webm';
+    const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    const filename = `DrSelfTape-${new Date().toISOString().slice(0,10)}-take.${ext}`;
+
+    // Use Web Share API on mobile if available (lets user save to Photos on iOS)
+    if (navigator.share && navigator.canShare) {
+      const file = new File([blobToSave], filename, { type: mimeType });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'My Self Tape' })
+          .catch(() => fallbackDownload(url, filename));
+        return;
+      }
+    }
+    fallbackDownload(url, filename);
+  };
+
+  const fallbackDownload = (url, filename) => {
     const a = document.createElement('a');
-    a.href = recordedUrl;
-    a.download = `scene-take-${Date.now()}.webm`;
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
   };
 
   const handleSave = async () => {
@@ -126,6 +148,7 @@ export default function RecordTake({ onBack }) {
             <video
               src={recordedUrl}
               controls
+              playsInline
               className="w-full h-full object-contain"
             />
           ) : (
@@ -186,39 +209,57 @@ export default function RecordTake({ onBack }) {
 
         {status === 'recorded' && (
           <>
+            {/* Save to Phone — primary CTA */}
             <button
-              onClick={handleDownload}
+              onClick={() => handleSaveToPhone()}
               className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"
-                />
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
               </svg>
-              Download
+              Save to Phone
             </button>
+
+            {/* Trim */}
+            <button
+              onClick={() => setStatus('trimming')}
+              className="flex-1 bg-[#1E1E1E] border border-[#3A3A3A] hover:border-[#C855F0]/50 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              ✂️ Trim
+            </button>
+
+            {/* Save to Auditions */}
             <button
               onClick={handleSave}
               disabled={saving || saved}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
-              {saved ? 'Saved!' : saving ? 'Saving...' : 'Save to My Auditions'}
+              {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save to Auditions'}
             </button>
+
             <button
               onClick={handleRedo}
-              className="px-5 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] hover:bg-[#2A2A2A] rounded-lg transition-colors cursor-pointer"
+              className="px-5 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] rounded-lg transition-colors cursor-pointer"
             >
               Redo
             </button>
           </>
+        )}
+
+        {status === 'trimming' && recordedUrl && (
+          <div className="w-full">
+            <VideoTrimmer
+              videoUrl={recordedUrl}
+              videoBlob={recordedBlob}
+              onSave={(trimmedBlob, trimmedUrl) => {
+                setRecordedBlob(trimmedBlob);
+                setRecordedUrl(trimmedUrl);
+                setStatus('recorded');
+                handleSaveToPhone(trimmedBlob, trimmedUrl);
+              }}
+              onCancel={() => setStatus('recorded')}
+            />
+          </div>
         )}
       </div>
     </div>

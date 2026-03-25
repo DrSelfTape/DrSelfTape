@@ -1,18 +1,68 @@
 import { useState, useRef } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
+import { cleanScriptText, detectScriptQuality } from '../../../utils/scriptCleaner';
+import axiosInstance from '../../../redux/http';
+import endPoints from '../../../redux/constant';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+// Simple hash for caching — avoids re-calling GPT on same content
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < Math.min(str.length, 500); i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return String(hash);
+}
 
 async function extractPdfText(file) {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const pages = [];
+  const pageTexts = [];
+
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    pages.push(content.items.map((item) => item.str).join(' '));
+    const content = await page.getTextContent({ includeMarkedContent: false });
+    const items = content.items.filter((item) => item.str?.trim());
+
+    if (items.length > 0) {
+      // Find dominant font size (body text) and filter out watermarks
+      const sizeMap = {};
+      items.forEach((item) => {
+        const h = Math.round(Math.abs(item.transform[3]));
+        sizeMap[h] = (sizeMap[h] || 0) + item.str.length;
+      });
+      const dominantSize = parseInt(Object.entries(sizeMap).sort((a, b) => b[1] - a[1])[0]?.[0]);
+      const filtered = items.filter((item) => Math.abs(Math.round(Math.abs(item.transform[3])) - dominantSize) <= 2);
+      const workItems = filtered.length > items.length * 0.3 ? filtered : items;
+
+      workItems.sort((a, b) => {
+        const yDiff = Math.round(b.transform[5]) - Math.round(a.transform[5]);
+        if (Math.abs(yDiff) > 4) return yDiff;
+        return a.transform[4] - b.transform[4];
+      });
+
+      const lines = [];
+      let currentY = null;
+      let currentLine = [];
+      for (const item of workItems) {
+        const y = Math.round(item.transform[5]);
+        if (currentY === null || Math.abs(y - currentY) <= 4) {
+          currentLine.push(item.str);
+          currentY = y;
+        } else {
+          if (currentLine.length) lines.push(currentLine.join(''));
+          currentLine = [item.str];
+          currentY = y;
+        }
+      }
+      if (currentLine.length) lines.push(currentLine.join(''));
+      pageTexts.push(lines.join('\n'));
+    }
   }
-  return pages.join('\n');
+
+  return cleanScriptText(pageTexts.join('\n\n'));
 }
 
 export default function ScriptUpload({ onSubmit }) {
@@ -21,6 +71,7 @@ export default function ScriptUpload({ onSubmit }) {
   const [dragActive, setDragActive] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState('');
+  const [pdfStatus, setPdfStatus] = useState(''); // loading step label
   const fileInputRef = useRef(null);
 
   const handleFile = async (file) => {
@@ -36,11 +87,36 @@ export default function ScriptUpload({ onSubmit }) {
     if (name.endsWith('.pdf')) {
       setPdfLoading(true);
       try {
-        const text = await extractPdfText(file);
-        setScriptText(text);
+        // Step 1: Extract raw text from PDF
+        setPdfStatus('Reading PDF...');
+        const rawText = await extractPdfText(file);
+
+        // Step 2: AI reformat into clean CHARACTER: dialogue format
+        setPdfStatus('Formatting with AI...');
+        let finalText = rawText;
+        // Check cache first — avoids re-calling GPT on same PDF content
+        const cacheKey = `fmtscript_${simpleHash(rawText)}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          finalText = cached;
+        } else {
+          try {
+            const { data } = await axiosInstance.post(endPoints.formatScript, { text: rawText });
+            if (data?.success && data?.data?.formatted) {
+              finalText = data.data.formatted;
+              sessionStorage.setItem(cacheKey, finalText); // cache it
+            }
+          } catch {
+            // If AI format fails, fall back to raw extracted text
+          }
+        }
+
+        setScriptText(finalText);
+        setPdfStatus('');
       } catch {
         setPdfError('Could not parse PDF — please paste your script manually.');
         setFileName('');
+        setPdfStatus('');
       } finally {
         setPdfLoading(false);
       }
@@ -92,7 +168,8 @@ export default function ScriptUpload({ onSubmit }) {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
               <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
             </svg>
-            <p className="text-sm font-medium text-[#999999]">Parsing PDF...</p>
+            <p className="text-sm font-medium text-white">{pdfStatus || 'Processing...'}</p>
+            <p className="text-xs text-[#666]">This may take a few seconds</p>
           </div>
         ) : (
           <>

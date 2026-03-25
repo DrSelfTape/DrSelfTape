@@ -17,6 +17,23 @@ export const setAuthToken = (token) => {
   }
 };
 
+// Request Interceptor — attach JWT from Redux store on every request
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    if (!config.headers['Authorization']) {
+      const { store } = await import('./store');
+      const state = store.getState();
+      // This build stores token at state.auth.user.token
+      const token = state?.auth?.user?.token;
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -25,6 +42,11 @@ axiosInstance.interceptors.response.use(
 
     if (!navigator.onLine) {
       console.log('No internet connection');
+    }
+
+    if (error?.response?.status === 402 && error?.response?.data?.code === 'insufficient_tokens') {
+      // Fire a custom event that components can listen to
+      window.dispatchEvent(new CustomEvent('insufficient_tokens'));
     }
 
     if (error?.response?.status === 401) {

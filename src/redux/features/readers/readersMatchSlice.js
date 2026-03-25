@@ -108,6 +108,18 @@ export const updateReaderProfile = createAsyncThunk(
   }
 );
 
+export const fetchFavorites = createAsyncThunk(
+  'readersMatch/fetchFavorites',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${baseURL}/v1/matching/favorites/`);
+      return data?.data || [];
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || 'Failed to fetch favorites');
+    }
+  }
+);
+
 export const updateReaderFilters = createAsyncThunk(
   'readersMatch/updateReaderFilters',
   async (filters, { rejectWithValue }) => {
@@ -246,6 +258,8 @@ const initialState = {
   readersLoading: false,
   matches: MOCK_MATCHES,
   matchesLoading: false,
+  favorites: [],
+  favoritesLoading: false,
   greenRoomMessages: MOCK_GREEN_ROOM_MESSAGES,
   messagesLoading: false,
   whoWantsToRead: MOCK_WHO_WANTS_TO_READ,
@@ -364,6 +378,14 @@ const readersMatchSlice = createSlice({
         state.likesLoading = false;
         state.error = action.payload;
       })
+
+      // fetchFavorites
+      .addCase(fetchFavorites.pending, (state) => { state.favoritesLoading = true; })
+      .addCase(fetchFavorites.fulfilled, (state, action) => {
+        state.favoritesLoading = false;
+        state.favorites = action.payload;
+      })
+      .addCase(fetchFavorites.rejected, (state) => { state.favoritesLoading = false; })
 
       // updateReaderProfile
       .addCase(updateReaderProfile.rejected, (state, action) => {

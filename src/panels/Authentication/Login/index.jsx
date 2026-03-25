@@ -74,7 +74,7 @@ export const Login = () => {
         });
 
         const payload = result?.payload;
-        
+
         // Set axios auth token immediately
         const token = payload?.token?.access;
         if (token) {
@@ -83,7 +83,7 @@ export const Login = () => {
 
         // Get role from response - use active_role if available, otherwise use role
         const role = payload?.active_role || payload?.role;
-        
+
         if (role) {
           // Navigate directly based on role - no role selection needed
           const firstPath = getFirstRouteByRole(role);
@@ -106,49 +106,35 @@ export const Login = () => {
   return (
     <AuthLayout title='Welcome back!'>
       <div className='mx-auto w-full max-w-sm lg:w-96'>
-        <Logo showText={false} />
-        <h2 className='mt-3 lg:mt-6 text-2xl font-semibold tracking-tight text-gray-900 max-lg:text-center'>
-          Sign in to your account
+        <h2 className='text-3xl font-bold text-white tracking-tight'>
+          Sign in
         </h2>
+        <p className='mt-2 text-sm text-[#888]'>Welcome back to Dr. Self Tape</p>
 
         <div className='mt-8'>
           <div>
-            <div>
-              <p className='text-sm font-medium text-gray-700 pb-1'>
-                Login with
-              </p>
-              <div className='mt-1 grid grid-cols-2 gap-3'>
-                <div>
-                  <div className='h-[42px] inline-flex w-full justify-center items-center rounded-md cursor-pointer border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50'>
-                    <GoogleIcon />
-                  </div>
-                </div>
-
-                <div>
-                  <div className='h-[42px] inline-flex w-full justify-center rounded-md border cursor-pointer border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50'>
-                    <AppleIcon />
-                  </div>
-                </div>
+            <p className='text-xs font-medium text-[#666] pb-2 uppercase tracking-widest'>Continue with</p>
+            <div className='grid grid-cols-2 gap-3'>
+              <div className='h-[42px] inline-flex w-full justify-center items-center rounded-lg cursor-pointer border border-[#2a2d35] bg-[#111318] hover:border-[#C855F0]/50 transition-colors'>
+                <GoogleIcon />
+              </div>
+              <div className='h-[42px] inline-flex w-full justify-center items-center rounded-lg cursor-pointer border border-[#2a2d35] bg-[#111318] hover:border-[#C855F0]/50 transition-colors'>
+                <AppleIcon />
               </div>
             </div>
 
             <div className='relative my-6'>
-              <div
-                className='absolute inset-0 flex items-center'
-                aria-hidden='true'
-              >
-                <div className='w-full border-t border-gray-300' />
+              <div className='absolute inset-0 flex items-center'>
+                <div className='w-full border-t border-[#2a2d35]' />
               </div>
-              <div className='relative flex justify-center text-sm'>
-                <span className='bg-white px-2 text-gray-500'>
-                  Or continue with
-                </span>
+              <div className='relative flex justify-center text-xs'>
+                <span className='bg-[#080a0f] px-3 text-[#555] uppercase tracking-widest'>or</span>
               </div>
             </div>
           </div>
           <form onSubmit={handleSubmit}>
             <div className='space-y-8'>
-              <CustomInput
+              <CustomInput dark
                 label='Email'
                 name='email'
                 type='text'
@@ -161,7 +147,7 @@ export const Login = () => {
                 errorMsg={errors.email}
               />
 
-              <CustomInput
+              <CustomInput dark
                 label='Password'
                 name='password'
                 type='password'
@@ -214,11 +200,11 @@ export const Login = () => {
                 Log in
               </CustomButton>
 
-              <p className='text-sm text-center'>
-                Don’t have an account?{' '}
+              <p className='text-sm text-center text-[#666]'>
+                Don't have an account?{' '}
                 <button
-                  type='submit'
-                  className='text-primary cursor-pointer font-medium hover:underline'
+                  type='button'
+                  className='text-[#C855F0] cursor-pointer font-semibold hover:text-[#A040C8] transition-colors'
                   onClick={(e) => {
                     e.preventDefault();
                     navigate('/signup');

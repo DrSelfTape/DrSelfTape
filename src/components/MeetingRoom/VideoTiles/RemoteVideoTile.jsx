@@ -60,7 +60,7 @@ const RemoteVideoTile = memo(({
     <div
       className={`
         relative bg-black rounded-2xl overflow-hidden shadow-xl flex items-center justify-center
-        ${isCompact ? 'aspect-video min-w-[220px] max-w-[320px]' : 'w-full h-full'}
+        ${isCompact ? 'aspect-video w-[40vw] min-w-[140px] max-w-[280px]' : 'w-full h-full'}
         ${containerClassName}
         ${onSelect ? 'cursor-pointer hover:scale-[1.01] transition-transform' : ''}
         ${isPinned ? 'ring-2 ring-sky-400/70' : ''}

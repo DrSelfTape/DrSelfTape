@@ -293,6 +293,8 @@ const Meeting = () => {
     (node) => {
       localVideoRef.current = node;
       if (node && localStreamRef.current) {
+        node.setAttribute('playsinline', '');
+        node.setAttribute('webkit-playsinline', '');
         node.srcObject = localStreamRef.current;
       }
     },
@@ -303,6 +305,8 @@ const Meeting = () => {
     (node) => {
       remoteVideoRef.current = node;
       if (node && remoteStreamRef.current) {
+        node.setAttribute('playsinline', '');
+        node.setAttribute('webkit-playsinline', '');
         node.srcObject = remoteStreamRef.current;
       }
     },
@@ -313,6 +317,8 @@ const Meeting = () => {
     (node) => {
       screenVideoRef.current = node;
       if (node && screenStreamRef.current) {
+        node.setAttribute('playsinline', '');
+        node.setAttribute('webkit-playsinline', '');
         node.srcObject = screenStreamRef.current;
       }
     },
@@ -324,6 +330,8 @@ const Meeting = () => {
     if (videoEl && localStreamRef.current) {
       // Only update if srcObject is different to avoid unnecessary updates
       if (videoEl.srcObject !== localStreamRef.current) {
+        videoEl.setAttribute('playsinline', '');
+        videoEl.setAttribute('webkit-playsinline', '');
         videoEl.srcObject = localStreamRef.current;
       }
     }
@@ -335,6 +343,8 @@ const Meeting = () => {
       const stream = localStreamRef.current;
       // Force update srcObject to ensure video feed is displayed
       if (videoEl.srcObject !== stream) {
+        videoEl.setAttribute('playsinline', '');
+        videoEl.setAttribute('webkit-playsinline', '');
         videoEl.srcObject = stream;
       }
       // Also ensure video tracks are enabled if camera is on

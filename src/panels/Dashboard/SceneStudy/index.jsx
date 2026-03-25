@@ -203,6 +203,7 @@ export default function SceneStudy() {
           userRole={selectedRole}
           onRecord={() => setStep('record')}
           onBack={() => setStep('pick-role')}
+          onGoLive={() => setStep('live')}
         />
       )}
 

@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Camera, Upload, Loader2, Check, User } from 'lucide-react';
+import { Camera, Upload, Loader2, Check, User, AlertCircle } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
+import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
 
 const PROFILE_FIELDS = [
   'first_name', 'last_name', 'email', 'phone_no', 'address',
@@ -41,6 +42,10 @@ export default function Profile() {
     address: '',
     bio: '',
     reel_url: '',
+    union: '',
+    based_in: '',
+    years_experience: '',
+    genres: [],
   });
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
@@ -48,6 +53,9 @@ export default function Profile() {
   const [headshotPreview, setHeadshotPreview] = useState(null);
   const [resumeFile, setResumeFile] = useState(null);
   const [toast, setToast] = useState(null);
+  const [toastType, setToastType] = useState('success');
+  const [showBadge, setShowBadge] = useState(false);
+  const hadProfileBefore = useRef(false);
 
   useEffect(() => {
     dispatch(fetchProfileThunk());
@@ -62,6 +70,10 @@ export default function Profile() {
         address: profile.address || '',
         bio: profile.actor_profile?.bio || '',
         reel_url: profile.actor_profile?.reel_url || '',
+        union: profile.actor_profile?.union || '',
+        based_in: profile.actor_profile?.based_in || '',
+        years_experience: profile.actor_profile?.years_experience || '',
+        genres: profile.actor_profile?.genres || [],
       });
       setAvatarPreview(profile.user_image || null);
       setHeadshotPreview(profile.actor_profile?.headshot || null);
@@ -84,9 +96,27 @@ export default function Profile() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Frontend validation for actor mandatory fields
+    if (profile?.role === 'actor') {
+      const missingFields = [];
+      if (!form.first_name.trim() || !form.last_name.trim()) missingFields.push('Full Name');
+      if (!form.union) missingFields.push('Union Status');
+      if (!headshotFile && !headshotPreview) missingFields.push('Headshot');
+      if (missingFields.length > 0) {
+        setToastType('error');
+        setToast(`Required: ${missingFields.join(', ')}`);
+        setTimeout(() => setToast(null), 5000);
+        return;
+      }
+    }
     const fd = new FormData();
     Object.entries(form).forEach(([key, val]) => {
-      if (val !== undefined && val !== null) fd.append(key, val);
+      if (key === 'genres') {
+        fd.append('genres', JSON.stringify(val));
+      } else if (val !== undefined && val !== null && val !== '') {
+        fd.append(key, val);
+      }
     });
     if (avatarFile) fd.append('user_image', avatarFile);
     if (headshotFile) fd.append('headshot', headshotFile);
@@ -94,11 +124,26 @@ export default function Profile() {
 
     const result = await dispatch(updateProfileThunk(fd));
     if (updateProfileThunk.fulfilled.match(result)) {
-      setToast('Profile updated!');
+      const wasIncomplete = !hadProfileBefore.current;
+      const hasPhoto = avatarFile || headshotFile;
+      hadProfileBefore.current = true;
+
       setAvatarFile(null);
       setHeadshotFile(null);
       setResumeFile(null);
-      setTimeout(() => setToast(null), 3000);
+
+      // Show badge + confetti if photo uploaded or first time completing profile
+      if (hasPhoto || wasIncomplete) {
+        setShowBadge(true);
+      } else {
+        setToastType('success');
+        setToast('Profile updated!');
+        setTimeout(() => setToast(null), 3000);
+      }
+    } else {
+      setToastType('error');
+      setToast(result.payload || 'Failed to save. Please try again.');
+      setTimeout(() => setToast(null), 4000);
     }
   };
 
@@ -116,10 +161,13 @@ export default function Profile() {
     <div className="p-6 max-w-6xl mx-auto">
       <h1 className="text-2xl font-bold text-white mb-6">My Profile</h1>
 
+      {/* Badge */}
+      <ProfileCompleteBadge show={showBadge} onClose={() => setShowBadge(false)} />
+
       {/* Toast */}
       {toast && (
-        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl shadow-lg animate-fade-in">
-          <Check className="w-5 h-5" />
+        <div className={`fixed top-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-xl shadow-lg animate-fade-in text-white ${toastType === 'error' ? 'bg-red-600' : 'bg-green-600'}`}>
+          {toastType === 'error' ? <AlertCircle className="w-5 h-5" /> : <Check className="w-5 h-5" />}
           {toast}
         </div>
       )}
@@ -192,7 +240,7 @@ export default function Profile() {
               <h3 className="text-lg font-semibold text-white mb-4">Personal Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">First Name</label>
+                  <label className="block text-sm font-medium text-[#999999] mb-1">First Name <span className="text-[#C855F0]">*</span></label>
                   <input
                     name="first_name"
                     value={form.first_name}
@@ -201,7 +249,7 @@ export default function Profile() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Last Name</label>
+                  <label className="block text-sm font-medium text-[#999999] mb-1">Last Name <span className="text-[#C855F0]">*</span></label>
                   <input
                     name="last_name"
                     value={form.last_name}
@@ -252,17 +300,72 @@ export default function Profile() {
                       value={form.reel_url}
                       onChange={handleChange}
                       placeholder="https://youtube.com/..."
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#999999] mb-1">Address</label>
+                    <label className="block text-sm font-medium text-[#999999] mb-1">Based In</label>
                     <input
-                      name="address"
-                      value={form.address}
+                      name="based_in"
+                      value={form.based_in}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                      placeholder="Los Angeles, CA"
+                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#999999] mb-1">Union Status <span className="text-[#C855F0]">*</span></label>
+                    <select
+                      name="union"
+                      value={form.union}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    >
+                      <option value="">Select union status</option>
+                      <option value="sag-aftra">SAG-AFTRA</option>
+                      <option value="aea">AEA</option>
+                      <option value="non-union">Non-Union</option>
+                      <option value="fi-core">Fi-Core</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-[#999999] mb-1">Years of Experience</label>
+                    <input
+                      name="years_experience"
+                      type="number"
+                      min="0"
+                      max="60"
+                      value={form.years_experience}
+                      onChange={handleChange}
+                      placeholder="e.g. 5"
+                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    />
+                  </div>
+                </div>
+
+                {/* Genre Tags */}
+                <div>
+                  <label className="block text-sm font-medium text-[#999999] mb-2">Genre Types</label>
+                  <div className="flex flex-wrap gap-2">
+                    {['Drama', 'Comedy', 'Thriller', 'Horror', 'Sci-Fi', 'Action', 'Romance', 'Period', 'Musical', 'Indie'].map((g) => (
+                      <button
+                        key={g}
+                        type="button"
+                        onClick={() => {
+                          const genres = form.genres.includes(g)
+                            ? form.genres.filter((x) => x !== g)
+                            : [...form.genres, g];
+                          setForm((prev) => ({ ...prev, genres }));
+                        }}
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
+                          form.genres.includes(g)
+                            ? 'bg-[#C855F0] border-[#C855F0] text-white'
+                            : 'bg-transparent border-[#3A3A3A] text-[#999999] hover:border-[#C855F0]/50'
+                        }`}
+                      >
+                        {g}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -274,7 +377,7 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Headshot */}
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Headshot</label>
+                  <label className="block text-sm font-medium text-[#999999] mb-1">Headshot <span className="text-[#C855F0]">*</span></label>
                   <div
                     onClick={() => headshotInputRef.current?.click()}
                     className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors"

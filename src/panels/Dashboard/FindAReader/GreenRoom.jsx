@@ -5,7 +5,7 @@ import { Loader2, Users } from 'lucide-react';
 import ReaderListItem from './components/ReaderListItem';
 import { fetchMatches } from '../../../redux/features/readers/readersMatchSlice';
 
-const GreenRoom = () => {
+const GreenRoom = ({ onSelectMatch } = {}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -18,8 +18,8 @@ const GreenRoom = () => {
   }, [dispatch]);
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0D0D0D] px-4 py-8">
-      <div className="mx-auto max-w-lg">
+    <div className="min-h-[calc(100vh-80px)] bg-[#0f0f1a] px-4 py-8">
+      <div className="mx-auto max-w-2xl">
         <h1 className="mb-6 text-xl font-bold text-white">Green Room</h1>
 
         {matchesLoading && (
@@ -30,21 +30,21 @@ const GreenRoom = () => {
 
         {!matchesLoading && matches.length === 0 && (
           <div className="flex h-60 flex-col items-center justify-center text-center">
-            <Users className="mb-3 h-10 w-10 text-gray-500" />
+            <Users className="mb-3 h-10 w-10 text-[#999999]" />
             <p className="text-sm font-semibold text-white">No matches yet</p>
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-[#666666]">
               Start swiping to find your scene partner!
             </p>
           </div>
         )}
 
         {!matchesLoading && matches.length > 0 && (
-          <div className="divide-y divide-[#2A2A2A] rounded-2xl border border-[#2A2A2A] bg-[#1A1A1A]">
+          <div className="grid gap-4 sm:grid-cols-2">
             {matches.map((match) => (
               <ReaderListItem
                 key={match.id}
                 match={match}
-                onClick={() => navigate(`/dashboard/green-room/${match.id}`)}
+                onClick={() => onSelectMatch ? onSelectMatch(match.id) : navigate(`/dashboard/green-room/${match.id}`)}
               />
             ))}
           </div>

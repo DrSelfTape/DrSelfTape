@@ -14,8 +14,9 @@ import {
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 
-const GreenRoomChat = () => {
-  const { matchId } = useParams();
+const GreenRoomChat = (props = {}) => {
+  const params = useParams();
+  const matchId = props.matchId || params.matchId;
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

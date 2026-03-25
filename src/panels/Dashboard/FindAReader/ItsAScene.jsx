@@ -2,9 +2,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Clapperboard } from 'lucide-react';
 import { useSelector } from 'react-redux';
 
-const ItsAScene = () => {
+const ItsAScene = (props = {}) => {
   const navigate = useNavigate();
-  const { matchId } = useParams();
+  const params = useParams();
+  const matchId = props.matchId || params.matchId;
   const { matches } = useSelector((state) => state.readersMatch || {});
   const match = matches?.find((m) => String(m.id) === String(matchId));
 
@@ -55,7 +56,7 @@ const ItsAScene = () => {
 
       {/* CTA */}
       <button
-        onClick={() => navigate(`/dashboard/green-room/${matchId}`)}
+        onClick={() => props.onGoToGreenRoom ? props.onGoToGreenRoom(matchId) : navigate(`/dashboard/green-room/${matchId}`)}
         className="font-bold px-10 py-3.5 rounded-full shadow-xl text-lg transition-transform active:scale-95"
         style={{ color: '#C855F0', background: 'white' }}
       >
@@ -64,7 +65,7 @@ const ItsAScene = () => {
 
       {/* Keep browsing */}
       <button
-        onClick={() => navigate('/dashboard/find-a-reader')}
+        onClick={() => props.onKeepBrowsing ? props.onKeepBrowsing() : navigate('/dashboard/find-a-reader')}
         className="mt-4 text-white/70 text-sm hover:text-white transition-colors"
       >
         Keep browsing readers

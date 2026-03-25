@@ -828,7 +828,9 @@ export const usePeerConnection = ({
         }
         
         // ---- Get local media ----
-        const cam = selectedCameraId ? { deviceId: { exact: selectedCameraId } } : true;
+        const cam = selectedCameraId
+          ? { deviceId: { exact: selectedCameraId } }
+          : { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } };
         const mic = selectedMicrophoneId ? { deviceId: { exact: selectedMicrophoneId } } : true;
         const stream = await navigator.mediaDevices.getUserMedia({ video: cam, audio: mic });
 

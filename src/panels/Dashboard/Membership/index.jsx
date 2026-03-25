@@ -1,179 +1,254 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useState, useEffect } from 'react';
+import axiosInstance from '../../../redux/http';
 
-import { useSnackbar } from '../../../hooks/useSnackbar';
-
-const plans = [
+const PLANS = [
   {
-    id: 'beginner',
-    name: 'Beginner',
-    price: 250,
+    id: 'basic',
+    name: 'Basic',
+    tokens: 10,
+    monthly: 9.99,
+    yearly: 99.99,
+    yearlySaving: '2 months free',
+    color: '#A7ECDA',
     features: [
-      '2 studio sessions per month',
-      'Basic lighting setup',
-      'Email support',
-      'Script review (1 per month)',
-      'Standard turnaround',
+      '10 AI tokens per month',
+      'CD Sim sessions',
+      'Live Scene Mode',
+      'Scene Generator',
+      'Audition Tracker',
     ],
-    popular: false,
+    rollover: false,
   },
   {
-    id: 'podcaster',
-    name: 'Podcaster',
-    price: 450,
-    features: [
-      '5 studio sessions per month',
-      'Premium lighting & sound',
-      'Priority support',
-      'Script review (3 per month)',
-      'Same-day turnaround',
-      'Zoom callback room access',
-      'Professional reader included',
-    ],
+    id: 'plus',
+    name: 'Plus',
+    tokens: 20,
+    monthly: 14.99,
+    yearly: 149.99,
+    yearlySaving: '2 months free',
+    color: '#C855F0',
     popular: true,
+    features: [
+      '20 AI tokens per month',
+      'Rollover unused tokens',
+      'Everything in Basic',
+      'Priority support',
+      'Green Room access',
+    ],
+    rollover: true,
   },
   {
-    id: 'influencer',
-    name: 'Influencer Creator',
-    price: 600,
+    id: 'premium',
+    name: 'Premium',
+    tokens: 50,
+    monthly: 24.99,
+    yearly: 249.99,
+    yearlySaving: '2 months free',
+    color: '#FCE072',
     features: [
-      'Unlimited studio sessions',
-      'Premium lighting, sound & teleprompter',
-      '24/7 VIP support',
-      'Unlimited script reviews',
-      'Rush turnaround',
-      'Zoom callback room access',
-      'Professional reader included',
-      'Dedicated coaching sessions',
-      'Priority booking',
+      '50 AI tokens per month',
+      'Rollover unused tokens',
+      'Everything in Plus',
+      'Early access to new features',
+      'Dedicated actor profile badge',
     ],
-    popular: false,
+    rollover: true,
   },
 ];
 
 export default function Membership() {
-  const dispatch = useDispatch();
-  const { toast } = useSnackbar();
-  const membership = null; const membershipLoading = false;
+  const [billing, setBilling] = useState('monthly');
+  const [status, setStatus] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState(null);
 
   useEffect(() => {
-    
-  }, [dispatch]);
+    axiosInstance.get('/v1/subscriptions/status/')
+      .then(res => setStatus(res.data.data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
 
-  const currentPlan = membership?.plan || membership?.plan_name?.toLowerCase() || 'podcaster';
-  const sessionsUsed = membership?.sessions_used ?? membership?.used ?? 3;
-  const sessionsTotal = membership?.sessions_total ?? membership?.total ?? 5;
-  const planDisplayName = membership?.plan_name || plans.find((p) => p.id === currentPlan)?.name || 'Podcaster';
-  const monthlyPrice = membership?.price || plans.find((p) => p.id === currentPlan)?.price || 450;
-  const renewalDate = membership?.renewal_date || 'Apr 1, 2026';
+    // Handle success/cancel redirect from Stripe
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success')) {
+      setTimeout(() => {
+        axiosInstance.get('/v1/subscriptions/status/').then(res => setStatus(res.data.data));
+      }, 2000);
+    }
+  }, []);
+
+  const handleSubscribe = async (planId) => {
+    setCheckoutLoading(planId);
+    try {
+      const res = await axiosInstance.post('/v1/subscriptions/checkout/', {
+        plan: planId,
+        billing,
+      });
+      window.location.href = res.data.data.checkout_url;
+    } catch (err) {
+      alert('Something went wrong. Please try again.');
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const handleManage = async () => {
+    try {
+      const res = await axiosInstance.post('/v1/subscriptions/portal/');
+      window.location.href = res.data.data.portal_url;
+    } catch {
+      alert('Could not open billing portal.');
+    }
+  };
+
+  const currentPlan = status?.plan;
+  const tokenBalance = status?.balance ?? 0;
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-white">Membership</h2>
-        <p className="text-[#999999] text-sm mt-1">Manage your plan and track usage</p>
+    <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Header */}
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+          Choose Your Plan
+        </h1>
+        <p className="text-[#8a9a96] text-sm">
+          One token = one AI session. No surprises.
+        </p>
+
+        {/* Token balance badge */}
+        {!loading && (
+          <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-[#1a1c26] border border-[rgba(167,236,218,0.15)] text-sm">
+            <span className="text-[#A7ECDA] font-bold">{tokenBalance}</span>
+            <span className="text-[#8a9a96]">tokens remaining</span>
+          </div>
+        )}
       </div>
 
-      {/* Current Plan Card */}
-      <div className="bg-gradient-to-r from-[#0a0a0f] to-[#1a1a2e] rounded-2xl p-6 sm:p-8 text-white mb-8 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-[#C855F0]/10 rounded-full blur-3xl" />
-        <div className="relative z-10">
-          {membershipLoading ? (
-            <div className="animate-pulse space-y-4">
-              <div className="h-4 bg-white/20 rounded w-24" />
-              <div className="h-8 bg-white/20 rounded w-48" />
-              <div className="h-4 bg-white/20 rounded w-36" />
-            </div>
-          ) : (
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Current Plan</p>
-                <div className="flex items-center gap-3">
-                  <h3 className="text-2xl font-bold">{planDisplayName}</h3>
-                  <span className="bg-[#ffd700]/20 text-[#ffd700] text-xs font-semibold px-3 py-1 rounded-full">
-                    Active
-                  </span>
-                </div>
-                <p className="text-gray-400 text-sm mt-2">
-                  ${monthlyPrice}/month &middot; Renews {renewalDate}
-                </p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5 min-w-[200px]">
-                <p className="text-sm text-gray-300 mb-2">Sessions this month</p>
-                <div className="flex items-end gap-2 mb-3">
-                  <span className="text-3xl font-bold">{sessionsUsed}</span>
-                  <span className="text-gray-400 text-sm mb-1">/ {sessionsTotal}</span>
-                </div>
-                <div className="w-full bg-white/20 rounded-full h-2">
-                  <div
-                    className="bg-gradient-to-r from-[#C855F0] to-[#ffd700] h-2 rounded-full transition-all"
-                    style={{ width: `${sessionsTotal > 0 ? (sessionsUsed / sessionsTotal) * 100 : 0}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+      {/* Billing toggle */}
+      <div className="flex items-center justify-center gap-3 mb-10">
+        <button
+          onClick={() => setBilling('monthly')}
+          className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+            billing === 'monthly'
+              ? 'bg-[#C855F0] text-white'
+              : 'bg-[#1a1c26] text-[#8a9a96] border border-[rgba(167,236,218,0.1)]'
+          }`}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => setBilling('yearly')}
+          className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+            billing === 'yearly'
+              ? 'bg-[#C855F0] text-white'
+              : 'bg-[#1a1c26] text-[#8a9a96] border border-[rgba(167,236,218,0.1)]'
+          }`}
+        >
+          Yearly
+          <span className="ml-2 text-[10px] font-bold text-[#A7ECDA] uppercase tracking-wide">Save 2 months</span>
+        </button>
       </div>
 
-      {/* Plan Comparison */}
-      <h3 className="text-lg font-semibold text-white mb-4">Compare Plans</h3>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {plans.map((plan) => {
-          const isCurrent = plan.id === currentPlan;
+      {/* Plan cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+        {PLANS.map(plan => {
+          const price = billing === 'monthly' ? plan.monthly : plan.yearly;
+          const isActive = currentPlan === plan.id;
+          const isCurrent = isActive && status?.status === 'active';
+
           return (
             <div
               key={plan.id}
-              className={`relative bg-[#1E1E1E] rounded-2xl border-2 p-6 transition-all ${
-                plan.popular
-                  ? 'border-[#C855F0] shadow-lg shadow-[#C855F0]/10'
-                  : 'border-[#3A3A3A] shadow-sm'
-              }`}
+              className="relative rounded-2xl p-6 flex flex-col"
+              style={{
+                background: plan.popular ? 'linear-gradient(145deg, #1a0d24, #120a1c)' : '#13151d',
+                border: isCurrent
+                  ? `2px solid ${plan.color}`
+                  : plan.popular
+                  ? `1px solid rgba(200,85,240,0.4)`
+                  : '1px solid rgba(167,236,218,0.06)',
+                boxShadow: plan.popular ? '0 0 40px rgba(200,85,240,0.1)' : 'none',
+              }}
             >
               {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="bg-[#C855F0] text-white text-xs font-semibold px-4 py-1 rounded-full">
-                    Most Popular
-                  </span>
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, #C855F0, #9333ea)' }}>
+                  Most Popular
+                </div>
+              )}
+              {isCurrent && (
+                <div className="absolute -top-3 right-4 px-3 py-1 rounded-full text-xs font-bold"
+                  style={{ background: plan.color, color: '#080a0f' }}>
+                  Current Plan
                 </div>
               )}
 
-              <div className="text-center mb-6 pt-2">
-                <h4 className="text-lg font-bold text-white">{plan.name}</h4>
-                <div className="mt-3">
-                  <span className="text-4xl font-bold text-white">${plan.price}</span>
-                  <span className="text-[#999999] text-sm">/month</span>
+              {/* Plan name + price */}
+              <div className="mb-5">
+                <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>{plan.name}</h2>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-bold text-white">${price}</span>
+                  <span className="text-[#8a9a96] text-sm">/{billing === 'monthly' ? 'mo' : 'yr'}</span>
+                </div>
+                {billing === 'yearly' && (
+                  <p className="text-xs mt-1" style={{ color: plan.color }}>Save ${((plan.monthly * 12) - plan.yearly).toFixed(2)}/year</p>
+                )}
+              </div>
+
+              {/* Token highlight */}
+              <div className="flex items-center gap-2 mb-5 px-3 py-2.5 rounded-xl"
+                style={{ background: `${plan.color}12`, border: `1px solid ${plan.color}25` }}>
+                <span className="text-2xl font-bold" style={{ color: plan.color }}>{plan.tokens}</span>
+                <div>
+                  <p className="text-white text-xs font-semibold">tokens / month</p>
+                  {plan.rollover && <p className="text-[10px]" style={{ color: plan.color }}>+ rollover up to 2 months</p>}
                 </div>
               </div>
 
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-start gap-2.5 text-sm text-[#999999]">
-                    <svg className="w-4 h-4 text-[#C855F0] mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    {feature}
+              {/* Features */}
+              <ul className="space-y-2.5 flex-1 mb-6">
+                {plan.features.map(f => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-[#8a9a96]">
+                    <span className="mt-0.5 text-xs" style={{ color: plan.color }}>✓</span>
+                    {f}
                   </li>
                 ))}
               </ul>
 
-              <button
-                onClick={() => !isCurrent && toast.info('Stripe payments coming soon! Contact us at studio@drselftape.com to sign up.')}
-                className={`w-full py-3 rounded-lg font-semibold text-sm transition-all cursor-pointer ${
-                  isCurrent
-                    ? 'bg-[#2A2A2A] text-[#666666] cursor-default'
-                    : plan.popular
-                    ? 'bg-[#C855F0] hover:bg-[#A040C8] text-white'
-                    : 'bg-[#2A2A2A] hover:bg-[#3A3A3A] text-white'
-                }`}
-                disabled={isCurrent}
-              >
-                {isCurrent ? 'Current Plan' : 'Upgrade'}
-              </button>
+              {/* CTA */}
+              {isCurrent ? (
+                <button
+                  onClick={handleManage}
+                  className="w-full py-3 rounded-xl text-sm font-semibold border transition-all"
+                  style={{ borderColor: plan.color, color: plan.color }}
+                >
+                  Manage Plan
+                </button>
+              ) : (
+                <button
+                  onClick={() => handleSubscribe(plan.id)}
+                  disabled={!!checkoutLoading}
+                  className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                  style={{
+                    background: plan.popular
+                      ? 'linear-gradient(135deg, #C855F0, #9333ea)'
+                      : `${plan.color}20`,
+                    color: plan.popular ? 'white' : plan.color,
+                    border: plan.popular ? 'none' : `1px solid ${plan.color}40`,
+                  }}
+                >
+                  {checkoutLoading === plan.id ? 'Loading...' : `Get ${plan.name}`}
+                </button>
+              )}
             </div>
           );
         })}
       </div>
+
+      {/* Rollover disclaimer */}
+      <p className="text-center text-xs text-[#4a5a56]">
+        Rollover credits accumulate up to a maximum of 2 months' worth of unused tokens. Billed in USD.
+      </p>
     </div>
   );
 }

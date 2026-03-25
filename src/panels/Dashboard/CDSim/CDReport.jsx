@@ -57,16 +57,16 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
       </div>
 
       {data && typeof data === 'object' && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {Object.entries(data).map(([key, value]) => {
             if (!value) return null;
-            const label = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+            const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
             return (
-              <div key={key}>
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#666666] mb-1">
-                  {label}
+              <div key={key} className="border-l-2 border-[#C855F0]/30 pl-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#C855F0]/70 mb-1">
+                  {fieldLabel}
                 </p>
-                <p className="text-[#999999] text-sm leading-relaxed">{value}</p>
+                <p className="text-[#CCCCCC] text-sm leading-relaxed">{value}</p>
               </div>
             );
           })}
@@ -78,12 +78,31 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
 
 export default function CDReport({ report, onRunAgain, selectedVoice }) {
   const audioRef = useRef(null);
-  const [playingSection, setPlayingSection] = useState(null); // null | 'loading' | 'playing'
+  const audioCtxRef = useRef(null);
+  const sourceRef = useRef(null);
+  const [playingSection, setPlayingSection] = useState(null);
   const [playingLabel, setPlayingLabel] = useState(null);
 
   const voiceKey = VOICE_KEY_MAP[selectedVoice] || 'cd_female';
 
+  // Get or create a shared AudioContext (must be created on user gesture)
+  const getAudioCtx = () => {
+    if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+      audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+    return audioCtxRef.current;
+  };
+
   const stopAudio = () => {
+    // Stop AudioContext source
+    if (sourceRef.current) {
+      try { sourceRef.current.stop(); } catch (_) {}
+      sourceRef.current = null;
+    }
+    // Stop HTML Audio fallback
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.src = '';
@@ -93,47 +112,58 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
     setPlayingLabel(null);
   };
 
-  const handlePlayToggle = async (label, data) => {
-    // Stop if already playing this section
-    if (playingLabel === label) {
-      stopAudio();
-      return;
-    }
-
-    // Stop any current audio
-    stopAudio();
-
-    const text = sectionToText(label, data);
-    if (!text) return;
-
-    setPlayingLabel(label);
-    setPlayingSection('loading');
-
+  const playBlob = async (blob, label) => {
+    // Try AudioContext first (bypasses autoplay policy)
     try {
-      const response = await axios.post(
-        `${baseURL}/v1/ai/tts/`,
-        { text, voice: voiceKey },
-        { responseType: 'blob' }
-      );
-
-      const blob = new Blob([response.data], { type: 'audio/mpeg' });
+      const ctx = getAudioCtx();
+      const arrayBuffer = await blob.arrayBuffer();
+      const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+      sourceRef.current = source;
+      setPlayingSection('playing');
+      source.start(0);
+      source.onended = () => {
+        sourceRef.current = null;
+        setPlayingSection(null);
+        setPlayingLabel(null);
+      };
+    } catch (ctxErr) {
+      // Fallback to HTML Audio
+      console.warn('AudioContext failed, using HTML Audio:', ctxErr);
       const url = URL.createObjectURL(blob);
       const audio = new Audio(url);
       audioRef.current = audio;
-
       audio.onplay = () => setPlayingSection('playing');
       audio.onended = () => {
         URL.revokeObjectURL(url);
         setPlayingSection(null);
         setPlayingLabel(null);
       };
-      audio.onerror = () => {
+      audio.onerror = (e) => {
+        console.error('Audio playback error:', e);
         URL.revokeObjectURL(url);
         setPlayingSection(null);
         setPlayingLabel(null);
       };
-
       await audio.play();
+    }
+  };
+
+  const fetchAndPlay = async (text, label) => {
+    if (playingLabel === label) { stopAudio(); return; }
+    stopAudio();
+    setPlayingLabel(label);
+    setPlayingSection('loading');
+    try {
+      const response = await axios.post(
+        `${baseURL}/v1/ai/tts/`,
+        { text, voice: voiceKey },
+        { responseType: 'blob' }
+      );
+      const blob = new Blob([response.data], { type: 'audio/mpeg' });
+      await playBlob(blob, label);
     } catch (err) {
       console.error('TTS error:', err);
       setPlayingSection(null);
@@ -141,54 +171,18 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
     }
   };
 
-  const handleListenAll = async () => {
-    if (playingLabel === 'ALL') {
-      stopAudio();
-      return;
-    }
+  const handlePlayToggle = (label, data) => {
+    const text = sectionToText(label, data);
+    if (!text) return;
+    fetchAndPlay(text, label);
+  };
 
-    stopAudio();
-
-    // Concatenate all sections into one text
+  const handleListenAll = () => {
     const fullText = SECTIONS.map((s) =>
       sectionToText(s.label, report?.[s.key])
     ).filter(Boolean).join('. ');
-
     if (!fullText) return;
-
-    setPlayingLabel('ALL');
-    setPlayingSection('loading');
-
-    try {
-      const response = await axios.post(
-        `${baseURL}/v1/ai/tts/`,
-        { text: fullText, voice: voiceKey },
-        { responseType: 'blob' }
-      );
-
-      const blob = new Blob([response.data], { type: 'audio/mpeg' });
-      const url = URL.createObjectURL(blob);
-      const audio = new Audio(url);
-      audioRef.current = audio;
-
-      audio.onplay = () => setPlayingSection('playing');
-      audio.onended = () => {
-        URL.revokeObjectURL(url);
-        setPlayingSection(null);
-        setPlayingLabel(null);
-      };
-      audio.onerror = () => {
-        URL.revokeObjectURL(url);
-        setPlayingSection(null);
-        setPlayingLabel(null);
-      };
-
-      await audio.play();
-    } catch (err) {
-      console.error('TTS error:', err);
-      setPlayingSection(null);
-      setPlayingLabel(null);
-    }
+    fetchAndPlay(fullText, 'ALL');
   };
 
   const isAllLoading = playingLabel === 'ALL' && playingSection === 'loading';

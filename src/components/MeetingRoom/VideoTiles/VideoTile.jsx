@@ -143,7 +143,7 @@ const getContainerClasses = (isCompact, isPinned, isInteractive, className) => {
   `;
 
   const sizeClasses = isCompact
-    ? 'aspect-video min-w-[220px] max-w-[320px]'
+    ? 'aspect-video w-[40vw] min-w-[140px] max-w-[280px]'
     : '';
 
   const interactiveClasses = isInteractive

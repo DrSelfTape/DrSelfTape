@@ -320,47 +320,35 @@ export const Signup = () => {
   return (
     <AuthLayout>
       <div className='mx-auto w-full max-w-sm lg:w-96'>
-        <Logo showText={false} />
-        <h2 className='mt-3 lg:mt-6 text-2xl font-semibold tracking-tight text-gray-900 text-center'>
-          Sign up to your account
+        <h2 className='text-3xl font-bold text-white tracking-tight'>
+          Create account
         </h2>
+        <p className='mt-2 text-sm text-[#888]'>Join the Dr. Self Tape community</p>
 
         <div className='mt-8'>
           <div>
-            <div>
-              <p className='text-sm font-medium text-gray-700 pb-1'>
-                Sign up with
-              </p>
-              <div className='mt-1 grid grid-cols-2 gap-3'>
-                <div className='h-[42px] inline-flex w-full justify-center items-center rounded-md cursor-pointer border border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50'>
-                  <span className='sr-only'>Sign in with Google</span>
-                  <GoogleIcon />
-                </div>
-
-                <div className='h-[42px] inline-flex w-full justify-center rounded-md border cursor-pointer border-gray-300 bg-white py-2 px-4 text-sm font-medium text-gray-500 shadow-sm hover:bg-gray-50'>
-                  <span className='sr-only'>Sign up with Apple</span>
-                  <AppleIcon />
-                </div>
+            <p className='text-xs font-medium text-[#666] pb-2 uppercase tracking-widest'>Continue with</p>
+            <div className='grid grid-cols-2 gap-3'>
+              <div className='h-[42px] inline-flex w-full justify-center items-center rounded-lg cursor-pointer border border-[#2a2d35] bg-[#111318] hover:border-[#C855F0]/50 transition-colors'>
+                <GoogleIcon />
+              </div>
+              <div className='h-[42px] inline-flex w-full justify-center items-center rounded-lg cursor-pointer border border-[#2a2d35] bg-[#111318] hover:border-[#C855F0]/50 transition-colors'>
+                <AppleIcon />
               </div>
             </div>
 
             <div className='relative my-6'>
-              <div
-                className='absolute inset-0 flex items-center'
-                aria-hidden='true'
-              >
-                <div className='w-full border-t border-gray-300' />
+              <div className='absolute inset-0 flex items-center'>
+                <div className='w-full border-t border-[#2a2d35]' />
               </div>
-              <div className='relative flex justify-center text-sm'>
-                <span className='bg-white px-2 text-gray-500'>
-                  Or continue with
-                </span>
+              <div className='relative flex justify-center text-xs'>
+                <span className='bg-[#080a0f] px-3 text-[#555] uppercase tracking-widest'>or</span>
               </div>
             </div>
           </div>
           <form onSubmit={handleSubmit} className=''>
             <div className='space-y-8'>
-              <CustomInput
+              <CustomInput dark
                 label='Full Name'
                 name='firstName'
                 type='text'
@@ -371,7 +359,7 @@ export const Signup = () => {
                 required
               />
 
-              <CustomInput
+              <CustomInput dark
                 label='Email'
                 name='email'
                 type='text'
@@ -385,7 +373,7 @@ export const Signup = () => {
               />
 
               <div className='flex flex-col gap-1 relative'>
-                <CustomInput
+                <CustomInput dark
                   label='Password'
                   name='password'
                   type='password'
@@ -404,7 +392,7 @@ export const Signup = () => {
                 )}
               </div>
 
-              <CustomInput
+              <CustomInput dark
                 label='Confirm Password'
                 name='confirmPassword'
                 type='password'
@@ -416,7 +404,7 @@ export const Signup = () => {
                 ref={fieldRefs.confirmPassword}
               />
 
-              <CustomInput
+              <CustomInput dark
                 label='Phone Number'
                 name='phoneNo'
                 value={formData.phoneNo}
@@ -456,7 +444,7 @@ export const Signup = () => {
                     errorMsg={errors.headshot}
                     ref={fieldRefs.headshot}
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Reel URL'
                     name='reelUrl'
                     type='text'
@@ -489,7 +477,7 @@ export const Signup = () => {
 
               {formData.accountType?.value === 'casting_director' && (
                 <div className='space-y-8'>
-                  <CustomInput
+                  <CustomInput dark
                     label='Company Name'
                     name='companyName'
                     type='text'
@@ -498,14 +486,14 @@ export const Signup = () => {
                     placeholder='Enter your company name'
                     required
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Company Phone'
                     name='companyPhone'
                     value={formData.companyPhone}
                     onChange={handleChange}
                     placeholder='Enter your company phone'
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Website'
                     name='website'
                     type='text'
@@ -516,7 +504,7 @@ export const Signup = () => {
                     errorMsg={errors.website}
                     ref={fieldRefs.website}
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Office Address'
                     name='officeAddress'
                     type='text'
@@ -547,7 +535,7 @@ export const Signup = () => {
 
               {formData.accountType?.value === 'agent' && (
                 <div className='space-y-8'>
-                  <CustomInput
+                  <CustomInput dark
                     label='Agency Name'
                     name='agencyName'
                     type='text'
@@ -556,14 +544,14 @@ export const Signup = () => {
                     placeholder='Enter your agency name'
                     required
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Agency Phone'
                     name='agencyPhone'
                     value={formData.agencyPhone}
                     onChange={handleChange}
                     placeholder='Enter your agency phone'
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Agency Email'
                     name='agencyEmail'
                     type='text'
@@ -574,7 +562,7 @@ export const Signup = () => {
                     errorMsg={errors.agencyEmail}
                     ref={fieldRefs.agencyEmail}
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Website'
                     name='website'
                     type='text'
@@ -585,7 +573,7 @@ export const Signup = () => {
                     errorMsg={errors.website}
                     ref={fieldRefs.website}
                   />
-                  <CustomInput
+                  <CustomInput dark
                     label='Office Address'
                     name='officeAddress'
                     type='text'
@@ -615,7 +603,7 @@ export const Signup = () => {
               )}
               {formData.accountType?.value === 'coach' && (
                 <div className='space-y-8'>
-                  <CustomInput
+                  <CustomInput dark
                     label='Display Name'
                     name='display_name'
                     type='text'
@@ -641,7 +629,7 @@ export const Signup = () => {
                     required
                   />
 
-                  <CustomInput
+                  <CustomInput dark
                     label='Hourly Rate'
                     name='hourly_rate'
                     type='number'

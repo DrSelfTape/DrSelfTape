@@ -65,6 +65,7 @@ const GreenRoom = lazy(() => import('../panels/Dashboard/FindAReader/GreenRoom')
 const GreenRoomChat = lazy(() => import('../panels/Dashboard/FindAReader/GreenRoomChat'));
 const WhoWantsToRead = lazy(() => import('../panels/Dashboard/FindAReader/WhoWantsToRead'));
 const ReaderProfile = lazy(() => import('../panels/Dashboard/FindAReader/ReaderProfile'));
+const Favorites = lazy(() => import('../panels/Dashboard/FindAReader/Favorites'));
 
 // Lazy-loaded Admin panel imports
 const AdminLayout = lazy(() => import('../panels/Admin/AdminLayout'));
@@ -125,6 +126,7 @@ export const commonRoutes = [
       { path: 'green-room', moduleName: 'GreenRoom', element: <GreenRoom /> },
       { path: 'green-room/:matchId', moduleName: 'GreenRoomChat', element: <GreenRoomChat /> },
       { path: 'who-wants-to-read', moduleName: 'WhoWantsToRead', element: <WhoWantsToRead /> },
+      { path: 'favorites', moduleName: 'Favorites', element: <Favorites /> },
       { path: 'reader-profile/:readerId', moduleName: 'ReaderProfile', element: <ReaderProfile /> },
     ],
   },

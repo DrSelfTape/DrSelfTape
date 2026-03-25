@@ -52,6 +52,8 @@ const endPoints = {
   /************************* Notifications ************************/
   myNotifications: `${baseURL}/v1/notifications/my-notifications/`,
   markNotificationRead: `${baseURL}/v1/notifications/mark-read/`,
+  pushSubscribe: `${baseURL}/v1/notifications/push/subscribe/`,
+  pushVapidKey: `${baseURL}/v1/notifications/push/vapid-key/`,
 
   /************************* Notifications ************************/
 
@@ -99,9 +101,16 @@ const endPoints = {
 
   // AI
   cdFeedback: `${baseURL}/v1/ai/cd-feedback/`,
+  generateScene: `${baseURL}/v1/ai/generate-scene/`,
+  parseBreakdown: `${baseURL}/v1/ai/parse-breakdown/`,
+  formatScript: `${baseURL}/v1/ai/format-script/`,
   scenePartner: `${baseURL}/v1/ai/scene-partner/`,
   transcribe: `${baseURL}/v1/ai/transcribe/`,
   tts: `${baseURL}/v1/ai/tts/`,
+
+  // Push Notifications
+  pushSubscribe: `${baseURL}/v1/notifications/push/subscribe/`,
+  pushVapidKey: `${baseURL}/v1/notifications/push/vapid-key/`,
 
   // Wix Bookings
   wixServices: `${baseURL}/v1/wix/services/`,
@@ -109,6 +118,13 @@ const endPoints = {
   wixBook: `${baseURL}/v1/wix/book/`,
   wixSync: `${baseURL}/v1/wix/sync/`,
   /******************** Dashboard Panels ********************/
+
+  // Subscriptions
+  subscriptionStatus: `${baseURL}/v1/subscriptions/status/`,
+  subscriptionCheckout: `${baseURL}/v1/subscriptions/checkout/`,
+  subscriptionPortal: `${baseURL}/v1/subscriptions/portal/`,
+  tokenBalance: `${baseURL}/v1/subscriptions/tokens/`,
+  spendToken: `${baseURL}/v1/subscriptions/tokens/spend/`,
 };
 
 export default endPoints;

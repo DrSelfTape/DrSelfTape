@@ -251,7 +251,8 @@ const VideoLayoutManager = ({
 
     // Default 2-tile grid
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-[10px] flex-1 h-[calc(100vh-120px)] min-h-[360px] w-full">
+      <div className="flex flex-col lg:grid lg:grid-cols-2 gap-[10px] flex-1 w-full"
+           style={{ height: 'calc(100vh - 120px)', minHeight: '360px' }}>
         <div className="flex-1 min-h-0 w-full">{renderTile('local', { containerClassName: 'w-full h-full' })}</div>
         <div className="flex-1 min-h-0 w-full">{renderTile('remote', { containerClassName: 'w-full h-full' })}</div>
       </div>
