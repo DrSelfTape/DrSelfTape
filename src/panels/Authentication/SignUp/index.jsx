@@ -28,7 +28,7 @@ export const Signup = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: '',
+    accountType: { label: 'Actor', value: 'actor' },
     phoneNo: '',
     // Actor fields
     bio: '',
@@ -268,7 +268,7 @@ export const Signup = () => {
           email: '',
           password: '',
           confirmPassword: '',
-          accountType: '',
+          accountType: { label: 'Actor', value: 'actor' },
           phoneNo: '',
           bio: '',
           headshot: null,
@@ -413,15 +413,7 @@ export const Signup = () => {
                 required
               />
 
-              <SelectDropdown
-                label='Account Type'
-                name={'accountType'}
-                value={formData.accountType}
-                onChange={handleChange}
-                options={accountOptions}
-                placeholder='Select account type'
-                required
-              />
+              {/* Account type hidden — all users are actors for now */}
 
               {formData.accountType?.value === 'actor' && (
                 <div className='space-y-8'>
