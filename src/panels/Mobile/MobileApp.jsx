@@ -1,30 +1,89 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { usePushNotifications } from "../../hooks/usePushNotifications";
+import { useTokenBalance } from "../../hooks/useTokenBalance";
+import NoTokensModal from "../../components/NoTokensModal";
 import { fetchAuditionsThunk, fetchAuditionStatsThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
-import { fetchScriptsThunk, createScriptThunk } from "../../redux/features/scripts/scriptsSlice";
+import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
+import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
+import axiosInstance from "../../redux/http";
+import endPoints from "../../redux/constant";
 import * as pdfjsLib from "pdfjs-dist";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
+// Simple hash for caching — avoids re-calling GPT on same content
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < Math.min(str.length, 500); i++) {
+    hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    hash |= 0;
+  }
+  return String(hash);
+}
+
 async function extractPdfText(file) {
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-  const pages = [];
+  const pageTexts = [];
+
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
-    pages.push(content.items.map(item => item.str).join(" "));
+    const content = await page.getTextContent({ includeMarkedContent: false });
+    const items = content.items.filter((item) => item.str?.trim());
+
+    if (items.length > 0) {
+      // Find dominant font size (body text) and filter out watermarks
+      const sizeMap = {};
+      items.forEach((item) => {
+        const h = Math.round(Math.abs(item.transform[3]));
+        sizeMap[h] = (sizeMap[h] || 0) + item.str.length;
+      });
+      const dominantSize = parseInt(Object.entries(sizeMap).sort((a, b) => b[1] - a[1])[0]?.[0]);
+      const filtered = items.filter((item) => Math.abs(Math.round(Math.abs(item.transform[3])) - dominantSize) <= 2);
+      const workItems = filtered.length > items.length * 0.3 ? filtered : items;
+
+      // Sort by Y axis (top to bottom), then X (left to right)
+      workItems.sort((a, b) => {
+        const yDiff = Math.round(b.transform[5]) - Math.round(a.transform[5]);
+        if (Math.abs(yDiff) > 4) return yDiff;
+        return a.transform[4] - b.transform[4];
+      });
+
+      // Group into lines by Y position
+      const lines = [];
+      let currentY = null;
+      let currentLine = [];
+      for (const item of workItems) {
+        const y = Math.round(item.transform[5]);
+        if (currentY === null || Math.abs(y - currentY) <= 4) {
+          currentLine.push(item.str);
+          currentY = y;
+        } else {
+          if (currentLine.length) lines.push(currentLine.join(''));
+          currentLine = [item.str];
+          currentY = y;
+        }
+      }
+      if (currentLine.length) lines.push(currentLine.join(''));
+      pageTexts.push(lines.join('\n'));
+    }
   }
-  return pages.join("\n");
+
+  return pageTexts.join('\n\n');
 }
 
 /* Lazy-load dashboard panels for the "More" menu */
 const CDSim = lazy(() => import("../Dashboard/CDSim"));
 const CastingDirectorAI = lazy(() => import("../Dashboard/CastingDirectorAI"));
+const WhoWantsToRead = lazy(() => import("../Dashboard/FindAReader/WhoWantsToRead"));
+const Favorites = lazy(() => import("../Dashboard/FindAReader/Favorites"));
 const FindAReader = lazy(() => import("../Dashboard/FindAReader"));
 const GreenRoom = lazy(() => import("../Dashboard/FindAReader/GreenRoom"));
+const GreenRoomChat = lazy(() => import("../Dashboard/FindAReader/GreenRoomChat"));
+const ItsAScene = lazy(() => import("../Dashboard/FindAReader/ItsAScene"));
 const LiveRehearsals = lazy(() => Promise.resolve({ default: () => null }));
 const Community = lazy(() => Promise.resolve({ default: () => null }));
 const Scripts = lazy(() => import("../Dashboard/Scripts"));
@@ -38,6 +97,7 @@ const DashProfile = lazy(() => import("../Dashboard/Profile"));
 const AgentPortal = lazy(() => Promise.resolve({ default: () => null }));
 const AuditionGenerator = lazy(() => import("../Dashboard/AuditionGenerator"));
 const SceneStudy = lazy(() => import("../Dashboard/SceneStudy"));
+const MeetingRoom = lazy(() => import("../Meeting/MeetingRoom"));
 
 /* ═══════════════════════════════════════════════════
    BRAND TOKENS — from Dr Self Tape Brand Guideline
@@ -71,6 +131,7 @@ const RED = CORAL;
 const STATUS_COLORS = {
   submitted: TEXT_MUTED,
   in_review: BLUE,
+  audition: "#C855F0",
   callback: GOLD,
   booked: GREEN,
   passed: CORAL,
@@ -92,7 +153,7 @@ function mapAudition(a) {
     character: a.character || "",
     cd: a.casting_director || a.cd || "",
     type: a.project_type || a.type || "",
-    status: a.status === "reviewed" ? "in_review" : (a.status || "submitted"),
+    status: a.status === "reviewed" ? "in_review" : a.status === "audition" ? "audition" : (a.status || "submitted"),
     callbackDate: a.callback_date || a.callbackDate || null,
     agency: a.agency || "",
   };
@@ -119,6 +180,7 @@ function mapScript(s) {
     pages: s.description || "Script",
     lastPracticed: relativeTime(s.created_at) || s.lastPracticed || "",
     progress: s.progress || 0,
+    content: s.content || s.script_content || s.text || "",
   };
 }
 
@@ -190,16 +252,15 @@ const TABS = [
 ];
 
 const MORE_FEATURES = [
-  { id: "find-a-reader", label: "Find a Reader", desc: "Match with scene partners", emoji: "🎭", color: "#C855F0" },
-  { id: "green-room", label: "Green Room", desc: "Chat with your matches", emoji: "💬", color: "#A7ECDA" },
-  { id: "cd-sim", label: "CD Sim", desc: "Casting director simulation", emoji: "🎬", color: "#C855F0" },
-  { id: "cd-ai", label: "CD AI Studio", desc: "Scene breakdown coaching", emoji: "🤖", color: "#A7ECDA" },
-  { id: "scripts", label: "Scripts", desc: "Your script library", emoji: "📝", color: "#FFB49A" },
-  { id: "submissions", label: "Submissions", desc: "Track tape submissions", emoji: "📤", color: "#5ee6b8" },
-  { id: "reports", label: "Reports", desc: "Career statistics", emoji: "📊", color: "#b89aff" },
-  { id: "generator", label: "Scene Generator", desc: "AI custom scenes", emoji: "✨", color: "#C855F0" },
-  { id: "membership", label: "Membership", desc: "Plans and billing", emoji: "👑", color: "#FCE072" },
-  { id: "dash-profile", label: "My Profile", desc: "Edit your profile", emoji: "🎭", color: "#A7ECDA" },
+  { id: "cd-sim", label: "CD Sim Mode", desc: "Live audition — real-time CD feedback", emoji: "🎬", color: "#C855F0" },
+  { id: "cd-ai", label: "CD AI Studio", desc: "Scene breakdown, analysis & prep", emoji: "🤖", color: "#A7ECDA" },
+  { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
+  { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
+  { id: "reports", label: "Reports", desc: "Your career at a glance", emoji: "📊", color: "#b89aff" },
+  { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#C855F0" },
+  { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072" },
+  { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#C855F0" },
+  { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072" },
 ];
 
 const PANEL_COMPONENTS = {
@@ -213,6 +274,9 @@ const PANEL_COMPONENTS = {
   "generator": AuditionGenerator,
   "membership": Membership,
   "dash-profile": DashProfile,
+  "who-wants-to-read": WhoWantsToRead,
+  "favorites": Favorites,
+  "meeting": MeetingRoom,
 };
 
 /* ═══════════════════════════════════════════════════
@@ -220,6 +284,8 @@ const PANEL_COMPONENTS = {
    ═══════════════════════════════════════════════════ */
 function HomeScreen({ setTab, setCurrentPanel }) {
   const dispatch = useDispatch();
+  const { permission, subscribe, supported, showIOSPrompt, setShowIOSPrompt } = usePushNotifications();
+  const { balance, refresh: refreshTokens } = useTokenBalance();
   const rawAuditions = useSelector((state) => state.auditions.data || []);
   const rawScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
   const s = useSelector((state) => state.auditions.stats?.data || {});
@@ -244,16 +310,15 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const callbacks = auditions.filter(a => callbackBadge(a.callbackDate));
 
   return (
-    <div style={{ padding: "0 16px 100px" }}>
+    <div style={{ padding: "0 16px 24px" }}>
+      {/* Push notifications — enabled when native app is live */}
       {/* Greeting — Playfair Display for editorial warmth */}
-      <div style={{ padding: "20px 0 24px" }}>
+      <div style={{ padding: "20px 0 20px" }}>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
           Welcome back
         </h1>
-        <p style={{ fontSize: 12, color: TEXT_MUTED, margin: "4px 0 0", fontStyle: "italic", fontFamily: "'Playfair Display', serif" }}>
-          Empowering actors, one take at a time
-        </p>
+
       </div>
 
       {/* Quick Actions — Coral CTA primary, Mint secondary */}
@@ -262,51 +327,65 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           flex: 1, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none",
           borderRadius: 16, padding: "14px 16px", cursor: "pointer", textAlign: "left",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <Icon name="mic" size={18} color="#fff" />
-            <span style={{ fontSize: 13, fontWeight: 600, color: "#fff" }}>Go live</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Icon name="mic" size={20} color="#fff" />
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Go Live</span>
           </div>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.75)", margin: 0 }}>AI scene partner</p>
+
         </button>
         <button onClick={() => setCurrentPanel("generator")} style={{
           flex: 1, background: BG_ELEVATED, border: `1px solid ${BORDER_ACTIVE}`,
           borderRadius: 16, padding: "14px 16px", cursor: "pointer", textAlign: "left",
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <Icon name="sparkle" size={18} color={MINT} />
-            <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>Generate</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <Icon name="sparkle" size={20} color={MINT} />
+            <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY }}>Generate</span>
           </div>
-          <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: 0 }}>AI scene generator</p>
+
         </button>
       </div>
 
-      {/* Stats Grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 24 }}>
-        {stats.map(s => (
-          <div key={s.label} style={{ background: BG_CARD, borderRadius: 16, padding: "16px", border: `1px solid ${BORDER}` }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-              <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>{s.label}</span>
-              <div style={{ width: 28, height: 28, borderRadius: 8, background: `${s.color}14`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Icon name={s.icon} size={14} color={s.color} />
-              </div>
-            </div>
-            <span style={{ fontSize: 30, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-1px", fontFamily: "'Playfair Display', serif" }}>{s.value}</span>
+      {/* Key stats — 2 numbers only */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+        {[
+          { label: "Auditions", value: s.total_auditions || 0, color: CORAL_SOFT },
+          { label: "Booked", value: s.total_booked || 0, color: GREEN },
+        ].map(stat => (
+          <div key={stat.label} style={{ flex: 1, background: BG_CARD, borderRadius: 16, padding: "16px", border: `1px solid ${BORDER}`, textAlign: "center" }}>
+            <span style={{ fontSize: 32, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-1px", fontFamily: "'Playfair Display', serif", display: "block" }}>{stat.value}</span>
+            <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>{stat.label}</span>
           </div>
         ))}
       </div>
 
+      {/* Token balance */}
+      {balance !== null && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, background: 'rgba(167,236,218,0.06)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(167,236,218,0.1)' }}>
+          <span style={{ fontSize: 16 }}>🎟️</span>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#A7ECDA' }}>{balance}</span>
+            <span style={{ fontSize: 12, color: '#8a9a96' }}> AI tokens remaining</span>
+          </div>
+          {balance === 0 && (
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#C855F0', background: 'rgba(200,85,240,0.15)', padding: '3px 10px', borderRadius: 20 }}>
+              Upgrade
+            </span>
+          )}
+        </div>
+      )}
+
       {/* Upcoming Callbacks */}
       {callbacks.length > 0 && (
         <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0 }}>Upcoming callbacks</h2>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+            <h2 style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.2px" }}>Upcoming Callbacks</h2>
             <button onClick={() => setTab("auditions")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>See all</button>
           </div>
           {callbacks.map(a => {
             const cb = callbackBadge(a.callbackDate);
             return (
               <div key={a.id} style={{
-                background: BG_CARD, borderRadius: 14, padding: "14px 16px", marginBottom: 8,
+                background: BG_CARD, borderRadius: 14, padding: "16px", marginBottom: 10,
                 border: cb?.urgent ? `1px solid ${CORAL}35` : `1px solid ${BORDER}`,
                 boxShadow: cb?.urgent ? `0 0 24px ${CORAL}12` : "none",
               }}>
@@ -327,41 +406,15 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </div>
       )}
 
-      {/* Recent Submissions */}
-      {recentSubmissions.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0 }}>Recent submissions</h2>
-            <button onClick={() => setTab("auditions")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>See all</button>
-          </div>
-          {recentSubmissions.map(sub => {
-            const statusColor = { sent: BLUE, viewed: "#b89aff", callback: GOLD, booked: GREEN }[sub.status] || TEXT_MUTED;
-            return (
-              <div key={sub.id} style={{
-                background: BG_CARD, borderRadius: 14, padding: "14px 16px", marginBottom: 8,
-                border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 12,
-              }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sub.project_name || "Untitled"}</p>
-                  <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "2px 0 0" }}>{sub.role || ""}{sub.casting_director ? ` · ${sub.casting_director}` : ""}</p>
-                </div>
-                <span style={{
-                  fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 10,
-                  background: `${statusColor}18`, color: statusColor, textTransform: "capitalize",
-                }}>{sub.status || "sent"}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
+
 
       {/* Recent Scripts */}
       <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0 }}>Continue practicing</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+          <h2 style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.2px" }}>Continue Practicing</h2>
           <button onClick={() => setTab("scenes")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>All scripts</button>
         </div>
-        {scripts.map(sc => (
+        {scripts.slice(0, 2).map(sc => (
           <div key={sc.id} style={{ background: BG_CARD, borderRadius: 14, padding: "14px 16px", marginBottom: 8, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
             <ProgressRing pct={sc.progress} />
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -388,7 +441,7 @@ function AuditionsScreen() {
   const auditions = rawAuditions.map(mapAudition);
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
-  const [viewSection, setViewSection] = useState("submissions");
+  const [viewSection, setViewSection] = useState("tracker");
 
   useEffect(() => {
     dispatch(fetchAuditionsThunk());
@@ -399,6 +452,7 @@ function AuditionsScreen() {
   const columns = [
     { id: "submitted", label: "Submitted" },
     { id: "in_review", label: "In review" },
+    { id: "audition", label: "Audition" },
     { id: "callback", label: "Callback" },
     { id: "booked", label: "Booked" },
     { id: "passed", label: "Passed" },
@@ -412,7 +466,7 @@ function AuditionsScreen() {
   ];
 
   return (
-    <div style={{ padding: "0 16px 100px" }}>
+    <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Auditions</h1>
         <button style={{ width: 38, height: 38, borderRadius: 12, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
@@ -420,15 +474,14 @@ function AuditionsScreen() {
         </button>
       </div>
 
-      {/* Section Toggle */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-        {[{ key: "submissions", label: "Submissions" }, { key: "tracker", label: "Audition Tracker" }].map(sec => (
+      {/* Tab row */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 16, borderBottom: `1px solid ${BORDER}`, paddingBottom: 12 }}>
+        {[{ key: "tracker", label: "Tracker" }, { key: "submissions", label: "Submissions" }].map(sec => (
           <button key={sec.key} onClick={() => setViewSection(sec.key)} style={{
-            flex: 1, padding: "10px 14px", borderRadius: 14, border: "none", cursor: "pointer",
+            padding: "6px 16px", borderRadius: 20, border: "none", cursor: "pointer",
             fontSize: 13, fontWeight: 600,
-            background: viewSection === sec.key ? CORAL : BG_ELEVATED,
-            color: viewSection === sec.key ? "#fff" : TEXT_SECONDARY,
-            transition: "all 0.15s",
+            background: viewSection === sec.key ? CORAL : "transparent",
+            color: viewSection === sec.key ? "#fff" : TEXT_MUTED,
           }}>
             {sec.label}
           </button>
@@ -438,12 +491,12 @@ function AuditionsScreen() {
       {viewSection === "submissions" ? (
         <div>
           {submissions.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "40px 0", color: TEXT_MUTED, fontSize: 13 }}>No submissions yet</div>
+            <div style={{ textAlign: "center", padding: "48px 0", color: TEXT_MUTED, fontSize: 13, letterSpacing: "0.2px" }}>No submissions yet — start tracking your work.</div>
           ) : submissions.map(sub => {
             const statusColor = { sent: BLUE, viewed: "#b89aff", callback: GOLD, booked: GREEN }[sub.status] || TEXT_MUTED;
             return (
               <div key={sub.id} style={{
-                background: BG_CARD, borderRadius: 14, padding: "14px 16px", marginBottom: 10,
+                background: BG_CARD, borderRadius: 14, padding: "16px", marginBottom: 12,
                 border: `1px solid ${BORDER}`,
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -461,7 +514,7 @@ function AuditionsScreen() {
                   padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: GOLD,
                   width: "100%", transition: "all 0.15s",
                 }}>
-                  🎬 Got an Audition!
+                  🎬  I Got an Audition
                 </button>
               </div>
             );
@@ -530,7 +583,7 @@ function AuditionsScreen() {
                 })}
                 {items.length === 0 && (
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 80, fontSize: 12, color: TEXT_MUTED }}>
-                    No auditions
+                    Nothing here yet
                   </div>
                 )}
               </div>
@@ -589,7 +642,7 @@ function AuditionsScreen() {
 /* ═══════════════════════════════════════════════════
    SCENES
    ═══════════════════════════════════════════════════ */
-function ScenesScreen() {
+function ScenesScreen({ setTab }) {
   const dispatch = useDispatch();
   const fallbackScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
   const realScripts = useSelector((state) => state.scripts.scripts || []);
@@ -597,6 +650,9 @@ function ScenesScreen() {
   const scripts = (realScripts.length > 0 ? realScripts : fallbackScripts).map(mapScript);
   const fileInputRef = useRef(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [selectedScript, setSelectedScript] = useState(null);
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null); // script object to confirm
 
   useEffect(() => {
     dispatch(fetchScriptsThunk());
@@ -614,7 +670,23 @@ function ScenesScreen() {
     if (name.endsWith(".pdf")) {
       setPdfLoading(true);
       try {
-        content = await extractPdfText(file);
+        const rawText = await extractPdfText(file);
+        // Check cache first — avoids re-calling GPT on same PDF content
+        const cacheKey = `fmtscript_${simpleHash(rawText)}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+          content = cached;
+        } else {
+          try {
+            const res = await axiosInstance.post(endPoints.formatScript, { text: rawText });
+            content = res?.data?.data?.formatted || res?.data?.formatted || rawText;
+            if (content && content !== rawText) {
+              sessionStorage.setItem(cacheKey, content); // cache it
+            }
+          } catch {
+            content = rawText;
+          }
+        }
       } catch {
         setPdfLoading(false);
         return;
@@ -629,8 +701,30 @@ function ScenesScreen() {
     }
   };
 
+  if (selectedScript) {
+    sessionStorage.setItem('preloadedScript', JSON.stringify({ scriptContent: selectedScript.content }));
+    return (
+      <div style={{ height: "calc(100vh - 64px)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid rgba(167,236,218,0.06)", flexShrink: 0 }}>
+          <button onClick={() => setSelectedScript(null)} style={{
+            width: 36, height: 36, borderRadius: 10, background: "#1a1c26",
+            border: "1px solid rgba(167,236,218,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          }}>
+            <Icon name="back" size={18} color="#8a9a96" />
+          </button>
+          <span style={{ fontSize: 16, fontWeight: 600, color: "#f2f0ed", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedScript.title}</span>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px", WebkitOverflowScrolling: "touch" }}>
+          <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}><div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div></div>}>
+            <SceneStudy key={selectedScript.id} />
+          </Suspense>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ padding: "0 16px 100px" }}>
+    <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
         <button style={{ width: 38, height: 38, borderRadius: 10, background: BG_ELEVATED, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
@@ -638,43 +732,100 @@ function ScenesScreen() {
         </button>
       </div>
 
-      {/* Upload CTA — Mint dashed border */}
-      <div onClick={() => fileInputRef.current?.click()} style={{
-        background: MINT_DIM, borderRadius: 18, padding: 28, marginBottom: 20,
-        border: `1.5px dashed ${MINT}40`, textAlign: "center", cursor: "pointer",
-      }}>
-        {pdfLoading || createLoading ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
-            <svg style={{ width: 32, height: 32, color: MINT, animation: "spin 1s linear infinite" }} viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.25 }} />
-              <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-            </svg>
-            <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0 }}>{pdfLoading ? "Parsing PDF..." : "Saving..."}</p>
-          </div>
-        ) : (
-          <>
-            <div style={{ width: 50, height: 50, borderRadius: 14, background: `${MINT}18`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
-              <Icon name="plus" size={22} color={MINT} />
+      {/* Upload CTA — Mint dashed border, wrapped in label for iOS Safari compatibility */}
+      <label htmlFor="script-upload-input" style={{ display: "block", cursor: "pointer" }}>
+        <div style={{
+          background: MINT_DIM, borderRadius: 18, padding: 28, marginBottom: 20,
+          border: `1.5px dashed ${MINT}40`, textAlign: "center",
+        }}>
+          {pdfLoading || createLoading ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
+              <svg style={{ width: 32, height: 32, color: MINT, animation: "spin 1s linear infinite" }} viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.25 }} />
+                <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+              </svg>
+              <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0 }}>{pdfLoading ? "Parsing PDF..." : "Saving..."}</p>
             </div>
-            <p style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0 }}>Upload a script</p>
-            <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "6px 0 0" }}>PDF or TXT files</p>
-          </>
-        )}
-        <input ref={fileInputRef} type="file" accept=".pdf,.txt" style={{ display: "none" }} onChange={e => handleFileUpload(e.target.files?.[0])} />
-      </div>
+          ) : (
+            <>
+              <div style={{ width: 50, height: 50, borderRadius: 14, background: `${MINT}18`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
+                <Icon name="plus" size={22} color={MINT} />
+              </div>
+              <p style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.2px" }}>Add a Script</p>
+              <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "6px 0 0", letterSpacing: "0.2px" }}>Upload PDF or paste text</p>
+            </>
+          )}
+        </div>
+        <input id="script-upload-input" ref={fileInputRef} type="file" accept=".pdf,.txt" style={{ display: "none" }} onChange={e => handleFileUpload(e.target.files?.[0])} />
+      </label>
 
-      <p style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, margin: "0 0 12px", textTransform: "uppercase", letterSpacing: "0.8px" }}>Your scripts</p>
+      <p style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "1px" }}>Your Scripts</p>
+
+      {/* Confirm delete dialog */}
+      {confirmDelete && (
+        <>
+          <div onClick={() => setConfirmDelete(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100 }} />
+          <div style={{
+            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 101,
+            background: BG_DEEP, borderRadius: "20px 20px 0 0", padding: "20px 20px 40px",
+          }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(167,236,218,0.15)", margin: "0 auto 20px" }} />
+            <p style={{ fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY, margin: "0 0 6px", textAlign: "center" }}>Delete Script?</p>
+            <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "0 0 24px", textAlign: "center" }}>
+              "{confirmDelete.title}" will be permanently removed.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button onClick={() => setConfirmDelete(null)} style={{
+                flex: 1, padding: "14px", borderRadius: 14, border: `1px solid ${BORDER_ACTIVE}`,
+                background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Cancel</button>
+              <button
+                onClick={async () => {
+                  setDeletingId(confirmDelete.id);
+                  setConfirmDelete(null);
+                  await dispatch(deleteScriptThunk(confirmDelete.id));
+                  setDeletingId(null);
+                }}
+                style={{
+                  flex: 1, padding: "14px", borderRadius: 14, border: "none",
+                  background: "#ef4444", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                }}
+              >Delete</button>
+            </div>
+          </div>
+        </>
+      )}
+
       {scripts.map(sc => (
         <div key={sc.id} style={{
-          background: BG_CARD, borderRadius: 14, padding: "16px", marginBottom: 10,
-          border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer",
+          background: deletingId === sc.id ? "rgba(239,68,68,0.08)" : BG_CARD,
+          borderRadius: 14, padding: "16px", marginBottom: 10,
+          border: deletingId === sc.id ? "1px solid rgba(239,68,68,0.3)" : `1px solid ${BORDER}`,
+          display: "flex", alignItems: "center", gap: 14,
+          opacity: deletingId === sc.id ? 0.5 : 1,
+          transition: "all 0.2s",
         }}>
-          <ProgressRing pct={sc.progress} size={44} stroke={3} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
-            <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "3px 0 0" }}>{sc.pages}{sc.lastPracticed ? ` · Last practiced ${sc.lastPracticed}` : ""}</p>
+          <div onClick={() => setSelectedScript(sc)} style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, cursor: "pointer" }}>
+            <ProgressRing pct={sc.progress} size={44} stroke={3} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
+              <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "3px 0 0" }}>{sc.pages}{sc.lastPracticed ? ` · Last practiced ${sc.lastPracticed}` : ""}</p>
+            </div>
           </div>
-          <Icon name="chevron" size={16} color={TEXT_MUTED} />
+          {/* Delete button */}
+          <button
+            onClick={(e) => { e.stopPropagation(); setConfirmDelete(sc); }}
+            disabled={!!deletingId}
+            style={{
+              width: 34, height: 34, borderRadius: 10, border: "none",
+              background: "rgba(239,68,68,0.1)", display: "flex", alignItems: "center",
+              justifyContent: "center", cursor: "pointer", flexShrink: 0,
+            }}
+          >
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="#ef4444" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
         </div>
       ))}
     </div>
@@ -686,19 +837,18 @@ function ScenesScreen() {
    ═══════════════════════════════════════════════════ */
 function LiveScreen() {
   return (
-    <div style={{ padding: "0 16px 100px" }}>
-      <div style={{ padding: "20px 0 8px" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", overflow: "hidden" }}>
+      <div style={{ padding: "20px 16px 8px", flexShrink: 0 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
-        <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "6px 0 16px", fontStyle: "italic" }}>Hands-free AI scene partner</p>
+        <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "8px 0 0", fontStyle: "italic", letterSpacing: "0.2px" }}>Rehearse with your AI scene partner</p>
       </div>
-
-      <div style={{ overflowY: "auto", paddingBottom: 100 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px", WebkitOverflowScrolling: "touch" }}>
         <Suspense fallback={
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
             <div style={{ fontSize: 13, color: TEXT_SECONDARY }}>Loading Scene Study...</div>
           </div>
         }>
-          <div style={{ background: "#fff", borderRadius: 16, padding: 12, minHeight: 200 }}>
+          <div style={{ minHeight: 200 }}>
             <SceneStudy />
           </div>
         </Suspense>
@@ -710,8 +860,16 @@ function LiveScreen() {
 /* ═══════════════════════════════════════════════════
    PROFILE
    ═══════════════════════════════════════════════════ */
+const PLAN_BADGES = {
+  basic: { label: 'Basic', emoji: '🌿', color: '#A7ECDA', bg: 'rgba(167,236,218,0.12)' },
+  plus: { label: 'Plus', emoji: '⭐', color: '#C855F0', bg: 'rgba(200,85,240,0.12)' },
+  premium: { label: 'Premium', emoji: '👑', color: '#FCE072', bg: 'rgba(252,224,114,0.12)' },
+};
+
 function ProfileScreen({ setCurrentPanel }) {
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth?.user);
+  const profileData = useSelector((state) => state.profile?.profile);
   const statsData = useSelector((state) => state.auditions.stats?.data);
   const scripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
   const userName = user ? `${user.first_name || ""} ${user.last_name || ""}`.trim() : "Actor";
@@ -721,33 +879,80 @@ function ProfileScreen({ setCurrentPanel }) {
   const bookedCount = statsData?.total_booked || 0;
   const scriptsCount = scripts.length || 0;
 
+  const headshot = profileData?.user_image || profileData?.headshot || null;
+  const union = profileData?.actor_profile?.union || null;
+  const basedIn = profileData?.actor_profile?.based_in || profileData?.based_in || null;
+  const genres = profileData?.actor_profile?.genres || profileData?.genres || [];
+  const yearsExperience = profileData?.actor_profile?.years_experience || profileData?.years_experience || null;
+
+  const [subStatus, setSubStatus] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchProfileThunk());
+    axiosInstance.get('/v1/subscriptions/status/').then(res => setSubStatus(res.data.data)).catch(() => {});
+  }, [dispatch]);
+
   const menu = [
-    { label: "Find a Reader", icon: "community", action: () => setCurrentPanel("find-a-reader") },
-    { label: "Green Room", icon: "mic", action: () => setCurrentPanel("green-room") },
-    { label: "Edit profile", icon: "profile", action: () => setCurrentPanel("dash-profile") },
+    { label: "Edit Profile", icon: "profile", action: () => setCurrentPanel("dash-profile") },
     { label: "Membership", icon: "star", action: () => setCurrentPanel("membership") },
     { label: "Reports", icon: "auditions", action: () => setCurrentPanel("reports") },
   ];
 
   return (
-    <div style={{ padding: "0 16px 100px" }}>
+    <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 28px", textAlign: "center" }}>
-        {/* Avatar — brand gradient: mint → coral */}
-        <div style={{
-          width: 76, height: 76, borderRadius: "50%", margin: "0 auto 14px",
-          background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT}, ${CORAL})`,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 28, fontWeight: 700, color: BG_DEEPEST, fontFamily: "'Playfair Display', serif",
-        }}>{initials}</div>
+        {/* Avatar — headshot or brand gradient fallback */}
+        {headshot ? (
+          <img src={headshot} alt="Headshot" style={{
+            width: 76, height: 76, borderRadius: "50%", margin: "0 auto 14px",
+            objectFit: "cover", display: "block", border: `2px solid ${MINT}40`,
+          }} />
+        ) : (
+          <div style={{
+            width: 76, height: 76, borderRadius: "50%", margin: "0 auto 14px",
+            background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT}, ${CORAL})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 28, fontWeight: 700, color: BG_DEEPEST, fontFamily: "'Playfair Display', serif",
+          }}>{initials}</div>
+        )}
         <h1 style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>{userName}</h1>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "4px 0 0" }}>{userEmail}</p>
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 6, marginTop: 10,
-          padding: "5px 14px", borderRadius: 20, background: GOLD_DIM,
-        }}>
-          <Icon name="star" size={12} color={GOLD} />
-          <span style={{ fontSize: 12, fontWeight: 600, color: GOLD }}>Pro member</span>
-        </div>
+        {(union || basedIn) && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10 }}>
+            {union && (
+              <span style={{ fontSize: 12, fontWeight: 600, color: MINT, padding: "4px 12px", borderRadius: 20, background: MINT_DIM }}>{union}</span>
+            )}
+            {basedIn && (
+              <span style={{ fontSize: 12, color: TEXT_SECONDARY, padding: "4px 12px", borderRadius: 20, background: BG_ELEVATED }}>📍 {basedIn}</span>
+            )}
+          </div>
+        )}
+        {/* Subscription badge + token balance */}
+        {subStatus?.plan && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 10 }}>
+            {(() => {
+              const badge = PLAN_BADGES[subStatus.plan];
+              return badge ? (
+                <span style={{
+                  fontSize: 12, fontWeight: 700, color: badge.color,
+                  padding: '5px 14px', borderRadius: 20, background: badge.bg,
+                  display: 'inline-flex', alignItems: 'center', gap: 5,
+                }}>
+                  {badge.emoji} {badge.label}
+                </span>
+              ) : null;
+            })()}
+            <span style={{
+              fontSize: 12, fontWeight: 600, color: '#A7ECDA',
+              padding: '5px 14px', borderRadius: 20,
+              background: 'rgba(167,236,218,0.08)',
+              border: '1px solid rgba(167,236,218,0.2)',
+            }}>
+              {subStatus.balance ?? 0} tokens
+            </span>
+          </div>
+        )}
+
       </div>
 
       <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
@@ -782,25 +987,24 @@ function ProfileScreen({ setCurrentPanel }) {
    ═══════════════════════════════════════════════════ */
 function MoreScreen({ setCurrentPanel }) {
   return (
-    <div style={{ padding: "0 16px 100px" }}>
+    <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 20px" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>More features</h1>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "6px 0 0" }}>All your tools in one place</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {MORE_FEATURES.map(f => (
           <button key={f.id} onClick={() => setCurrentPanel(f.id)} style={{
             background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 18,
-            padding: "18px 14px", cursor: "pointer", textAlign: "left",
+            padding: "20px 16px", cursor: "pointer", textAlign: "left",
             transition: "border-color 0.15s, transform 0.15s",
           }}>
             <div style={{
               width: 42, height: 42, borderRadius: 12,
               background: `${f.color}14`, display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 20, marginBottom: 10,
+              fontSize: 28, marginBottom: 10,
             }}>{f.emoji}</div>
             <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.3 }}>{f.label}</p>
-            <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "4px 0 0", lineHeight: 1.3 }}>{f.desc}</p>
           </button>
         ))}
       </div>
@@ -812,17 +1016,76 @@ function MoreScreen({ setCurrentPanel }) {
    PANEL SCREEN — Wraps a dashboard panel for mobile
    ═══════════════════════════════════════════════════ */
 // Panels that already use dark brand styling (inline dark bg/colors)
-const DARK_PANELS = new Set(["cd-ai", "generator", "find-a-reader", "green-room"]);
+const DARK_PANELS = new Set(["cd-ai", "cd-sim", "generator", "find-a-reader", "green-room"]);
+
+// Wrapper to inject matchId into GreenRoomChat without React Router params
+function GreenRoomChatWrapper({ matchId }) {
+  return (
+    <Suspense fallback={
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
+        <div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div>
+      </div>
+    }>
+      <GreenRoomChat matchId={matchId} />
+    </Suspense>
+  );
+}
+
+// Wrapper to inject matchId into ItsAScene without React Router params
+function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
+  return (
+    <Suspense fallback={
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
+        <div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div>
+      </div>
+    }>
+      <ItsAScene matchId={matchId} onGoToGreenRoom={onGoToGreenRoom} onKeepBrowsing={onKeepBrowsing} />
+    </Suspense>
+  );
+}
 
 function PanelScreen({ panelId, onBack }) {
+  const [subPanel, setSubPanel] = useState(null); // { id: 'green-room-chat', matchId: '123' }
   const PanelComponent = PANEL_COMPONENTS[panelId];
   const feature = MORE_FEATURES.find(f => f.id === panelId);
   if (!PanelComponent) return null;
 
   const isDark = DARK_PANELS.has(panelId);
 
+  // If we're in a sub-panel (e.g. GreenRoomChat or ItsAScene), render that instead
+  if (subPanel?.id === 'green-room-chat') {
+    return (
+      <div style={{ padding: "0 0 24px" }}>
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
+          borderBottom: `1px solid ${BORDER}`,
+        }}>
+          <button onClick={() => setSubPanel(null)} style={{
+            width: 36, height: 36, borderRadius: 10, background: BG_ELEVATED,
+            border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+          }}>
+            <Icon name="back" size={18} color={TEXT_SECONDARY} />
+          </button>
+          <span style={{ fontSize: 16, fontWeight: 600, color: TEXT_PRIMARY }}>Green Room Chat</span>
+        </div>
+        <GreenRoomChatWrapper matchId={subPanel.matchId} />
+      </div>
+    );
+  }
+
+  if (subPanel?.id === 'its-a-scene') {
+    return (
+      <ItsASceneWrapper
+        matchId={subPanel.matchId}
+        onGoToGreenRoom={(matchId) => setSubPanel({ id: 'green-room-chat', matchId })}
+        onKeepBrowsing={() => setSubPanel(null)}
+      />
+    );
+  }
+
   return (
-    <div style={{ padding: "0 0 100px" }}>
+    <div style={{ padding: "0 0 24px" }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
         borderBottom: `1px solid ${BORDER}`,
@@ -842,13 +1105,19 @@ function PanelScreen({ panelId, onBack }) {
         </div>
       }>
         {isDark ? (
-          <PanelComponent />
+          <PanelComponent
+            onSelectMatch={panelId === 'green-room' ? (matchId) => setSubPanel({ id: 'green-room-chat', matchId }) : undefined}
+            onMatchNavigate={panelId === 'who-wants-to-read' ? (matchId) => setSubPanel({ id: 'its-a-scene', matchId }) : undefined}
+          />
         ) : (
           <div style={{
-            background: "#fff", borderRadius: 16, margin: "12px 8px 0",
+            background: BG_CARD, borderRadius: 16, margin: "12px 8px 0",
             padding: 12, minHeight: 200,
           }}>
-            <PanelComponent />
+            <PanelComponent
+              onSelectMatch={panelId === 'green-room' ? (matchId) => setSubPanel({ id: 'green-room-chat', matchId }) : undefined}
+              onMatchNavigate={panelId === 'who-wants-to-read' ? (matchId) => setSubPanel({ id: 'its-a-scene', matchId }) : undefined}
+            />
           </div>
         )}
       </Suspense>
@@ -863,12 +1132,29 @@ export default function DrSelfTapeApp() {
   const [tab, setTab] = useState("home");
   const [currentPanel, setCurrentPanel] = useState(null);
   const [isMobile, setIsMobile] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [showNoTokens, setShowNoTokens] = useState(false);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('subscribed')) {
+      window.history.replaceState({}, '', '/');
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 5000);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handler = () => setShowNoTokens(true);
+    window.addEventListener('insufficient_tokens', handler);
+    return () => window.removeEventListener('insufficient_tokens', handler);
   }, []);
 
   const handleSetTab = (id) => {
@@ -879,7 +1165,7 @@ export default function DrSelfTapeApp() {
   const screens = {
     home: <HomeScreen setTab={handleSetTab} setCurrentPanel={setCurrentPanel} />,
     auditions: <AuditionsScreen />,
-    scenes: <ScenesScreen />,
+    scenes: <ScenesScreen setTab={handleSetTab} />,
     live: <LiveScreen />,
     "find-a-reader": (
       <PanelScreen panelId="find-a-reader" onBack={() => handleSetTab("home")} />
@@ -891,10 +1177,79 @@ export default function DrSelfTapeApp() {
   return (
     <div style={{ background: BG_DEEP, minHeight: "100vh", fontFamily: "'Poppins', sans-serif", color: TEXT_PRIMARY }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+      {/* No tokens modal */}
+      {showNoTokens && (
+        <NoTokensModal
+          onClose={() => setShowNoTokens(false)}
+          onUpgrade={() => {
+            setShowNoTokens(false);
+            setCurrentPanel('membership');
+          }}
+        />
+      )}
+
+      {/* Celebration overlay */}
+      {showCelebration && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 999, pointerEvents: 'none', overflow: 'hidden' }}>
+          {/* Confetti particles */}
+          {[...Array(24)].map((_, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              left: `${(i * 4.16) % 100}%`,
+              top: '-10px',
+              width: i % 3 === 0 ? 10 : 8,
+              height: i % 3 === 0 ? 10 : 14,
+              borderRadius: i % 2 === 0 ? '50%' : '2px',
+              background: ['#C855F0', '#A7ECDA', '#FCE072', '#FFB49A', '#5ee6b8', '#ffffff'][i % 6],
+              animation: `confettiFall ${1.5 + (i % 4) * 0.4}s ease-in ${(i % 8) * 0.15}s forwards`,
+              transform: `rotate(${i * 15}deg)`,
+            }} />
+          ))}
+          {/* Modal */}
+          <div style={{
+            position: 'absolute', bottom: 80, left: 16, right: 16,
+            background: 'linear-gradient(145deg, #1a0d24, #0f0f1a)',
+            border: '1px solid rgba(200,85,240,0.5)',
+            borderRadius: 24, padding: '28px 24px', textAlign: 'center',
+            animation: 'celebrationPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
+            boxShadow: '0 0 60px rgba(200,85,240,0.3)',
+            pointerEvents: 'all',
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 12 }}>🎬</div>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#f2f0ed', margin: '0 0 8px', fontFamily: "'Playfair Display', serif" }}>
+              Welcome to Dr Self Tape
+            </h2>
+            <p style={{ fontSize: 14, color: '#8a9a96', margin: '0 0 20px', lineHeight: 1.5 }}>
+              Your membership is active. Tokens are ready to use.
+            </p>
+            <button
+              onClick={() => setShowCelebration(false)}
+              style={{
+                background: 'linear-gradient(135deg, #C855F0, #9333ea)',
+                border: 'none', borderRadius: 14, padding: '14px 32px',
+                fontSize: 15, fontWeight: 700, color: 'white', cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              Start Rehearsing 🎭
+            </button>
+          </div>
+        </div>
+      )}
       <style>{`
-        * { box-sizing: border-box; margin: 0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; overflow: hidden; }
         ::-webkit-scrollbar { display: none; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes confettiFall {
+          0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+        }
+        @keyframes celebrationPop {
+          0% { opacity: 0; transform: scale(0.7) translateY(30px); }
+          60% { transform: scale(1.05) translateY(-5px); }
+          100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
         @keyframes micPulse {
           0%, 100% { transform: scale(1); box-shadow: 0 0 40px ${CORAL}25; }
           50% { transform: scale(1.08); box-shadow: 0 0 60px ${CORAL}35; }
@@ -904,13 +1259,14 @@ export default function DrSelfTapeApp() {
       `}</style>
 
       {isMobile ? (
-        <div>
-          <div style={{ height: 48 }} />
+        <div style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
           {/* Top Bar */}
           <div style={{
-            position: "sticky", top: 0, zIndex: 50,
+            position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
             background: `${BG_DEEP}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-            padding: "0 16px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 50,
+            padding: "env(safe-area-inset-top, 0px) 16px 0",
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            height: "calc(50px + env(safe-area-inset-top, 0px))",
             borderBottom: `1px solid ${BORDER}`,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -926,7 +1282,15 @@ export default function DrSelfTapeApp() {
             </button>
           </div>
 
-          <div style={{ paddingTop: 8 }}>
+          {/* Scrollable Content Area — sits between fixed top and bottom bars */}
+          <div style={{
+            flex: 1,
+            overflowY: "auto",
+            overflowX: "hidden",
+            marginTop: "calc(50px + env(safe-area-inset-top, 0px))",
+            marginBottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
+            WebkitOverflowScrolling: "touch",
+          }}>
             {currentPanel ? (
               <PanelScreen panelId={currentPanel} onBack={() => setCurrentPanel(null)} />
             ) : (
@@ -940,7 +1304,8 @@ export default function DrSelfTapeApp() {
             background: `${BG_DEEPEST}f8`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
             borderTop: `1px solid ${BORDER}`,
             display: "flex", justifyContent: "space-around", alignItems: "center",
-            paddingBottom: "env(safe-area-inset-bottom, 16px)", paddingTop: 8,
+            paddingBottom: "env(safe-area-inset-bottom, 8px)", paddingTop: 8,
+            height: "calc(60px + env(safe-area-inset-bottom, 0px))",
           }}>
             {TABS.map(t => {
               const a = tab === t.id && !currentPanel;

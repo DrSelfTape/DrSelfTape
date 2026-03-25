@@ -118,7 +118,8 @@ export default function CDSim() {
       })
       .then((res) => {
         if (!cancelled) {
-          setReport(res.data);
+          // API returns { data: { interpretation, performance, ... }, success, message }
+          setReport(res.data?.data || res.data);
           setStep('report');
         }
       })
@@ -143,7 +144,8 @@ export default function CDSim() {
   const currentStepIdx = STEPS.indexOf(step);
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="min-h-full bg-[#0d0d0d]">
+    <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Step Indicator — hidden during analyzing */}
       {step !== 'analyzing' && (
         <div className="flex items-center gap-2 mb-8">
@@ -240,6 +242,7 @@ export default function CDSim() {
           }}
         />
       )}
+    </div>
     </div>
   );
 }
