@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { logoutUser } from '../redux/features/auth/authSlice'
 import {
   Monitor,
   BookOpen,
@@ -28,6 +29,7 @@ const navItems = [
 
 export default function Sidebar() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
   const user = useSelector((s) => s.auth?.user)
   const profile = useSelector((s) => s.profile?.profile)
 
@@ -111,10 +113,14 @@ export default function Sidebar() {
           <UserCircle className="w-4 h-4 text-[#666666] group-hover:text-[#C855F0] transition-colors shrink-0" />
         </button>
 
-        {/* Edit profile hint */}
-        <p className="text-center text-xs text-[#444444] mt-2">
-          Tap your name to edit profile
-        </p>
+        {/* Log Out */}
+        <button
+          onClick={() => dispatch(logoutUser())}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[#999999] hover:text-red-400 hover:bg-red-500/10 transition-colors mt-1"
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          <span>Log Out</span>
+        </button>
       </div>
     </aside>
   )

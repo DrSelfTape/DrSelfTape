@@ -8,6 +8,7 @@ import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScr
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
+import { logoutUser } from "../../redux/features/auth/authSlice";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
 import * as pdfjsLib from "pdfjs-dist";
@@ -210,6 +211,7 @@ function Icon({ name, size = 20, color = TEXT_SECONDARY }) {
     book: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253",
     more: "M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z",
     back: "M15 19l-7-7 7-7",
+    logout: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
     agent: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
   };
   return (
@@ -894,6 +896,7 @@ function ProfileScreen({ setCurrentPanel }) {
     { label: "Edit Profile", icon: "profile", action: () => setCurrentPanel("dash-profile") },
     { label: "Membership", icon: "star", action: () => setCurrentPanel("membership") },
     { label: "Reports", icon: "auditions", action: () => setCurrentPanel("reports") },
+    { label: "Log Out", icon: "logout", action: () => dispatch(logoutUser()), danger: true },
   ];
 
   return (
@@ -968,11 +971,15 @@ function ProfileScreen({ setCurrentPanel }) {
             display: "flex", alignItems: "center", gap: 14, padding: "15px 16px", cursor: "pointer",
             borderBottom: i < menu.length - 1 ? `1px solid ${BORDER}` : "none",
           }}>
-            <div style={{ width: 34, height: 34, borderRadius: 10, background: `${MINT}08`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon name={item.icon} size={16} color={MINT} />
+            <div style={{
+              width: 34, height: 34, borderRadius: 10,
+              background: item.danger ? 'rgba(239,68,68,0.08)' : `${MINT}08`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Icon name={item.icon} size={16} color={item.danger ? '#ef4444' : MINT} />
             </div>
-            <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: TEXT_PRIMARY }}>{item.label}</span>
-            <Icon name="chevron" size={14} color={TEXT_MUTED} />
+            <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: item.danger ? '#ef4444' : TEXT_PRIMARY }}>{item.label}</span>
+            {!item.danger && <Icon name="chevron" size={14} color={TEXT_MUTED} />}
           </div>
         ))}
       </div>
