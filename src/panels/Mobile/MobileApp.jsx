@@ -77,7 +77,7 @@ async function extractPdfText(file) {
 
 /* Lazy-load dashboard panels for the "More" menu */
 const CDSim = lazy(() => import("../Dashboard/CDSim"));
-const CastingDirectorAI = lazy(() => import("../Dashboard/CastingDirectorAI"));
+
 const WhoWantsToRead = lazy(() => import("../Dashboard/FindAReader/WhoWantsToRead"));
 const Favorites = lazy(() => import("../Dashboard/FindAReader/Favorites"));
 const FindAReader = lazy(() => import("../Dashboard/FindAReader"));
@@ -253,7 +253,6 @@ const TABS = [
 
 const MORE_FEATURES = [
   { id: "cd-sim", label: "CD Sim Mode", desc: "Live audition — real-time CD feedback", emoji: "🎬", color: "#C855F0" },
-  { id: "cd-ai", label: "CD AI Studio", desc: "Scene breakdown, analysis & prep", emoji: "🤖", color: "#A7ECDA" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
   { id: "reports", label: "Reports", desc: "Your career at a glance", emoji: "📊", color: "#b89aff" },
@@ -267,7 +266,6 @@ const PANEL_COMPONENTS = {
   "find-a-reader": FindAReader,
   "green-room": GreenRoom,
   "cd-sim": CDSim,
-  "cd-ai": CastingDirectorAI,
   "scripts": Scripts,
   "submissions": Submissions,
   "reports": Reports,
@@ -1016,7 +1014,7 @@ function MoreScreen({ setCurrentPanel }) {
    PANEL SCREEN — Wraps a dashboard panel for mobile
    ═══════════════════════════════════════════════════ */
 // Panels that already use dark brand styling (inline dark bg/colors)
-const DARK_PANELS = new Set(["cd-ai", "cd-sim", "generator", "find-a-reader", "green-room"]);
+const DARK_PANELS = new Set(["cd-sim", "generator", "find-a-reader", "green-room"]);
 
 // Wrapper to inject matchId into GreenRoomChat without React Router params
 function GreenRoomChatWrapper({ matchId }) {
