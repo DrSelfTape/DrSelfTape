@@ -301,6 +301,7 @@ const AiScenePartnerLayout = () => {
                 handleToneChange: handlers.handleToneChange,
                 handleStartSession: handlers.handleStartSession,
                 handleEndSession: handlers.handleEndSession,
+                handleRestartScene: handlers.handleRestartScene,
                 handleRecordToggle: handlers.handleRecordToggle,
                 handlePlayNonUserLine: handlers.handlePlayNonUserLine,
                 handleRestartLine: handlers.handleRestartLine,

@@ -1261,6 +1261,17 @@ export const useAiScenePartnerHandlers = ({
     return recordings.find((r) => r.index === index && r.url);
   }, [recordings]);
 
+  // Restart the scene from the beginning without ending the session
+  const handleRestartScene = useCallback(() => {
+    stopAllPlayback();
+    if (stopRecording) stopRecording();
+    setCurrentLineIndex(0);
+    setCompletedLines(new Set());
+    setRecordings([]);
+    setReviewMode(false);
+    scrollToLine(0, audioPlayer);
+  }, [stopAllPlayback, stopRecording, setCurrentLineIndex, setCompletedLines, setRecordings, setReviewMode, scrollToLine, audioPlayer]);
+
   return {
     validatePartnerAudios,
     handleStartSession,
@@ -1274,6 +1285,7 @@ export const useAiScenePartnerHandlers = ({
     playNextPartnerAfter,
     handleRecordToggle,
     handleRestartLine,
+    handleRestartScene, // Start Again — resets line index, recordings, completedLines; keeps session alive
     playRecordingForIndex,
     stopAllPlayback,
     getLastCompletedLineIndex,

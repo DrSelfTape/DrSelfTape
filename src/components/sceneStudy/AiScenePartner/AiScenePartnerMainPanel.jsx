@@ -8,7 +8,6 @@ import { SelectDropdown, CustomButton } from '../../Shared';
 import { TeleprompterIcon } from '../../../assets/icons';
 import AiScenePartnerScriptLines from './AiScenePartnerScriptLines';
 import AiScenePartnerProgressHeader from './AiScenePartnerProgressHeader';
-import SceneNavigator from './SceneNavigator';
 
 /**
  * Main Panel Component
@@ -71,6 +70,7 @@ const AiScenePartnerMainPanel = ({
     handleToneChange,
     handleStartSession,
     handleEndSession,
+    handleRestartScene,
   } = handlers;
 
   // Extract state setters
@@ -145,6 +145,18 @@ const AiScenePartnerMainPanel = ({
             className='!w-[10rem]'
           />
 
+          {/* Start Again — resets scene to line 0 without ending the API session */}
+          {sessionStarted && handleRestartScene && (
+            <CustomButton
+              variant='outlined'
+              onClick={handleRestartScene}
+              className='!text-gray-700 !border-gray-300 hover:!bg-gray-50 disabled:opacity-50'
+              sx={{ borderColor: '#d1d5db', color: '#374151', '&:hover': { backgroundColor: '#f9fafb' } }}
+            >
+              Start Again
+            </CustomButton>
+          )}
+
           <CustomButton
             variant='contained'
             onClick={handleSessionButtonClick}
@@ -193,22 +205,8 @@ const AiScenePartnerMainPanel = ({
         </div>
       </div>
 
-      {/* Scene Navigator */}
-      <div className='pt-3 lg:pt-4'>
-        <SceneNavigator
-          scriptLines={scriptLines}
-          currentLineIndex={currentLineIndex}
-          completedLines={completedLines}
-          sessionStarted={sessionConfig.sessionStarted}
-          audioPlayer={audioPlayer}
-          setCurrentLineIndex={stateSetters.setCurrentLineIndex}
-          stopAllPlayback={handlers.stopAllPlayback}
-          scrollToLine={handlers.scrollToLine}
-        />
-      </div>
-
       {/* Script Lines Container */}
-      <div className='pt-2 lg:pt-3'>
+      <div className='pt-3 lg:pt-6'>
         <div className='rounded-xl bg-white border border-gray-200 overflow-hidden shadow-sm'>
           <AiScenePartnerProgressHeader
             scriptLinesConfig={scriptLinesConfig}
