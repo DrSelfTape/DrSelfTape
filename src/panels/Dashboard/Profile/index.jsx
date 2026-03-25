@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Camera, Upload, Loader2, Check, User, AlertCircle } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
 import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
+import AuditionBadges, { BADGES } from '../../../components/AuditionBadges';
+import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
 
 const PROFILE_FIELDS = [
   'first_name', 'last_name', 'email', 'phone_no', 'address',
@@ -31,6 +33,7 @@ function getInitials(profile) {
 export default function Profile() {
   const dispatch = useDispatch();
   const { profile, loading, updateLoading } = useSelector((s) => s.profile);
+  const auditionStats = useSelector((s) => s.auditionTracker?.stats?.data || s.auditions?.stats?.data || null);
   const avatarInputRef = useRef(null);
   const headshotInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -59,6 +62,7 @@ export default function Profile() {
 
   useEffect(() => {
     dispatch(fetchProfileThunk());
+    dispatch(fetchAuditionStatsThunk());
   }, [dispatch]);
 
   useEffect(() => {
@@ -458,6 +462,47 @@ export default function Profile() {
           </form>
         </div>
       </div>
+
+      {/* ── Achievements ─────────────────────────────────── */}
+      <div className="bg-[#111318] rounded-2xl border border-[#2a2d35] p-6 mt-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-lg font-bold text-white">Achievements</h2>
+            <p className="text-sm text-[#666] mt-0.5">Milestones earned from your audition activity</p>
+          </div>
+          {auditionStats && (
+            <div className="text-right">
+              <p className="text-2xl font-bold text-[#C855F0]">
+                {BADGES.filter(b => b.check(auditionStats)).length}
+                <span className="text-base text-[#666] font-normal">/{BADGES.length}</span>
+              </p>
+              <p className="text-xs text-[#666]">earned</p>
+            </div>
+          )}
+        </div>
+
+        {auditionStats ? (
+          <AuditionBadges stats={auditionStats} compact={false} />
+        ) : (
+          /* Placeholder — show all locked until stats load */
+          <div>
+            <h4 className="text-xs font-bold text-[#666] uppercase tracking-wider mb-3">Start logging auditions to earn badges</h4>
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+              {BADGES.map((b) => (
+                <div
+                  key={b.id}
+                  title={`${b.name}: ${b.desc}`}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[#3A3A3A] bg-[#1E1E1E] opacity-50 grayscale"
+                >
+                  <span className="text-2xl">{b.emoji}</span>
+                  <span className="text-[10px] font-bold text-center leading-tight text-[#999]">{b.name}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 }
