@@ -25,7 +25,12 @@ const PublicRoutes = () => {
   
   // Avoid redirecting while state is still loading from storage
   if (!isRehydrated) {
-    return null;
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0D0D0D' }}>
+        <div style={{ width: 32, height: 32, border: '3px solid rgba(200,85,240,0.2)', borderTop: '3px solid #C855F0', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
   }
 
   // If user has multiple roles, don't redirect - let Login component handle role selection
