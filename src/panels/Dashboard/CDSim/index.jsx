@@ -125,11 +125,13 @@ export default function CDSim() {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(
-            err?.response?.data?.detail ||
-              err?.message ||
-              'Something went wrong. Please try again.'
-          );
+          const status = err?.response?.status;
+          const msg = err?.response?.data?.message || err?.response?.data?.detail;
+          if (status === 402) {
+            setError('🎟️ You\'re out of tokens. Upgrade your plan to run more CD Sim sessions.');
+          } else {
+            setError(msg || err?.message || 'Something went wrong. Please try again.');
+          }
         }
       })
       .finally(() => {
