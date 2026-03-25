@@ -13,8 +13,7 @@ export default defineConfig({
           "vendor-redux": ["@reduxjs/toolkit", "react-redux", "redux-persist"],
           "vendor-recharts": ["recharts"],
           "vendor-lucide": ["lucide-react"],
-          "vendor-mui": ["@mui/material", "@mui/icons-material", "@mui/x-date-pickers"],
-          "vendor-emotion": ["@emotion/react", "@emotion/styled"],
+          "vendor-mui": ["@mui/material", "@mui/icons-material", "@mui/x-date-pickers", "@emotion/react", "@emotion/styled", "@emotion/cache"],
           "vendor-calendar": [
             "@fullcalendar/core",
             "@fullcalendar/daygrid",
