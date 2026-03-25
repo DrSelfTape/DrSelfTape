@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Local Imports
 import { baseURL } from './constant';
-import { logoutUser } from '../redux/features/auth/authSlice';
+// NOTE: do NOT import authSlice here — it imports this file (circular dependency)
 
 const axiosInstance = axios.create({
   baseURL,
@@ -17,44 +17,24 @@ export const setAuthToken = (token) => {
   }
 };
 
-// Request Interceptor — attach JWT from Redux store on every request
-axiosInstance.interceptors.request.use(
-  async (config) => {
-    if (!config.headers['Authorization']) {
-      const { store } = await import('./store');
-      const state = store.getState();
-      // This build stores token at state.auth.user.token
-      const token = state?.auth?.user?.token;
-      if (token) {
-        config.headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
-
 // Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
-    console.log('Error from axios:', error);
-
     if (!navigator.onLine) {
       console.log('No internet connection');
     }
 
     if (error?.response?.status === 402 && error?.response?.data?.code === 'insufficient_tokens') {
-      // Fire a custom event that components can listen to
       window.dispatchEvent(new CustomEvent('insufficient_tokens'));
     }
 
     if (error?.response?.status === 401) {
+      // Dynamic imports to avoid circular dependency
       const { store, persistor } = await import('./store');
-      const dispatch = store.dispatch;
-
-      dispatch(logoutUser());
-      persistor.purge(); 
+      const { logoutUser } = await import('./features/auth/authSlice');
+      store.dispatch(logoutUser());
+      persistor.purge();
     }
 
     return Promise.reject(error);
