@@ -902,20 +902,23 @@ function ProfileScreen({ setCurrentPanel }) {
   return (
     <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 28px", textAlign: "center" }}>
-        {/* Avatar — headshot or brand gradient fallback */}
-        {headshot ? (
-          <img src={headshot} alt="Headshot" style={{
-            width: 76, height: 76, borderRadius: "50%", margin: "0 auto 14px",
-            objectFit: "cover", display: "block", border: `2px solid ${MINT}40`,
-          }} />
-        ) : (
-          <div style={{
-            width: 76, height: 76, borderRadius: "50%", margin: "0 auto 14px",
-            background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT}, ${CORAL})`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 28, fontWeight: 700, color: BG_DEEPEST, fontFamily: "'Playfair Display', serif",
-          }}>{initials}</div>
-        )}
+        {/* Avatar — headshot with brand gradient overlay */}
+        <div style={{ width: 76, height: 76, borderRadius: "50%", margin: "0 auto 14px", position: "relative", overflow: "hidden" }}>
+          {headshot ? (
+            <>
+              <img src={headshot} alt="Headshot" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(200,85,240,0.25) 0%, transparent 50%, rgba(167,236,218,0.18) 100%)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "inset 0 0 0 1.5px rgba(200,85,240,0.4)", pointerEvents: "none" }} />
+            </>
+          ) : (
+            <div style={{
+              width: "100%", height: "100%",
+              background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT}, ${CORAL})`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 28, fontWeight: 700, color: BG_DEEPEST, fontFamily: "'Playfair Display', serif",
+            }}>{initials}</div>
+          )}
+        </div>
         <h1 style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>{userName}</h1>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "4px 0 0" }}>{userEmail}</p>
         {(union || basedIn) && (

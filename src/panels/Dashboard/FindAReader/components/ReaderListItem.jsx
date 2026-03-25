@@ -1,4 +1,5 @@
 import { MapPin, Clock, MessageCircle } from 'lucide-react';
+import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
 
 const ReaderListItem = ({ match, onClick }) => {
   const other = match?.other_actor || {};
@@ -26,17 +27,12 @@ const ReaderListItem = ({ match, onClick }) => {
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="relative shrink-0">
-          {other?.headshot || other?.user_image ? (
-            <img
-              src={other.headshot || other.user_image}
-              alt={other.name}
-              className="h-16 w-16 rounded-full object-cover border-2 border-[#C855F0]/30"
-            />
-          ) : (
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[#C855F0] to-[#7B2FBE] text-lg font-bold text-white">
-              {initials}
-            </div>
-          )}
+          <ProfilePhoto
+            src={other?.headshot || other?.user_image}
+            alt={other?.name}
+            initials={initials}
+            className="h-16 w-16"
+          />
           <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-[#1E1E1E]" />
         </div>
 

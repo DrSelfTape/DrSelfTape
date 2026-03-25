@@ -106,12 +106,16 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* Full-bleed headshot */}
       <div style={{ position: 'absolute', inset: 0 }}>
         {actor?.headshot || actor?.user_image || actor?.headshotUrl ? (
-          <img
-            src={actor.headshot || actor.user_image || actor.headshotUrl}
-            alt={actor.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
-            draggable={false}
-          />
+          <>
+            <img
+              src={actor.headshot || actor.user_image || actor.headshotUrl}
+              alt={actor.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
+              draggable={false}
+            />
+            {/* Brand gradient overlay */}
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(200,85,240,0.22) 0%, transparent 50%, rgba(167,236,218,0.15) 100%)', pointerEvents: 'none' }} />
+          </>
         ) : (
           <div style={{
             width: '100%', height: '100%',

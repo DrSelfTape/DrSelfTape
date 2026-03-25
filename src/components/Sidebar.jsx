@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logoutUser } from '../redux/features/auth/authSlice'
+import ProfilePhoto from './Shared/ProfilePhoto'
 import {
   Monitor,
   BookOpen,
@@ -97,13 +98,12 @@ export default function Sidebar() {
           className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#1E1E1E] transition-colors group"
         >
           {/* Avatar */}
-          <div className="w-9 h-9 rounded-full bg-[#C855F0]/20 border border-[#C855F0]/20 overflow-hidden flex items-center justify-center shrink-0">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt={displayName} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-[#C855F0] text-xs font-bold">{initials}</span>
-            )}
-          </div>
+          <ProfilePhoto
+            src={avatarUrl}
+            alt={displayName}
+            initials={initials}
+            className="w-9 h-9 shrink-0"
+          />
           <div className="flex-1 min-w-0 text-left">
             <p className="text-sm font-medium text-white truncate group-hover:text-[#C855F0] transition-colors">
               {displayName}
