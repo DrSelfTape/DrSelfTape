@@ -138,7 +138,6 @@ export const Signup = () => {
         newErrors.headshot =
           'Invalid file format. Allowed: jpg, jpeg, png, webp';
       }
-      }
     }
 
     if (
