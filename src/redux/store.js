@@ -6,6 +6,7 @@ import storage from 'redux-persist/lib/storage';
 // Migrations — bump version in persistConfig when breaking state shape changes
 const migrations = {
   2: (state) => ({ auth: state?.auth }), // v2: only keep auth, drop everything else
+  3: (state) => ({ auth: state?.auth }), // v3: cache bust for logout button deploy
 };
 const migrationConfig = createMigrate(migrations, { debug: false });
 
@@ -35,7 +36,7 @@ import adminSlice from './features/admin/adminSlice';
 // Define the persist configuration
 const persistConfig = {
   key: 'root',
-  version: 2,
+  version: 3,
   storage,
   whitelist: ['auth'],
   migrate: migrationConfig,
