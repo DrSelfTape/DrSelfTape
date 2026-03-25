@@ -9,6 +9,7 @@ import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/featu
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
 import { logoutUser } from "../../redux/features/auth/authSlice";
+import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
 import * as pdfjsLib from "pdfjs-dist";
@@ -1278,10 +1279,8 @@ export default function DrSelfTapeApp() {
             borderBottom: `1px solid ${BORDER}`,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {/* Logo mark — mint/coral gradient */}
-              <div style={{ width: 30, height: 30, borderRadius: 9, background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT})`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <span style={{ fontSize: 14, fontWeight: 800, color: BG_DEEPEST }}>D</span>
-              </div>
+              {/* Logo */}
+              <img src={logo} alt="Dr Self Tape" style={{ width: 30, height: 30, objectFit: "contain" }} />
               <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
             </div>
             <button style={{ width: 36, height: 36, borderRadius: 10, background: `${MINT}08`, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative" }}>
