@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Filter, Loader2, Users } from 'lucide-react';
+import { Filter, Loader2, Users, Camera } from 'lucide-react';
 import SwipeCard from './components/SwipeCard';
 import SwipeActions from './components/SwipeActions';
 import ReaderFilters from './ReaderFilters';
@@ -9,6 +9,9 @@ import {
   fetchAvailableReaders,
   swipeOnReader,
 } from '../../../redux/features/readers/readersMatchSlice';
+import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice';
+import axios from '../../../redux/http';
+import { baseURL } from '../../../redux/constant';
 
 const FindAReader = () => {
   const dispatch = useDispatch();
@@ -17,13 +20,35 @@ const FindAReader = () => {
   const { readers = [], readersLoading, onlineCount } = useSelector(
     (state) => state.readersMatch || {}
   );
+  const profile = useSelector((state) => state.profile?.profile);
+  const hasPhoto = !!(profile?.actor_profile?.headshot || profile?.user_image);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
+    dispatch(fetchProfileThunk());
     dispatch(fetchAvailableReaders());
   }, [dispatch]);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('headshot', file);
+      await axios.patch(`${baseURL}/v1/users/profile/`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      dispatch(fetchProfileThunk());
+    } catch (err) {
+      console.error('Failed to upload photo:', err);
+    }
+    setUploading(false);
+  };
 
   const handleSwipe = useCallback(
     async (action) => {
@@ -69,8 +94,41 @@ const FindAReader = () => {
         </button>
       </div>
 
+      {/* Photo required gate */}
+      {!hasPhoto && !readersLoading && (
+        <div className="w-full max-w-sm flex flex-col items-center text-center py-12 px-6">
+          <div className="w-20 h-20 rounded-full bg-[#C855F0]/10 flex items-center justify-center mb-4">
+            <Camera className="w-10 h-10 text-[#C855F0]" />
+          </div>
+          <h2 className="text-lg font-bold text-white mb-2">Add a Headshot to Start</h2>
+          <p className="text-sm text-[#999999] mb-6">
+            Other actors want to see who they're reading with. Upload a photo to start matching.
+          </p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handlePhotoUpload}
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm disabled:opacity-50"
+          >
+            {uploading ? 'Uploading...' : 'Upload Photo'}
+          </button>
+          <button
+            onClick={() => navigate('/dashboard/profile')}
+            className="mt-3 text-xs text-[#999999] hover:text-white transition-colors"
+          >
+            Or update your full profile
+          </button>
+        </div>
+      )}
+
       {/* Online count badge */}
-      {!readersLoading && readers.length > 0 && (
+      {hasPhoto && !readersLoading && readers.length > 0 && (
         <div className="flex items-center gap-1.5 mb-5">
           <Users size={14} color="#A7ECDA" />
           <span className="text-sm" style={{ color: '#A7ECDA' }}>
@@ -80,7 +138,7 @@ const FindAReader = () => {
       )}
 
       {/* Card stack area */}
-      <div className="relative flex w-full max-w-[340px] items-start justify-center" style={{ minHeight: 520 }}>
+      {hasPhoto && <div className="relative flex w-full max-w-[340px] items-start justify-center" style={{ minHeight: 520 }}>
         {readersLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
             <Loader2 size={36} color="#C855F0" className="animate-spin" />
@@ -134,10 +192,10 @@ const FindAReader = () => {
             </div>
           </>
         )}
-      </div>
+      </div>}
 
       {/* Swipe action buttons */}
-      {!readersLoading && currentActor && (
+      {hasPhoto && !readersLoading && currentActor && (
         <SwipeActions
           onPass={() => handleSwipe('left')}
           onStar={() => handleSwipe('star')}
