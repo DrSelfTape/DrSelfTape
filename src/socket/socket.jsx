@@ -2,7 +2,7 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ReconnectingWebSocket from "reconnecting-websocket";
-import { fetchMatches, fetchWhoWantsToRead } from "../redux/features/readers/readersMatchSlice";
+import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats } from "../redux/features/readers/readersMatchSlice";
 
 const SocketContext = React.createContext(null);
 
@@ -37,9 +37,10 @@ export const SocketProvider = ({ children }) => {
     setNotifications((prev) => [parsedData, ...prev]);
 
     switch (notification_type) {
-      // Someone swiped right on you — refresh likes list
+      // Someone swiped right on you — refresh likes list + dashboard stats
       case 'scene_partner_like':
         dispatch(fetchWhoWantsToRead());
+        dispatch(fetchMatchingStats());
         break;
 
       // Mutual match — refresh matches + navigate to "It's a Scene"
@@ -87,7 +88,21 @@ export const SocketProvider = ({ children }) => {
     ws.onerror = () => {};
     ws.onclose = () => { setIsSocketReady(false); };
 
+    // Auto-offline when user leaves the app/tab
+    const handleVisibility = () => {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      const presenceUrl = `${apiUrl}/v1/matching/presence/`;
+      const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+      if (document.visibilityState === 'hidden') {
+        navigator.sendBeacon?.(presenceUrl, new Blob([JSON.stringify({ is_online: false })], { type: 'application/json' }));
+      } else {
+        fetch(presenceUrl, { method: 'POST', headers, body: JSON.stringify({ is_online: true }) }).catch(() => {});
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
       ws.close();
       setIsSocketReady(false);
       socketRef.current = null;

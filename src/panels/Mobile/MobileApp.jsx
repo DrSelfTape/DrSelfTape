@@ -9,6 +9,7 @@ import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/featu
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
 import { logoutUser } from "../../redux/features/auth/authSlice";
+import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -291,6 +292,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const rawScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
   const s = useSelector((state) => state.auditions.stats?.data || {});
   const submissions = useSelector((state) => state.submissions.submissions || []);
+  const matchingStats = useSelector((state) => state.readersMatch.matchingStats);
+  const isAvailable = useSelector((state) => state.readersMatch.isAvailable);
+  const availabilityToggling = useSelector((state) => state.readersMatch.availabilityToggling);
 
   const auditions = rawAuditions.map(mapAudition);
   const scripts = rawScripts.map(mapScript);
@@ -300,6 +304,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     dispatch(fetchAuditionStatsThunk());
     dispatch(getScripts());
     dispatch(fetchSubmissionsThunk());
+    dispatch(fetchMatchingStats());
   }, [dispatch]);
 
   const stats = [
@@ -344,6 +349,61 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           </div>
 
         </button>
+      </div>
+
+      {/* Availability toggle */}
+      <div style={{ marginBottom: 16 }}>
+        <button
+          onClick={() => !availabilityToggling && dispatch(toggleAvailability(!isAvailable))}
+          style={{
+            width: "100%", display: "flex", alignItems: "center", gap: 10,
+            background: isAvailable ? "rgba(34,197,94,0.08)" : BG_CARD,
+            border: isAvailable ? "1px solid rgba(34,197,94,0.2)" : `1px solid ${BORDER}`,
+            borderRadius: 14, padding: "12px 16px", cursor: "pointer",
+          }}
+        >
+          <span style={{
+            width: 10, height: 10, borderRadius: "50%",
+            background: isAvailable ? "#22c55e" : "#666",
+            boxShadow: isAvailable ? "0 0 8px rgba(34,197,94,0.5)" : "none",
+          }} />
+          <span style={{ fontSize: 14, fontWeight: 600, color: isAvailable ? "#22c55e" : TEXT_SECONDARY }}>
+            {isAvailable ? "Available to Read" : "Go Available"}
+          </span>
+        </button>
+      </div>
+
+      {/* Find a Reader CTA */}
+      <div
+        onClick={() => setTab("find-a-reader")}
+        style={{
+          background: BG_CARD, borderRadius: 16, padding: "16px",
+          border: `1px solid rgba(167,236,218,0.15)`, marginBottom: 16,
+          cursor: "pointer", borderLeft: `3px solid ${MINT}`,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>Find a Reader</span>
+              {(matchingStats?.pending_likes_count || 0) > 0 && (
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: "#fff", background: "#C855F0",
+                  padding: "2px 8px", borderRadius: 20, minWidth: 20, textAlign: "center",
+                }}>
+                  {matchingStats.pending_likes_count}
+                </span>
+              )}
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
+              <span style={{ fontSize: 12, color: MINT, fontWeight: 500 }}>
+                {matchingStats?.available_count || 0} online now
+              </span>
+            </div>
+          </div>
+          <span style={{ fontSize: 12, fontWeight: 600, color: MINT }}>Go &rarr;</span>
+        </div>
       </div>
 
       {/* Key stats — 2 numbers only */}

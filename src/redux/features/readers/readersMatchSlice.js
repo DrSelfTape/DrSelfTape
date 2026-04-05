@@ -134,6 +134,54 @@ export const updateReaderFilters = createAsyncThunk(
   }
 );
 
+export const fetchMatchingStats = createAsyncThunk(
+  'readersMatch/fetchMatchingStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${baseURL}/v1/matching/stats/`);
+      return data?.data || {};
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || 'Failed to fetch stats');
+    }
+  }
+);
+
+export const toggleAvailability = createAsyncThunk(
+  'readersMatch/toggleAvailability',
+  async (isAvailable, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(`${baseURL}/v1/matching/presence/`, { is_available: isAvailable });
+      return { is_available: isAvailable, data: data?.data };
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || 'Failed to toggle availability');
+    }
+  }
+);
+
+export const fetchActivityFeed = createAsyncThunk(
+  'readersMatch/fetchActivityFeed',
+  async (_, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${baseURL}/v1/matching/activity/`);
+      return data?.data || {};
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || 'Failed to fetch activity');
+    }
+  }
+);
+
+export const onboardReader = createAsyncThunk(
+  'readersMatch/onboardReader',
+  async (body, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(`${baseURL}/v1/matching/onboard/`, body);
+      return data?.data || {};
+    } catch (error) {
+      return rejectWithValue(error?.response?.data?.message || 'Failed to onboard');
+    }
+  }
+);
+
 // ========== Slice ==========
 
 // ─── Mock seed data (shown when API isn't connected) ───────────────────────
@@ -267,6 +315,10 @@ const initialState = {
   onlineCount: 12,
   filters: {},
   error: null,
+  matchingStats: { available_count: 0, pending_likes_count: 0, active_matches_count: 0 },
+  isAvailable: false,
+  availabilityToggling: false,
+  activityFeed: null,
 };
 
 const readersMatchSlice = createSlice({
@@ -398,6 +450,33 @@ const readersMatchSlice = createSlice({
       })
       .addCase(updateReaderFilters.rejected, (state, action) => {
         state.error = action.payload;
+      })
+
+      // fetchMatchingStats
+      .addCase(fetchMatchingStats.fulfilled, (state, action) => {
+        state.matchingStats = action.payload;
+      })
+
+      // toggleAvailability
+      .addCase(toggleAvailability.pending, (state) => {
+        state.availabilityToggling = true;
+      })
+      .addCase(toggleAvailability.fulfilled, (state, action) => {
+        state.availabilityToggling = false;
+        state.isAvailable = action.payload.is_available;
+      })
+      .addCase(toggleAvailability.rejected, (state) => {
+        state.availabilityToggling = false;
+      })
+
+      // fetchActivityFeed
+      .addCase(fetchActivityFeed.fulfilled, (state, action) => {
+        state.activityFeed = action.payload;
+      })
+
+      // onboardReader
+      .addCase(onboardReader.fulfilled, (state) => {
+        state.isAvailable = true;
       });
   },
 });

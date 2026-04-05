@@ -2,6 +2,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { logoutUser } from '../redux/features/auth/authSlice'
 import ProfilePhoto from './Shared/ProfilePhoto'
+import AvailabilityToggle from './Dashboard/AvailabilityToggle'
 import {
   Monitor,
   BookOpen,
@@ -16,15 +17,15 @@ import {
   Clapperboard,
 } from 'lucide-react'
 
-const navItems = [
+const BASE_NAV_ITEMS = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'CD Sim Mode', path: '/dashboard/cd-sim', icon: Monitor, badge: 'PRO' },
   { label: 'Scene Study', path: '/dashboard/scene-study', icon: BookOpen },
   { label: 'Audition Tracker', path: '/dashboard/auditions', icon: Target },
   { label: 'Submissions', path: '/dashboard/submissions', icon: Send },
-  { label: 'Find a Reader', path: '/dashboard/find-a-reader', icon: Users2, badge: 'NEW' },
+  { label: 'Find a Reader', path: '/dashboard/find-a-reader', icon: Users2, badgeKey: 'find-a-reader' },
   { label: 'Green Room', path: '/dashboard/green-room', icon: MessageSquare },
-  { label: 'Who Wants to Read', path: '/dashboard/who-wants-to-read', icon: HeartHandshake },
+  { label: 'Who Wants to Read', path: '/dashboard/who-wants-to-read', icon: HeartHandshake, badgeKey: 'who-wants-to-read' },
   { label: 'My Profile', path: '/dashboard/profile', icon: UserCircle },
 ]
 
@@ -33,6 +34,14 @@ export default function Sidebar() {
   const dispatch = useDispatch()
   const user = useSelector((s) => s.auth?.user)
   const profile = useSelector((s) => s.profile?.profile)
+  const pendingLikes = useSelector((s) => s.readersMatch?.matchingStats?.pending_likes_count || 0)
+
+  const navItems = BASE_NAV_ITEMS.map((item) => {
+    if (item.badgeKey === 'find-a-reader' || item.badgeKey === 'who-wants-to-read') {
+      return { ...item, badge: pendingLikes > 0 ? String(pendingLikes) : 'NEW' }
+    }
+    return item
+  })
 
   const displayName = profile?.first_name
     ? `${profile.first_name} ${profile.last_name || ''}`.trim()
@@ -81,7 +90,9 @@ export default function Sidebar() {
                 className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
                   item.badge === 'PRO'
                     ? 'bg-[#C855F0]/10 text-[#C855F0]'
-                    : 'bg-emerald-500/10 text-emerald-400'
+                    : /^\d+$/.test(item.badge)
+                      ? 'bg-[#C855F0] text-white min-w-[20px] text-center'
+                      : 'bg-emerald-500/10 text-emerald-400'
                 }`}
               >
                 {item.badge}
@@ -90,6 +101,11 @@ export default function Sidebar() {
           </NavLink>
         ))}
       </nav>
+
+      {/* Availability toggle */}
+      <div className="px-4 pb-2">
+        <AvailabilityToggle compact />
+      </div>
 
       {/* User footer */}
       <div className="p-4 border-t border-[#1E1E1E]">

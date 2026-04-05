@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -10,8 +10,13 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
 // bookingsSlice removed — booking features deprecated
 import { fetchSubmissionsThunk } from '../../../redux/features/submissions/submissionsSlice';
+import { fetchMatchingStats } from '../../../redux/features/readers/readersMatchSlice';
 import AuditionBadges from '../../../components/AuditionBadges';
 import UpcomingCallbacks from '../../../components/UpcomingCallbacks';
+import FindAReaderCTA from '../../../components/Dashboard/FindAReaderCTA';
+import PendingLikesBanner from '../../../components/Dashboard/PendingLikesBanner';
+import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
+import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardingModal';
 
 const TYPE_COLORS = {
   film: '#C855F0',
@@ -46,10 +51,18 @@ export default function DashboardHome() {
   const bookingsLoading = false;
   const { submissions } = useSelector((state) => state.submissions);
 
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   useEffect(() => {
     dispatch(fetchAuditionStatsThunk());
-
     dispatch(fetchSubmissionsThunk());
+    dispatch(fetchMatchingStats());
+
+    // Show onboarding for first-time users
+    if (!localStorage.getItem('reader_onboarding_seen')) {
+      const timer = setTimeout(() => setShowOnboarding(true), 2000);
+      return () => clearTimeout(timer);
+    }
   }, [dispatch]);
 
   const recentSubs = Array.isArray(submissions) ? submissions.slice(0, 6) : [];
@@ -79,10 +92,20 @@ export default function DashboardHome() {
 
   return (
     <div className="space-y-6">
+      {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
+
+      <PendingLikesBanner />
+
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        {stats?.data && <AuditionBadges stats={stats.data} compact={true} />}
+        <div className="flex items-center gap-3">
+          <AvailabilityToggle />
+          {stats?.data && <AuditionBadges stats={stats.data} compact={true} />}
+        </div>
       </div>
+
+      {/* Find a Reader CTA */}
+      <FindAReaderCTA />
 
       {/* Feature Banners */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
