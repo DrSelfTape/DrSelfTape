@@ -25,11 +25,16 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
       const result = await dispatch(
         swipeOnReader({ reader_id: actor.id, action: 'right' })
       ).unwrap();
-      if (result?.matched) {
+      if (result?.match && result?.match_details?.id) {
         if (onMatchNavigate) {
-          onMatchNavigate(result.match_id);
+          onMatchNavigate(result.match_details.id);
         } else {
-          navigate(`/dashboard/its-a-scene/${result.match_id}`);
+          const isMob = window.innerWidth < 768;
+          if (isMob) {
+            window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
+          } else {
+            navigate(`/dashboard/its-a-scene/${result.match_details.id}`);
+          }
         }
       } else {
         dispatch(fetchWhoWantsToRead());
