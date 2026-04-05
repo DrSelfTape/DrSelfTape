@@ -12,6 +12,7 @@ import { logoutUser } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
+import NotificationBell from "../../components/Dashboard/NotificationBell";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -333,12 +334,18 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
 
-      {/* Greeting */}
-      <div style={{ padding: "24px 0 24px" }}>
-        <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
-          Welcome back
-        </h1>
+      {/* Greeting + notification bell */}
+      <div style={{ padding: "24px 0 24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
+            Welcome back
+          </h1>
+        </div>
+        <NotificationBell onNavigate={({ panel, tab }) => {
+          if (panel) setCurrentPanel(panel);
+          if (tab) setTab(tab);
+        }} />
       </div>
 
       {/* Quick Actions */}

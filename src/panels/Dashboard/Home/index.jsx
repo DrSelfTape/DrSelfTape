@@ -17,6 +17,7 @@ import FindAReaderCTA from '../../../components/Dashboard/FindAReaderCTA';
 import PendingLikesBanner from '../../../components/Dashboard/PendingLikesBanner';
 import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
 import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardingModal';
+import NotificationBell from '../../../components/Dashboard/NotificationBell';
 
 const TYPE_COLORS = {
   film: '#C855F0',
@@ -100,6 +101,7 @@ export default function DashboardHome() {
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <div className="flex items-center gap-3">
           <AvailabilityToggle />
+          <NotificationBell />
           {stats?.data && <AuditionBadges stats={stats.data} compact={true} />}
         </div>
       </div>

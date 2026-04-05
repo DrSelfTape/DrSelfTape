@@ -21,7 +21,7 @@ export const markNotificationRead = createAsyncThunk(
   'notifications/markRead',
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(
+      const response = await axiosInstance.patch(
         `${endPoints.markNotificationRead}${id}/`
       );
       return { id, data: response.data };
@@ -54,6 +54,11 @@ const notificationSlice = createSlice({
       .addCase(getNotifications.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(markNotificationRead.fulfilled, (state, action) => {
+        const id = action.payload.id;
+        const notif = state.notifications?.find((n) => n.id === id);
+        if (notif) notif.is_read = true;
       });
   },
 });
