@@ -2,9 +2,11 @@ import { FileText, ExternalLink } from 'lucide-react';
 
 const GreenRoomMessage = ({ message, isOwn = false }) => {
   const text = message.text || message.content || '';
-  const type = message.type || 'text';
+  const type = message.message_type || message.type || 'text';
+  const fileUrl = message.file_url || message.fileUrl || '';
+  const fileName = message.fileName || (fileUrl ? fileUrl.split('/').pop() : 'Sides');
   const time = message.timestamp
-    ? (message.timestamp.includes(':')
+    ? (typeof message.timestamp === 'string' && message.timestamp.includes(':') && message.timestamp.length < 10
         ? message.timestamp
         : new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
     : '';
@@ -21,7 +23,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
   }
 
   // File / sides message
-  if (type === 'file') {
+  if (type === 'file' || type === 'sides' || fileUrl) {
     return (
       <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3`}>
         <div
@@ -36,7 +38,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
             <p className="text-[10px] font-semibold mb-1 text-[#C855F0]">{message.senderName}</p>
           )}
           <a
-            href={message.fileUrl}
+            href={fileUrl}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
@@ -45,7 +47,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
               <FileText size={18} className={isOwn ? 'text-white' : 'text-[#C855F0]'} />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-medium truncate">{message.fileName || 'Sides'}</p>
+              <p className="text-sm font-medium truncate">{fileName}</p>
               <p className={`text-xs flex items-center gap-1 ${isOwn ? 'text-white/70' : 'text-[#999999]'}`}>
                 <ExternalLink size={10} /> Open file
               </p>
