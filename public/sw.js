@@ -19,7 +19,9 @@ self.addEventListener('notificationclick', (event) => {
   const notifData = event.notification.data || {};
   let url = '/';
 
-  if (notifData.type === 'scene_partner_match' && notifData.match_id) {
+  if (notifData.type === 'scene_partner_like') {
+    url = '/dashboard/who-wants-to-read';
+  } else if (notifData.type === 'scene_partner_match' && notifData.match_id) {
     url = `/dashboard/green-room/${notifData.match_id}`;
   } else if (notifData.type === 'rehearsal_started' && notifData.match_id) {
     url = `/dashboard/green-room/${notifData.match_id}`;
