@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { HeartHandshake } from "lucide-react";
-import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats } from "../redux/features/readers/readersMatchSlice";
+import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats, fetchGreenRoomMessages } from "../redux/features/readers/readersMatchSlice";
 
 const SocketContext = React.createContext(null);
 const isMobile = () => window.innerWidth < 768;
@@ -60,6 +60,13 @@ export const SocketProvider = ({ children }) => {
           } else {
             navigate(`/dashboard/its-a-scene/${data.match_id}`);
           }
+        }
+        break;
+
+      // New chat message — refresh messages for that match
+      case 'new_message':
+        if (data?.match_id) {
+          dispatch(fetchGreenRoomMessages(data.match_id));
         }
         break;
 

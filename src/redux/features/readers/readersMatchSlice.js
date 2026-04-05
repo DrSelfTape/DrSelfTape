@@ -53,7 +53,7 @@ export const fetchGreenRoomMessages = createAsyncThunk(
   'readersMatch/fetchGreenRoomMessages',
   async (matchId, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${baseURL}/v1/readers/messages/${matchId}`);
+      const { data } = await axios.get(`${baseURL}/v1/matching/messages/${matchId}/`);
       return data?.data || [];
     } catch (error) {
       return rejectWithValue(
@@ -67,7 +67,7 @@ export const sendGreenRoomMessage = createAsyncThunk(
   'readersMatch/sendGreenRoomMessage',
   async ({ match_id, content }, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(`${baseURL}/v1/readers/messages/send/`, {
+      const { data } = await axios.post(`${baseURL}/v1/matching/messages/send/`, {
         match_id,
         content,
       });
