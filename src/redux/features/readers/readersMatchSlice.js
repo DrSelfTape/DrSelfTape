@@ -8,7 +8,7 @@ export const fetchAvailableReaders = createAsyncThunk(
   'readersMatch/fetchAvailableReaders',
   async (params = {}, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${baseURL}/v1/readers/available/`, { params });
+      const { data } = await axios.get(`${baseURL}/v1/matching/discover/`, { params });
       return data?.data || [];
     } catch (error) {
       return rejectWithValue(
@@ -22,9 +22,9 @@ export const swipeOnReader = createAsyncThunk(
   'readersMatch/swipeOnReader',
   async ({ reader_id, action }, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(`${baseURL}/v1/readers/swipe/`, {
-        reader_id,
-        action,
+      const { data } = await axios.post(`${baseURL}/v1/matching/swipe/`, {
+        to_user_id: reader_id,
+        direction: action,
       });
       return data?.data || data;
     } catch (error) {
@@ -39,7 +39,7 @@ export const fetchMatches = createAsyncThunk(
   'readersMatch/fetchMatches',
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${baseURL}/v1/readers/matches/`);
+      const { data } = await axios.get(`${baseURL}/v1/matching/matches/`);
       return data?.data || [];
     } catch (error) {
       return rejectWithValue(
@@ -84,7 +84,7 @@ export const fetchWhoWantsToRead = createAsyncThunk(
   'readersMatch/fetchWhoWantsToRead',
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${baseURL}/v1/readers/likes/`);
+      const { data } = await axios.get(`${baseURL}/v1/matching/likes/`);
       return data?.data || [];
     } catch (error) {
       return rejectWithValue(
@@ -302,17 +302,17 @@ const MOCK_WHO_WANTS_TO_READ = [
 // ────────────────────────────────────────────────────────────────────────────
 
 const initialState = {
-  readers: MOCK_READERS,
+  readers: [],
   readersLoading: false,
-  matches: MOCK_MATCHES,
+  matches: [],
   matchesLoading: false,
   favorites: [],
   favoritesLoading: false,
-  greenRoomMessages: MOCK_GREEN_ROOM_MESSAGES,
+  greenRoomMessages: {},
   messagesLoading: false,
-  whoWantsToRead: MOCK_WHO_WANTS_TO_READ,
+  whoWantsToRead: [],
   likesLoading: false,
-  onlineCount: 12,
+  onlineCount: 0,
   filters: {},
   error: null,
   matchingStats: { available_count: 0, pending_likes_count: 0, active_matches_count: 0 },
@@ -349,14 +349,10 @@ const readersMatchSlice = createSlice({
       })
       .addCase(fetchAvailableReaders.fulfilled, (state, action) => {
         state.readersLoading = false;
-        // Only replace mock data if API returned real results
-        if (action.payload && action.payload.length > 0) {
-          state.readers = action.payload;
-        }
+        state.readers = action.payload || [];
       })
       .addCase(fetchAvailableReaders.rejected, (state) => {
         state.readersLoading = false;
-        // Keep mock data on error
       })
 
       // swipeOnReader
@@ -377,13 +373,10 @@ const readersMatchSlice = createSlice({
       })
       .addCase(fetchMatches.fulfilled, (state, action) => {
         state.matchesLoading = false;
-        if (action.payload && action.payload.length > 0) {
-          state.matches = action.payload;
-        }
+        state.matches = action.payload || [];
       })
       .addCase(fetchMatches.rejected, (state) => {
         state.matchesLoading = false;
-        // Keep mock data on error
       })
 
       // fetchGreenRoomMessages
