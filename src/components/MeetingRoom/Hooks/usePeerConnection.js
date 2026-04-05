@@ -132,20 +132,36 @@ export const usePeerConnection = ({
   // -------------------------------------------------------------
   // Connect to host (participant side)
   // -------------------------------------------------------------
+  const connectToHostAttemptRef = useRef(0);
+
   const connectToHost = useCallback(
     (stream, peer) => {
-      const call = peer.call(meetingId, stream, {
-        metadata: { displayName: displayNameRef.current, role: 'participant' },
-      });
-      currentCallRef.current = call;
-      if (activeCallsRef.current) {
-        activeCallsRef.current.add(call);
-      }
-      // Don't reset remoteConnected here - it might already be true from a previous connection
-      // Only reset if we truly don't have a stream
-      if (!remoteStreamRef.current) {
-      setRemoteConnected(false);
-      }
+      const attempt = () => {
+        console.log(`Connecting to host peer: ${meetingId} (attempt ${connectToHostAttemptRef.current + 1})`);
+        const call = peer.call(meetingId, stream, {
+          metadata: { displayName: displayNameRef.current, role: 'participant' },
+        });
+
+        if (!call) {
+          // Host peer not found — retry up to 10 times with 2s delay
+          connectToHostAttemptRef.current += 1;
+          if (connectToHostAttemptRef.current < 10) {
+            console.log(`Host peer not found, retrying in 2s...`);
+            setTimeout(attempt, 2000);
+            return;
+          }
+          setMeetingError('Could not connect to host. They may not have joined yet.');
+          return;
+        }
+
+        connectToHostAttemptRef.current = 0;
+        currentCallRef.current = call;
+        if (activeCallsRef.current) {
+          activeCallsRef.current.add(call);
+        }
+        if (!remoteStreamRef.current) {
+          setRemoteConnected(false);
+        }
 
       call.on('stream', (remote) => {
         remoteStreamRef.current = remote;
@@ -319,6 +335,9 @@ export const usePeerConnection = ({
       });
 
       call.on('error', (err) => setMeetingError(err?.message || 'Call error'));
+      };
+
+      attempt();
     },
     [
       meetingId,

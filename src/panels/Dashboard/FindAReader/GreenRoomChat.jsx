@@ -13,6 +13,7 @@ import {
 } from '../../../redux/features/readers/readersMatchSlice';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import { isMeetingHost } from '../../../utils/meeting';
 
 const GreenRoomChat = (props = {}) => {
   const params = useParams();
@@ -152,6 +153,9 @@ const GreenRoomChat = (props = {}) => {
 
       // Extract room name/ID from Daily.co URL (e.g. https://drselftape.daily.co/match-101)
       const roomId = roomUrl.split('/').filter(Boolean).pop();
+
+      // Mark as host so PeerJS creates the hosting peer
+      localStorage.setItem(`dr-self-tapes_meeting_host_${roomId}`, 'true');
 
       // Send a system message to the chat
       sendLocalMsg(`🎬 Live rehearsal started! Joining room...`, 'system');
