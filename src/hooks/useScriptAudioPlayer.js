@@ -784,10 +784,8 @@ export const useScriptAudioPlayer = ({
               // Check if it's a user line - if so, navigate to it but don't play (stop auto-play)
               if (isNextUserLine) {
                 // Navigate to user line but don't play it (user needs to record)
-                // Use setTimeout to prevent infinite loops from state updates
                 setTimeout(() => {
-                  // Only update if we're still on the same line (prevent loops)
-                  if (activeLineIndexRef.current === lineIndex && modeRef.current === currentMode) {
+                  if (modeRef.current === currentMode) {
                     setCurrentLineIndex(nextIndex);
                     scrollToLine(nextIndex);
                   }
@@ -815,8 +813,9 @@ export const useScriptAudioPlayer = ({
                 if (nextAudioUrl) {
                   // Immediate next line has audio - play it directly (line by line progression)
                   timeoutId = setTimeout(() => {
-                    // Check if playback was stopped or audio element changed before executing
-                    if (modeRef.current === currentMode && activeLineIndexRef.current === lineIndex) {
+                    // Only check mode hasn't changed — don't check activeLineIndexRef
+                    // because playLine updates it immediately, making the old check stale
+                    if (modeRef.current === currentMode) {
                       playLine(nextIndex, { ...options, skipIfNoAudio: true });
                     }
                   }, AUDIO_TIMING.ADVANCE_DELAY);
@@ -831,10 +830,8 @@ export const useScriptAudioPlayer = ({
                     // Check if nextPlayable is a user line (findNextPlayableLine returns user line to stop auto-play)
                     if (isPlayableUserLine) {
                       // It's a user line - activate it directly (don't call playLine)
-                      // Use setTimeout to prevent infinite loops from useEffect watching currentLineIndex
                       setTimeout(() => {
-                        // Only update if we're still on the same line (prevent loops)
-                        if (activeLineIndexRef.current === lineIndex && modeRef.current === currentMode) {
+                        if (modeRef.current === currentMode) {
                           setCurrentLineIndex(nextPlayable);
                           scrollToLine(nextPlayable);
                         }
@@ -843,17 +840,16 @@ export const useScriptAudioPlayer = ({
                     } else {
                       // It's a partner line with audio - play it
                       timeoutId = setTimeout(() => {
-                        // Check if playback was stopped or audio element changed before executing
-                        if (modeRef.current === currentMode && activeLineIndexRef.current === lineIndex) {
+                        if (modeRef.current === currentMode) {
                           playLine(nextPlayable, { ...options, skipIfNoAudio: true });
                         }
                       }, AUDIO_TIMING.ADVANCE_DELAY);
                     }
                   } else {
                     // No playable line found — still advance to the immediate next line
-                    // so the script doesn't get stuck (user can see the line even without audio)
+                    // so the script doesn't get stuck
                     setTimeout(() => {
-                      if (activeLineIndexRef.current === lineIndex && modeRef.current === currentMode) {
+                      if (modeRef.current === currentMode) {
                         setCurrentLineIndex(nextIndex);
                         scrollToLine(nextIndex);
                       }

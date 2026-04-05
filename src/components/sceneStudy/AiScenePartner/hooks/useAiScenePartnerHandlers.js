@@ -645,11 +645,13 @@ export const useAiScenePartnerHandlers = ({
 
         chunksRef.current = [];
 
-        // Continue review process after recording stops - move to next line
+        // Continue after recording stops - move to next line
         // This applies to both review mode and normal mode
-        // Use setTimeout to ensure state updates complete before moving to next line
+        // Do NOT call stopAllPlayback() here — it resets activeLineIndexRef in the
+        // audio player, which breaks the guard in handleAudioEnded and prevents
+        // the script from advancing past the first partner line after recording.
+        // playNextPartnerAfter handles playback correctly on its own.
         setTimeout(() => {
-          stopAllPlayback();
           playNextPartnerAfter(currentIndex);
         }, 100);
       };
