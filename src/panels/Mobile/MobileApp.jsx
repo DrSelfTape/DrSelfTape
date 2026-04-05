@@ -1100,7 +1100,7 @@ function MoreScreen({ setCurrentPanel }) {
    PANEL SCREEN — Wraps a dashboard panel for mobile
    ═══════════════════════════════════════════════════ */
 // Panels that already use dark brand styling (inline dark bg/colors)
-const DARK_PANELS = new Set(["cd-sim", "generator", "find-a-reader", "green-room"]);
+const DARK_PANELS = new Set(["cd-sim", "generator", "find-a-reader", "green-room", "who-wants-to-read", "favorites"]);
 
 // Wrapper to inject matchId into GreenRoomChat without React Router params
 function GreenRoomChatWrapper({ matchId }) {

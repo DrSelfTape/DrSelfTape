@@ -41,14 +41,22 @@ export default function NotificationBell({ onNavigate }) {
     dispatch(getNotifications());
   }, [dispatch]);
 
-  // Close on outside click
+  // Close on outside click (delayed to avoid catching notification item clicks)
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
-      if (panelRef.current && !panelRef.current.contains(e.target)) setOpen(false);
+      if (panelRef.current && !panelRef.current.contains(e.target)) {
+        setOpen(false);
+      }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    // Use setTimeout to register after current event cycle
+    const timer = setTimeout(() => {
+      document.addEventListener('mousedown', handler);
+    }, 0);
+    return () => {
+      clearTimeout(timer);
+      document.removeEventListener('mousedown', handler);
+    };
   }, [open]);
 
   const sorted = [...(notifications || [])].sort(
@@ -57,33 +65,44 @@ export default function NotificationBell({ onNavigate }) {
   const unread = sorted.filter((n) => !n.is_read);
 
   const handleClick = (notif) => {
-    dispatch(markNotificationRead(notif.id));
-    setOpen(false);
-
-    const route =
-      notif.type === 'scene_partner_like' ? '/dashboard/who-wants-to-read' :
-      notif.type === 'scene_partner_match' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
-      notif.type === 'rehearsal_started' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
-      null;
-
-    if (route) {
-      if (isMobile && onNavigate) {
-        if (notif.type === 'scene_partner_like') {
-          onNavigate({ panel: 'who-wants-to-read' });
-        } else {
-          onNavigate({ panel: 'green-room' });
-        }
-      } else {
-        navigate(route);
-      }
+    // Mark as read but don't remove from list — just updates the dot
+    if (!notif.is_read) {
+      dispatch(markNotificationRead(notif.id));
     }
+
+    // Navigate after a brief delay so user sees the read state change
+    setTimeout(() => {
+      setOpen(false);
+
+      const route =
+        notif.type === 'scene_partner_like' ? '/dashboard/who-wants-to-read' :
+        notif.type === 'scene_partner_match' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
+        notif.type === 'rehearsal_started' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
+        null;
+
+      if (route) {
+        if (isMobile && onNavigate) {
+          if (notif.type === 'scene_partner_like') {
+            onNavigate({ panel: 'who-wants-to-read' });
+          } else {
+            onNavigate({ panel: 'green-room' });
+          }
+        } else {
+          navigate(route);
+        }
+      }
+    }, 150);
   };
 
   return (
     <div className="relative" ref={panelRef}>
       {/* Bell button */}
       <button
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          const next = !open;
+          setOpen(next);
+          if (next) dispatch(getNotifications());
+        }}
         className="relative w-10 h-10 rounded-xl bg-[#1E1E1E] border border-[#2A2A2A] flex items-center justify-center hover:bg-[#252525] transition-colors"
       >
         <Bell className="w-[18px] h-[18px] text-[#999]" />
