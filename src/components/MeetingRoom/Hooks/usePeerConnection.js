@@ -8,6 +8,65 @@ import Peer from 'peerjs';
 import { useCallback, useEffect, useRef } from 'react';
 import { clearMeetingHostFlag } from '../../../utils/meeting';
 
+// Shared ICE server config for NAT traversal
+const ICE_SERVERS = [
+  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
+  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
+  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
+];
+
+/**
+ * Create a PeerJS instance with fallback signaling servers.
+ * Tries custom server first, falls back to PeerJS cloud.
+ */
+function createPeerWithFallback(peerId, onOpen, onFallback) {
+  const makeOpts = (serverOpts) => ({
+    ...serverOpts,
+    config: { iceServers: ICE_SERVERS },
+  });
+
+  // Try custom server first
+  const peer = new Peer(peerId, makeOpts({
+    host: 'peer.testerp.co',
+    path: '/myapp',
+    secure: true,
+    port: 443,
+  }));
+
+  let settled = false;
+  const timeout = setTimeout(() => {
+    if (settled) return;
+    settled = true;
+    console.warn('Custom signaling server timed out, falling back to PeerJS cloud');
+    try { peer.destroy(); } catch (_) {}
+    // PeerJS cloud — no host/path/port needed, just pass config
+    const fallbackPeer = new Peer(peerId, makeOpts({}));
+    if (onFallback) onFallback(fallbackPeer);
+  }, 5000);
+
+  peer.on('open', () => {
+    if (settled) return;
+    settled = true;
+    clearTimeout(timeout);
+    if (onOpen) onOpen(peer);
+  });
+
+  peer.on('error', (err) => {
+    if (settled) return;
+    if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error') {
+      settled = true;
+      clearTimeout(timeout);
+      console.warn('Custom signaling server error, falling back to PeerJS cloud:', err.type);
+      try { peer.destroy(); } catch (_) {}
+      const fallbackPeer = new Peer(peerId, makeOpts({}));
+      if (onFallback) onFallback(fallbackPeer);
+    }
+  });
+
+  return { peer, cancelTimeout: () => { settled = true; clearTimeout(timeout); } };
+}
+
 export const usePeerConnection = ({
   meetingId,
   isHost,
@@ -813,23 +872,16 @@ export const usePeerConnection = ({
           console.log('⚠️ Local stream already exists, reusing it');
           // Still need to create peer if it doesn't exist
           if (!peerRef.current) {
-            const peer = new Peer(isHost ? meetingId : undefined, {
-              host: "peer.testerp.co",
-              path: "/myapp",
-              secure: true,
-              port: 443,
-              config: {
-                iceServers: [
-                  { urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] },
-                  { urls: 'turn:openrelay.metered.ca:80', username: 'openrelayproject', credential: 'openrelayproject' },
-                  { urls: 'turn:openrelay.metered.ca:443', username: 'openrelayproject', credential: 'openrelayproject' },
-                  { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' },
-                ],
-              },
-            });
+            const usePeer = (p) => {
+              peerRef.current = p;
+              setupPeerHandlersInline(p, localStreamRef.current);
+            };
+            const { peer } = createPeerWithFallback(
+              isHost ? meetingId : undefined,
+              usePeer,   // onOpen — primary server worked
+              usePeer,   // onFallback — switched to PeerJS cloud
+            );
             peerRef.current = peer;
-            
-            // Set up peer event handlers (inline to access closure variables)
             setupPeerHandlersInline(peer, localStreamRef.current);
           }
           return;
@@ -870,15 +922,16 @@ export const usePeerConnection = ({
 
         // ---- Create PeerJS instance (ONLY if it doesn't exist) ----
         if (!peerRef.current) {
-          const peer = new Peer(isHost ? meetingId : undefined, {
-            host: "peer.testerp.co",
-            path: "/myapp",
-            secure: true,
-            port: 443,
-          });
+          const usePeer = (p) => {
+            peerRef.current = p;
+            setupPeerHandlersInline(p, stream);
+          };
+          const { peer } = createPeerWithFallback(
+            isHost ? meetingId : undefined,
+            usePeer,
+            usePeer,
+          );
           peerRef.current = peer;
-          
-          // Set up peer event handlers using helper function
           setupPeerHandlersInline(peer, stream);
         } else {
           console.log('⚠️ Peer already exists, reusing existing peer');
