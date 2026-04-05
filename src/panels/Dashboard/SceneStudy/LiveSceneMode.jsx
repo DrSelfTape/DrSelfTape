@@ -155,6 +155,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const [liveTranscript, setLiveTranscript] = useState('');
   const [conversationHistory, setConversationHistory] = useState([]);
   const [currentLineIdx, setCurrentLineIdx] = useState(0);
+  const currentLineIdxRef = useRef(0);
+  const setCurrentLine = useCallback((idx) => {
+    currentLineIdxRef.current = idx;
+    setCurrentLineIdx(idx);
+  }, []);
   const [errorMsg, setErrorMsg] = useState('');
   const [aiCurrentLine, setAiCurrentLine] = useState('');
 
@@ -295,7 +300,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (!isActiveRef.current) return;
 
       const scriptLine = lines[idx];
-      setCurrentLineIdx(idx);
+      setCurrentLine(idx);
       scrollToLine(idx);
       setStatus('thinking');
 
@@ -353,8 +358,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       setConversationHistory(newHistory);
       setLiveTranscript('');
 
-      // Skip past any actor lines at current position to find next AI line
-      let nextIdx = currentLineIdx;
+      // Use ref for current index to avoid stale closure (the main bug fix)
+      let nextIdx = currentLineIdxRef.current;
+      // Move past the current user line(s) to find the next AI line
       while (nextIdx < lines.length && lines[nextIdx].character === userRole) {
         nextIdx++;
       }
@@ -373,7 +379,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         isProcessingRef.current = false;
       }
     },
-    [conversationHistory, currentLineIdx, lines, userRole, playAiLinesFrom]
+    [conversationHistory, lines, userRole, playAiLinesFrom]
   );
 
   /**
@@ -494,7 +500,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (firstLine && firstLine.character !== userRole) {
         playAiLinesFrom(0, []);
       } else {
-        setCurrentLineIdx(0);
+        setCurrentLine(0);
         scrollToLine(0);
         setStatus('listening');
         startRecognition();
