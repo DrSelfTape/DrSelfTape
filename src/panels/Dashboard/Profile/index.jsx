@@ -101,18 +101,12 @@ export default function Profile() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Frontend validation for actor mandatory fields
-    if (profile?.role === 'actor') {
-      const missingFields = [];
-      if (!form.first_name.trim() || !form.last_name.trim()) missingFields.push('Full Name');
-      if (!form.union) missingFields.push('Union Status');
-      if (!headshotFile && !headshotPreview) missingFields.push('Headshot');
-      if (missingFields.length > 0) {
-        setToastType('error');
-        setToast(`Required: ${missingFields.join(', ')}`);
-        setTimeout(() => setToast(null), 5000);
-        return;
-      }
+    // Frontend validation — only name is required
+    if (!form.first_name.trim() || !form.last_name.trim()) {
+      setToastType('error');
+      setToast('First and last name are required.');
+      setTimeout(() => setToast(null), 5000);
+      return;
     }
     const fd = new FormData();
     Object.entries(form).forEach(([key, val]) => {
