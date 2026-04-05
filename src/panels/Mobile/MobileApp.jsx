@@ -1226,6 +1226,21 @@ export default function DrSelfTapeApp() {
     return () => window.removeEventListener('insufficient_tokens', handler);
   }, []);
 
+  // Listen for cross-component mobile navigation (e.g. Generator → Scene Study)
+  useEffect(() => {
+    const handler = (e) => {
+      const { tab: targetTab, panel: targetPanel } = e.detail || {};
+      if (targetTab) {
+        setCurrentPanel(null);
+        setTab(targetTab);
+      } else if (targetPanel) {
+        setCurrentPanel(targetPanel);
+      }
+    };
+    window.addEventListener('drst-navigate', handler);
+    return () => window.removeEventListener('drst-navigate', handler);
+  }, []);
+
   const handleSetTab = (id) => {
     setTab(id);
     setCurrentPanel(null);

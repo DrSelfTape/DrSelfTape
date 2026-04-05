@@ -155,16 +155,26 @@ export default function AuditionGenerator() {
     }
   };
 
+  const isMobile = window.innerWidth < 768;
+
   const launchCDSim = () => {
     if (!scene) return;
     sessionStorage.setItem('preloadedScript', JSON.stringify({ scriptContent: scene }));
-    navigate('/dashboard/cd-sim', { state: { scriptContent: scene } });
+    if (isMobile) {
+      window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'cd-sim' } }));
+    } else {
+      navigate('/dashboard/cd-sim', { state: { scriptContent: scene } });
+    }
   };
 
   const launchSceneStudy = () => {
     if (!scene) return;
     sessionStorage.setItem('preloadedScript', JSON.stringify({ scriptContent: scene }));
-    navigate('/dashboard/scene-study', { state: { scriptContent: scene } });
+    if (isMobile) {
+      window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'live' } }));
+    } else {
+      navigate('/dashboard/scene-study', { state: { scriptContent: scene } });
+    }
   };
 
   const handleExportPDF = () => {
