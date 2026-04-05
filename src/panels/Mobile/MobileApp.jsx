@@ -10,6 +10,8 @@ import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../r
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
 import { logoutUser } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
+import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
+import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -300,11 +302,18 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const scripts = rawScripts.map(mapScript);
   const recentSubmissions = submissions.slice(0, 4);
 
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   useEffect(() => {
     dispatch(fetchAuditionStatsThunk());
     dispatch(getScripts());
     dispatch(fetchSubmissionsThunk());
     dispatch(fetchMatchingStats());
+
+    if (!localStorage.getItem('reader_onboarding_seen')) {
+      const timer = setTimeout(() => setShowOnboarding(true), 2000);
+      return () => clearTimeout(timer);
+    }
   }, [dispatch]);
 
   const stats = [
@@ -317,7 +326,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
   return (
     <div style={{ padding: "0 16px 24px" }}>
-      {/* Push notifications — enabled when native app is live */}
+      {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
+
+      {/* Pending likes banner */}
+      <div style={{ marginBottom: (matchingStats?.pending_likes_count || 0) > 0 ? 12 : 0 }}>
+        <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
+      </div>
+
       {/* Greeting — Playfair Display for editorial warmth */}
       <div style={{ padding: "20px 0 20px" }}>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
