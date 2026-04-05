@@ -252,9 +252,8 @@ function callbackBadge(dateStr) {
 const TABS = [
   { id: "home", icon: "home", label: "Home" },
   { id: "auditions", icon: "auditions", label: "Auditions" },
-  { id: "scenes", icon: "book", label: "Scene Study" },
   { id: "find-a-reader", icon: "community", label: "Find Reader" },
-  { id: "profile", icon: "profile", label: "Profile" },
+  { id: "green-room", icon: "mic", label: "Green Room" },
   { id: "more", icon: "more", label: "More" },
 ];
 
@@ -267,6 +266,7 @@ const MORE_FEATURES = [
   { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072" },
   { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#C855F0" },
   { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072" },
+  { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA" },
 ];
 
 const PANEL_COMPONENTS = {
@@ -1268,6 +1268,9 @@ export default function DrSelfTapeApp() {
     live: <LiveScreen />,
     "find-a-reader": (
       <PanelScreen panelId="find-a-reader" onBack={() => handleSetTab("home")} />
+    ),
+    "green-room": (
+      <PanelScreen panelId="green-room" onBack={() => handleSetTab("home")} />
     ),
     profile: <ProfileScreen setCurrentPanel={setCurrentPanel} />,
     more: <MoreScreen setCurrentPanel={setCurrentPanel} />,
