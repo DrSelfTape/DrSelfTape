@@ -17,54 +17,12 @@ const ICE_SERVERS = [
 ];
 
 /**
- * Create a PeerJS instance with fallback signaling servers.
- * Tries custom server first, falls back to PeerJS cloud.
+ * Create a PeerJS instance using PeerJS cloud signaling + STUN/TURN.
  */
-function createPeerWithFallback(peerId, onOpen, onFallback) {
-  const makeOpts = (serverOpts) => ({
-    ...serverOpts,
+function createPeer(peerId) {
+  return new Peer(peerId, {
     config: { iceServers: ICE_SERVERS },
   });
-
-  // Try custom server first
-  const peer = new Peer(peerId, makeOpts({
-    host: 'peer.testerp.co',
-    path: '/myapp',
-    secure: true,
-    port: 443,
-  }));
-
-  let settled = false;
-  const timeout = setTimeout(() => {
-    if (settled) return;
-    settled = true;
-    console.warn('Custom signaling server timed out, falling back to PeerJS cloud');
-    try { peer.destroy(); } catch (_) {}
-    // PeerJS cloud — no host/path/port needed, just pass config
-    const fallbackPeer = new Peer(peerId, makeOpts({}));
-    if (onFallback) onFallback(fallbackPeer);
-  }, 5000);
-
-  peer.on('open', () => {
-    if (settled) return;
-    settled = true;
-    clearTimeout(timeout);
-    if (onOpen) onOpen(peer);
-  });
-
-  peer.on('error', (err) => {
-    if (settled) return;
-    if (err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error') {
-      settled = true;
-      clearTimeout(timeout);
-      console.warn('Custom signaling server error, falling back to PeerJS cloud:', err.type);
-      try { peer.destroy(); } catch (_) {}
-      const fallbackPeer = new Peer(peerId, makeOpts({}));
-      if (onFallback) onFallback(fallbackPeer);
-    }
-  });
-
-  return { peer, cancelTimeout: () => { settled = true; clearTimeout(timeout); } };
 }
 
 export const usePeerConnection = ({
@@ -872,15 +830,7 @@ export const usePeerConnection = ({
           console.log('⚠️ Local stream already exists, reusing it');
           // Still need to create peer if it doesn't exist
           if (!peerRef.current) {
-            const usePeer = (p) => {
-              peerRef.current = p;
-              setupPeerHandlersInline(p, localStreamRef.current);
-            };
-            const { peer } = createPeerWithFallback(
-              isHost ? meetingId : undefined,
-              usePeer,   // onOpen — primary server worked
-              usePeer,   // onFallback — switched to PeerJS cloud
-            );
+            const peer = createPeer(isHost ? meetingId : undefined);
             peerRef.current = peer;
             setupPeerHandlersInline(peer, localStreamRef.current);
           }
@@ -922,15 +872,7 @@ export const usePeerConnection = ({
 
         // ---- Create PeerJS instance (ONLY if it doesn't exist) ----
         if (!peerRef.current) {
-          const usePeer = (p) => {
-            peerRef.current = p;
-            setupPeerHandlersInline(p, stream);
-          };
-          const { peer } = createPeerWithFallback(
-            isHost ? meetingId : undefined,
-            usePeer,
-            usePeer,
-          );
+          const peer = createPeer(isHost ? meetingId : undefined);
           peerRef.current = peer;
           setupPeerHandlersInline(peer, stream);
         } else {
