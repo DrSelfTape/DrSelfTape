@@ -11,6 +11,8 @@
  *   initials   — fallback initials if no src
  *   round      — true = circle (default), false = rounded-lg
  */
+import { useState } from 'react';
+
 export default function ProfilePhoto({
   src,
   alt = 'Profile',
@@ -20,19 +22,22 @@ export default function ProfilePhoto({
   round = true,
 }) {
   const shape = round ? 'rounded-full' : 'rounded-lg';
+  const [imgFailed, setImgFailed] = useState(false);
+  const showImage = src && !imgFailed;
 
   return (
     <div
       className={`relative overflow-hidden ${shape} ${className}`}
       style={style}
     >
-      {src ? (
+      {showImage ? (
         <>
           {/* Photo */}
           <img
             src={src}
             alt={alt}
             className="w-full h-full object-cover object-top"
+            onError={() => setImgFailed(true)}
           />
           {/* Brand gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-br from-[#C855F0]/25 via-transparent to-[#A7ECDA]/20 pointer-events-none" />

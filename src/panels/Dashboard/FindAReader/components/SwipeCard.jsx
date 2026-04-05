@@ -112,6 +112,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               alt={actor.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
               draggable={false}
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1a0a2e 0%,#0f0f1a 50%,#0a1a0a 100%);display:flex;align-items:center;justify-content:center"><span style="font-size:${isMobile ? 120 : 80}px;font-weight:800;color:rgba(200,85,240,0.3);user-select:none">${initials}</span></div>`); }}
             />
             {/* Brand gradient overlay */}
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(200,85,240,0.22) 0%, transparent 50%, rgba(167,236,218,0.15) 100%)', pointerEvents: 'none' }} />
