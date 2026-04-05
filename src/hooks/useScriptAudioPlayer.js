@@ -808,10 +808,10 @@ export const useScriptAudioPlayer = ({
               } else {
                 // AiScenePartner mode: check if immediate next partner line has audio
                 const nextAudioUrl = getAudioUrlForLine(nextIndex);
-                
+
                 // Store timeout ID so it can be cleared if stopAllPlayback is called
                 let timeoutId = null;
-                
+
                 if (nextAudioUrl) {
                   // Immediate next line has audio - play it directly (line by line progression)
                   timeoutId = setTimeout(() => {
@@ -823,11 +823,11 @@ export const useScriptAudioPlayer = ({
                 } else {
                   // Immediate next line has no audio - find next playable line
                   const nextPlayable = findNextPlayableLine(lineIndex, true);
-                  
+
                   if (nextPlayable >= 0) {
                     const playableLine = effectiveScriptLines[nextPlayable];
                     const isPlayableUserLine = playableLine && effectiveIsUserLine && effectiveIsUserLine(playableLine);
-                    
+
                     // Check if nextPlayable is a user line (findNextPlayableLine returns user line to stop auto-play)
                     if (isPlayableUserLine) {
                       // It's a user line - activate it directly (don't call playLine)
@@ -849,9 +849,18 @@ export const useScriptAudioPlayer = ({
                         }
                       }, AUDIO_TIMING.ADVANCE_DELAY);
                     }
+                  } else {
+                    // No playable line found — still advance to the immediate next line
+                    // so the script doesn't get stuck (user can see the line even without audio)
+                    setTimeout(() => {
+                      if (activeLineIndexRef.current === lineIndex && modeRef.current === currentMode) {
+                        setCurrentLineIndex(nextIndex);
+                        scrollToLine(nextIndex);
+                      }
+                    }, 0);
                   }
                 }
-                
+
                 // Store timeout ID in polling intervals so it can be cleared on stopAllPlayback
                 if (timeoutId) {
                   pollingIntervals.current[`advance-${lineIndex}`] = timeoutId;

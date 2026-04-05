@@ -586,24 +586,27 @@ export const useAiScenePartnerHandlers = ({
       console.log('[playNextPartnerAfter] Teleprompter mode, skipping scroll');
     }
     
-    // If it's a partner line, play it automatically after state update
-    if (!isUserLine && audioPlayer) {
-      console.log('[playNextPartnerAfter] Next line is partner line, scheduling playback in 150ms');
-      setTimeout(() => {
-        console.log('[playNextPartnerAfter] Executing handlePlayNonUserLine after timeout');
-        // Use handlePlayNonUserLine with forcePlay option to ensure fresh playback
-        // This prevents resume logic from interfering with automatic playback
-        handlePlayNonUserLine(next, { forcePlay: true });
-      }, 150);
-    } else {
-      if (isUserLine) {
-        console.log('[playNextPartnerAfter] Next line is user line - not playing audio');
+    // If it's a partner line, try to play it automatically after state update
+    if (!isUserLine) {
+      const lineAudio = getLineAudio(nextLine);
+      if (lineAudio && audioPlayer) {
+        console.log('[playNextPartnerAfter] Next line is partner line WITH audio, scheduling playback in 150ms');
+        setTimeout(() => {
+          console.log('[playNextPartnerAfter] Executing handlePlayNonUserLine after timeout');
+          handlePlayNonUserLine(next, { forcePlay: true });
+        }, 150);
       } else {
-        console.log('[playNextPartnerAfter] No audioPlayer available for partner line');
+        // Partner line without audio — still navigated to it above, now auto-advance past it
+        console.log('[playNextPartnerAfter] Partner line has no audio, auto-advancing past it');
+        setTimeout(() => {
+          playNextPartnerAfter(next);
+        }, 300);
       }
+    } else {
+      console.log('[playNextPartnerAfter] Next line is user line - waiting for recording');
       console.log('=== [playNextPartnerAfter] END (no playback) ===');
     }
-  }, [scriptLines, checkIsUserLine, audioPlayer, teleprompterMode, findNextLineWithAudio, setCurrentLineIndex, scrollToLine, handlePlayNonUserLine, state.endSessionModal]);
+  }, [scriptLines, checkIsUserLine, audioPlayer, teleprompterMode, findNextLineWithAudio, setCurrentLineIndex, scrollToLine, handlePlayNonUserLine, getLineAudio, state.endSessionModal]);
 
   // Handle record toggle
   const handleRecordToggle = useCallback(async (index) => {

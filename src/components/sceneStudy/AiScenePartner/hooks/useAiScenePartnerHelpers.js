@@ -25,23 +25,18 @@ export const useAiScenePartnerHelpers = ({
     return resolveLineAudio(line, currentTone, audioData);
   }, [tone, audioData]);
 
-  // Helper function to find next line with audio
+  // Helper function to find next line to advance to
+  // Returns the next valid line index — user lines always, partner lines regardless of audio
+  // This ensures the script progresses through ALL lines, not just ones with audio
   const findNextLineWithAudio = useCallback((startIndex) => {
     for (let i = startIndex + 1; i < scriptLines.length; i++) {
       const line = scriptLines[i];
       if (!line) continue;
-      
-      if (checkIsUserLine(line)) {
-        return i;
-      }
-      
-      const audioUrl = getLineAudio(line);
-      if (audioUrl) {
-        return i;
-      }
+      // Return any valid line — user line or partner line (with or without audio)
+      return i;
     }
     return -1;
-  }, [scriptLines, checkIsUserLine, getLineAudio]);
+  }, [scriptLines]);
 
   const getLastCompletedLineIndex = useCallback(() => {
     if (audioPlayer) {

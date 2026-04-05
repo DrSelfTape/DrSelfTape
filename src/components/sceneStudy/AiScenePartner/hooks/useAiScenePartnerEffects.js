@@ -65,36 +65,34 @@ export const useAiScenePartnerEffects = ({
   }, [reviewMode, reviewModeRef]);
 
   // Sync currentLineIndex with audio player
-  // CRITICAL: This sync works for BOTH main view and teleprompter mode
-  // Both views share the same state.currentLineIndex from useAiScenePartnerState
-  // This ensures state consistency when switching between views
-  // Only sync from audio player if audioPlayer is actively playing (not when we're manually setting it)
-  // This prevents conflicts when manually advancing after recording
-  // Track previous audioPlayer currentLineIndex to detect changes even when isPlaying is false
+  // CRITICAL: Only sync FORWARD, never backward. This prevents the audio player's
+  // stale state from overriding manual advances made by playNextPartnerAfter.
+  // Track previous audioPlayer currentLineIndex to detect changes
   const prevAudioPlayerLineIndexRef = useRef(audioPlayer?.currentLineIndex);
-  
+
   useEffect(() => {
     const audioPlayerLineIndex = audioPlayer?.currentLineIndex;
     const prevAudioPlayerLineIndex = prevAudioPlayerLineIndexRef.current;
-    const lineIndexChanged = audioPlayerLineIndex !== undefined && 
+    const lineIndexChanged = audioPlayerLineIndex !== undefined &&
       audioPlayerLineIndex !== null &&
       audioPlayerLineIndex !== prevAudioPlayerLineIndex;
-    
-    // Sync currentLineIndex from audioPlayer when:
+
+    // Only sync from audioPlayer when:
     // 1. Not recording
-    // 2. Either audio is playing OR the line index just changed (audio ended, activating user line)
-    // This ensures consistent state between main view and teleprompter mode
+    // 2. Audio is actively playing (NOT when it just changed — that causes backward jumps)
+    // 3. The audioPlayer index is AHEAD of current (never sync backward)
     if (
-      audioPlayerLineIndex !== undefined && 
+      audioPlayerLineIndex !== undefined &&
       audioPlayerLineIndex !== null &&
-      audioPlayerLineIndex !== currentLineIndex && 
+      audioPlayerLineIndex !== currentLineIndex &&
       !isRecording &&
-      (audioPlayer?.isPlaying || lineIndexChanged) // Allow sync when playing OR when index changed (audio just ended)
+      audioPlayer?.isPlaying &&
+      audioPlayerLineIndex > currentLineIndex // Never go backward
     ) {
       setCurrentLineIndex(audioPlayerLineIndex);
     }
-    
-    // Update ref to track changes (only update when value actually changes)
+
+    // Update ref to track changes
     if (audioPlayerLineIndex !== prevAudioPlayerLineIndexRef.current) {
       prevAudioPlayerLineIndexRef.current = audioPlayerLineIndex;
     }
