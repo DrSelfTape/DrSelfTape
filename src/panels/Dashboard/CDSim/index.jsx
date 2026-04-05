@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import SidesUpload from './SidesUpload';
 import RoleSelect from './RoleSelect';
 import VoicePicker from './VoicePicker';
@@ -76,6 +76,7 @@ function extractCharacters(lines) {
 
 export default function CDSim() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState('upload');
   const [scriptText, setScriptText] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
@@ -84,8 +85,16 @@ export default function CDSim() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Check for preloaded script from Scripts Library
+  // Check for preloaded script from route state or sessionStorage
   useEffect(() => {
+    const routeScript = location?.state?.scriptContent;
+    if (routeScript) {
+      setScriptText(routeScript);
+      setStep('role');
+      sessionStorage.removeItem('preloadedScript');
+      return;
+    }
+
     const raw = sessionStorage.getItem('preloadedScript');
     if (raw) {
       try {
@@ -97,7 +106,7 @@ export default function CDSim() {
       } catch { /* ignore */ }
       sessionStorage.removeItem('preloadedScript');
     }
-  }, []);
+  }, [location?.state]);
 
   const parsedLines = useMemo(() => parseScript(scriptText), [scriptText]);
   const characters = useMemo(() => extractCharacters(parsedLines), [parsedLines]);

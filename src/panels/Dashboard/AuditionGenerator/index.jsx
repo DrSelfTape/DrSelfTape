@@ -156,8 +156,9 @@ export default function AuditionGenerator() {
   };
 
   const launchCDSim = () => {
+    if (!scene) return;
     sessionStorage.setItem('preloadedScript', JSON.stringify({ scriptContent: scene }));
-    navigate('/dashboard/cd-sim');
+    navigate('/dashboard/cd-sim', { state: { scriptContent: scene } });
   };
 
   const launchSceneStudy = () => {
