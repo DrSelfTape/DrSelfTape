@@ -329,21 +329,20 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
 
       {/* Pending likes banner */}
-      <div style={{ marginBottom: (matchingStats?.pending_likes_count || 0) > 0 ? 12 : 0 }}>
+      <div style={{ paddingTop: 16, marginBottom: (matchingStats?.pending_likes_count || 0) > 0 ? 8 : 0 }}>
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
 
-      {/* Greeting — Playfair Display for editorial warmth */}
-      <div style={{ padding: "20px 0 20px" }}>
+      {/* Greeting */}
+      <div style={{ padding: "24px 0 24px" }}>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
           Welcome back
         </h1>
-
       </div>
 
-      {/* Quick Actions — Coral CTA primary, Mint secondary */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+      {/* Quick Actions */}
+      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
         <button onClick={() => setTab("live")} style={{
           flex: 1, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none",
           borderRadius: 16, padding: "14px 16px", cursor: "pointer", textAlign: "left",
@@ -367,14 +366,14 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       </div>
 
       {/* Availability toggle */}
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 20 }}>
         <button
           onClick={() => !availabilityToggling && dispatch(toggleAvailability(!isAvailable))}
           style={{
             width: "100%", display: "flex", alignItems: "center", gap: 10,
             background: isAvailable ? "rgba(34,197,94,0.08)" : BG_CARD,
             border: isAvailable ? "1px solid rgba(34,197,94,0.2)" : `1px solid ${BORDER}`,
-            borderRadius: 14, padding: "12px 16px", cursor: "pointer",
+            borderRadius: 14, padding: "14px 16px", cursor: "pointer",
           }}
         >
           <span style={{
@@ -393,7 +392,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         onClick={() => setTab("find-a-reader")}
         style={{
           background: BG_CARD, borderRadius: 16, padding: "16px",
-          border: `1px solid rgba(167,236,218,0.15)`, marginBottom: 16,
+          border: `1px solid rgba(167,236,218,0.15)`, marginBottom: 24,
           cursor: "pointer", borderLeft: `3px solid ${MINT}`,
         }}
       >
@@ -436,7 +435,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
       {/* Token balance */}
       {balance !== null && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, background: 'rgba(167,236,218,0.06)', borderRadius: 12, padding: '10px 14px', border: '1px solid rgba(167,236,218,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, background: 'rgba(167,236,218,0.06)', borderRadius: 12, padding: '12px 14px', border: '1px solid rgba(167,236,218,0.1)' }}>
           <span style={{ fontSize: 16 }}>🎟️</span>
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#A7ECDA' }}>{balance}</span>
@@ -491,7 +490,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <button onClick={() => setTab("scenes")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>All scripts</button>
         </div>
         {scripts.slice(0, 2).map(sc => (
-          <div key={sc.id} style={{ background: BG_CARD, borderRadius: 14, padding: "14px 16px", marginBottom: 8, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
+          <div key={sc.id} style={{ background: BG_CARD, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
             <ProgressRing pct={sc.progress} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
@@ -551,7 +550,7 @@ function AuditionsScreen() {
       </div>
 
       {/* Tab row */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 16, borderBottom: `1px solid ${BORDER}`, paddingBottom: 12 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: `1px solid ${BORDER}`, paddingBottom: 14 }}>
         {[{ key: "tracker", label: "Tracker" }, { key: "submissions", label: "Submissions" }].map(sec => (
           <button key={sec.key} onClick={() => setViewSection(sec.key)} style={{
             padding: "6px 16px", borderRadius: 20, border: "none", cursor: "pointer",
@@ -914,7 +913,7 @@ function ScenesScreen({ setTab }) {
 function LiveScreen() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", overflow: "hidden" }}>
-      <div style={{ padding: "20px 16px 8px", flexShrink: 0 }}>
+      <div style={{ padding: "24px 16px 12px", flexShrink: 0 }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
         <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "8px 0 0", fontStyle: "italic", letterSpacing: "0.2px" }}>Rehearse with your AI scene partner</p>
       </div>
@@ -976,13 +975,13 @@ function ProfileScreen({ setCurrentPanel }) {
   ];
 
   return (
-    <div style={{ padding: "0 16px 24px" }}>
-      <div style={{ padding: "20px 0 28px", textAlign: "center" }}>
+    <div style={{ padding: "0 16px 32px" }}>
+      <div style={{ padding: "24px 0 32px", textAlign: "center" }}>
         {/* Avatar — headshot with brand gradient overlay */}
-        <div style={{ width: 76, height: 76, borderRadius: "50%", margin: "0 auto 14px", position: "relative", overflow: "hidden" }}>
+        <div style={{ width: 84, height: 84, borderRadius: "50%", margin: "0 auto 16px", position: "relative", overflow: "hidden" }}>
           {headshot ? (
             <>
-              <img src={headshot} alt="Headshot" style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
+              <img src={headshot} alt="Headshot" onError={(e) => e.target.style.display = 'none'} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(200,85,240,0.25) 0%, transparent 50%, rgba(167,236,218,0.18) 100%)", pointerEvents: "none" }} />
               <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "inset 0 0 0 1.5px rgba(200,85,240,0.4)", pointerEvents: "none" }} />
             </>
@@ -1035,9 +1034,9 @@ function ProfileScreen({ setCurrentPanel }) {
 
       </div>
 
-      <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
         {[{ n: auditionCount, l: "Auditions" }, { n: bookedCount, l: "Booked" }, { n: scriptsCount, l: "Scripts" }].map(s => (
-          <div key={s.l} style={{ flex: 1, textAlign: "center", background: BG_CARD, borderRadius: 14, padding: "14px 8px", border: `1px solid ${BORDER}` }}>
+          <div key={s.l} style={{ flex: 1, textAlign: "center", background: BG_CARD, borderRadius: 14, padding: "16px 8px", border: `1px solid ${BORDER}` }}>
             <p style={{ fontSize: 22, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>{s.n}</p>
             <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "2px 0 0" }}>{s.l}</p>
           </div>
@@ -1071,12 +1070,12 @@ function ProfileScreen({ setCurrentPanel }) {
    ═══════════════════════════════════════════════════ */
 function MoreScreen({ setCurrentPanel }) {
   return (
-    <div style={{ padding: "0 16px 24px" }}>
-      <div style={{ padding: "20px 0 20px" }}>
+    <div style={{ padding: "0 16px 32px" }}>
+      <div style={{ padding: "24px 0 24px" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>More features</h1>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "6px 0 0" }}>All your tools in one place</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {MORE_FEATURES.map(f => (
           <button key={f.id} onClick={() => setCurrentPanel(f.id)} style={{
             background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 18,
@@ -1171,17 +1170,17 @@ function PanelScreen({ panelId, onBack }) {
   return (
     <div style={{ padding: "0 0 24px" }}>
       <div style={{
-        display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
+        display: "flex", alignItems: "center", gap: 12, padding: "16px 16px",
         borderBottom: `1px solid ${BORDER}`,
       }}>
         <button onClick={onBack} style={{
-          width: 36, height: 36, borderRadius: 10, background: BG_ELEVATED,
+          width: 38, height: 38, borderRadius: 10, background: BG_ELEVATED,
           border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center",
           cursor: "pointer",
         }}>
           <Icon name="back" size={18} color={TEXT_SECONDARY} />
         </button>
-        <span style={{ fontSize: 16, fontWeight: 600, color: TEXT_PRIMARY }}>{feature?.label || "Feature"}</span>
+        <span style={{ fontSize: 17, fontWeight: 600, color: TEXT_PRIMARY }}>{feature?.label || "Feature"}</span>
       </div>
       <Suspense fallback={
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
