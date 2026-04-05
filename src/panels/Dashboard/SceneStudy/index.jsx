@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import ScriptUpload from './ScriptUpload';
 import RolePicker from './RolePicker';
 import Teleprompter from './Teleprompter';
@@ -76,13 +77,25 @@ function extractCharacters(lines) {
 }
 
 export default function SceneStudy() {
+  const location = useLocation();
   const [step, setStep] = useState('upload');
   const [scriptText, setScriptText] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedVoice, setSelectedVoice] = useState('partner_male');
 
-  // Check for preloaded script from Scripts Library
+  // Check for preloaded script from route state or sessionStorage
   useEffect(() => {
+    // Priority 1: route state (passed via navigate)
+    const routeScript = location?.state?.scriptContent;
+    if (routeScript) {
+      setScriptText(routeScript);
+      setStep('pick-role');
+      // Clear sessionStorage if it was also set
+      sessionStorage.removeItem('preloadedScript');
+      return;
+    }
+
+    // Priority 2: sessionStorage (fallback for mobile tab navigation)
     const raw = sessionStorage.getItem('preloadedScript');
     if (raw) {
       try {
@@ -94,7 +107,7 @@ export default function SceneStudy() {
       } catch { /* ignore */ }
       sessionStorage.removeItem('preloadedScript');
     }
-  }, []);
+  }, [location?.state]);
 
   const parsedLines = useMemo(() => parseScript(scriptText), [scriptText]);
   const characters = useMemo(() => extractCharacters(parsedLines), [parsedLines]);

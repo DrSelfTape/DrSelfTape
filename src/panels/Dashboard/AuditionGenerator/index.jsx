@@ -161,8 +161,9 @@ export default function AuditionGenerator() {
   };
 
   const launchSceneStudy = () => {
+    if (!scene) return;
     sessionStorage.setItem('preloadedScript', JSON.stringify({ scriptContent: scene }));
-    navigate('/dashboard/scene-study');
+    navigate('/dashboard/scene-study', { state: { scriptContent: scene } });
   };
 
   const handleExportPDF = () => {
