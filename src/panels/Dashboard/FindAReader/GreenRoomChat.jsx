@@ -105,18 +105,28 @@ const GreenRoomChat = (props = {}) => {
       fd.append('match_id', matchId);
       fd.append('message_type', 'sides');
 
-      // Try to upload to backend; if it fails, still show it locally
-      let fileUrl = URL.createObjectURL(file);
-      try {
-        const res = await axios.post(`${baseURL}/v1/matching/messages/upload/`, fd, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        fileUrl = res.data?.data?.url || fileUrl;
-      } catch { /* use local blob URL */ }
+      const res = await axios.post(`${baseURL}/v1/matching/messages/upload/`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const fileUrl = res.data?.data?.url;
 
+      if (fileUrl) {
+        // Backend already created the message + notified partner
+        // Just refresh to show the persisted message
+        dispatch(fetchGreenRoomMessages(matchId));
+      } else {
+        // Fallback: show locally if upload response missing URL
+        sendLocalMsg(`📄 Sides shared: ${file.name}`, 'file', {
+          fileName: file.name,
+          fileUrl: URL.createObjectURL(file),
+          fileType: file.type,
+        });
+      }
+    } catch {
+      // Upload failed — show locally
       sendLocalMsg(`📄 Sides shared: ${file.name}`, 'file', {
         fileName: file.name,
-        fileUrl,
+        fileUrl: URL.createObjectURL(file),
         fileType: file.type,
       });
     } finally {
