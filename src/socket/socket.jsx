@@ -2,9 +2,11 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ReconnectingWebSocket from "reconnecting-websocket";
+import { HeartHandshake } from "lucide-react";
 import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats } from "../redux/features/readers/readersMatchSlice";
 
 const SocketContext = React.createContext(null);
+const isMobile = () => window.innerWidth < 768;
 
 export const useSocket = () => {
   const state = useContext(SocketContext);
@@ -25,6 +27,9 @@ export const SocketProvider = ({ children }) => {
   // Incoming call state
   const [incomingCall, setIncomingCall] = useState(null); // { matchId, roomUrl, partnerName }
 
+  // Like toast state
+  const [likeToast, setLikeToast] = useState(null); // { fromName }
+
   const sendCommand = useCallback((payload = {}) => {
     if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(payload));
@@ -37,17 +42,24 @@ export const SocketProvider = ({ children }) => {
     setNotifications((prev) => [parsedData, ...prev]);
 
     switch (notification_type) {
-      // Someone swiped right on you — refresh likes list + dashboard stats
+      // Someone swiped right on you — refresh data + show toast
       case 'scene_partner_like':
         dispatch(fetchWhoWantsToRead());
         dispatch(fetchMatchingStats());
+        setLikeToast({ fromName: data?.from_name || 'Someone' });
+        setTimeout(() => setLikeToast(null), 6000);
         break;
 
       // Mutual match — refresh matches + navigate to "It's a Scene"
       case 'scene_partner_match':
         dispatch(fetchMatches());
         if (data?.match_id) {
-          navigate(`/dashboard/its-a-scene/${data.match_id}`);
+          if (isMobile()) {
+            // Use custom event for mobile tab navigation
+            window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
+          } else {
+            navigate(`/dashboard/its-a-scene/${data.match_id}`);
+          }
         }
         break;
 
@@ -119,9 +131,47 @@ export const SocketProvider = ({ children }) => {
 
   const declineCall = () => setIncomingCall(null);
 
+  const handleLikeToastTap = () => {
+    setLikeToast(null);
+    if (isMobile()) {
+      window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'who-wants-to-read' } }));
+    } else {
+      navigate('/dashboard/who-wants-to-read');
+    }
+  };
+
   return (
     <SocketContext.Provider value={{ sendCommand, notifications, isSocketReady }}>
       {children}
+
+      {/* ── Like Toast Notification ──────────────────────────────────── */}
+      {likeToast && (
+        <div
+          className="fixed top-4 left-4 right-4 z-[998] mx-auto max-w-sm cursor-pointer"
+          onClick={handleLikeToastTap}
+          style={{ animation: 'slideDown 0.4s ease-out forwards' }}
+        >
+          <div className="bg-[#1A1A2E] border border-[#C855F0]/30 rounded-2xl px-5 py-4 flex items-center gap-4 shadow-2xl">
+            <div className="w-11 h-11 rounded-full bg-[#C855F0]/20 flex items-center justify-center shrink-0">
+              <HeartHandshake className="w-5 h-5 text-[#C855F0]" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-sm font-semibold">{likeToast.fromName} wants to read with you!</p>
+              <p className="text-[#A7ECDA] text-xs mt-0.5">Tap to see who &rarr;</p>
+            </div>
+            <button
+              onClick={(e) => { e.stopPropagation(); setLikeToast(null); }}
+              className="text-[#666] hover:text-white text-lg leading-none"
+            >&times;</button>
+          </div>
+          <style>{`
+            @keyframes slideDown {
+              from { opacity: 0; transform: translateY(-20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* ── Incoming Call Modal ───────────────────────────────────────── */}
       {incomingCall && (
