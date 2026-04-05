@@ -559,6 +559,8 @@ const Meeting = () => {
                 handleToggleCamera={handleToggleCamera}
                 startScreenShare={startScreenShare}
                 stopScreenShare={stopScreenShare}
+                localStreamRef={localStreamRef}
+                remoteStreamRef={remoteStreamRef}
               />
             </div>
 
