@@ -334,18 +334,12 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
 
-      {/* Greeting + notification bell */}
-      <div style={{ padding: "24px 0 24px", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-        <div>
-          <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
-            Welcome back
-          </h1>
-        </div>
-        <NotificationBell onNavigate={({ panel, tab }) => {
-          if (panel) setCurrentPanel(panel);
-          if (tab) setTab(tab);
-        }} />
+      {/* Greeting */}
+      <div style={{ padding: "24px 0 24px" }}>
+        <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
+          Welcome back
+        </h1>
       </div>
 
       {/* Quick Actions */}
@@ -1379,10 +1373,10 @@ export default function DrSelfTapeApp() {
               <img src={logo} alt="Dr Self Tape" style={{ width: 30, height: 30, objectFit: "contain" }} />
               <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
             </div>
-            <button style={{ width: 36, height: 36, borderRadius: 10, background: `${MINT}08`, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", position: "relative" }}>
-              <Icon name="bell" size={18} color={TEXT_SECONDARY} />
-              <span style={{ position: "absolute", top: 7, right: 7, width: 7, height: 7, borderRadius: "50%", background: CORAL }} />
-            </button>
+            <NotificationBell onNavigate={({ panel, tab }) => {
+              if (panel) setCurrentPanel(panel);
+              if (tab) { setCurrentPanel(null); setTab(tab); }
+            }} />
           </div>
 
           {/* Scrollable Content Area — sits between fixed top and bottom bars */}

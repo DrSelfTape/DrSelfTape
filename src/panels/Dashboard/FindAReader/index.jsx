@@ -58,8 +58,13 @@ const FindAReader = () => {
         const result = await dispatch(
           swipeOnReader({ reader_id: actor.id, action })
         ).unwrap();
-        if (result?.matched) {
-          navigate(`/dashboard/its-a-scene/${result.match_id}`);
+        if (result?.match && result?.match_details?.id) {
+          const isMob = window.innerWidth < 768;
+          if (isMob) {
+            window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
+          } else {
+            navigate(`/dashboard/its-a-scene/${result.match_details.id}`);
+          }
           return;
         }
       } catch {
