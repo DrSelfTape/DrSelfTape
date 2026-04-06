@@ -1160,6 +1160,7 @@ function ProfileScreen({ setCurrentPanel }) {
    MORE SCREEN — Grid of all additional features
    ═══════════════════════════════════════════════════ */
 function MoreScreen({ setCurrentPanel }) {
+  const dispatch = useDispatch();
   return (
     <div style={{ padding: "0 16px 32px" }}>
       <div style={{ padding: "24px 0 24px" }}>
@@ -1182,6 +1183,20 @@ function MoreScreen({ setCurrentPanel }) {
           </button>
         ))}
       </div>
+
+      {/* Log Out */}
+      <button
+        onClick={() => dispatch(logoutUser())}
+        style={{
+          width: "100%", marginTop: 28, padding: "16px", borderRadius: 14,
+          background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+          display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+          cursor: "pointer",
+        }}
+      >
+        <Icon name="logout" size={18} color="#ef4444" />
+        <span style={{ fontSize: 15, fontWeight: 600, color: "#ef4444" }}>Log Out</span>
+      </button>
     </div>
   );
 }
