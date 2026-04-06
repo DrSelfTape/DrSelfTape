@@ -154,6 +154,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const [voice, setVoice] = useState(initialVoice || 'partner_male');
   const [liveTranscript, setLiveTranscript] = useState('');
   const [conversationHistory, setConversationHistory] = useState([]);
+  const conversationHistoryRef = useRef([]);
   const [currentLineIdx, setCurrentLineIdx] = useState(0);
   const currentLineIdxRef = useRef(0);
   const setCurrentLine = useCallback((idx) => {
@@ -174,6 +175,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const [sceneStarted, setSceneStarted] = useState(false);
   const [sceneComplete, setSceneComplete] = useState(false);
   const [showMicPermission, setShowMicPermission] = useState(false);
+
+  // Keep conversationHistory ref in sync
+  useEffect(() => {
+    conversationHistoryRef.current = conversationHistory;
+  }, [conversationHistory]);
 
   // Create AudioContext on mount — resumed on user gesture (not created inside it)
   useEffect(() => {
@@ -322,7 +328,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       }
 
       setAiCurrentLine(aiText);
-      setConversationHistory((prev) => [...prev, { role: 'ai', text: aiText }]);
+      setConversationHistory((prev) => {
+        const updated = [...prev, { role: 'ai', text: aiText }];
+        conversationHistoryRef.current = updated;
+        return updated;
+      });
       setStatus('playing');
 
       await playTTS(aiText, voice);
@@ -339,11 +349,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       return;
     }
 
-    setCurrentLineIdx(idx);
+    setCurrentLine(idx);
     scrollToLine(idx);
     setStatus('listening');
     startRecognition();
-  }, [lines, userRole, voice, playTTS, scrollToLine]);  // eslint-disable-line
+  }, [lines, userRole, voice, playTTS, scrollToLine, setCurrentLine]);  // eslint-disable-line
 
   /**
    * Called when actor finishes speaking. Records their line, then plays AI lines one by one.
@@ -354,11 +364,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (isProcessingRef.current) return; // prevent double-fire
       isProcessingRef.current = true;
 
-      const newHistory = [...conversationHistory, { role: 'actor', text: spokenText.trim() }];
+      // Use refs for both to avoid stale closures
+      const newHistory = [...conversationHistoryRef.current, { role: 'actor', text: spokenText.trim() }];
       setConversationHistory(newHistory);
+      conversationHistoryRef.current = newHistory;
       setLiveTranscript('');
 
-      // Use ref for current index to avoid stale closure (the main bug fix)
+      // Use ref for current index — always up to date
       let nextIdx = currentLineIdxRef.current;
       // Move past the current user line(s) to find the next AI line
       while (nextIdx < lines.length && lines[nextIdx].character === userRole) {
@@ -379,7 +391,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         isProcessingRef.current = false;
       }
     },
-    [conversationHistory, lines, userRole, playAiLinesFrom]
+    [lines, userRole, playAiLinesFrom]
   );
 
   /**
