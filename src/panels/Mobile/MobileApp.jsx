@@ -345,9 +345,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       </div>
 
       {/* Centered logo */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, paddingBottom: 4 }}>
-        <img src={logo} alt="Dr Self Tape" style={{ width: 36, height: 36, objectFit: "contain", filter: "drop-shadow(0 0 10px rgba(200,85,240,0.3))" }} />
-        <p style={{ fontSize: 9, fontWeight: 600, color: "#555", letterSpacing: "3px", textTransform: "uppercase", marginTop: 6 }}>Dr Self Tape</p>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, paddingBottom: 6 }}>
+        <img src={logo} alt="Dr Self Tape" style={{ width: 48, height: 48, objectFit: "contain", filter: "brightness(1.5) drop-shadow(0 0 14px rgba(200,85,240,0.4))" }} />
+        <p style={{ fontSize: 10, fontWeight: 700, color: "#BBBBBB", letterSpacing: "4px", textTransform: "uppercase", marginTop: 8 }}>Dr Self Tape</p>
       </div>
 
       {/* Greeting */}
