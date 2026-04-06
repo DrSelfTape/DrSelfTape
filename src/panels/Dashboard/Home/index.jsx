@@ -18,6 +18,8 @@ import PendingLikesBanner from '../../../components/Dashboard/PendingLikesBanner
 import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
 import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardingModal';
 import NotificationBell from '../../../components/Dashboard/NotificationBell';
+import TutorialChecklist from '../../../components/Dashboard/TutorialChecklist';
+import TutorialAchievement from '../../../components/Dashboard/TutorialAchievement';
 
 const TYPE_COLORS = {
   film: '#C855F0',
@@ -53,6 +55,14 @@ export default function DashboardHome() {
   const { submissions } = useSelector((state) => state.submissions);
 
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTutorialAchievement, setShowTutorialAchievement] = useState(false);
+
+  // Listen for tutorial completion
+  useEffect(() => {
+    const handler = () => setShowTutorialAchievement(true);
+    window.addEventListener('drst-tutorial-complete', handler);
+    return () => window.removeEventListener('drst-tutorial-complete', handler);
+  }, []);
 
   useEffect(() => {
     dispatch(fetchAuditionStatsThunk());
@@ -94,6 +104,7 @@ export default function DashboardHome() {
   return (
     <div className="space-y-6">
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
+      {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
       <PendingLikesBanner />
 
@@ -108,6 +119,9 @@ export default function DashboardHome() {
 
       {/* Find a Reader CTA */}
       <FindAReaderCTA />
+
+      {/* Tutorial Checklist */}
+      <TutorialChecklist />
 
       {/* Feature Banners */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

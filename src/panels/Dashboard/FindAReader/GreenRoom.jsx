@@ -17,6 +17,8 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
   useEffect(() => {
     dispatch(fetchMatches());
     dispatch(fetchActivityFeed());
+    // Mark tutorial step
+    try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('green_room'); } catch {}
   }, [dispatch]);
 
   return (

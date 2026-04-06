@@ -13,6 +13,8 @@ import { fetchMatchingStats, toggleAvailability } from "../../redux/features/rea
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
+import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
+import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -304,6 +306,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const recentSubmissions = submissions.slice(0, 4);
 
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTutorialAchievement, setShowTutorialAchievement] = useState(false);
+
+  useEffect(() => {
+    const handler = () => setShowTutorialAchievement(true);
+    window.addEventListener('drst-tutorial-complete', handler);
+    return () => window.removeEventListener('drst-tutorial-complete', handler);
+  }, []);
 
   useEffect(() => {
     dispatch(fetchAuditionStatsThunk());
@@ -328,6 +337,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   return (
     <div style={{ padding: "0 16px 24px" }}>
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
+      {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
       {/* Pending likes banner */}
       <div style={{ paddingTop: 16, marginBottom: (matchingStats?.pending_likes_count || 0) > 0 ? 8 : 0 }}>
@@ -419,6 +429,14 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           </div>
           <span style={{ fontSize: 12, fontWeight: 600, color: MINT }}>Go &rarr;</span>
         </div>
+      </div>
+
+      {/* Tutorial checklist */}
+      <div style={{ marginBottom: 20 }}>
+        <TutorialChecklist onNavigate={({ tab, panel }) => {
+          if (tab) { setTab(tab); }
+          if (panel) { setCurrentPanel(panel); }
+        }} />
       </div>
 
       {/* Key stats — 2 numbers only */}

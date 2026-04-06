@@ -147,6 +147,8 @@ export default function AuditionGenerator() {
       if (!text) throw new Error('No scene returned');
       setScene(text);
       setGenerated(true);
+      // Mark tutorial step
+      try { const { markStep } = await import('../../../components/Dashboard/TutorialChecklist'); markStep('generate_scene'); } catch {}
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to generate. Try again.');
     } finally {

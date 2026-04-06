@@ -30,6 +30,8 @@ const FindAReader = () => {
 
   useEffect(() => {
     dispatch(fetchProfileThunk());
+    // Mark tutorial step
+    try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('find_reader'); } catch {}
     // Restore saved filters and pass to API
     try {
       const saved = JSON.parse(localStorage.getItem('drst-reader-filters') || '{}');

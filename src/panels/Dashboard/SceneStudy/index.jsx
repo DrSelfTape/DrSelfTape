@@ -114,6 +114,13 @@ export default function SceneStudy() {
 
   const currentStepIdx = STEPS.indexOf(step);
 
+  // Mark tutorial step when user starts practicing
+  useEffect(() => {
+    if (step === 'practice' || step === 'live') {
+      try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('practice_ai'); } catch {}
+    }
+  }, [step]);
+
   // Live scene mode — full screen overlay
   if (step === 'live') {
     return (
