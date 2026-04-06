@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   Camera, Sparkles, Mic, Users2, Radio, MessageSquare, Target,
-  ChevronDown, ChevronUp, Check, ArrowRight, Trophy,
+  ChevronDown, ChevronUp, Check, ArrowRight, Trophy, Zap,
 } from 'lucide-react';
+
+const STEP_COLORS = ['#C855F0', '#A7ECDA', '#FFB49A', '#3b82f6', '#22c55e', '#FCE072', '#ef4444'];
 
 const STEPS = [
   { id: 'headshot', label: 'Upload a Headshot', desc: 'So scene partners can see you', icon: Camera, route: '/dashboard/profile', mobilePanel: 'dash-profile' },
@@ -34,7 +36,6 @@ function markStep(stepId) {
   }
 }
 
-// Export for other components to call
 export { markStep };
 
 export default function TutorialChecklist({ onNavigate }) {
@@ -47,32 +48,19 @@ export default function TutorialChecklist({ onNavigate }) {
   const [dismissed, setDismissed] = useState(!!localStorage.getItem(COMPLETE_KEY));
   const isMobile = window.innerWidth < 768;
 
-  // Listen for updates from other components
   useEffect(() => {
     const handler = () => setProgress(getProgress());
     window.addEventListener('drst-tutorial-update', handler);
     return () => window.removeEventListener('drst-tutorial-update', handler);
   }, []);
 
-  // Auto-detect completed steps
   useEffect(() => {
     const p = getProgress();
     let changed = false;
-
-    if (!p.headshot && (profile?.actor_profile?.headshot || profile?.user_image)) {
-      p.headshot = true; changed = true;
-    }
-    if (!p.track_audition && auditions.length > 0) {
-      p.track_audition = true; changed = true;
-    }
-    if (!p.go_available && isAvailable) {
-      p.go_available = true; changed = true;
-    }
-
-    if (changed) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(p));
-      setProgress({ ...p });
-    }
+    if (!p.headshot && (profile?.actor_profile?.headshot || profile?.user_image)) { p.headshot = true; changed = true; }
+    if (!p.track_audition && auditions.length > 0) { p.track_audition = true; changed = true; }
+    if (!p.go_available && isAvailable) { p.go_available = true; changed = true; }
+    if (changed) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); setProgress({ ...p }); }
   }, [profile, auditions, isAvailable]);
 
   const completedCount = STEPS.filter((s) => progress[s.id]).length;
@@ -82,16 +70,12 @@ export default function TutorialChecklist({ onNavigate }) {
 
   const handleGo = useCallback((step) => {
     if (step.action === 'toggle_available') {
-      // Trigger the availability toggle via custom event
       window.dispatchEvent(new CustomEvent('drst-tutorial-toggle-available'));
       return;
     }
     if (isMobile && onNavigate) {
-      if (step.mobileTab) {
-        onNavigate({ tab: step.mobileTab });
-      } else if (step.mobilePanel) {
-        onNavigate({ panel: step.mobilePanel });
-      }
+      if (step.mobileTab) onNavigate({ tab: step.mobileTab });
+      else if (step.mobilePanel) onNavigate({ panel: step.mobilePanel });
     } else if (step.route) {
       navigate(step.route);
     }
@@ -100,110 +84,129 @@ export default function TutorialChecklist({ onNavigate }) {
   if (dismissed) return null;
 
   return (
-    <div className="bg-[#111318] border border-[#2A2A2A] rounded-2xl overflow-hidden">
-      {/* Header with progress */}
+    <div className="relative rounded-2xl overflow-hidden border border-[#C855F0]/20" style={{
+      background: 'linear-gradient(135deg, #1a0d24 0%, #111318 40%, #0f1a1a 100%)',
+    }}>
+      {/* Subtle glow */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse at top left, rgba(200,85,240,0.08), transparent 60%)',
+      }} />
+
+      {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-[#1A1A2E]/50 transition-colors"
+        className="relative w-full flex items-center justify-between px-5 py-4 cursor-pointer"
       >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-[#C855F0]/15 flex items-center justify-center">
-            <Trophy className="w-4 h-4 text-[#C855F0]" />
+          <div className="relative">
+            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{
+              background: 'linear-gradient(135deg, #C855F0, #7B2FBE)',
+              boxShadow: '0 4px 15px rgba(200,85,240,0.3)',
+            }}>
+              {allComplete ? <Trophy className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
+            </div>
+            {!allComplete && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#FCE072] text-[#0D0D0D] text-[10px] font-bold flex items-center justify-center shadow-md">
+                {totalSteps - completedCount}
+              </span>
+            )}
           </div>
           <div className="text-left">
-            <p className="text-sm font-bold text-white">
-              {allComplete ? 'Tutorial Complete!' : 'Get Started'}
+            <p className="text-base font-bold text-white">
+              {allComplete ? 'Tutorial Complete!' : 'Your Setup Checklist'}
             </p>
-            <p className="text-xs text-[#888]">
-              {completedCount} of {totalSteps} complete ({percent}%)
+            <p className="text-xs text-[#A7ECDA] font-medium">
+              {completedCount} of {totalSteps} done
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          {/* Mini progress bar */}
-          <div className="w-24 h-2 bg-[#2A2A2A] rounded-full overflow-hidden hidden sm:block">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${percent}%`,
-                background: allComplete
-                  ? 'linear-gradient(90deg, #22c55e, #A7ECDA)'
-                  : 'linear-gradient(90deg, #C855F0, #E88BF5)',
-              }}
-            />
+        <div className="flex items-center gap-4">
+          {/* Circular progress */}
+          <div className="relative w-10 h-10">
+            <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="#2A2A2A" strokeWidth="3" />
+              <circle cx="18" cy="18" r="15.5" fill="none"
+                stroke={allComplete ? '#22c55e' : '#C855F0'}
+                strokeWidth="3" strokeLinecap="round"
+                strokeDasharray={`${percent} 100`}
+                className="transition-all duration-700"
+              />
+            </svg>
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
+              {percent}%
+            </span>
           </div>
-          {expanded ? (
-            <ChevronUp className="w-4 h-4 text-[#666]" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-[#666]" />
-          )}
+          {expanded ? <ChevronUp className="w-4 h-4 text-[#888]" /> : <ChevronDown className="w-4 h-4 text-[#888]" />}
         </div>
       </button>
 
-      {/* Full progress bar (mobile) */}
-      <div className="px-5 pb-1 sm:hidden">
-        <div className="w-full h-2 bg-[#2A2A2A] rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: `${percent}%`,
-              background: allComplete
-                ? 'linear-gradient(90deg, #22c55e, #A7ECDA)'
-                : 'linear-gradient(90deg, #C855F0, #E88BF5)',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Steps list */}
+      {/* Steps */}
       {expanded && (
-        <div className="px-3 pb-3">
-          {STEPS.map((step) => {
+        <div className="relative px-4 pb-4 space-y-2">
+          {/* Progress track line */}
+          <div className="absolute left-[2.15rem] top-0 bottom-4 w-[2px] bg-[#2A2A2A]" />
+
+          {STEPS.map((step, i) => {
             const done = progress[step.id];
             const Icon = step.icon;
+            const color = STEP_COLORS[i];
+            const isNext = !done && STEPS.slice(0, i).every((s) => progress[s.id]);
+
             return (
               <div
                 key={step.id}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
-                  done ? 'opacity-60' : 'hover:bg-[#1E1E1E]'
+                className={`relative flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
+                  done ? '' : isNext ? 'bg-[#C855F0]/5 border border-[#C855F0]/20' : 'hover:bg-[#ffffff05]'
                 }`}
               >
-                {/* Status icon */}
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                  done ? 'bg-emerald-500/20' : 'bg-[#2A2A2A]'
+                {/* Step circle */}
+                <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                  done
+                    ? 'bg-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
+                    : isNext
+                      ? 'border-2 border-[#C855F0] bg-[#C855F0]/10'
+                      : 'border border-[#3A3A3A] bg-[#1E1E1E]'
                 }`}>
                   {done ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   ) : (
-                    <Icon className="w-3.5 h-3.5 text-[#888]" />
+                    <Icon className="w-3.5 h-3.5" style={{ color: isNext ? '#C855F0' : '#666' }} />
                   )}
                 </div>
 
-                {/* Label */}
+                {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${done ? 'text-[#888] line-through' : 'text-white'}`}>
+                  <p className={`text-sm font-semibold ${done ? 'text-emerald-400' : 'text-white'}`}>
                     {step.label}
                   </p>
-                  <p className="text-xs text-[#555] truncate">{step.desc}</p>
+                  <p className={`text-xs mt-0.5 ${done ? 'text-emerald-400/60' : 'text-[#888]'}`}>
+                    {done ? 'Completed' : step.desc}
+                  </p>
                 </div>
 
                 {/* Action */}
                 {!done && (
                   <button
-                    onClick={() => handleGo(step)}
-                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#C855F0]/10 text-[#C855F0] text-xs font-semibold hover:bg-[#C855F0]/20 transition-colors"
+                    onClick={(e) => { e.stopPropagation(); handleGo(step); }}
+                    className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                      isNext
+                        ? 'bg-[#C855F0] text-white hover:bg-[#A040C8] shadow-[0_2px_10px_rgba(200,85,240,0.3)]'
+                        : 'bg-[#1E1E1E] text-[#BBB] border border-[#3A3A3A] hover:border-[#C855F0]/50 hover:text-white'
+                    }`}
                   >
-                    Go <ArrowRight className="w-3 h-3" />
+                    {isNext ? 'Start' : 'Go'} <ArrowRight className="w-3 h-3" />
                   </button>
                 )}
                 {done && (
-                  <span className="text-xs text-emerald-400 font-medium shrink-0">Done</span>
+                  <div className="shrink-0 w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  </div>
                 )}
               </div>
             );
           })}
 
-          {/* Complete button */}
+          {/* Claim button */}
           {allComplete && (
             <button
               onClick={() => {
@@ -211,7 +214,11 @@ export default function TutorialChecklist({ onNavigate }) {
                 setDismissed(true);
                 window.dispatchEvent(new CustomEvent('drst-tutorial-complete'));
               }}
-              className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-[#C855F0] to-[#22c55e] text-white font-bold text-sm transition-all hover:shadow-lg hover:shadow-[#C855F0]/20"
+              className="w-full mt-3 py-3.5 rounded-xl text-white font-bold text-sm transition-all hover:shadow-xl"
+              style={{
+                background: 'linear-gradient(135deg, #C855F0 0%, #A7ECDA 50%, #22c55e 100%)',
+                boxShadow: '0 4px 20px rgba(200,85,240,0.3)',
+              }}
             >
               Claim Achievement
             </button>
