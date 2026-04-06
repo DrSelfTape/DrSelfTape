@@ -1563,6 +1563,14 @@ export default function DrSelfTapeApp() {
             }} />
           </div>
 
+          {/* Logo watermark */}
+          <div style={{
+            position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            pointerEvents: "none", zIndex: 0, opacity: 0.025,
+          }}>
+            <img src={logo} alt="" style={{ width: 300, height: "auto", userSelect: "none" }} draggable={false} />
+          </div>
+
           {/* Scrollable Content Area — sits between fixed top and bottom bars */}
           <div style={{
             flex: 1,
@@ -1571,6 +1579,7 @@ export default function DrSelfTapeApp() {
             marginTop: "calc(50px + env(safe-area-inset-top, 0px))",
             marginBottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
             WebkitOverflowScrolling: "touch",
+            position: "relative", zIndex: 1,
           }}>
             {currentPanel ? (
               <PanelScreen panelId={currentPanel} onBack={() => setCurrentPanel(null)} />
