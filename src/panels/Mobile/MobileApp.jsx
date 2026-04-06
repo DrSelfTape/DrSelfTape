@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
-import { fetchAuditionsThunk, fetchAuditionStatsThunk } from "../../redux/features/auditions/auditionsSlice";
+import { fetchAuditionsThunk, fetchAuditionStatsThunk, createAuditionThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
@@ -578,13 +578,19 @@ function AuditionsScreen() {
     if (!addForm.project.trim()) return;
     setAddSaving(true);
     try {
-      const { createAuditionThunk } = await import("../../redux/features/auditions/auditionsSlice");
-      await dispatch(createAuditionThunk(addForm)).unwrap();
+      // Clean empty fields so backend doesn't choke on empty strings
+      const payload = { ...addForm };
+      if (!payload.callback_date) delete payload.callback_date;
+      Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
+      payload.project = addForm.project; // always include project
+
+      await dispatch(createAuditionThunk(payload)).unwrap();
       dispatch(fetchAuditionsThunk());
       setAddForm({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
       setShowAddForm(false);
     } catch (err) {
       console.error('Failed to add audition:', err);
+      alert(typeof err === 'string' ? err : 'Failed to add audition. Please try again.');
     }
     setAddSaving(false);
   };
