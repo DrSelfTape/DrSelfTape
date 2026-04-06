@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { HeartHandshake } from "lucide-react";
-import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats, fetchGreenRoomMessages } from "../redux/features/readers/readersMatchSlice";
+import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats, fetchGreenRoomMessages, fetchActivityFeed } from "../redux/features/readers/readersMatchSlice";
 
 const SocketContext = React.createContext(null);
 const isMobile = () => window.innerWidth < 768;
@@ -50,9 +50,10 @@ export const SocketProvider = ({ children }) => {
         setTimeout(() => setLikeToast(null), 6000);
         break;
 
-      // Mutual match — refresh matches + navigate to "It's a Scene"
+      // Mutual match — refresh matches + activity feed + navigate to "It's a Scene"
       case 'scene_partner_match':
         dispatch(fetchMatches());
+        dispatch(fetchActivityFeed());
         if (data?.match_id) {
           if (isMobile()) {
             // Use custom event for mobile tab navigation
@@ -70,8 +71,12 @@ export const SocketProvider = ({ children }) => {
         }
         break;
 
+      // New chat message — refresh messages for that match
+      // (already handled above, also refresh activity for session count)
+
       // Partner started the video call — show incoming call modal (auto-dismiss after 30s)
       case 'rehearsal_started':
+        dispatch(fetchActivityFeed());
         if (data?.room_url && data?.match_id) {
           setIncomingCall({
             matchId: data.match_id,

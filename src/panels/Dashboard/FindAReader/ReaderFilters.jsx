@@ -63,6 +63,7 @@ const ReaderFilters = ({ onClose }) => {
     };
 
     dispatch(setFiltersLocal(filters));
+    localStorage.setItem('drst-reader-filters', JSON.stringify(filters));
 
     try {
       await dispatch(updateReaderFilters(filters)).unwrap();
@@ -80,6 +81,7 @@ const ReaderFilters = ({ onClose }) => {
     setUnionStatus('Both');
     setAvailability('Any');
     setGender('Any');
+    localStorage.removeItem('drst-reader-filters');
   };
 
   return (

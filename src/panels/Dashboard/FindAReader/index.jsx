@@ -30,7 +30,19 @@ const FindAReader = () => {
 
   useEffect(() => {
     dispatch(fetchProfileThunk());
-    dispatch(fetchAvailableReaders());
+    // Restore saved filters and pass to API
+    try {
+      const saved = JSON.parse(localStorage.getItem('drst-reader-filters') || '{}');
+      if (Object.keys(saved).length > 0) {
+        const { setFiltersLocal } = require('../../../redux/features/readers/readersMatchSlice');
+        dispatch(setFiltersLocal(saved));
+        dispatch(fetchAvailableReaders(saved));
+      } else {
+        dispatch(fetchAvailableReaders());
+      }
+    } catch {
+      dispatch(fetchAvailableReaders());
+    }
   }, [dispatch]);
 
   const handlePhotoUpload = async (e) => {
