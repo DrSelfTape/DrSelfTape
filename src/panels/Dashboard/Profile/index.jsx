@@ -98,14 +98,21 @@ export default function Profile() {
     }
   };
 
+  const [validationPopup, setValidationPopup] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Frontend validation — only name is required
-    if (!form.first_name.trim() || !form.last_name.trim()) {
-      setToastType('error');
-      setToast('First and last name are required.');
-      setTimeout(() => setToast(null), 5000);
+    // Check all important fields and show a clear popup
+    const missing = [];
+    if (!form.first_name.trim()) missing.push('First Name');
+    if (!form.last_name.trim()) missing.push('Last Name');
+    if (!headshotFile && !headshotPreview) missing.push('Headshot Photo');
+    if (!form.bio.trim()) missing.push('Bio');
+    if (!form.union) missing.push('Union Status');
+
+    if (missing.length > 0) {
+      setValidationPopup(missing);
       return;
     }
     const fd = new FormData();
@@ -161,6 +168,45 @@ export default function Profile() {
 
       {/* Badge */}
       <ProfileCompleteBadge show={showBadge} onClose={() => setShowBadge(false)} />
+
+      {/* Validation Popup */}
+      {validationPopup && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="bg-[#1A1A2E] border border-red-500/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            style={{ animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
+          >
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-red-400" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Complete Your Profile</h3>
+            </div>
+            <p className="text-sm text-[#999] mb-4">
+              Please fill in the following before saving:
+            </p>
+            <div className="space-y-2 mb-6">
+              {validationPopup.map((field) => (
+                <div key={field} className="flex items-center gap-2 px-3 py-2 bg-red-500/8 border border-red-500/15 rounded-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
+                  <span className="text-sm text-red-300 font-medium">{field}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              onClick={() => setValidationPopup(null)}
+              className="w-full py-3 rounded-xl bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold text-sm transition-colors"
+            >
+              Got It
+            </button>
+          </div>
+          <style>{`
+            @keyframes badgePop {
+              from { opacity: 0; transform: scale(0.8) translateY(10px); }
+              to { opacity: 1; transform: scale(1) translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
 
       {/* Toast */}
       {toast && (
