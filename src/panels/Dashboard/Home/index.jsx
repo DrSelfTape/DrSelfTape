@@ -108,14 +108,6 @@ export default function DashboardHome() {
 
       <PendingLikesBanner />
 
-      {/* Centered logo header */}
-      <div className="flex flex-col items-center pb-3">
-        <div className="relative">
-          <img src="/logo.png" alt="Dr Self Tape" className="w-14 h-14 object-contain brightness-150" style={{ filter: 'brightness(1.5) drop-shadow(0 0 16px rgba(200,85,240,0.4))' }} />
-        </div>
-        <p className="text-[11px] font-bold uppercase tracking-[4px] text-[#BBBBBB] mt-2">Dr Self Tape</p>
-      </div>
-
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <div className="flex items-center gap-3">
