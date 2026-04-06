@@ -220,23 +220,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "24px 0" }}>
-            <div style={{ flex: 1, height: 1, background: BORDER }} />
-            <span style={{ fontSize: 11, color: "#666666", fontWeight: 500 }}>Or</span>
-            <div style={{ flex: 1, height: 1, background: BORDER }} />
-          </div>
 
-          <div style={{ display: "flex", gap: 16, justifyContent: "center" }}>
-            {[
-              { label: "Google", icon: <svg width="20" height="20" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> },
-              { label: "Apple", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill={TEXT}><path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.18 0-.36-.02-.53-.06-.01-.09-.02-.19-.02-.29 0-1.07.47-2.25 1.18-3.07.71-.83 1.98-1.54 2.99-1.57.03.11.05.21.05.32zM21.395 17.77c-.45 1.06-1.01 2.06-1.81 2.92-.69.73-1.55 1.61-2.67 1.61-.98 0-1.63-.6-2.77-.6-1.17 0-1.86.6-2.78.6-1.06 0-1.87-.8-2.63-1.61-2.02-2.18-3.57-6.16-1.49-8.86.75-1.04 2.15-1.7 3.44-1.7 1.07 0 2.09.72 2.73.72.63 0 1.8-.87 3.04-.74.52.02 1.97.21 2.9 1.58-.08.04-1.73 1.01-1.71 3.02.02 2.4 2.11 3.2 2.14 3.21-.02.06-.33 1.15-1.09 2.27z"/></svg> },
-              { label: "Facebook", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg> },
-            ].map(s => (
-              <button key={s.label} style={{ width: 52, height: 52, borderRadius: "50%", background: "#1E1E1E", border: "1px solid #3A3A3A", color: TEXT, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", padding: 0 }}>
-                {s.icon}
-              </button>
-            ))}
-          </div>
         </div>
 
         <p style={{ marginTop: 24, fontSize: 13, color: TEXT2, position: "relative", zIndex: 1, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.7s" }}>

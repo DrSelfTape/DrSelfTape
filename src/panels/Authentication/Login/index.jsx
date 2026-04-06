@@ -112,26 +112,6 @@ export const Login = () => {
         <p className='mt-2 text-sm text-[#888]'>Welcome back to Dr. Self Tape</p>
 
         <div className='mt-8'>
-          <div>
-            <p className='text-xs font-medium text-[#666] pb-2 uppercase tracking-widest'>Continue with</p>
-            <div className='grid grid-cols-2 gap-3'>
-              <div className='h-[42px] inline-flex w-full justify-center items-center rounded-lg cursor-pointer border border-[#2a2d35] bg-[#111318] hover:border-[#C855F0]/50 transition-colors'>
-                <GoogleIcon />
-              </div>
-              <div className='h-[42px] inline-flex w-full justify-center items-center rounded-lg cursor-pointer border border-[#2a2d35] bg-[#111318] hover:border-[#C855F0]/50 transition-colors'>
-                <AppleIcon />
-              </div>
-            </div>
-
-            <div className='relative my-6'>
-              <div className='absolute inset-0 flex items-center'>
-                <div className='w-full border-t border-[#2a2d35]' />
-              </div>
-              <div className='relative flex justify-center text-xs'>
-                <span className='bg-[#080a0f] px-3 text-[#555] uppercase tracking-widest'>or</span>
-              </div>
-            </div>
-          </div>
           <form onSubmit={handleSubmit}>
             <div className='space-y-8'>
               <CustomInput dark
