@@ -26,6 +26,7 @@ export const swipeOnReader = createAsyncThunk(
         to_user_id: reader_id,
         direction: action,
       });
+      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.SWIPE, { direction: action }); } catch {}
       return data?.data || data;
     } catch (error) {
       return rejectWithValue(
