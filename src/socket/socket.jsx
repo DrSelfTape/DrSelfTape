@@ -64,6 +64,12 @@ export const SocketProvider = ({ children }) => {
         }
         break;
 
+      // Admin broadcast — show toast
+      case 'admin_broadcast':
+        setLikeToast({ fromName: data?.title || 'Dr Self Tape', message: data?.message });
+        setTimeout(() => setLikeToast(null), 8000);
+        break;
+
       // New chat message — refresh messages for that match
       case 'new_message':
         if (data?.match_id) {
@@ -171,8 +177,12 @@ export const SocketProvider = ({ children }) => {
               <HeartHandshake className="w-5 h-5 text-[#C855F0]" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-semibold">{likeToast.fromName} wants to read with you!</p>
-              <p className="text-[#A7ECDA] text-xs mt-0.5">Tap to see who &rarr;</p>
+              <p className="text-white text-sm font-semibold">
+                {likeToast.message ? likeToast.fromName : `${likeToast.fromName} wants to read with you!`}
+              </p>
+              <p className="text-[#A7ECDA] text-xs mt-0.5">
+                {likeToast.message || 'Tap to see who →'}
+              </p>
             </div>
             <button
               onClick={(e) => { e.stopPropagation(); setLikeToast(null); }}

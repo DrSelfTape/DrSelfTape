@@ -9,12 +9,14 @@ const NOTIF_ICONS = {
   scene_partner_match: Clapperboard,
   rehearsal_started: Clapperboard,
   new_message: MessageSquare,
+  admin_broadcast: Bell,
 };
 
 const NOTIF_COLORS = {
   scene_partner_like: '#C855F0',
   scene_partner_match: '#A7ECDA',
   rehearsal_started: '#eab308',
+  admin_broadcast: '#FCE072',
 };
 
 function timeAgo(dateStr) {
