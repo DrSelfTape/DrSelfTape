@@ -208,7 +208,7 @@ export default function DashboardHome() {
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-[#666666] text-center py-12">No audition data yet</p>
+                <p className="text-sm text-[#888888] text-center py-12">No audition data yet</p>
               )}
             </CardContent>
           </Card>
@@ -225,7 +225,7 @@ export default function DashboardHome() {
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart data={funnelData} layout="vertical" barSize={28}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" horizontal={false} />
-                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: '#666666' }} axisLine={false} tickLine={false} />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: '#888888' }} axisLine={false} tickLine={false} />
                     <YAxis type="category" dataKey="name" tick={{ fontSize: 13, fill: '#999999', fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
                     <Tooltip formatter={(value) => [value, 'Auditions']} contentStyle={{ borderRadius: '8px', border: '1px solid #3A3A3A', backgroundColor: '#1E1E1E', color: '#fff' }} />
                     <Bar dataKey="count" radius={[0, 6, 6, 0]}>
@@ -236,7 +236,7 @@ export default function DashboardHome() {
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-[#666666] text-center py-12">Submit auditions to see your pipeline</p>
+                <p className="text-sm text-[#888888] text-center py-12">Submit auditions to see your pipeline</p>
               )}
             </CardContent>
           </Card>
@@ -258,10 +258,10 @@ export default function DashboardHome() {
                 <div key={sub.id} className="flex items-center justify-between py-2.5">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold text-white truncate">{sub.project_name}</p>
-                    <p className="text-xs text-[#999999] truncate">{sub.role} {sub.casting_director ? `· ${sub.casting_director}` : ''}</p>
+                    <p className="text-xs text-[#AAAAAA] truncate">{sub.role} {sub.casting_director ? `· ${sub.casting_director}` : ''}</p>
                   </div>
                   <div className="flex items-center gap-3 ml-4 shrink-0">
-                    <span className="text-xs text-[#666666]">
+                    <span className="text-xs text-[#888888]">
                       {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                     </span>
                     <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
