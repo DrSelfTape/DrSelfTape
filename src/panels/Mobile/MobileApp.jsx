@@ -1559,13 +1559,10 @@ export default function DrSelfTapeApp() {
               <img src={logo} alt="Dr Self Tape" style={{ width: 30, height: 30, objectFit: "contain" }} />
               <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <ThemeToggle compact />
-              <NotificationBell onNavigate={({ panel, tab }) => {
-                if (panel) setCurrentPanel(panel);
-                if (tab) { setCurrentPanel(null); setTab(tab); }
-              }} />
-            </div>
+            <NotificationBell onNavigate={({ panel, tab }) => {
+              if (panel) setCurrentPanel(panel);
+              if (tab) { setCurrentPanel(null); setTab(tab); }
+            }} />
           </div>
 
           {/* Logo watermark */}

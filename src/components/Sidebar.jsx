@@ -104,10 +104,9 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Availability toggle + Theme toggle */}
-      <div className="px-4 pb-2 flex items-center gap-2">
+      {/* Availability toggle */}
+      <div className="px-4 pb-2">
         <AvailabilityToggle compact />
-        <ThemeToggle compact />
       </div>
 
       {/* User footer */}
