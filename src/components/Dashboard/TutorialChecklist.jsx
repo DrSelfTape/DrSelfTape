@@ -85,7 +85,7 @@ export default function TutorialChecklist({ onNavigate }) {
 
   return (
     <div className="relative rounded-2xl overflow-hidden border border-[#C855F0]/20" style={{
-      background: 'linear-gradient(135deg, #1a0d24 0%, #111318 40%, #0f1a1a 100%)',
+      background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-input) 40%, var(--bg-deepest) 100%)',
     }}>
       {/* Subtle glow */}
       <div className="absolute inset-0 pointer-events-none" style={{
@@ -106,13 +106,13 @@ export default function TutorialChecklist({ onNavigate }) {
               {allComplete ? <Trophy className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
             </div>
             {!allComplete && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#FCE072] text-[#0D0D0D] text-[10px] font-bold flex items-center justify-center shadow-md">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#FCE072] text-[10px] font-bold flex items-center justify-center shadow-md" style={{ color: 'var(--bg-deep)' }}>
                 {totalSteps - completedCount}
               </span>
             )}
           </div>
           <div className="text-left">
-            <p className="text-base font-bold text-white">
+            <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
               {allComplete ? 'Tutorial Complete!' : 'Your Setup Checklist'}
             </p>
             <p className="text-xs text-[#A7ECDA] font-medium">
@@ -124,7 +124,7 @@ export default function TutorialChecklist({ onNavigate }) {
           {/* Circular progress */}
           <div className="relative w-10 h-10">
             <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" r="15.5" fill="none" stroke="#2A2A2A" strokeWidth="3" />
+              <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--border-default)" strokeWidth="3" />
               <circle cx="18" cy="18" r="15.5" fill="none"
                 stroke={allComplete ? '#22c55e' : '#C855F0'}
                 strokeWidth="3" strokeLinecap="round"
@@ -132,11 +132,11 @@ export default function TutorialChecklist({ onNavigate }) {
                 className="transition-all duration-700"
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white">
+            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold" style={{ color: 'var(--text-primary)' }}>
               {percent}%
             </span>
           </div>
-          {expanded ? <ChevronUp className="w-4 h-4 text-[#888]" /> : <ChevronDown className="w-4 h-4 text-[#888]" />}
+          {expanded ? <ChevronUp className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} /> : <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />}
         </div>
       </button>
 
@@ -144,7 +144,7 @@ export default function TutorialChecklist({ onNavigate }) {
       {expanded && (
         <div className="relative px-4 pb-4 space-y-2">
           {/* Progress track line */}
-          <div className="absolute left-[2.15rem] top-0 bottom-4 w-[2px] bg-[#2A2A2A]" />
+          <div className="absolute left-[2.15rem] top-0 bottom-4 w-[2px]" style={{ background: 'var(--border-default)' }} />
 
           {STEPS.map((step, i) => {
             const done = progress[step.id];
@@ -165,21 +165,21 @@ export default function TutorialChecklist({ onNavigate }) {
                     ? 'bg-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
                     : isNext
                       ? 'border-2 border-[#C855F0] bg-[#C855F0]/10'
-                      : 'border border-[#3A3A3A] bg-[#1E1E1E]'
-                }`}>
+                      : ''
+                }`} style={!done && !isNext ? { border: '1px solid var(--border-active)', background: 'var(--bg-surface)' } : {}}>
                   {done ? (
                     <Check className="w-4 h-4 text-white" strokeWidth={3} />
                   ) : (
-                    <Icon className="w-3.5 h-3.5" style={{ color: isNext ? '#C855F0' : '#666' }} />
+                    <Icon className="w-3.5 h-3.5" style={{ color: isNext ? '#C855F0' : 'var(--text-muted)' }} />
                   )}
                 </div>
 
                 {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold ${done ? 'text-emerald-400' : 'text-white'}`}>
+                  <p className={`text-sm font-semibold ${done ? 'text-emerald-400' : ''}`} style={!done ? { color: 'var(--text-primary)' } : {}}>
                     {step.label}
                   </p>
-                  <p className={`text-xs mt-0.5 ${done ? 'text-emerald-400/60' : 'text-[#888]'}`}>
+                  <p className={`text-xs mt-0.5 ${done ? 'text-emerald-400/60' : ''}`} style={!done ? { color: 'var(--text-secondary)' } : {}}>
                     {done ? 'Completed' : step.desc}
                   </p>
                 </div>
@@ -191,8 +191,9 @@ export default function TutorialChecklist({ onNavigate }) {
                     className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                       isNext
                         ? 'bg-[#C855F0] text-white hover:bg-[#A040C8] shadow-[0_2px_10px_rgba(200,85,240,0.3)]'
-                        : 'bg-[#1E1E1E] text-[#BBB] border border-[#3A3A3A] hover:border-[#C855F0]/50 hover:text-white'
+                        : 'hover:border-[#C855F0]/50 hover:text-white'
                     }`}
+                    style={!isNext ? { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-active)' } : {}}
                   >
                     {isNext ? 'Start' : 'Go'} <ArrowRight className="w-3 h-3" />
                   </button>

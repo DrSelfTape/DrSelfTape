@@ -191,13 +191,14 @@ const GreenRoomChat = (props = {}) => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] flex-col bg-[#0D0D0D]">
+    <div className="flex h-[calc(100vh-80px)] flex-col" style={{ background: 'var(--bg-deep)' }}>
 
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-[#1E1E1E] px-4 py-3">
+      <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--bg-surface)' }}>
         <button
           onClick={() => navigate('/dashboard/green-room')}
-          className="rounded-full p-1.5 text-[#999999] transition-colors hover:bg-[#1E1E1E] hover:text-white"
+          className="rounded-full p-1.5 transition-colors hover:text-white"
+          style={{ color: 'var(--text-secondary)' }}
         >
           <ArrowLeft size={18} />
         </button>
@@ -208,7 +209,7 @@ const GreenRoomChat = (props = {}) => {
         </div>
 
         <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-semibold truncate">{partnerName}</p>
+          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{partnerName}</p>
           <p className="text-[#22C55E] text-xs flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] inline-block" />
             Online
@@ -250,7 +251,8 @@ const GreenRoomChat = (props = {}) => {
         </button>
         <button
           onClick={handleAISession}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all border border-[#3A3A3A] text-[#999999] hover:bg-[#1E1E1E] hover:text-white"
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all hover:text-white"
+          style={{ border: '1px solid var(--border-active)', color: 'var(--text-secondary)' }}
         >
           <Bot size={14} />
           Practice with AI First
@@ -270,8 +272,8 @@ const GreenRoomChat = (props = {}) => {
             <div className="w-16 h-16 rounded-full bg-[#C855F0]/10 flex items-center justify-center">
               <Video size={28} color="#C855F0" />
             </div>
-            <p className="text-white font-semibold">You matched with {partnerName}!</p>
-            <p className="text-[#666666] text-sm">
+            <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>You matched with {partnerName}!</p>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
               Say hi, share your sides, then start a live rehearsal together — or practice with the AI first.
             </p>
           </div>
@@ -289,10 +291,10 @@ const GreenRoomChat = (props = {}) => {
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-[#1E1E1E] bg-[#1A1A1A] px-4 py-3">
+      <div className="px-4 py-3" style={{ borderTop: '1px solid var(--bg-surface)', background: 'var(--bg-card)' }}>
         {/* Upload sides preview */}
         {sidesFile && (
-          <div className="mb-2 flex items-center gap-2 rounded-xl bg-[#2A2A2A] px-3 py-2 text-xs text-[#999999]">
+          <div className="mb-2 flex items-center gap-2 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--border-default)', color: 'var(--text-secondary)' }}>
             <FileText size={14} className="text-[#C855F0]" />
             <span className="flex-1 truncate">{sidesFile.name}</span>
             <button onClick={() => setSidesFile(null)}><X size={12} /></button>
@@ -305,47 +307,51 @@ const GreenRoomChat = (props = {}) => {
             <button
               type="button"
               onClick={() => setShowActions((v) => !v)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2A2A2A] border border-[#3A3A3A] text-[#999999] hover:text-white transition-colors"
+              className="flex h-10 w-10 items-center justify-center rounded-full hover:text-white transition-colors"
+              style={{ background: 'var(--border-default)', border: '1px solid var(--border-active)', color: 'var(--text-secondary)' }}
             >
               {showActions ? <ChevronUp size={18} /> : <Paperclip size={18} />}
             </button>
 
             {showActions && (
-              <div className="absolute bottom-12 left-0 bg-[#1E1E1E] border border-[#3A3A3A] rounded-2xl overflow-hidden shadow-xl w-56 z-50">
+              <div className="absolute bottom-12 left-0 rounded-2xl overflow-hidden shadow-xl w-56 z-50" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-active)' }}>
                 <button
                   type="button"
                   onClick={() => { fileInputRef.current?.click(); setShowActions(false); }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-[#2A2A2A] transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
                 >
                   <FileText size={16} className="text-[#C855F0]" />
                   <div className="text-left">
                     <p className="font-medium">Share Sides</p>
-                    <p className="text-xs text-[#666666]">PDF or image of your sides</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>PDF or image of your sides</p>
                   </div>
                 </button>
-                <div className="border-t border-[#3A3A3A]" />
+                <div style={{ borderTop: '1px solid var(--border-active)' }} />
                 <button
                   type="button"
                   onClick={handleStartRehearsal}
                   disabled={startingRehearsal}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-[#2A2A2A] transition-colors disabled:opacity-50"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors disabled:opacity-50"
+                  style={{ color: 'var(--text-primary)' }}
                 >
                   <Video size={16} className="text-[#C855F0]" />
                   <div className="text-left">
                     <p className="font-medium">Start Live Rehearsal</p>
-                    <p className="text-xs text-[#666666]">Video call via Daily.co</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Video call via Daily.co</p>
                   </div>
                 </button>
-                <div className="border-t border-[#3A3A3A]" />
+                <div style={{ borderTop: '1px solid var(--border-active)' }} />
                 <button
                   type="button"
                   onClick={handleAISession}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-white hover:bg-[#2A2A2A] transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors"
+                  style={{ color: 'var(--text-primary)' }}
                 >
                   <Bot size={16} className="text-[#C855F0]" />
                   <div className="text-left">
                     <p className="font-medium">AI Scene Partner</p>
-                    <p className="text-xs text-[#666666]">Practice lines with AI reader</p>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Practice lines with AI reader</p>
                   </div>
                 </button>
               </div>
@@ -366,7 +372,8 @@ const GreenRoomChat = (props = {}) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Message ${partnerName.split(' ')[0]}...`}
-            className="flex-1 rounded-full border border-[#3A3A3A] bg-[#2A2A2A] px-4 py-2.5 text-sm text-white placeholder-[#666666] outline-none transition-colors focus:border-[#C855F0]"
+            className="flex-1 rounded-full px-4 py-2.5 text-sm outline-none transition-colors focus:border-[#C855F0]"
+            style={{ border: '1px solid var(--border-active)', background: 'var(--border-default)', color: 'var(--text-primary)', '--tw-placeholder-opacity': 1 }}
           />
 
           <button

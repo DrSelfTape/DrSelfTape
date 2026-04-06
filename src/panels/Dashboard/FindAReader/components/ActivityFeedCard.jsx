@@ -10,7 +10,7 @@ export default function ActivityFeedCard({ type, count, label, pulse = false }) 
   const { Icon, color, bg } = ICONS[type] || ICONS.available;
 
   return (
-    <div className="flex items-center gap-3 bg-[#0D0D0D] rounded-xl p-3 border border-[#1E1E1E]">
+    <div className="flex items-center gap-3 rounded-xl p-3" style={{ background: 'var(--bg-deep)', border: '1px solid var(--bg-surface)' }}>
       <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ backgroundColor: bg }}>
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
@@ -22,9 +22,9 @@ export default function ActivityFeedCard({ type, count, label, pulse = false }) 
               <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: color }} />
             </span>
           )}
-          <span className="text-white text-sm font-semibold">{count}</span>
+          <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{count}</span>
         </div>
-        <p className="text-[#999999] text-xs">{label}</p>
+        <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{label}</p>
       </div>
     </div>
   );

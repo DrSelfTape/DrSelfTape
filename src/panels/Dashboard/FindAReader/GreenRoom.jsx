@@ -22,9 +22,9 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
   }, [dispatch]);
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0f0f1a] px-4 py-8">
+    <div className="min-h-[calc(100vh-80px)] px-4 py-8" style={{ background: 'var(--bg-deepest)' }}>
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-bold text-white">Green Room</h1>
+        <h1 className="mb-6 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Green Room</h1>
 
         {matchesLoading && (
           <div className="flex h-60 items-center justify-center">
@@ -37,8 +37,8 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
             <div className="w-16 h-16 rounded-full bg-[#C855F0]/10 flex items-center justify-center mb-4">
               <Users2 className="h-8 w-8 text-[#C855F0]" />
             </div>
-            <p className="text-lg font-bold text-white mb-2">Your Green Room is empty</p>
-            <p className="text-sm text-[#999999] mb-6 max-w-xs">
+            <p className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Your Green Room is empty</p>
+            <p className="text-sm mb-6 max-w-xs" style={{ color: 'var(--text-secondary)' }}>
               Match with other actors to start running lines together
             </p>
 

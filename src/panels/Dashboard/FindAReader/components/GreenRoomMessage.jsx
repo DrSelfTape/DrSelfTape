@@ -15,7 +15,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
   if (type === 'system') {
     return (
       <div className="flex justify-center my-3">
-        <span className="text-xs text-[#666666] bg-[#1A1A1A] border border-[#2A2A2A] rounded-full px-4 py-1.5">
+        <span className="text-xs rounded-full px-4 py-1.5" style={{ color: 'var(--text-muted)', background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
           {text}
         </span>
       </div>
@@ -29,10 +29,10 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
         <div
           className={`max-w-[75%] rounded-2xl px-4 py-3 ${
             isOwn
-              ? 'rounded-br-md text-white'
-              : 'bg-[#2A2A2A] rounded-bl-md text-white'
+              ? 'rounded-br-md'
+              : 'rounded-bl-md'
           }`}
-          style={isOwn ? { background: 'linear-gradient(135deg, #C855F0, #E88BF5)' } : {}}
+          style={isOwn ? { background: 'linear-gradient(135deg, #C855F0, #E88BF5)', color: 'white' } : { background: 'var(--border-default)', color: 'var(--text-primary)' }}
         >
           {!isOwn && message.senderName && (
             <p className="text-[10px] font-semibold mb-1 text-[#C855F0]">{message.senderName}</p>
@@ -48,12 +48,12 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{fileName}</p>
-              <p className={`text-xs flex items-center gap-1 ${isOwn ? 'text-white/70' : 'text-[#999999]'}`}>
+              <p className={`text-xs flex items-center gap-1 ${isOwn ? 'text-white/70' : ''}`} style={!isOwn ? { color: 'var(--text-secondary)' } : {}}>
                 <ExternalLink size={10} /> Open file
               </p>
             </div>
           </a>
-          <p className={`text-[10px] mt-2 ${isOwn ? 'text-white/60' : 'text-[#666666]'} text-right`}>{time}</p>
+          <p className={`text-[10px] mt-2 text-right ${isOwn ? 'text-white/60' : ''}`} style={!isOwn ? { color: 'var(--text-muted)' } : {}}>{time}</p>
         </div>
       </div>
     );
@@ -71,15 +71,15 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
       )}
       <div
         className={`max-w-[72%] rounded-2xl px-4 py-2.5 ${
-          isOwn ? 'rounded-br-sm' : 'rounded-bl-sm bg-[#2A2A2A]'
+          isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
         }`}
-        style={isOwn ? { background: 'linear-gradient(135deg, #C855F0, #E88BF5)' } : {}}
+        style={isOwn ? { background: 'linear-gradient(135deg, #C855F0, #E88BF5)' } : { background: 'var(--border-default)' }}
       >
         {!isOwn && message.senderName && (
           <p className="text-[10px] font-semibold mb-0.5 text-[#C855F0]">{message.senderName}</p>
         )}
-        <p className="text-sm leading-relaxed text-white">{text}</p>
-        <p className={`text-[10px] mt-1 text-right ${isOwn ? 'text-white/60' : 'text-[#666666]'}`}>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{text}</p>
+        <p className={`text-[10px] mt-1 text-right ${isOwn ? 'text-white/60' : ''}`} style={!isOwn ? { color: 'var(--text-muted)' } : {}}>
           {time}
         </p>
       </div>

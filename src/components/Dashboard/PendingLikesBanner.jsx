@@ -21,13 +21,17 @@ export default function PendingLikesBanner({ onNavigate }) {
 
   return (
     <div
-      className="relative bg-gradient-to-r from-[#2a1540] via-[#1a1035] to-[#2a1540] rounded-2xl p-4 border border-[#C855F0]/20 cursor-pointer hover:border-[#C855F0]/40 transition-all duration-300 overflow-hidden"
-      style={{ animation: 'slideDown 0.4s ease-out forwards' }}
+      className="relative rounded-2xl p-4 border border-[#C855F0]/20 cursor-pointer hover:border-[#C855F0]/40 transition-all duration-300 overflow-hidden"
+      style={{
+        background: 'linear-gradient(to right, var(--bg-elevated), var(--bg-card), var(--bg-elevated))',
+        animation: 'slideDown 0.4s ease-out forwards',
+      }}
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(200,85,240,0.1),_transparent_60%)]" />
       <button
         onClick={(e) => { e.stopPropagation(); setDismissed(true); }}
-        className="absolute top-3 right-3 z-10 text-[#666666] hover:text-white transition-colors"
+        className="absolute top-3 right-3 z-10 hover:text-white transition-colors"
+        style={{ color: 'var(--text-muted)' }}
       >
         <X className="w-4 h-4" />
       </button>
@@ -36,10 +40,10 @@ export default function PendingLikesBanner({ onNavigate }) {
           <HeartHandshake className="w-5 h-5 text-[#C855F0]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-semibold">
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
             {count} {count === 1 ? 'actor wants' : 'actors want'} to read with you!
           </p>
-          <p className="text-[#999999] text-xs mt-0.5">Tap to see who</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Tap to see who</p>
         </div>
         <button className="bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold px-4 py-2 rounded-xl transition-all text-xs whitespace-nowrap">
           See Who

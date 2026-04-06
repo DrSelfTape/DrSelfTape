@@ -11,14 +11,20 @@ export default function FindAReaderCTA() {
   return (
     <div
       onClick={() => navigate('/dashboard/find-a-reader')}
-      className="bg-gradient-to-r from-[#0f1a1a] via-[#121c1c] to-[#1a0d24] rounded-2xl p-6 border border-[rgba(167,236,218,0.15)] cursor-pointer hover:border-[rgba(167,236,218,0.3)] hover:shadow-xl hover:shadow-[#A7ECDA]/5 transition-all duration-300 group relative overflow-hidden"
+      className="rounded-2xl p-6 border cursor-pointer hover:shadow-xl hover:shadow-[#A7ECDA]/5 transition-all duration-300 group relative overflow-hidden"
+      style={{
+        background: 'linear-gradient(to right, var(--bg-deepest), var(--bg-card), var(--bg-elevated))',
+        borderColor: 'rgba(167,236,218,0.15)',
+      }}
+      onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(167,236,218,0.3)'}
+      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(167,236,218,0.15)'}
     >
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_rgba(167,236,218,0.08),_transparent_60%)]" />
       <div className="relative flex items-center justify-between gap-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
             <Users2 className="w-5 h-5 text-[#A7ECDA]" />
-            <h2 className="text-white text-lg font-bold">Find a Reader</h2>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Find a Reader</h2>
           </div>
           <div className="flex items-center gap-2 mb-1">
             <span className="relative flex h-2.5 w-2.5">
@@ -38,7 +44,7 @@ export default function FindAReaderCTA() {
             </div>
           )}
         </div>
-        <button className="bg-[#A7ECDA] hover:bg-[#8ed4c2] text-[#0D0D0D] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer text-sm group-hover:shadow-lg group-hover:shadow-[#A7ECDA]/20">
+        <button className="bg-[#A7ECDA] hover:bg-[#8ed4c2] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer text-sm group-hover:shadow-lg group-hover:shadow-[#A7ECDA]/20" style={{ color: 'var(--bg-deep)' }}>
           Find Readers &rarr;
         </button>
       </div>

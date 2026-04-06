@@ -103,9 +103,10 @@ export default function NotificationBell({ onNavigate }) {
           setOpen(next);
           if (next) dispatch(getNotifications());
         }}
-        className="relative w-10 h-10 rounded-xl bg-[#1E1E1E] border border-[#2A2A2A] flex items-center justify-center hover:bg-[#252525] transition-colors"
+        className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
+        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
       >
-        <Bell className="w-[18px] h-[18px] text-[#999]" />
+        <Bell className="w-[18px] h-[18px]" style={{ color: 'var(--text-secondary)' }} />
         {unread.length > 0 && (
           <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-[#C855F0] text-white text-[10px] font-bold flex items-center justify-center px-1">
             {unread.length > 9 ? '9+' : unread.length}
@@ -116,13 +117,14 @@ export default function NotificationBell({ onNavigate }) {
       {/* Dropdown panel */}
       {open && (
         <div
-          className="absolute right-0 top-12 w-[340px] max-h-[420px] bg-[#1A1A2E] border border-[#2A2A2A] rounded-2xl shadow-2xl z-[100] overflow-hidden"
+          className="absolute right-0 top-12 w-[340px] max-h-[420px] rounded-2xl shadow-2xl z-[100] overflow-hidden"
+          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
           style={{ animation: 'fadeIn 0.15s ease-out' }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-[#2A2A2A]">
-            <h3 className="text-sm font-bold text-white">Notifications</h3>
-            <button onClick={() => setOpen(false)} className="text-[#666] hover:text-white">
+          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border-default)' }}>
+            <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
+            <button onClick={() => setOpen(false)} className="hover:text-white" style={{ color: 'var(--text-muted)' }}>
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -130,14 +132,14 @@ export default function NotificationBell({ onNavigate }) {
           {/* List */}
           <div className="overflow-y-auto max-h-[340px]">
             {loading && (
-              <p className="text-center text-[#666] text-xs py-8">Loading...</p>
+              <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>Loading...</p>
             )}
 
             {!loading && sorted.length === 0 && (
               <div className="flex flex-col items-center justify-center py-10 px-4">
-                <Bell className="w-8 h-8 text-[#333] mb-3" />
-                <p className="text-sm text-[#666]">No notifications yet</p>
-                <p className="text-xs text-[#444] mt-1">You'll see activity here when actors interact with you</p>
+                <Bell className="w-8 h-8 mb-3" style={{ color: 'var(--text-dim)' }} />
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No notifications yet</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>You'll see activity here when actors interact with you</p>
               </div>
             )}
 
@@ -162,7 +164,7 @@ export default function NotificationBell({ onNavigate }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className={`text-sm truncate ${isUnread ? 'text-white font-semibold' : 'text-[#999] font-medium'}`}>
+                      <p className={`text-sm truncate ${isUnread ? 'font-semibold' : 'font-medium'}`} style={{ color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                         {notif.title}
                       </p>
                       {isUnread && (
@@ -170,9 +172,9 @@ export default function NotificationBell({ onNavigate }) {
                       )}
                     </div>
                     {notif.message && (
-                      <p className="text-xs text-[#666] truncate mt-0.5">{notif.message}</p>
+                      <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{notif.message}</p>
                     )}
-                    <p className="text-[10px] text-[#444] mt-1">{timeAgo(notif.created_at)}</p>
+                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>{timeAgo(notif.created_at)}</p>
                   </div>
                 </div>
               );

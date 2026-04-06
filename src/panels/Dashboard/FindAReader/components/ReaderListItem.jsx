@@ -23,7 +23,7 @@ const ReaderListItem = ({ match, onClick }) => {
     : '';
 
   return (
-    <div className="rounded-xl border border-[#2A2A2A] bg-[#1E1E1E] p-5 shadow-sm">
+    <div className="rounded-xl p-5 shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="relative shrink-0">
@@ -33,13 +33,13 @@ const ReaderListItem = ({ match, onClick }) => {
             initials={initials}
             className="h-16 w-16"
           />
-          <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-[#1E1E1E]" />
+          <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500" style={{ borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--bg-surface)' }} />
         </div>
 
         <div className="min-w-0 flex-1 space-y-2">
           {/* Name + Union */}
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-bold text-white truncate">
+            <h4 className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
               {other?.name || 'Actor'}
             </h4>
             {unionLabel && (
@@ -48,19 +48,19 @@ const ReaderListItem = ({ match, onClick }) => {
               </span>
             )}
             {time && (
-              <span className="ml-auto text-[10px] text-[#555]">{time}</span>
+              <span className="ml-auto text-[10px]" style={{ color: 'var(--text-dim)' }}>{time}</span>
             )}
           </div>
 
           {/* Location + Experience */}
           <div className="flex items-center gap-3 flex-wrap">
             {other?.based_in && (
-              <span className="flex items-center gap-1 text-xs text-[#888]">
+              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <MapPin size={10} />{other.based_in}
               </span>
             )}
             {other?.years_experience && (
-              <span className="flex items-center gap-1 text-xs text-[#888]">
+              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <Clock size={10} />{other.years_experience}yr{other.years_experience !== 1 ? 's' : ''}
               </span>
             )}
@@ -68,16 +68,16 @@ const ReaderListItem = ({ match, onClick }) => {
 
           {/* Last message or bio */}
           {match?.last_message ? (
-            <p className="truncate text-xs text-[#666]">{match.last_message}</p>
+            <p className="truncate text-xs" style={{ color: 'var(--text-muted)' }}>{match.last_message}</p>
           ) : other?.bio ? (
-            <p className="line-clamp-2 text-xs leading-relaxed text-[#999]">{other.bio}</p>
+            <p className="line-clamp-2 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{other.bio}</p>
           ) : null}
 
           {/* Genres */}
           {other?.genres?.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {other.genres.map((g) => (
-                <span key={g} className="rounded-full bg-[#2A2A2A] px-2 py-0.5 text-[10px] text-[#AAAAAA]">
+                <span key={g} className="rounded-full px-2 py-0.5 text-[10px]" style={{ background: 'var(--border-default)', color: 'var(--text-secondary)' }}>
                   {g}
                 </span>
               ))}

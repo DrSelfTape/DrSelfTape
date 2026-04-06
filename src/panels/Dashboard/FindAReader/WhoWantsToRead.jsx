@@ -61,9 +61,9 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0f0f1a] px-4 py-8">
+    <div className="min-h-[calc(100vh-80px)] px-4 py-8" style={{ background: 'var(--bg-deepest)' }}>
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-bold text-white">
+        <h1 className="mb-6 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
           Who Wants to Read
         </h1>
 
@@ -75,11 +75,11 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
 
         {!likesLoading && whoWantsToRead.length === 0 && (
           <div className="flex h-60 flex-col items-center justify-center text-center">
-            <Heart className="mb-3 h-10 w-10 text-[#999999]" />
-            <p className="text-sm font-semibold text-white">
+            <Heart className="mb-3 h-10 w-10" style={{ color: 'var(--text-secondary)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
               No one yet
             </p>
-            <p className="mt-1 text-xs text-[#666666]">
+            <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
               When someone swipes right on you, they&apos;ll appear here.
             </p>
           </div>

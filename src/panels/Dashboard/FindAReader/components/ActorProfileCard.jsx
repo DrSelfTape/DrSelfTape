@@ -17,7 +17,7 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
   }[actor?.union] || actor?.union;
 
   return (
-    <div className="rounded-xl border border-[#2A2A2A] bg-[#1E1E1E] p-5 shadow-sm">
+    <div className="rounded-xl p-5 shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
       <div className="flex items-start gap-4">
         {/* Avatar */}
         <div className="relative shrink-0">
@@ -27,13 +27,13 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
             initials={initials}
             className="h-16 w-16"
           />
-          <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500 border-2 border-[#1E1E1E]" />
+          <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500" style={{ borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--bg-surface)' }} />
         </div>
 
         <div className="min-w-0 flex-1 space-y-2">
           {/* Name + Union */}
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-bold text-white truncate">
+            <h4 className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
               {actor?.name || 'Actor'}
             </h4>
             {unionLabel && (
@@ -46,12 +46,12 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
           {/* Location + Experience */}
           <div className="flex items-center gap-3 flex-wrap">
             {actor?.based_in && (
-              <span className="flex items-center gap-1 text-xs text-[#888]">
+              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <MapPin size={10} />{actor.based_in}
               </span>
             )}
             {actor?.years_experience && (
-              <span className="flex items-center gap-1 text-xs text-[#888]">
+              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
                 <Clock size={10} />{actor.years_experience}yr{actor.years_experience !== 1 ? 's' : ''}
               </span>
             )}
@@ -59,7 +59,7 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
 
           {/* Bio */}
           {actor?.bio && (
-            <p className="line-clamp-2 text-xs leading-relaxed text-[#999999]">
+            <p className="line-clamp-2 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
               {actor.bio}
             </p>
           )}
@@ -68,7 +68,7 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
           {actor?.genres?.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {actor.genres.map((g) => (
-                <span key={g} className="rounded-full bg-[#2A2A2A] px-2 py-0.5 text-[10px] text-[#AAAAAA]">
+                <span key={g} className="rounded-full px-2 py-0.5 text-[10px]" style={{ background: 'var(--border-default)', color: 'var(--text-secondary)' }}>
                   {g}
                 </span>
               ))}
@@ -83,7 +83,8 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
         <button
           type="button"
           onClick={onPass}
-          className="flex flex-col items-center gap-1 rounded-lg border border-[#3A3A3A] py-2.5 text-[#666] hover:bg-[#2A2A2A] hover:border-[#555] transition-all group"
+          className="flex flex-col items-center gap-1 rounded-lg py-2.5 transition-all group"
+          style={{ border: '1px solid var(--border-active)', color: 'var(--text-muted)' }}
         >
           <X size={16} className="group-hover:text-red-400 transition-colors" />
           <span className="text-[10px] font-medium">Pass</span>
@@ -93,7 +94,8 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
         <button
           type="button"
           onClick={onStar}
-          className="flex flex-col items-center gap-1 rounded-lg border border-[#3A3A3A] py-2.5 text-[#666] hover:bg-[#2A1A00] hover:border-[#FCE072]/50 transition-all group"
+          className="flex flex-col items-center gap-1 rounded-lg py-2.5 hover:bg-[#2A1A00] hover:border-[#FCE072]/50 transition-all group"
+          style={{ border: '1px solid var(--border-active)', color: 'var(--text-muted)' }}
         >
           <Star size={16} className="group-hover:text-[#FCE072] group-hover:fill-[#FCE072] transition-colors" />
           <span className="text-[10px] font-medium group-hover:text-[#FCE072] transition-colors">Favorite</span>
@@ -112,9 +114,9 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
 
       {/* Action labels */}
       <div className="mt-1.5 grid grid-cols-3 gap-2 px-1">
-        <p className="text-[9px] text-center text-[#444]">not interested</p>
-        <p className="text-[9px] text-center text-[#444]">save for later</p>
-        <p className="text-[9px] text-center text-[#444]">move to green room</p>
+        <p className="text-[9px] text-center" style={{ color: 'var(--text-dim)' }}>not interested</p>
+        <p className="text-[9px] text-center" style={{ color: 'var(--text-dim)' }}>save for later</p>
+        <p className="text-[9px] text-center" style={{ color: 'var(--text-dim)' }}>move to green room</p>
       </div>
     </div>
   );

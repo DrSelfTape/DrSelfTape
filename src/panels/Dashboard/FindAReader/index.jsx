@@ -101,13 +101,13 @@ const FindAReader = () => {
   return (
     <div
       className="flex min-h-screen flex-col items-center px-4 py-6"
-      style={{ background: '#0D0D0D' }}
+      style={{ background: 'var(--bg-deep)' }}
     >
       {/* Nav bar */}
       <div
         className="flex w-full max-w-sm items-center justify-between mb-4 px-1"
       >
-        <h1 className="text-xl font-bold text-white">Find a Reader</h1>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Find a Reader</h1>
         <button
           onClick={() => setShowFilters(true)}
           className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white transition-colors"
@@ -124,8 +124,8 @@ const FindAReader = () => {
           <div className="w-20 h-20 rounded-full bg-[#C855F0]/10 flex items-center justify-center mb-4">
             <Camera className="w-10 h-10 text-[#C855F0]" />
           </div>
-          <h2 className="text-lg font-bold text-white mb-2">Add a Headshot to Start</h2>
-          <p className="text-sm text-[#999999] mb-6">
+          <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Add a Headshot to Start</h2>
+          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
             Other actors want to see who they're reading with. Upload a photo to start matching.
           </p>
           <input
@@ -151,7 +151,8 @@ const FindAReader = () => {
                 navigate('/dashboard/profile');
               }
             }}
-            className="mt-3 text-xs text-[#999999] hover:text-white transition-colors"
+            className="mt-3 text-xs hover:text-white transition-colors"
+            style={{ color: 'var(--text-secondary)' }}
           >
             Or update your full profile
           </button>
@@ -180,12 +181,12 @@ const FindAReader = () => {
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-              style={{ background: '#2A2A2A' }}
+              style={{ background: 'var(--border-default)' }}
             >
               <Users size={32} color="#9CA3AF" />
             </div>
-            <p className="text-lg font-semibold text-white mb-2">No more readers</p>
-            <p className="text-sm mb-5" style={{ color: '#9CA3AF' }}>
+            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>No more readers</p>
+            <p className="text-sm mb-5" style={{ color: 'var(--text-secondary)' }}>
               Check back later or adjust your filters.
             </p>
             <button

@@ -164,7 +164,7 @@ export default function Profile() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold text-white mb-6">My Profile</h1>
+      <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>My Profile</h1>
 
       {/* Badge */}
       <ProfileCompleteBadge show={showBadge} onClose={() => setShowBadge(false)} />
@@ -172,16 +172,17 @@ export default function Profile() {
       {/* Validation Popup */}
       {validationPopup && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="bg-[#1A1A2E] border border-red-500/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+          <div className="border border-red-500/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+            style={{ background: 'var(--bg-elevated)' }}
             style={{ animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center">
                 <AlertCircle className="w-5 h-5 text-red-400" />
               </div>
-              <h3 className="text-lg font-bold text-white">Complete Your Profile</h3>
+              <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Complete Your Profile</h3>
             </div>
-            <p className="text-sm text-[#999] mb-4">
+            <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
               Please fill in the following before saving:
             </p>
             <div className="space-y-2 mb-6">
@@ -219,7 +220,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT — Avatar Card */}
         <div className="lg:col-span-1">
-          <div className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-6 text-center">
+          <div className="rounded-xl shadow-sm p-6 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
             {/* Avatar */}
             <div className="relative mx-auto w-32 h-32 mb-4">
               {avatarPreview ? (
@@ -253,7 +254,7 @@ export default function Profile() {
               />
             </div>
 
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
               {profile?.first_name || 'First'} {profile?.last_name || 'Last'}
             </h2>
             <span className="inline-block mt-1 px-3 py-0.5 text-xs font-medium rounded-full bg-[#C855F0]/10 text-[#C855F0] capitalize">
@@ -263,10 +264,10 @@ export default function Profile() {
             {/* Completion */}
             <div className="mt-6">
               <div className="flex items-center justify-between text-sm mb-1">
-                <span className="text-[#999999]">Profile completion</span>
-                <span className="font-semibold text-white">{completion}%</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Profile completion</span>
+                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{completion}%</span>
               </div>
-              <div className="w-full h-2 bg-[#2A2A2A] rounded-full overflow-hidden">
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-default)' }}>
                 <div
                   className="h-full bg-[#C855F0] rounded-full transition-all duration-500"
                   style={{ width: `${completion}%` }}
@@ -280,90 +281,90 @@ export default function Profile() {
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Info */}
-            <div className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Personal Information</h3>
+            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Personal Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">First Name <span className="text-[#C855F0]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>First Name <span className="text-[#C855F0]">*</span></label>
                   <input
                     name="first_name"
                     value={form.first_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Last Name <span className="text-[#C855F0]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Last Name <span className="text-[#C855F0]">*</span></label>
                   <input
                     name="last_name"
                     value={form.last_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Email</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Email</label>
                   <input
                     value={profile?.email || ''}
                     readOnly
-                    className="w-full px-3 py-2 border border-[#3A3A3A] rounded-lg bg-[#1E1E1E] text-[#999999] cursor-not-allowed"
+                    className="w-full px-3 py-2 rounded-lg cursor-not-allowed" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Phone</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Phone</label>
                   <input
                     name="phone_no"
                     value={form.phone_no}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
             </div>
 
             {/* Actor Info */}
-            <div className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Actor Information</h3>
+            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Actor Information</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Bio</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Bio</label>
                   <textarea
                     name="bio"
                     rows={4}
                     value={form.bio}
                     onChange={handleChange}
                     placeholder="Tell casting directors about yourself..."
-                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors resize-none"
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors resize-none" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-[#999999] mb-1">Reel URL</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Reel URL</label>
                     <input
                       name="reel_url"
                       value={form.reel_url}
                       onChange={handleChange}
                       placeholder="https://youtube.com/..."
-                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#999999] mb-1">Based In</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Based In</label>
                     <input
                       name="based_in"
                       value={form.based_in}
                       onChange={handleChange}
                       placeholder="Los Angeles, CA"
-                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#999999] mb-1">Union Status <span className="text-[#C855F0]">*</span></label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Union Status <span className="text-[#C855F0]">*</span></label>
                     <select
                       name="union"
                       value={form.union}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     >
                       <option value="">Select union status</option>
                       <option value="sag-aftra">SAG-AFTRA</option>
@@ -373,7 +374,7 @@ export default function Profile() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-[#999999] mb-1">Years of Experience</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Years of Experience</label>
                     <input
                       name="years_experience"
                       type="number"
@@ -382,14 +383,14 @@ export default function Profile() {
                       value={form.years_experience}
                       onChange={handleChange}
                       placeholder="e.g. 5"
-                      className="w-full px-3 py-2 border border-[#2A2A2A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     />
                   </div>
                 </div>
 
                 {/* Genre Tags */}
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-2">Genre Types</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Genre Types</label>
                   <div className="flex flex-wrap gap-2">
                     {['Drama', 'Comedy', 'Thriller', 'Horror', 'Sci-Fi', 'Action', 'Romance', 'Period', 'Musical', 'Indie'].map((g) => (
                       <button
@@ -404,8 +405,9 @@ export default function Profile() {
                         className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                           form.genres.includes(g)
                             ? 'bg-[#C855F0] border-[#C855F0] text-white'
-                            : 'bg-transparent border-[#3A3A3A] text-[#999999] hover:border-[#C855F0]/50'
+                            : 'bg-transparent hover:border-[#C855F0]/50'
                         }`}
+                        style={!form.genres.includes(g) ? { borderColor: 'var(--border-active)', color: 'var(--text-secondary)' } : {}}
                       >
                         {g}
                       </button>
@@ -416,15 +418,15 @@ export default function Profile() {
             </div>
 
             {/* File Uploads */}
-            <div className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-6">
-              <h3 className="text-lg font-semibold text-white mb-4">Files</h3>
+            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Files</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Headshot */}
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Headshot <span className="text-[#C855F0]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Headshot <span className="text-[#C855F0]">*</span></label>
                   <div
                     onClick={() => headshotInputRef.current?.click()}
-                    className="border-2 border-dashed border-[#3A3A3A] rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors"
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors" style={{ borderColor: 'var(--border-active)' }}
                   >
                     {headshotPreview ? (
                       <img
@@ -434,9 +436,9 @@ export default function Profile() {
                       />
                     ) : (
                       <div className="py-4">
-                        <Upload className="w-8 h-8 mx-auto text-[#666666] mb-2" />
-                        <p className="text-sm text-[#999999]">Upload headshot</p>
-                        <p className="text-xs text-[#666666] mt-1">JPG, PNG, WEBP</p>
+                        <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Upload headshot</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>JPG, PNG, WEBP</p>
                       </div>
                     )}
                   </div>
@@ -453,27 +455,27 @@ export default function Profile() {
 
                 {/* Resume */}
                 <div>
-                  <label className="block text-sm font-medium text-[#999999] mb-1">Resume (PDF)</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Resume (PDF)</label>
                   <div
                     onClick={() => resumeInputRef.current?.click()}
-                    className="border-2 border-dashed border-[#3A3A3A] rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors"
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors" style={{ borderColor: 'var(--border-active)' }}
                   >
                     {resumeFile ? (
                       <div className="py-4">
                         <Check className="w-8 h-8 mx-auto text-green-500 mb-2" />
-                        <p className="text-sm text-[#999999] font-medium truncate">{resumeFile.name}</p>
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-secondary)' }}>{resumeFile.name}</p>
                       </div>
                     ) : profile?.actor_profile?.resume_file ? (
                       <div className="py-4">
                         <Check className="w-8 h-8 mx-auto text-green-500 mb-2" />
-                        <p className="text-sm text-[#999999]">Resume uploaded</p>
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Resume uploaded</p>
                         <p className="text-xs text-[#C855F0] mt-1">Click to replace</p>
                       </div>
                     ) : (
                       <div className="py-4">
-                        <Upload className="w-8 h-8 mx-auto text-[#666666] mb-2" />
-                        <p className="text-sm text-[#999999]">Upload resume</p>
-                        <p className="text-xs text-[#666666] mt-1">PDF only</p>
+                        <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
+                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Upload resume</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>PDF only</p>
                       </div>
                     )}
                   </div>
@@ -504,19 +506,19 @@ export default function Profile() {
       </div>
 
       {/* ── Achievements ─────────────────────────────────── */}
-      <div className="bg-[#111318] rounded-2xl border border-[#2a2d35] p-6 mt-6">
+      <div className="rounded-2xl p-6 mt-6" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)' }}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-bold text-white">Achievements</h2>
-            <p className="text-sm text-[#666] mt-0.5">Milestones earned from your audition activity</p>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Achievements</h2>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>Milestones earned from your audition activity</p>
           </div>
           {auditionStats && (
             <div className="text-right">
               <p className="text-2xl font-bold text-[#C855F0]">
                 {BADGES.filter(b => b.check(auditionStats)).length}
-                <span className="text-base text-[#666] font-normal">/{BADGES.length}</span>
+                <span className="text-base font-normal" style={{ color: 'var(--text-muted)' }}>/{BADGES.length}</span>
               </p>
-              <p className="text-xs text-[#666]">earned</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>earned</p>
             </div>
           )}
         </div>
@@ -526,16 +528,17 @@ export default function Profile() {
         ) : (
           /* Placeholder — show all locked until stats load */
           <div>
-            <h4 className="text-xs font-bold text-[#666] uppercase tracking-wider mb-3">Start logging auditions to earn badges</h4>
+            <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Start logging auditions to earn badges</h4>
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {BADGES.map((b) => (
                 <div
                   key={b.id}
                   title={`${b.name}: ${b.desc}`}
-                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-[#3A3A3A] bg-[#1E1E1E] opacity-50 grayscale"
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-xl opacity-50 grayscale"
+                  style={{ border: '1px solid var(--border-active)', background: 'var(--bg-surface)' }}
                 >
                   <span className="text-2xl">{b.emoji}</span>
-                  <span className="text-[10px] font-bold text-center leading-tight text-[#999]">{b.name}</span>
+                  <span className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--text-secondary)' }}>{b.name}</span>
                 </div>
               ))}
             </div>
