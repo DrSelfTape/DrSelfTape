@@ -518,11 +518,30 @@ function AuditionsScreen() {
   const [filter, setFilter] = useState("all");
   const [selected, setSelected] = useState(null);
   const [viewSection, setViewSection] = useState("tracker");
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addForm, setAddForm] = useState({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
+  const [addSaving, setAddSaving] = useState(false);
 
   useEffect(() => {
     dispatch(fetchAuditionsThunk());
     dispatch(fetchSubmissionsThunk());
   }, [dispatch]);
+
+  const handleAddAudition = async (e) => {
+    e.preventDefault();
+    if (!addForm.project.trim()) return;
+    setAddSaving(true);
+    try {
+      const { createAuditionThunk } = await import("../../redux/features/auditions/auditionsSlice");
+      await dispatch(createAuditionThunk(addForm)).unwrap();
+      dispatch(fetchAuditionsThunk());
+      setAddForm({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
+      setShowAddForm(false);
+    } catch (err) {
+      console.error('Failed to add audition:', err);
+    }
+    setAddSaving(false);
+  };
 
   const filtered = filter === "all" ? auditions : auditions.filter(a => a.type === filter);
   const columns = [
@@ -545,10 +564,81 @@ function AuditionsScreen() {
     <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Auditions</h1>
-        <button style={{ width: 38, height: 38, borderRadius: 12, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+        <button onClick={() => setShowAddForm(true)} style={{ width: 38, height: 38, borderRadius: 12, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
           <Icon name="plus" size={18} color="#fff" />
         </button>
       </div>
+
+      {/* Add Audition Modal */}
+      {showAddForm && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", padding: 16 }}>
+          <div style={{ background: BG_CARD, borderRadius: 20, border: `1px solid ${BORDER_ACTIVE}`, width: "100%", maxWidth: 400, maxHeight: "85vh", overflow: "auto", padding: 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>Add Audition</h2>
+              <button onClick={() => setShowAddForm(false)} style={{ background: "none", border: "none", color: TEXT_MUTED, fontSize: 22, cursor: "pointer", lineHeight: 1 }}>&times;</button>
+            </div>
+            <form onSubmit={handleAddAudition}>
+              {[
+                { key: "project", label: "Project Name *", placeholder: "e.g. Untitled Netflix Drama" },
+                { key: "role", label: "Role / Character", placeholder: "e.g. Lead — Sarah" },
+                { key: "casting_director", label: "Casting Director", placeholder: "e.g. Jane Smith Casting" },
+              ].map(f => (
+                <div key={f.key} style={{ marginBottom: 14 }}>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>{f.label}</label>
+                  <input
+                    value={addForm[f.key]}
+                    onChange={(e) => setAddForm(prev => ({ ...prev, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                  />
+                </div>
+              ))}
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>Project Type</label>
+                <select
+                  value={addForm.project_type}
+                  onChange={(e) => setAddForm(prev => ({ ...prev, project_type: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none" }}
+                >
+                  {[["film","Film/TV"],["commercial","Commercial"],["theatrical","Theatrical"],["voiceover","Voiceover"],["theater","Theater"]].map(([v,l]) => (
+                    <option key={v} value={v}>{l}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ marginBottom: 14 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>Callback Date</label>
+                <input
+                  type="date"
+                  value={addForm.callback_date}
+                  onChange={(e) => setAddForm(prev => ({ ...prev, callback_date: e.target.value }))}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>Notes</label>
+                <textarea
+                  value={addForm.notes}
+                  onChange={(e) => setAddForm(prev => ({ ...prev, notes: e.target.value }))}
+                  rows={3}
+                  placeholder="Any additional details..."
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box" }}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={addSaving || !addForm.project.trim()}
+                style={{
+                  width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
+                  background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
+                  fontSize: 15, fontWeight: 700, opacity: addSaving || !addForm.project.trim() ? 0.5 : 1,
+                }}
+              >
+                {addSaving ? "Saving..." : "Add Audition"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Tab row */}
       <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: `1px solid ${BORDER}`, paddingBottom: 14 }}>
