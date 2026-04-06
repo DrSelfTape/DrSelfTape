@@ -483,11 +483,12 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
    ═══════════════════════════════════════════════════════════════════ */
 
 function NewAuditionModal({ open, onClose, onSubmit }) {
-  const [mode, setMode] = useState('manual'); // 'manual' | 'paste' | 'pdf'
+  const [mode, setMode] = useState('manual'); // 'manual' | 'paste' | 'pdf' | 'screenshot'
   const [pasteText, setPasteText] = useState('');
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState('');
   const fileInputRef = useRef(null);
+  const screenshotInputRef = useRef(null);
   const [form, setForm] = useState({
     project: '', role: '', casting_director: '', agency: '',
     project_type: 'film', callback_date: '', notes: '',
@@ -560,6 +561,36 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     }
   };
 
+  const handleScreenshot = async (file) => {
+    if (!file) return;
+    setParsing(true);
+    setParseError('');
+    try {
+      const axiosInstance = (await import('../../../redux/http')).default;
+      const endPoints = (await import('../../../redux/constant')).default;
+      const fd = new FormData();
+      fd.append('image', file);
+      const { data } = await axiosInstance.post(endPoints.parseBreakdown, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const parsed = data?.data || {};
+      setForm((prev) => ({
+        ...prev,
+        project: parsed.project || prev.project,
+        role: parsed.role || prev.role,
+        casting_director: parsed.casting_director || prev.casting_director,
+        agency: parsed.agency || prev.agency,
+        project_type: parsed.project_type || prev.project_type,
+        notes: parsed.notes || prev.notes,
+      }));
+      setMode('manual');
+    } catch (err) {
+      setParseError('Could not read screenshot — try pasting the text instead.');
+    } finally {
+      setParsing(false);
+    }
+  };
+
   return (
     <>
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
@@ -580,8 +611,9 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
           <div className="flex gap-1 px-6 pt-4 pb-2">
             {[
               { id: 'manual', label: '✏️ Manual' },
-              { id: 'paste', label: '📋 Paste Breakdown' },
-              { id: 'pdf', label: '📄 Import PDF' },
+              { id: 'screenshot', label: '📸 Screenshot' },
+              { id: 'paste', label: '📋 Paste' },
+              { id: 'pdf', label: '📄 PDF' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -621,6 +653,36 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
             )}
 
             {/* PDF Mode */}
+            {mode === 'screenshot' && (
+              <div className="space-y-3">
+                <p className="text-xs text-[#888]">Upload a screenshot of your audition breakdown — AI will read it and fill in the details.</p>
+                <div
+                  onClick={() => screenshotInputRef.current?.click()}
+                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#C855F0] rounded-xl p-8 text-center cursor-pointer transition-colors"
+                >
+                  {parsing ? (
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="w-8 h-8 border-2 border-[#C855F0]/30 border-t-[#C855F0] rounded-full animate-spin" />
+                      <p className="text-sm text-white">Scanning screenshot with AI...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-2xl mb-2">📸</p>
+                      <p className="text-sm font-medium text-white">Drop or click to upload screenshot</p>
+                      <p className="text-xs text-[#555] mt-1">JPG, PNG, WEBP</p>
+                    </>
+                  )}
+                </div>
+                <input
+                  ref={screenshotInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => handleScreenshot(e.target.files?.[0])}
+                />
+              </div>
+            )}
+
             {mode === 'pdf' && (
               <div className="space-y-3">
                 <p className="text-xs text-[#888]">Upload the breakdown PDF — the AI will pull out all the key details.</p>

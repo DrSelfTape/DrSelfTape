@@ -539,6 +539,34 @@ function AuditionsScreen() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
   const [addSaving, setAddSaving] = useState(false);
+  const [scanLoading, setScanLoading] = useState(false);
+  const scanInputRef = useRef(null);
+
+  const handleScanScreenshot = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setScanLoading(true);
+    try {
+      const fd = new FormData();
+      fd.append('image', file);
+      const res = await axiosInstance.post(endPoints.parseBreakdown, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      const parsed = res.data?.data || {};
+      setAddForm(prev => ({
+        ...prev,
+        project: parsed.project || prev.project,
+        role: parsed.role || prev.role,
+        casting_director: parsed.casting_director || prev.casting_director,
+        project_type: parsed.project_type || prev.project_type,
+        notes: parsed.notes || prev.notes,
+      }));
+    } catch (err) {
+      console.error('Failed to parse screenshot:', err);
+    }
+    setScanLoading(false);
+    if (scanInputRef.current) scanInputRef.current.value = '';
+  };
 
   useEffect(() => {
     dispatch(fetchAuditionsThunk());
@@ -595,6 +623,30 @@ function AuditionsScreen() {
               <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>Add Audition</h2>
               <button onClick={() => setShowAddForm(false)} style={{ background: "none", border: "none", color: TEXT_MUTED, fontSize: 22, cursor: "pointer", lineHeight: 1 }}>&times;</button>
             </div>
+            {/* Scan Screenshot Button */}
+            <button
+              type="button"
+              onClick={() => scanInputRef.current?.click()}
+              disabled={scanLoading}
+              style={{
+                width: "100%", padding: "14px", borderRadius: 14, cursor: "pointer",
+                background: "linear-gradient(135deg, rgba(200,85,240,0.12), rgba(167,236,218,0.08))",
+                border: `1.5px dashed rgba(200,85,240,0.4)`,
+                display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
+                marginBottom: 20, transition: "all 0.2s",
+              }}
+            >
+              {scanLoading ? (
+                <span style={{ fontSize: 13, fontWeight: 600, color: MINT }}>Scanning with AI...</span>
+              ) : (
+                <>
+                  <span style={{ fontSize: 18 }}>📸</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>Scan Screenshot with AI</span>
+                </>
+              )}
+            </button>
+            <input ref={scanInputRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleScanScreenshot} />
+
             <form onSubmit={handleAddAudition}>
               {[
                 { key: "project", label: "Project Name *", placeholder: "e.g. Untitled Netflix Drama" },
