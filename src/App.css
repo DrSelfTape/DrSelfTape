@@ -4,13 +4,52 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 @import 'tailwindcss';
 
+/* Theme Variables */
+:root,
+[data-theme="dark"] {
+  --bg-deepest: #080a0f;
+  --bg-deep: #0D0D0D;
+  --bg-card: #13151d;
+  --bg-elevated: #1A1A2E;
+  --bg-surface: #1E1E1E;
+  --bg-input: #111318;
+  --border-default: #2A2A2A;
+  --border-active: #3A3A3A;
+  --text-primary: #f2f0ed;
+  --text-secondary: #999999;
+  --text-muted: #666666;
+  --text-dim: #444444;
+  --sidebar-bg: #0D0D0D;
+  --topbar-bg: #0D0D0Dee;
+  --card-shadow: rgba(0,0,0,0.3);
+}
+
+[data-theme="light"] {
+  --bg-deepest: #f5f5f7;
+  --bg-deep: #ffffff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f0f0f5;
+  --bg-surface: #f8f8fa;
+  --bg-input: #ffffff;
+  --border-default: #e0e0e5;
+  --border-active: #d0d0d8;
+  --text-primary: #1a1a2e;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-dim: #b0b0b8;
+  --sidebar-bg: #ffffff;
+  --topbar-bg: #ffffffee;
+  --card-shadow: rgba(0,0,0,0.08);
+}
+
 html,
 body {
   margin: 0;
   padding: 0;
-  background: #0D0D0D;
-  color: #fff;
+  background: var(--bg-deep);
+  color: var(--text-primary);
   font-family: 'Poppins', sans-serif;
+  transition: background 0.3s, color 0.3s;
 }
 
 @theme {

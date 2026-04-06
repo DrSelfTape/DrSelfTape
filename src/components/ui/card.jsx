@@ -4,9 +4,10 @@ function Card({ className, ...props }) {
   return (
     <div
       className={cn(
-        "rounded-2xl border border-[#2A2A2A] bg-[#1A1A1A] shadow-sm",
+        "rounded-2xl border shadow-sm transition-colors duration-300",
         className
       )}
+      style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
       {...props}
     />
   )

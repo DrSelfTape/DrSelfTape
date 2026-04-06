@@ -15,6 +15,7 @@ import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingMo
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
+import ThemeToggle from "../../components/Dashboard/ThemeToggle";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -1458,7 +1459,7 @@ export default function DrSelfTapeApp() {
   };
 
   return (
-    <div style={{ background: BG_DEEP, minHeight: "100vh", fontFamily: "'Poppins', sans-serif", color: TEXT_PRIMARY }}>
+    <div style={{ background: "var(--bg-deep)", minHeight: "100vh", fontFamily: "'Poppins', sans-serif", color: "var(--text-primary)", transition: "background 0.3s, color 0.3s" }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
       {/* No tokens modal */}
       {showNoTokens && (
@@ -1546,21 +1547,25 @@ export default function DrSelfTapeApp() {
           {/* Top Bar */}
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-            background: `${BG_DEEP}ee`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+            background: "var(--topbar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
             padding: "env(safe-area-inset-top, 0px) 16px 0",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             height: "calc(50px + env(safe-area-inset-top, 0px))",
-            borderBottom: `1px solid ${BORDER}`,
+            borderBottom: "1px solid var(--border-default)",
+            transition: "background 0.3s",
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {/* Logo */}
               <img src={logo} alt="Dr Self Tape" style={{ width: 30, height: 30, objectFit: "contain" }} />
               <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
             </div>
-            <NotificationBell onNavigate={({ panel, tab }) => {
-              if (panel) setCurrentPanel(panel);
-              if (tab) { setCurrentPanel(null); setTab(tab); }
-            }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <ThemeToggle compact />
+              <NotificationBell onNavigate={({ panel, tab }) => {
+                if (panel) setCurrentPanel(panel);
+                if (tab) { setCurrentPanel(null); setTab(tab); }
+              }} />
+            </div>
           </div>
 
           {/* Logo watermark */}
@@ -1591,8 +1596,9 @@ export default function DrSelfTapeApp() {
           {/* Bottom Tab Bar */}
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-            background: `${BG_DEEPEST}f8`, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-            borderTop: `1px solid ${BORDER}`,
+            background: "var(--topbar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
+            borderTop: "1px solid var(--border-default)",
+            transition: "background 0.3s",
             display: "flex", justifyContent: "space-around", alignItems: "center",
             paddingBottom: "env(safe-area-inset-bottom, 8px)", paddingTop: 8,
             height: "calc(60px + env(safe-area-inset-bottom, 0px))",

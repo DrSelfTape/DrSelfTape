@@ -23,7 +23,7 @@ export default function DashboardLayout() {
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <main className="relative flex-1 ml-64 overflow-auto bg-[#0D0D0D] p-8">
+      <main className="relative flex-1 ml-64 overflow-auto p-8" style={{ background: 'var(--bg-deep)' }}>
         {/* Subtle logo watermark */}
         <div
           className="pointer-events-none fixed inset-0 ml-64 flex items-center justify-center"

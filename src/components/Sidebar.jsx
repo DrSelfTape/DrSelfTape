@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { logoutUser } from '../redux/features/auth/authSlice'
 import ProfilePhoto from './Shared/ProfilePhoto'
 import AvailabilityToggle from './Dashboard/AvailabilityToggle'
+import ThemeToggle from './Dashboard/ThemeToggle'
 import {
   Monitor,
   BookOpen,
@@ -59,13 +60,13 @@ export default function Sidebar() {
   const avatarUrl = profile?.user_image || profile?.actor_profile?.headshot || null
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 bg-[#0D0D0D] border-r border-[#1E1E1E] flex flex-col">
+    <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r flex flex-col transition-colors duration-300" style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border-default)' }}>
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-[#1E1E1E] gap-3">
+      <div className="h-16 flex items-center px-6 border-b gap-3" style={{ borderColor: 'var(--border-default)' }}>
         <div className="w-8 h-8 bg-[#C855F0]/10 rounded-lg flex items-center justify-center">
           <Clapperboard className="w-4 h-4 text-[#C855F0]" />
         </div>
-        <span className="text-white text-base font-bold tracking-tight">Dr. Self Tape</span>
+        <span className="text-base font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Dr. Self Tape</span>
       </div>
 
       {/* Navigation */}
@@ -79,9 +80,10 @@ export default function Sidebar() {
               `flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors ${
                 isActive
                   ? 'bg-[#C855F0]/10 text-[#C855F0]'
-                  : 'text-[#999999] hover:text-white hover:bg-[#1E1E1E]'
+                  : 'hover:bg-[#C855F0]/5'
               }`
             }
+            style={({ isActive }) => isActive ? {} : { color: 'var(--text-secondary)' }}
           >
             <item.icon className="w-4 h-4 shrink-0" />
             <span className="flex-1">{item.label}</span>
@@ -102,13 +104,14 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Availability toggle */}
-      <div className="px-4 pb-2">
+      {/* Availability toggle + Theme toggle */}
+      <div className="px-4 pb-2 flex items-center gap-2">
         <AvailabilityToggle compact />
+        <ThemeToggle compact />
       </div>
 
       {/* User footer */}
-      <div className="p-4 border-t border-[#1E1E1E]">
+      <div className="p-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
         <button
           onClick={() => navigate('/dashboard/profile')}
           className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#1E1E1E] transition-colors group"

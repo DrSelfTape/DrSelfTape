@@ -20,6 +20,7 @@ import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardin
 import NotificationBell from '../../../components/Dashboard/NotificationBell';
 import TutorialChecklist from '../../../components/Dashboard/TutorialChecklist';
 import TutorialAchievement from '../../../components/Dashboard/TutorialAchievement';
+import ThemeToggle from '../../../components/Dashboard/ThemeToggle';
 
 const TYPE_COLORS = {
   film: '#C855F0',
@@ -111,6 +112,7 @@ export default function DashboardHome() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-white">Dashboard</h1>
         <div className="flex items-center gap-3">
+          <ThemeToggle compact />
           <AvailabilityToggle />
           <NotificationBell />
           {stats?.data && <AuditionBadges stats={stats.data} compact={true} />}
