@@ -97,7 +97,7 @@ const ReaderFilters = ({ onClose }) => {
       <div className="relative w-full max-w-md rounded-t-2xl bg-[#1E1E1E] p-6 sm:rounded-2xl">
         {/* Header */}
         <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-[#0f0f1a]">Filters</h2>
+          <h2 className="text-lg font-bold text-white">Filters</h2>
           <button
             type="button"
             onClick={onClose}
@@ -111,7 +111,7 @@ const ReaderFilters = ({ onClose }) => {
         <div className="max-h-[60vh] space-y-6 overflow-y-auto">
           {/* Genre */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-[#0f0f1a]">
+            <h3 className="mb-2 text-sm font-semibold text-white">
               Genre
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -124,7 +124,7 @@ const ReaderFilters = ({ onClose }) => {
                     onClick={() => toggleGenre(genre)}
                     className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                       selected
-                        ? 'bg-[#A7ECDA] text-[#0f0f1a]'
+                        ? 'bg-[#A7ECDA] text-white'
                         : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
                     }`}
                   >
@@ -137,13 +137,13 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Experience Level */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-[#0f0f1a]">
+            <h3 className="mb-2 text-sm font-semibold text-white">
               Experience Level
             </h3>
             <select
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
-              className="w-full rounded-lg border border-[#3A3A3A] px-3 py-2 text-sm text-[#0f0f1a] outline-none focus:border-[#C855F0]"
+              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#C855F0]"
             >
               <option value="">Any</option>
               {EXPERIENCE_LEVELS.map((level) => (
@@ -156,7 +156,7 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Union Status */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-[#0f0f1a]">
+            <h3 className="mb-2 text-sm font-semibold text-white">
               Union Status
             </h3>
             <div className="flex gap-2">
@@ -179,7 +179,7 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Availability */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-[#0f0f1a]">
+            <h3 className="mb-2 text-sm font-semibold text-white">
               Availability
             </h3>
             <div className="flex gap-2">
@@ -202,7 +202,7 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Gender */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-[#0f0f1a]">
+            <h3 className="mb-2 text-sm font-semibold text-white">
               Gender
             </h3>
             <div className="flex flex-wrap gap-2">

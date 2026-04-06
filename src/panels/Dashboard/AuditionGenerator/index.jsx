@@ -211,8 +211,6 @@ export default function AuditionGenerator() {
         rel="stylesheet"
       />
       <style>{`
-        * { box-sizing: border-box; margin: 0; }
-        ::-webkit-scrollbar { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>

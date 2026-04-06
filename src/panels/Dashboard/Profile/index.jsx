@@ -243,7 +243,7 @@ export default function Profile() {
                     name="first_name"
                     value={form.first_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
                   />
                 </div>
                 <div>
@@ -252,7 +252,7 @@ export default function Profile() {
                     name="last_name"
                     value={form.last_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
                   />
                 </div>
                 <div>
@@ -269,7 +269,7 @@ export default function Profile() {
                     name="phone_no"
                     value={form.phone_no}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -287,7 +287,7 @@ export default function Profile() {
                     value={form.bio}
                     onChange={handleChange}
                     placeholder="Tell casting directors about yourself..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors resize-none"
+                    className="w-full px-3 py-2 border border-[#3A3A3A] bg-[#111318] text-white rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors resize-none"
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -378,7 +378,7 @@ export default function Profile() {
                   <label className="block text-sm font-medium text-[#999999] mb-1">Headshot <span className="text-[#C855F0]">*</span></label>
                   <div
                     onClick={() => headshotInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors"
+                    className="border-2 border-dashed border-[#3A3A3A] rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors"
                   >
                     {headshotPreview ? (
                       <img
@@ -410,7 +410,7 @@ export default function Profile() {
                   <label className="block text-sm font-medium text-[#999999] mb-1">Resume (PDF)</label>
                   <div
                     onClick={() => resumeInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors"
+                    className="border-2 border-dashed border-[#3A3A3A] rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors"
                   >
                     {resumeFile ? (
                       <div className="py-4">
