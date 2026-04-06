@@ -50,10 +50,14 @@ const FindAReader = () => {
     setUploading(false);
   };
 
+  const [swiping, setSwiping] = useState(false);
+
   const handleSwipe = useCallback(
     async (action) => {
+      if (swiping) return;
       const actor = readers[currentIndex];
       if (!actor) return;
+      setSwiping(true);
       try {
         const result = await dispatch(
           swipeOnReader({ reader_id: actor.id, action })
@@ -71,8 +75,9 @@ const FindAReader = () => {
         // error handled in slice
       }
       setCurrentIndex((prev) => prev + 1);
+      setSwiping(false);
     },
-    [currentIndex, readers, dispatch, navigate]
+    [currentIndex, readers, dispatch, navigate, swiping]
   );
 
   const currentActor = readers[currentIndex];
@@ -124,7 +129,14 @@ const FindAReader = () => {
             {uploading ? 'Uploading...' : 'Upload Photo'}
           </button>
           <button
-            onClick={() => navigate('/dashboard/profile')}
+            onClick={() => {
+              const isMob = window.innerWidth < 768;
+              if (isMob) {
+                window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'dash-profile' } }));
+              } else {
+                navigate('/dashboard/profile');
+              }
+            }}
             className="mt-3 text-xs text-[#999999] hover:text-white transition-colors"
           >
             Or update your full profile

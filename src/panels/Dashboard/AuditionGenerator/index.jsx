@@ -132,7 +132,7 @@ export default function AuditionGenerator() {
       setLoadingIdx((i) => (i + 1) % LOADING_MSGS.length), 2200);
 
     try {
-      const { data } = await axios.post(endPoints.generateScene || endPoints.cdFeedback, {
+      const { data } = await axios.post(endPoints.generateScene, {
         genre: genre.toLowerCase(),
         tone: tone.toLowerCase(),
         difficulty,

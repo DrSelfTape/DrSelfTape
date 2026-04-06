@@ -70,7 +70,7 @@ export const SocketProvider = ({ children }) => {
         }
         break;
 
-      // Partner started the video call — show incoming call modal
+      // Partner started the video call — show incoming call modal (auto-dismiss after 30s)
       case 'rehearsal_started':
         if (data?.room_url && data?.match_id) {
           setIncomingCall({
@@ -78,6 +78,9 @@ export const SocketProvider = ({ children }) => {
             roomUrl: data.room_url,
             partnerName: data.partner_name || 'Your scene partner',
           });
+          setTimeout(() => setIncomingCall((prev) =>
+            prev?.matchId === data.match_id ? null : prev
+          ), 30000);
         }
         break;
 

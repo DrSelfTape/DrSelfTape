@@ -182,7 +182,12 @@ const GreenRoomChat = (props = {}) => {
   const handleAISession = () => {
     setShowActions(false);
     sendLocalMsg('🤖 Launching AI scene partner session...', 'system');
-    navigate('/scene-study/collaboration/ai-scene-partner');
+    const isMob = window.innerWidth < 768;
+    if (isMob) {
+      window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'live' } }));
+    } else {
+      navigate('/dashboard/scene-study');
+    }
   };
 
   return (
