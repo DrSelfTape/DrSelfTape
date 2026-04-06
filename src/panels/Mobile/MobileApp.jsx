@@ -344,8 +344,14 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
 
+      {/* Centered logo */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: 20, paddingBottom: 4 }}>
+        <img src={logo} alt="Dr Self Tape" style={{ width: 36, height: 36, objectFit: "contain", filter: "drop-shadow(0 0 10px rgba(200,85,240,0.3))" }} />
+        <p style={{ fontSize: 9, fontWeight: 600, color: "#555", letterSpacing: "3px", textTransform: "uppercase", marginTop: 6 }}>Dr Self Tape</p>
+      </div>
+
       {/* Greeting */}
-      <div style={{ padding: "24px 0 24px" }}>
+      <div style={{ padding: "16px 0 24px" }}>
         <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
         <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
           Welcome back
