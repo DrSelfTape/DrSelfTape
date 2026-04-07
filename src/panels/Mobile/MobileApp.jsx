@@ -746,6 +746,43 @@ function AuditionsScreen() {
         ))}
       </div>
 
+      {/* Pipeline Stats Bar */}
+      {viewSection === "tracker" && auditions.length > 0 && (
+        <div style={{ marginBottom: 20 }}>
+          {/* Mini bar chart */}
+          <div style={{ display: "flex", gap: 2, height: 32, borderRadius: 10, overflow: "hidden", marginBottom: 12 }}>
+            {columns.map(col => {
+              const count = auditions.filter(a => a.status === col.id).length;
+              const pct = auditions.length > 0 ? (count / auditions.length) * 100 : 0;
+              if (pct === 0) return null;
+              return (
+                <div key={col.id} style={{
+                  flex: `0 0 ${Math.max(pct, 8)}%`,
+                  background: STATUS_COLORS[col.id] || TEXT_MUTED,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.3s",
+                }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>{count}</span>
+                </div>
+              );
+            })}
+          </div>
+          {/* Legend */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>
+            {columns.map(col => {
+              const count = auditions.filter(a => a.status === col.id).length;
+              if (count === 0) return null;
+              return (
+                <div key={col.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS_COLORS[col.id] }} />
+                  <span style={{ fontSize: 10, color: TEXT_SECONDARY }}>{col.label} ({count})</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {viewSection === "submissions" ? (
         <div>
           {submissions.length === 0 ? (
@@ -799,56 +836,51 @@ function AuditionsScreen() {
         })}
       </div>
 
-      {/* Kanban */}
-      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 16, scrollSnapType: "x mandatory" }}>
-        {columns.map(col => {
-          const items = filtered.filter(a => a.status === col.id);
-          return (
-            <div key={col.id} style={{ minWidth: 230, flex: "0 0 230px", scrollSnapAlign: "start" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, padding: "0 4px" }}>
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: STATUS_COLORS[col.id] }} />
-                <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, textTransform: "uppercase", letterSpacing: "0.5px" }}>{col.label}</span>
-                <span style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, background: "rgba(167,236,218,0.06)", padding: "2px 7px", borderRadius: 10, marginLeft: "auto" }}>{items.length}</span>
+      {/* Compact List */}
+      {filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "48px 0", color: TEXT_MUTED, fontSize: 13 }}>
+          No auditions yet — tap + to add one.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {filtered.map(a => {
+            const cb = callbackBadge(a.callbackDate);
+            const statusColor = STATUS_COLORS[a.status] || TEXT_MUTED;
+            const statusLabel = columns.find(c => c.id === a.status)?.label || a.status;
+            return (
+              <div key={a.id} onClick={() => setSelected(a)} style={{
+                background: BG_CARD, borderRadius: 14, padding: "14px 16px", cursor: "pointer",
+                border: cb?.urgent ? `1px solid ${CORAL}30` : `1px solid ${BORDER}`,
+                display: "flex", alignItems: "center", gap: 12,
+              }}>
+                {/* Status dot */}
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: statusColor, flexShrink: 0 }} />
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.project}</p>
+                  <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "2px 0 0" }}>
+                    {a.character ? `as ${a.character}` : ''}{a.cd ? ` · ${a.cd}` : ''}
+                  </p>
+                </div>
+                {/* Status + callback */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                  <span style={{
+                    fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 8,
+                    background: `${statusColor}18`, color: statusColor,
+                  }}>{statusLabel}</span>
+                  {cb && (
+                    <span style={{
+                      fontSize: 9, fontWeight: 600, padding: "2px 6px", borderRadius: 6,
+                      background: cb.urgent ? CORAL_DIM : GOLD_DIM,
+                      color: cb.urgent ? CORAL : GOLD,
+                    }}>{cb.text}</span>
+                  )}
+                </div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, minHeight: 120, background: "rgba(167,236,218,0.02)", borderRadius: 14, padding: 8 }}>
-                {items.map(a => {
-                  const cb = callbackBadge(a.callbackDate);
-                  return (
-                    <div key={a.id} onClick={() => setSelected(a)} style={{
-                      background: BG_CARD, borderRadius: 14, padding: "13px 15px", cursor: "pointer",
-                      border: cb?.urgent ? `1px solid ${CORAL}30` : `1px solid ${BORDER}`,
-                      boxShadow: cb?.urgent ? `0 0 20px ${CORAL}0d` : "none",
-                      transition: "transform 0.15s, border-color 0.15s",
-                    }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.3 }}>{a.project}</p>
-                      <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "3px 0 0" }}>as {a.character}</p>
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 10 }}>
-                        <span style={{
-                          fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6,
-                          background: `${TYPE_COLORS[a.type]}15`, color: TYPE_COLORS[a.type],
-                          textTransform: "uppercase", letterSpacing: "0.5px",
-                        }}>{a.type}</span>
-                        {cb && (
-                          <span style={{
-                            fontSize: 10, fontWeight: 600, padding: "3px 8px", borderRadius: 6,
-                            background: cb.urgent ? CORAL_DIM : GOLD_DIM,
-                            color: cb.urgent ? CORAL : GOLD,
-                          }}>{cb.text}</span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-                {items.length === 0 && (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 80, fontSize: 12, color: TEXT_MUTED }}>
-                    Nothing here yet
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Bottom Sheet Detail */}
       {selected && (
