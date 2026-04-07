@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink } from 'lucide-react';
+import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -59,6 +59,8 @@ export default function Profile() {
     session_rate_60: '20',
   });
   const [connectLoading, setConnectLoading] = useState(false);
+  const [referral, setReferral] = useState({ code: '', share_url: '', uses: 0 });
+  const [codeCopied, setCodeCopied] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [headshotFile, setHeadshotFile] = useState(null);
@@ -72,6 +74,10 @@ export default function Profile() {
   useEffect(() => {
     dispatch(fetchProfileThunk());
     dispatch(fetchAuditionStatsThunk());
+    // Load referral code
+    axios.get(`${baseURL}/v1/growth/referral/code/`)
+      .then(({ data }) => setReferral(data?.data || {}))
+      .catch(() => {});
     // Load reader marketplace profile
     axios.get(`${baseURL}/v1/growth/marketplace/profile/`)
       .then(({ data }) => {
@@ -306,6 +312,61 @@ export default function Profile() {
               </div>
             </div>
           </div>
+
+          {/* Referral Card */}
+          {referral.code && (
+            <div className="rounded-xl shadow-sm p-5 mt-6" style={{
+              background: 'linear-gradient(135deg, rgba(200,85,240,0.08), var(--bg-surface))',
+              border: '1px solid rgba(200,85,240,0.2)',
+            }}>
+              <div className="flex items-center gap-2 mb-3">
+                <Gift className="w-4 h-4 text-[#C855F0]" />
+                <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Your Referral Code</h3>
+              </div>
+
+              {/* Code */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1 px-3 py-2.5 rounded-lg text-center font-mono text-lg font-bold tracking-widest" style={{
+                  background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: '#C855F0',
+                }}>
+                  {referral.code}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(referral.share_url || `https://drselftape.app/signup?ref=${referral.code}`);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  }}
+                  className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                  style={{ background: codeCopied ? 'rgba(34,197,94,0.15)' : 'var(--bg-input)', border: '1px solid var(--border-active)' }}
+                >
+                  {codeCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />}
+                </button>
+              </div>
+
+              {/* Share button (mobile) */}
+              {navigator.share && (
+                <button
+                  type="button"
+                  onClick={() => navigator.share({
+                    title: 'Join me on Dr Self Tape',
+                    text: 'Use my code to get 50 free AI tokens!',
+                    url: referral.share_url || `https://drselftape.app/signup?ref=${referral.code}`,
+                  }).catch(() => {})}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold mb-3 transition-colors"
+                  style={{ background: 'rgba(200,85,240,0.1)', border: '1px solid rgba(200,85,240,0.3)', color: '#C855F0' }}
+                >
+                  <Share2 className="w-4 h-4" /> Share Invite Link
+                </button>
+              )}
+
+              <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+                {referral.uses > 0 ? `${referral.uses} referral${referral.uses !== 1 ? 's' : ''} · ` : ''}
+                Both you and your friend get <span className="text-[#A7ECDA] font-semibold">50 free tokens</span>
+              </p>
+            </div>
+          )}
         </div>
 
         {/* RIGHT — Edit Form */}
