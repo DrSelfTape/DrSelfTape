@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Bell, HeartHandshake, Clapperboard, MessageSquare, X } from 'lucide-react';
+import { Bell, HeartHandshake, Clapperboard, MessageSquare, X, Megaphone } from 'lucide-react';
 import { getNotifications, markNotificationRead } from '../../redux/features/notifications/notificationsSlice';
 
 const NOTIF_ICONS = {
@@ -9,7 +9,7 @@ const NOTIF_ICONS = {
   scene_partner_match: Clapperboard,
   rehearsal_started: Clapperboard,
   new_message: MessageSquare,
-  admin_broadcast: Bell,
+  admin_broadcast: Megaphone,
 };
 
 const NOTIF_COLORS = {
@@ -25,11 +25,11 @@ function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
   if (mins < 1) return 'now';
-  if (mins < 60) return `${mins}m`;
+  if (mins < 60) return `${mins}m ago`;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h`;
+  if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
-  return `${days}d`;
+  return `${days}d ago`;
 }
 
 export default function NotificationBell({ onNavigate }) {
@@ -44,7 +44,7 @@ export default function NotificationBell({ onNavigate }) {
     dispatch(getNotifications());
   }, [dispatch]);
 
-  // Close on outside click (delayed to avoid catching notification item clicks)
+  // Close on outside click
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -52,14 +52,8 @@ export default function NotificationBell({ onNavigate }) {
         setOpen(false);
       }
     };
-    // Use setTimeout to register after current event cycle
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handler);
-    }, 0);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handler);
-    };
+    const timer = setTimeout(() => document.addEventListener('mousedown', handler), 50);
+    return () => { clearTimeout(timer); document.removeEventListener('mousedown', handler); };
   }, [open]);
 
   const sorted = [...(notifications || [])].sort(
@@ -68,15 +62,10 @@ export default function NotificationBell({ onNavigate }) {
   const unread = sorted.filter((n) => !n.is_read);
 
   const handleClick = (notif) => {
-    // Mark as read but don't remove from list — just updates the dot
-    if (!notif.is_read) {
-      dispatch(markNotificationRead(notif.id));
-    }
+    if (!notif.is_read) dispatch(markNotificationRead(notif.id));
 
-    // Navigate after a brief delay so user sees the read state change
     setTimeout(() => {
       setOpen(false);
-
       const route =
         notif.type === 'scene_partner_like' ? '/dashboard/who-wants-to-read' :
         notif.type === 'scene_partner_match' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
@@ -112,76 +101,110 @@ export default function NotificationBell({ onNavigate }) {
       >
         <Bell className="w-[18px] h-[18px]" style={{ color: 'var(--text-secondary)' }} />
         {unread.length > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-[#C855F0] text-white text-[10px] font-bold flex items-center justify-center px-1">
+          <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] rounded-full bg-[#C855F0] text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg shadow-[#C855F0]/30">
             {unread.length > 9 ? '9+' : unread.length}
           </span>
         )}
       </button>
 
-      {/* Dropdown panel */}
+      {/* Dropdown — full screen on mobile, positioned on desktop */}
       {open && (
         <div
-          className="absolute right-0 top-12 w-[340px] max-h-[420px] rounded-2xl shadow-2xl z-[100] overflow-hidden"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', animation: 'fadeIn 0.15s ease-out' }}
+          className={isMobile
+            ? "fixed inset-0 z-[9999] flex flex-col"
+            : "absolute right-0 top-12 w-[380px] z-[9999] flex flex-col rounded-2xl shadow-2xl"
+          }
+          style={{
+            background: 'var(--bg-elevated)',
+            border: isMobile ? 'none' : '1px solid var(--border-default)',
+            maxHeight: isMobile ? '100vh' : '80vh',
+            animation: 'fadeIn 0.15s ease-out',
+          }}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border-default)' }}>
-            <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
-            <button onClick={() => setOpen(false)} className="hover:text-white" style={{ color: 'var(--text-muted)' }}>
+          <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border-default)' }}>
+            <div className="flex items-center gap-2">
+              <Bell className="w-4 h-4 text-[#C855F0]" />
+              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
+              {unread.length > 0 && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C855F0]/15 text-[#C855F0]">
+                  {unread.length} new
+                </span>
+              )}
+            </div>
+            <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* List */}
-          <div className="overflow-y-auto max-h-[340px]">
+          {/* List — scrollable */}
+          <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
             {loading && (
-              <p className="text-center text-xs py-8" style={{ color: 'var(--text-muted)' }}>Loading...</p>
+              <div className="flex items-center justify-center py-12">
+                <div className="w-6 h-6 border-2 border-[#C855F0]/30 border-t-[#C855F0] rounded-full animate-spin" />
+              </div>
             )}
 
             {!loading && sorted.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-10 px-4">
-                <Bell className="w-8 h-8 mb-3" style={{ color: 'var(--text-dim)' }} />
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No notifications yet</p>
-                <p className="text-xs mt-1" style={{ color: 'var(--text-dim)' }}>You'll see activity here when actors interact with you</p>
+              <div className="flex flex-col items-center justify-center py-16 px-6">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center mb-4" style={{ background: 'var(--bg-surface)' }}>
+                  <Bell className="w-6 h-6" style={{ color: 'var(--text-dim)' }} />
+                </div>
+                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>No notifications yet</p>
+                <p className="text-xs mt-1 text-center" style={{ color: 'var(--text-muted)' }}>
+                  You'll see activity here when actors interact with you
+                </p>
               </div>
             )}
 
             {!loading && sorted.map((notif) => {
               const Icon = NOTIF_ICONS[notif.type] || Bell;
-              const color = NOTIF_COLORS[notif.type] || '#999';
+              const color = NOTIF_COLORS[notif.type] || 'var(--text-secondary)';
               const isUnread = !notif.is_read;
 
               return (
                 <div
                   key={notif.id}
                   onClick={() => handleClick(notif)}
-                  className={`flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-[#ffffff08] ${
-                    isUnread ? 'bg-[#C855F0]/5' : ''
-                  }`}
+                  className="flex items-start gap-3 px-5 py-4 cursor-pointer transition-colors"
+                  style={{
+                    background: isUnread ? 'rgba(200,85,240,0.04)' : 'transparent',
+                    borderBottom: '1px solid var(--border-default)',
+                  }}
                 >
+                  {/* Icon */}
                   <div
-                    className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                     style={{ backgroundColor: `${color}15` }}
                   >
-                    <Icon className="w-4 h-4" style={{ color }} />
+                    <Icon className="w-5 h-5" style={{ color }} />
                   </div>
+
+                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className={`text-sm truncate ${isUnread ? 'font-semibold' : 'font-medium'}`} style={{ color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className={`text-sm leading-snug ${isUnread ? 'font-semibold' : 'font-medium'}`} style={{ color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                         {notif.title}
                       </p>
                       {isUnread && (
-                        <span className="w-2 h-2 rounded-full bg-[#C855F0] shrink-0" />
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#C855F0] shrink-0 mt-1.5" />
                       )}
                     </div>
                     {notif.message && (
-                      <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{notif.message}</p>
+                      <p className="text-xs mt-1 line-clamp-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                        {notif.message}
+                      </p>
                     )}
-                    <p className="text-[10px] mt-1" style={{ color: 'var(--text-dim)' }}>{timeAgo(notif.created_at)}</p>
+                    <p className="text-[11px] mt-1.5 font-medium" style={{ color: 'var(--text-dim)' }}>
+                      {timeAgo(notif.created_at)}
+                    </p>
                   </div>
                 </div>
               );
             })}
+
+            {/* Bottom padding for mobile safe area */}
+            {isMobile && <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />}
           </div>
 
           <style>{`
