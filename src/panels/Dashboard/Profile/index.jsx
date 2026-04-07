@@ -566,17 +566,24 @@ export default function Profile() {
             </div>
 
             {/* Reader Marketplace — Pricing */}
-            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-              <div className="flex items-center gap-3 mb-4">
-                <DollarSign className="w-5 h-5 text-[#FCE072]" />
-                <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Reader Marketplace</h3>
+            <div className="rounded-2xl shadow-sm p-6" style={{
+              background: 'linear-gradient(135deg, rgba(252,224,114,0.03), var(--bg-surface))',
+              border: '1px solid rgba(252,224,114,0.15)',
+            }}>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(252,224,114,0.1)' }}>
+                  <DollarSign className="w-5 h-5 text-[#FCE072]" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Reader Marketplace</h3>
+                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Earn money reading with other actors</p>
+                </div>
               </div>
-              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
-                Want to get paid to read with other actors? Set your rates and earn money for every session.
-              </p>
+
+              <div className="my-4" style={{ height: 1, background: 'var(--border-default)' }} />
 
               {/* Toggle */}
-              <div className="flex items-center gap-3 mb-5">
+              <div className="flex items-center gap-3 mb-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -600,8 +607,10 @@ export default function Profile() {
 
               {/* Rates */}
               {readerForm.is_paid_reader && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-5">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Your Session Rates</p>
+                    <div className="grid grid-cols-3 gap-3">
                     {[
                       { key: 'session_rate_15', label: '15 min' },
                       { key: 'session_rate_30', label: '30 min' },
@@ -625,11 +634,16 @@ export default function Profile() {
                     ))}
                   </div>
 
-                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                    You keep 80% of each session. Dr Self Tape takes a 20% platform fee.
-                  </p>
+                    <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                      You keep 80%. Platform fee: 20%.
+                    </p>
+                  </div>
+
+                  <div style={{ height: 1, background: 'var(--border-default)' }} />
 
                   {/* Connect Stripe button */}
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Payment Setup</p>
                   {stripeConnected ? (
                     <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
                       style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
@@ -667,6 +681,7 @@ export default function Profile() {
                       {connectLoading ? 'Setting up...' : 'Connect Bank Account (Stripe)'}
                     </button>
                   )}
+                  </div>
                 </div>
               )}
             </div>
