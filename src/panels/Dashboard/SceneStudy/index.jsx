@@ -5,6 +5,7 @@ import RolePicker from './RolePicker';
 import Teleprompter from './Teleprompter';
 import RecordTake from './RecordTake';
 import LiveSceneMode from './LiveSceneMode';
+import SelfTapeRecorder from './SelfTapeRecorder';
 
 const STEPS = ['upload', 'pick-role', 'practice', 'record'];
 const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice', 'Record'];
@@ -121,6 +122,17 @@ export default function SceneStudy() {
     }
   }, [step]);
 
+  // Self-tape recording mode — full screen camera overlay
+  if (step === 'self-tape') {
+    return (
+      <SelfTapeRecorder
+        lines={parsedLines}
+        userRole={selectedRole}
+        onClose={() => setStep('practice')}
+      />
+    );
+  }
+
   // Live scene mode — full screen overlay
   if (step === 'live') {
     return (
@@ -224,6 +236,7 @@ export default function SceneStudy() {
           onRecord={() => setStep('record')}
           onBack={() => setStep('pick-role')}
           onGoLive={() => setStep('live')}
+          onSelfTape={() => setStep('self-tape')}
         />
       )}
 

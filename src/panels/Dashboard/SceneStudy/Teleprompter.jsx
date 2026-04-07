@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const SPEED_MAP = { slow: 0.5, medium: 1, fast: 2 };
 const SPEED_LABELS = ['slow', 'medium', 'fast'];
 
-export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLive }) {
+export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLive, onSelfTape }) {
   const [autoScroll, setAutoScroll] = useState(false);
   const [speed, setSpeed] = useState('medium');
   const [paused, setPaused] = useState(false);
@@ -51,16 +51,20 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
             Your lines are highlighted in <span className="text-[#C855F0]">purple</span>
           </p>
         </div>
-        {/* Record button — compact on mobile */}
-        <button
-          onClick={onRecord}
-          className="flex items-center gap-1.5 bg-[#1E1E1E] border border-[#3A3A3A] text-white px-3 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer shrink-0 ml-3"
-        >
-          <svg className="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 24 24">
-            <circle cx="12" cy="12" r="6" />
-          </svg>
-          Record
-        </button>
+        <div className="flex items-center gap-2 ml-3 shrink-0">
+          {/* Self-Tape button */}
+          {onSelfTape && (
+            <button
+              onClick={onSelfTape}
+              className="flex items-center gap-1.5 bg-[#C855F0] text-white px-3 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
+            >
+              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
+              </svg>
+              Self-Tape
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Controls Bar — single row, compact ── */}
