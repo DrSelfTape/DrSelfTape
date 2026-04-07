@@ -57,6 +57,9 @@ const Reports = lazy(() => import('../panels/Dashboard/Reports'));
 const Submissions = lazy(() => import('../panels/Dashboard/Submissions'));
 const AuditionGenerator = lazy(() => import('../panels/Dashboard/AuditionGenerator'));
 const CastingDirectorAI = lazy(() => import('../panels/Dashboard/CastingDirectorAI'));
+const Referral = lazy(() => import('../panels/Dashboard/Referral'));
+const Marketplace = lazy(() => import('../panels/Dashboard/Marketplace'));
+const SelfTapes = lazy(() => import('../panels/Dashboard/SelfTapes'));
 
 // Lazy-loaded Find a Reader imports
 const FindAReader = lazy(() => import('../panels/Dashboard/FindAReader'));
@@ -128,6 +131,9 @@ export const commonRoutes = [
       { path: 'who-wants-to-read', moduleName: 'WhoWantsToRead', element: <WhoWantsToRead /> },
       { path: 'favorites', moduleName: 'Favorites', element: <Favorites /> },
       { path: 'reader-profile/:readerId', moduleName: 'ReaderProfile', element: <ReaderProfile /> },
+      { path: 'referral', moduleName: 'Referral', element: <Referral /> },
+      { path: 'marketplace', moduleName: 'Marketplace', element: <Marketplace /> },
+      { path: 'self-tapes', moduleName: 'SelfTapes', element: <SelfTapes /> },
     ],
   },
   // Admin routes (accessible to all authenticated users, guarded by AdminLayout)

@@ -108,6 +108,9 @@ const AgentPortal = lazy(() => Promise.resolve({ default: () => null }));
 const AuditionGenerator = lazy(() => import("../Dashboard/AuditionGenerator"));
 const SceneStudy = lazy(() => import("../Dashboard/SceneStudy"));
 const MeetingRoom = lazy(() => import("../Meeting/MeetingRoom"));
+const Referral = lazy(() => import("../Dashboard/Referral"));
+const Marketplace = lazy(() => import("../Dashboard/Marketplace"));
+const SelfTapesPanel = lazy(() => import("../Dashboard/SelfTapes"));
 
 /* ═══════════════════════════════════════════════════
    BRAND TOKENS — from Dr Self Tape Brand Guideline
@@ -271,6 +274,9 @@ const MORE_FEATURES = [
   { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#C855F0" },
   { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072" },
   { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA" },
+  { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA" },
+  { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072" },
+  { id: "self-tapes", label: "Self-Tapes", desc: "Record and submit auditions", emoji: "📹", color: "#FFB49A" },
 ];
 
 const PANEL_COMPONENTS = {
@@ -286,6 +292,9 @@ const PANEL_COMPONENTS = {
   "who-wants-to-read": WhoWantsToRead,
   "favorites": Favorites,
   "meeting": MeetingRoom,
+  "referral": Referral,
+  "marketplace": Marketplace,
+  "self-tapes": SelfTapesPanel,
 };
 
 /* ═══════════════════════════════════════════════════
