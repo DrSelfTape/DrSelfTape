@@ -59,6 +59,7 @@ export default function Profile() {
     session_rate_60: '20',
   });
   const [connectLoading, setConnectLoading] = useState(false);
+  const [showMarketplaceTutorial, setShowMarketplaceTutorial] = useState(false);
   const [referral, setReferral] = useState({ code: '', share_url: '', uses: 0 });
   const [codeCopied, setCodeCopied] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);
@@ -240,6 +241,59 @@ export default function Profile() {
           <style>{`
             @keyframes badgePop {
               from { opacity: 0; transform: scale(0.8) translateY(10px); }
+              to { opacity: 1; transform: scale(1) translateY(0); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Marketplace Tutorial */}
+      {showMarketplaceTutorial && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="max-w-sm w-full rounded-2xl p-7 shadow-2xl" style={{
+            background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-card))',
+            border: '1px solid rgba(252,224,114,0.2)',
+            animation: 'badgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards',
+          }}>
+            <div className="text-center mb-5">
+              <span className="text-4xl">💰</span>
+              <h2 className="text-xl font-bold mt-3" style={{ color: 'var(--text-primary)' }}>Welcome to the Marketplace!</h2>
+              <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+                You're about to start earning money as a reader. Here's how it works:
+              </p>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              {[
+                { emoji: '💵', title: 'Set Your Rates', desc: 'Choose what you charge for 15, 30, and 60 minute sessions.' },
+                { emoji: '🏦', title: 'Connect Your Bank', desc: 'Link your bank account via Stripe so you get paid directly.' },
+                { emoji: '🎬', title: 'Get Booked', desc: 'Actors browse your profile and book sessions. You get notified instantly.' },
+                { emoji: '💸', title: 'Get Paid Automatically', desc: 'You keep 80% of every session. Money goes straight to your bank.' },
+              ].map((step, i) => (
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: 'var(--bg-deep)' }}>
+                  <span className="text-lg shrink-0 mt-0.5">{step.emoji}</span>
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                setShowMarketplaceTutorial(false);
+                localStorage.setItem('drst-marketplace-tutorial-seen', 'true');
+              }}
+              className="w-full py-3 rounded-xl text-white font-bold text-sm transition-colors"
+              style={{ background: 'linear-gradient(135deg, #FCE072, #C855F0)' }}
+            >
+              Let's Set Up My Rates
+            </button>
+          </div>
+          <style>{`
+            @keyframes badgePop {
+              from { opacity: 0; transform: scale(0.7) translateY(20px); }
               to { opacity: 1; transform: scale(1) translateY(0); }
             }
           `}</style>
@@ -523,7 +577,13 @@ export default function Profile() {
               <div className="flex items-center gap-3 mb-5">
                 <button
                   type="button"
-                  onClick={() => setReaderForm(prev => ({ ...prev, is_paid_reader: !prev.is_paid_reader }))}
+                  onClick={() => {
+                    const wasOff = !readerForm.is_paid_reader;
+                    setReaderForm(prev => ({ ...prev, is_paid_reader: !prev.is_paid_reader }));
+                    if (wasOff && !localStorage.getItem('drst-marketplace-tutorial-seen')) {
+                      setShowMarketplaceTutorial(true);
+                    }
+                  }}
                   className="relative w-12 h-7 rounded-full transition-colors"
                   style={{ background: readerForm.is_paid_reader ? '#C855F0' : 'var(--border-default)' }}
                 >
