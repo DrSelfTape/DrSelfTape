@@ -272,44 +272,62 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
           </button>
         )}
 
-        <div className="flex items-center justify-center gap-6">
+        <div className="flex items-center justify-center gap-8">
         {!recordedUrl ? (
           <>
+            {/* Close button */}
+            <button onClick={onClose} className="flex flex-col items-center gap-1.5">
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
+                <X className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-[11px] text-white/60 font-medium">Close</span>
+            </button>
+
+            {/* Record / Stop */}
             {!recording ? (
               <button
                 onClick={startRecording}
                 disabled={!cameraReady}
-                className="w-16 h-16 rounded-full border-4 border-white flex items-center justify-center disabled:opacity-30"
+                className="flex flex-col items-center gap-1.5 disabled:opacity-30"
               >
-                <div className="w-12 h-12 rounded-full bg-red-500" />
+                <div className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center">
+                  <div className="w-14 h-14 rounded-full bg-red-500" />
+                </div>
+                <span className="text-[11px] text-white font-semibold">Record</span>
               </button>
             ) : (
-              <button onClick={stopRecording} className="w-16 h-16 rounded-full border-4 border-red-500 flex items-center justify-center">
-                <Square className="w-6 h-6 text-red-500 fill-red-500" />
+              <button onClick={stopRecording} className="flex flex-col items-center gap-1.5">
+                <div className="w-20 h-20 rounded-full border-4 border-red-500 flex items-center justify-center animate-pulse">
+                  <Square className="w-8 h-8 text-red-500 fill-red-500" />
+                </div>
+                <span className="text-[11px] text-red-400 font-semibold">Stop</span>
               </button>
             )}
+
+            {/* Placeholder for balance */}
+            <div className="w-14" />
           </>
         ) : (
-          <div className="flex items-center gap-4">
-            <button onClick={handleRetake} className="flex flex-col items-center gap-1">
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+          <div className="flex items-center gap-6">
+            <button onClick={handleRetake} className="flex flex-col items-center gap-1.5">
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
                 <RotateCcw className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xs text-white/60">Retake</span>
+              <span className="text-[11px] text-white/60 font-medium">Retake</span>
             </button>
 
-            <button onClick={handleDownload} className="flex flex-col items-center gap-1">
-              <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+            <button onClick={handleDownload} className="flex flex-col items-center gap-1.5">
+              <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
                 <Download className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xs text-white/60">Download</span>
+              <span className="text-[11px] text-white/60 font-medium">Download</span>
             </button>
 
-            <button onClick={handleSave} disabled={saving || saved} className="flex flex-col items-center gap-1">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${saved ? 'bg-emerald-500' : 'bg-[#C855F0]'}`}>
+            <button onClick={handleSave} disabled={saving || saved} className="flex flex-col items-center gap-1.5">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${saved ? 'bg-emerald-500' : 'bg-[#C855F0]'}`}>
                 {saved ? <Video className="w-6 h-6 text-white" /> : saving ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-6 h-6 text-white" />}
               </div>
-              <span className="text-xs text-white/60">{saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}</span>
+              <span className="text-[11px] text-white/60 font-medium">{saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}</span>
             </button>
           </div>
         )}
