@@ -213,8 +213,7 @@ export default function Profile() {
       {validationPopup && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="border border-red-500/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
-            style={{ background: 'var(--bg-elevated)' }}
-            style={{ animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
+            style={{ background: 'var(--bg-elevated)', animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
           >
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center">

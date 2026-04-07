@@ -16,6 +16,7 @@ const NOTIF_COLORS = {
   scene_partner_like: '#C855F0',
   scene_partner_match: '#A7ECDA',
   rehearsal_started: '#eab308',
+  new_message: '#60A5FA',
   admin_broadcast: '#FCE072',
 };
 
@@ -80,6 +81,7 @@ export default function NotificationBell({ onNavigate }) {
         notif.type === 'scene_partner_like' ? '/dashboard/who-wants-to-read' :
         notif.type === 'scene_partner_match' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
         notif.type === 'rehearsal_started' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
+        notif.type === 'new_message' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
         null;
 
       if (route) {
@@ -120,8 +122,7 @@ export default function NotificationBell({ onNavigate }) {
       {open && (
         <div
           className="absolute right-0 top-12 w-[340px] max-h-[420px] rounded-2xl shadow-2xl z-[100] overflow-hidden"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)' }}
-          style={{ animation: 'fadeIn 0.15s ease-out' }}
+          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', animation: 'fadeIn 0.15s ease-out' }}
         >
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border-default)' }}>
