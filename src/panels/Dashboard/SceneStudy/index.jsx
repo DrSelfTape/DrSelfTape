@@ -7,8 +7,8 @@ import RecordTake from './RecordTake';
 import LiveSceneMode from './LiveSceneMode';
 import SelfTapeRecorder from './SelfTapeRecorder';
 
-const STEPS = ['upload', 'pick-role', 'practice', 'record'];
-const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice', 'Record'];
+const STEPS = ['upload', 'pick-role', 'practice'];
+const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice'];
 
 /**
  * Parse script text into lines with character + dialogue.
@@ -240,9 +240,6 @@ export default function SceneStudy() {
         />
       )}
 
-      {step === 'record' && (
-        <RecordTake onBack={() => setStep('practice')} />
-      )}
     </div>
   );
 }

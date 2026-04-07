@@ -157,42 +157,14 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
 
       {/* ── Bottom Actions ── */}
       <div className="mt-3 flex flex-col gap-2">
-        {/* Go Live — primary CTA */}
-        {onGoLive && (
-          <button
-            onClick={onGoLive}
-            className="w-full py-3.5 rounded-xl font-bold text-sm text-white flex items-center justify-center gap-2 cursor-pointer"
-            style={{
-              background: 'linear-gradient(135deg, #C855F0, #9333ea)',
-              boxShadow: '0 4px 20px rgba(200,85,240,0.35)',
-            }}
-          >
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-            </svg>
-            Go Live with AI Scene Partner
-          </button>
-        )}
-
-        {/* Secondary row — Record + Back */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onRecord}
-            className="flex-1 py-2.5 rounded-xl font-semibold text-sm text-white border border-[#3A3A3A] bg-[#1A1A1A] flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <svg className="w-3.5 h-3.5 text-red-400" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="6" />
-            </svg>
-            Record Take
-          </button>
-          <button
-            onClick={onBack}
-            className="px-5 py-2.5 rounded-xl text-sm text-[#666666] font-medium cursor-pointer bg-[#1A1A1A] border border-[#2A2A2A]"
-          >
-            Back
-          </button>
-        </div>
+        {/* Back button */}
+        <button
+          onClick={onBack}
+          className="w-full py-2.5 rounded-xl text-sm font-medium cursor-pointer flex items-center justify-center"
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-secondary)' }}
+        >
+          ← Back to Role Selection
+        </button>
       </div>
     </div>
   );
