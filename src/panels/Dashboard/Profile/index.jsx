@@ -59,6 +59,7 @@ export default function Profile() {
     session_rate_60: '20',
   });
   const [connectLoading, setConnectLoading] = useState(false);
+  const [stripeConnected, setStripeConnected] = useState(false);
   const [showMarketplaceTutorial, setShowMarketplaceTutorial] = useState(false);
   const [referral, setReferral] = useState({ code: '', share_url: '', uses: 0 });
   const [codeCopied, setCodeCopied] = useState(false);
@@ -89,6 +90,7 @@ export default function Profile() {
           session_rate_30: String(d.session_rate_30 || 10),
           session_rate_60: String(d.session_rate_60 || 20),
         });
+        setStripeConnected(d.stripe_connected || false);
       })
       .catch(() => {});
   }, [dispatch]);
@@ -628,34 +630,43 @@ export default function Profile() {
                   </p>
 
                   {/* Connect Stripe button */}
-                  <button
-                    type="button"
-                    disabled={connectLoading}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setConnectLoading(true);
-                      axios.post(`${baseURL}/v1/growth/marketplace/connect/`)
-                        .then(({ data }) => {
-                          const url = data?.data?.onboarding_url;
-                          if (url) {
-                            window.location.href = url;
-                          } else {
-                            alert('No onboarding URL returned. Please try again.');
+                  {stripeConnected ? (
+                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
+                      style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
+                    >
+                      <Check className="w-4 h-4" />
+                      Bank Account Connected
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={connectLoading}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setConnectLoading(true);
+                        axios.post(`${baseURL}/v1/growth/marketplace/connect/`)
+                          .then(({ data }) => {
+                            const url = data?.data?.onboarding_url;
+                            if (url) {
+                              window.location.href = url;
+                            } else {
+                              alert('No onboarding URL returned. Please try again.');
+                              setConnectLoading(false);
+                            }
+                          })
+                          .catch((err) => {
+                            alert(err?.response?.data?.message || 'Failed to set up payments. Please try again.');
                             setConnectLoading(false);
-                          }
-                        })
-                        .catch((err) => {
-                          alert(err?.response?.data?.message || 'Failed to set up payments. Please try again.');
-                          setConnectLoading(false);
-                        });
-                    }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-                    style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    {connectLoading ? 'Setting up...' : 'Connect Bank Account (Stripe)'}
-                  </button>
+                          });
+                      }}
+                      className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                      style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      {connectLoading ? 'Setting up...' : 'Connect Bank Account (Stripe)'}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
