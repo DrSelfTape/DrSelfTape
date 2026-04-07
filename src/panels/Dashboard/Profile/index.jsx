@@ -631,17 +631,24 @@ export default function Profile() {
                   <button
                     type="button"
                     disabled={connectLoading}
-                    onClick={async () => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
                       setConnectLoading(true);
-                      try {
-                        const { data } = await axios.post(`${baseURL}/v1/growth/marketplace/connect/`);
-                        if (data?.data?.onboarding_url) {
-                          window.open(data.data.onboarding_url, '_blank');
-                        }
-                      } catch (err) {
-                        alert(err?.response?.data?.message || 'Failed to set up payments');
-                      }
-                      setConnectLoading(false);
+                      axios.post(`${baseURL}/v1/growth/marketplace/connect/`)
+                        .then(({ data }) => {
+                          const url = data?.data?.onboarding_url;
+                          if (url) {
+                            window.location.href = url;
+                          } else {
+                            alert('No onboarding URL returned. Please try again.');
+                            setConnectLoading(false);
+                          }
+                        })
+                        .catch((err) => {
+                          alert(err?.response?.data?.message || 'Failed to set up payments. Please try again.');
+                          setConnectLoading(false);
+                        });
                     }}
                     className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
                     style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
