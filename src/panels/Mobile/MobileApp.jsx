@@ -891,7 +891,7 @@ function AuditionsScreen() {
           <div style={{
             position: "relative", zIndex: 1, maxHeight: "85vh",
             background: BG_DEEP, borderRadius: "20px 20px 0 0",
-            padding: "12px 20px 32px",
+            padding: "12px 20px calc(80px + env(safe-area-inset-bottom, 0px))",
             overflowY: "scroll", WebkitOverflowScrolling: "touch",
           }}>
             {/* Handle + Close */}
