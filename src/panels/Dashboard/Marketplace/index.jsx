@@ -218,13 +218,18 @@ export default function Marketplace() {
     if (!confirmData) return;
     setBooking(true);
     try {
-      await axios.post(`${baseURL}/v1/growth/marketplace/book/`, {
-        reader_id: confirmData.reader.id,
+      const { data } = await axios.post(`${baseURL}/v1/growth/marketplace/book/`, {
+        reader_id: confirmData.reader.user_id,
         duration: confirmData.duration,
       });
-      setConfirmData(null);
-    } catch {
-      /* handle error */
+      const checkoutUrl = data?.data?.checkout_url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        setConfirmData(null);
+      }
+    } catch (err) {
+      alert(err?.response?.data?.message || 'Booking failed. Please try again.');
     } finally {
       setBooking(false);
     }
