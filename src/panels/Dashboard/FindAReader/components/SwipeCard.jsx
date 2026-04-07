@@ -137,6 +137,18 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         pointerEvents: 'none',
       }} />
 
+      {/* ── Free / Paid badge */}
+      <div style={{
+        position: 'absolute', top: isMobile ? 60 : 16, right: 16,
+        padding: '5px 14px', borderRadius: 20, zIndex: 5,
+        background: actor?.is_paid_reader ? 'rgba(252,224,114,0.9)' : 'rgba(34,197,94,0.9)',
+        color: actor?.is_paid_reader ? '#1a1a2e' : '#fff',
+        fontSize: 12, fontWeight: 800, letterSpacing: 0.5,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      }}>
+        {actor?.is_paid_reader ? `$${actor.session_rate || ''}/session` : 'FREE'}
+      </div>
+
       {/* ── SLATE stamp (swipe right) */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, left: 20,
