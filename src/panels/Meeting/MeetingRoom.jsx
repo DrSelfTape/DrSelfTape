@@ -16,6 +16,7 @@ import { usePeerConnection } from '../../components/MeetingRoom/Hooks/usePeerCon
 import { isMeetingHost, meetingUrlForId } from '../../utils/meeting';
 import { PreJoinScreen } from '../../components/MeetingRoom/PreJoin/PreJoinScreen';
 import MeetingChat from '../../components/MeetingRoom/Controls/MeetingChat';
+import PostCallScreen from '../../components/MeetingRoom/PostCallScreen';
 
 const Meeting = () => {
   const { meetingId } = useParams();
@@ -482,10 +483,14 @@ const Meeting = () => {
     };
   }, [isScreenShareFullscreen, setIsScreenShareFullscreen]);
 
+  const [showPostCall, setShowPostCall] = useState(false);
+  const [postCallPartner, setPostCallPartner] = useState('');
+
   const handleLeaveMeeting = useCallback(() => {
     cleanupConnections();
-    navigate('/dashboard');
-  }, [cleanupConnections, navigate]);
+    setPostCallPartner(remoteDisplayName || 'Your scene partner');
+    setShowPostCall(true);
+  }, [cleanupConnections, remoteDisplayName]);
 
   const handleCopyLink = useCallback(async () => {
     try {
@@ -693,6 +698,14 @@ const Meeting = () => {
         initialCameraState={true}
         initialMicState={true}
       />
+
+      {/* Post-call screen — rating + tip */}
+      {showPostCall && (
+        <PostCallScreen
+          partnerName={postCallPartner}
+          onClose={() => navigate('/dashboard')}
+        />
+      )}
     </div>
   );
 };
