@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Camera, Upload, Loader2, Check, User, AlertCircle } from 'lucide-react';
+import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
+import axios from '../../../redux/http';
+import { baseURL } from '../../../redux/constant';
 import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
 import AuditionBadges, { BADGES } from '../../../components/AuditionBadges';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
@@ -50,6 +52,13 @@ export default function Profile() {
     years_experience: '',
     genres: [],
   });
+  const [readerForm, setReaderForm] = useState({
+    is_paid_reader: false,
+    session_rate_15: '5',
+    session_rate_30: '10',
+    session_rate_60: '20',
+  });
+  const [connectLoading, setConnectLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [headshotFile, setHeadshotFile] = useState(null);
@@ -63,6 +72,18 @@ export default function Profile() {
   useEffect(() => {
     dispatch(fetchProfileThunk());
     dispatch(fetchAuditionStatsThunk());
+    // Load reader marketplace profile
+    axios.get(`${baseURL}/v1/growth/marketplace/profile/`)
+      .then(({ data }) => {
+        const d = data?.data || {};
+        setReaderForm({
+          is_paid_reader: d.is_paid_reader || false,
+          session_rate_15: String(d.session_rate_15 || 5),
+          session_rate_30: String(d.session_rate_30 || 10),
+          session_rate_60: String(d.session_rate_60 || 20),
+        });
+      })
+      .catch(() => {});
   }, [dispatch]);
 
   useEffect(() => {
@@ -126,6 +147,16 @@ export default function Profile() {
     if (avatarFile) fd.append('user_image', avatarFile);
     if (headshotFile) fd.append('headshot', headshotFile);
     if (resumeFile) fd.append('resume_file', resumeFile);
+
+    // Save reader marketplace rates
+    try {
+      await axios.post(`${baseURL}/v1/growth/marketplace/profile/`, {
+        is_paid_reader: readerForm.is_paid_reader,
+        session_rate_15: parseFloat(readerForm.session_rate_15) || 5,
+        session_rate_30: parseFloat(readerForm.session_rate_30) || 10,
+        session_rate_60: parseFloat(readerForm.session_rate_60) || 20,
+      });
+    } catch {}
 
     const result = await dispatch(updateProfileThunk(fd));
     if (updateProfileThunk.fulfilled.match(result)) {
@@ -415,6 +446,90 @@ export default function Profile() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Reader Marketplace — Pricing */}
+            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+              <div className="flex items-center gap-3 mb-4">
+                <DollarSign className="w-5 h-5 text-[#FCE072]" />
+                <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Reader Marketplace</h3>
+              </div>
+              <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+                Want to get paid to read with other actors? Set your rates and earn money for every session.
+              </p>
+
+              {/* Toggle */}
+              <div className="flex items-center gap-3 mb-5">
+                <button
+                  type="button"
+                  onClick={() => setReaderForm(prev => ({ ...prev, is_paid_reader: !prev.is_paid_reader }))}
+                  className="relative w-12 h-7 rounded-full transition-colors"
+                  style={{ background: readerForm.is_paid_reader ? '#C855F0' : 'var(--border-default)' }}
+                >
+                  <div className="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-transform" style={{
+                    transform: readerForm.is_paid_reader ? 'translateX(20px)' : 'translateX(0)',
+                  }} />
+                </button>
+                <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  {readerForm.is_paid_reader ? 'Paid Reader — Active' : 'Not offering paid sessions'}
+                </span>
+              </div>
+
+              {/* Rates */}
+              {readerForm.is_paid_reader && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { key: 'session_rate_15', label: '15 min' },
+                      { key: 'session_rate_30', label: '30 min' },
+                      { key: 'session_rate_60', label: '60 min' },
+                    ].map(r => (
+                      <div key={r.key}>
+                        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{r.label}</label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'var(--text-muted)' }}>$</span>
+                          <input
+                            type="number"
+                            min="1"
+                            max="200"
+                            value={readerForm[r.key]}
+                            onChange={(e) => setReaderForm(prev => ({ ...prev, [r.key]: e.target.value }))}
+                            className="w-full pl-7 pr-3 py-2.5 rounded-lg text-sm font-semibold outline-none transition-colors"
+                            style={{ background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: 'var(--text-primary)' }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    You keep 80% of each session. Dr Self Tape takes a 20% platform fee.
+                  </p>
+
+                  {/* Connect Stripe button */}
+                  <button
+                    type="button"
+                    disabled={connectLoading}
+                    onClick={async () => {
+                      setConnectLoading(true);
+                      try {
+                        const { data } = await axios.post(`${baseURL}/v1/growth/marketplace/connect/`);
+                        if (data?.data?.onboarding_url) {
+                          window.open(data.data.onboarding_url, '_blank');
+                        }
+                      } catch (err) {
+                        alert(err?.response?.data?.message || 'Failed to set up payments');
+                      }
+                      setConnectLoading(false);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                    style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                    {connectLoading ? 'Setting up...' : 'Connect Bank Account (Stripe)'}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* File Uploads */}
