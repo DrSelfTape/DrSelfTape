@@ -884,20 +884,16 @@ function AuditionsScreen() {
 
       {/* Bottom Sheet Detail */}
       {selected && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           {/* Backdrop */}
-          <div onClick={() => setSelected(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} />
+          <div onClick={() => setSelected(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 0 }} />
           {/* Sheet */}
-          <div
-            onClick={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}
-            style={{
-              position: "absolute", bottom: 0, left: 0, right: 0, maxHeight: "80vh",
-              background: BG_DEEP, borderRadius: "20px 20px 0 0",
-              padding: "12px 20px calc(env(safe-area-inset-bottom, 8px) + 16px)",
-              overflowY: "auto", WebkitOverflowScrolling: "touch",
-              touchAction: "pan-y",
-            }}>
+          <div style={{
+            position: "relative", zIndex: 1, maxHeight: "80vh",
+            background: BG_DEEP, borderRadius: "20px 20px 0 0",
+            padding: "12px 20px calc(env(safe-area-inset-bottom, 8px) + 16px)",
+            overflowY: "scroll", WebkitOverflowScrolling: "touch",
+          }}>
             {/* Handle + Close */}
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
               <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(167,236,218,0.2)" }} />
