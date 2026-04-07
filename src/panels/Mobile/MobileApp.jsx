@@ -15,6 +15,7 @@ import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingMo
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
+import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
 import ThemeToggle from "../../components/Dashboard/ThemeToggle";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
@@ -430,6 +431,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           </div>
           <span style={{ fontSize: 12, fontWeight: 600, color: MINT }}>Go &rarr;</span>
         </div>
+      </div>
+
+      {/* Daily Challenge */}
+      <div style={{ marginBottom: 20 }}>
+        <DailyChallengeCard />
       </div>
 
       {/* Tutorial checklist */}

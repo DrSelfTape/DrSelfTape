@@ -20,6 +20,7 @@ import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardin
 import NotificationBell from '../../../components/Dashboard/NotificationBell';
 import TutorialChecklist from '../../../components/Dashboard/TutorialChecklist';
 import TutorialAchievement from '../../../components/Dashboard/TutorialAchievement';
+import DailyChallengeCard from '../../../components/Dashboard/DailyChallengeCard';
 import ThemeToggle from '../../../components/Dashboard/ThemeToggle';
 
 const TYPE_COLORS = {
@@ -120,6 +121,9 @@ export default function DashboardHome() {
 
       {/* Find a Reader CTA */}
       <FindAReaderCTA />
+
+      {/* Daily Challenge */}
+      <DailyChallengeCard />
 
       {/* Tutorial Checklist */}
       <TutorialChecklist />
