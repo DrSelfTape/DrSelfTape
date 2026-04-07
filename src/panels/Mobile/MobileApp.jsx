@@ -884,30 +884,44 @@ function AuditionsScreen() {
 
       {/* Bottom Sheet Detail */}
       {selected && (
-        <>
-          <div onClick={() => setSelected(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100 }} />
+        <div style={{ position: "fixed", inset: 0, zIndex: 200 }}>
+          {/* Backdrop */}
+          <div onClick={() => setSelected(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)" }} />
+          {/* Sheet */}
           <div style={{
-            position: "fixed", bottom: 0, left: 0, right: 0, maxHeight: "85vh", zIndex: 101,
-            background: BG_DEEP, borderRadius: "20px 20px 0 0", padding: "8px 20px 32px",
-            overflowY: "auto", animation: "slideUp 0.3s ease",
+            position: "absolute", bottom: 0, left: 0, right: 0, maxHeight: "80vh",
+            background: BG_DEEP, borderRadius: "20px 20px 0 0",
+            padding: "12px 20px calc(env(safe-area-inset-bottom, 8px) + 16px)",
+            overflowY: "auto", WebkitOverflowScrolling: "touch",
           }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(167,236,218,0.15)", margin: "0 auto 16px" }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>{selected.project}</h2>
-                <p style={{ fontSize: 14, color: TEXT_SECONDARY, margin: "4px 0 0" }}>as {selected.character}</p>
-              </div>
+            {/* Handle + Close */}
+            <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+              <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(167,236,218,0.2)" }} />
+            </div>
+            <button onClick={() => setSelected(null)} style={{
+              position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 10,
+              background: BG_ELEVATED, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+              color: TEXT_SECONDARY, fontSize: 18, lineHeight: 1,
+            }}>&times;</button>
+
+            {/* Header */}
+            <div style={{ marginBottom: 20, paddingRight: 40 }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>{selected.project}</h2>
+              <p style={{ fontSize: 14, color: TEXT_SECONDARY, margin: "4px 0 0" }}>as {selected.character}</p>
               <span style={{
-                fontSize: 12, fontWeight: 600, padding: "6px 14px", borderRadius: 20,
+                display: "inline-block", marginTop: 8,
+                fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20,
                 background: `${STATUS_COLORS[selected.status]}18`, color: STATUS_COLORS[selected.status],
                 textTransform: "capitalize",
-              }}>{selected.status.replace("_", " ")}</span>
+              }}>{(selected.status || "").replace("_", " ")}</span>
             </div>
+
+            {/* Details grid */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
               {[
-                { label: "Casting director", value: selected.cd },
-                { label: "Agency", value: selected.agency },
-                { label: "Type", value: selected.type },
+                { label: "Casting Director", value: selected.cd || "—" },
+                { label: "Agency", value: selected.agency || "—" },
+                { label: "Type", value: selected.type || "—" },
                 { label: "Callback", value: selected.callbackDate || "—" },
               ].map(f => (
                 <div key={f.label} style={{ background: BG_CARD, borderRadius: 12, padding: "12px 14px" }}>
@@ -916,12 +930,21 @@ function AuditionsScreen() {
                 </div>
               ))}
             </div>
+
+            {/* Actions */}
             <div style={{ display: "flex", gap: 10 }}>
-              <button style={{ flex: 1, padding: "14px", borderRadius: 12, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Edit</button>
-              <button style={{ flex: 1, padding: "14px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>Move status</button>
+              <button onClick={() => setSelected(null)} style={{
+                flex: 1, padding: "14px", borderRadius: 12, border: `1px solid ${BORDER_ACTIVE}`,
+                background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Close</button>
+              <button onClick={() => setSelected(null)} style={{
+                flex: 1, padding: "14px", borderRadius: 12, border: "none",
+                background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
+                fontSize: 14, fontWeight: 600, cursor: "pointer",
+              }}>Got It</button>
             </div>
           </div>
-        </>
+        </div>
       )}
         </>
       )}
