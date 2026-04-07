@@ -884,14 +884,14 @@ function AuditionsScreen() {
 
       {/* Bottom Sheet Detail */}
       {selected && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 200, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           {/* Backdrop */}
-          <div onClick={() => setSelected(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 0 }} />
+          <div onClick={() => setSelected(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 0 }} />
           {/* Sheet */}
           <div style={{
-            position: "relative", zIndex: 1, maxHeight: "80vh",
+            position: "relative", zIndex: 1, maxHeight: "85vh",
             background: BG_DEEP, borderRadius: "20px 20px 0 0",
-            padding: "12px 20px calc(env(safe-area-inset-bottom, 8px) + 16px)",
+            padding: "12px 20px 32px",
             overflowY: "scroll", WebkitOverflowScrolling: "touch",
           }}>
             {/* Handle + Close */}
