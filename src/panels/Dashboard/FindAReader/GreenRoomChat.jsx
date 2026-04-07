@@ -24,12 +24,7 @@ const GreenRoomChat = (props = {}) => {
   const { greenRoomMessages: allMessages, messagesLoading, matches } = useSelector(
     (state) => state.readersMatch
   );
-  const greenRoomMessages = (() => {
-    const msgs = allMessages[matchId];
-    if (Array.isArray(msgs)) return msgs;
-    if (Array.isArray(allMessages)) return allMessages;
-    return [];
-  })();
+  const greenRoomMessages = Array.isArray(allMessages?.[matchId]) ? allMessages[matchId] : [];
 
   const match = matches?.find((m) => String(m.id) === String(matchId));
   const partnerName = match?.reader?.name || 'Your Reader';
@@ -89,6 +84,8 @@ const GreenRoomChat = (props = {}) => {
     setSending(true);
     try {
       await dispatch(sendGreenRoomMessage({ match_id: matchId, content: trimmed })).unwrap();
+      // Refresh from server to get the persisted message with correct ID
+      dispatch(fetchGreenRoomMessages(matchId));
     } catch { /* local msg already shown */ } finally { setSending(false); }
   };
 

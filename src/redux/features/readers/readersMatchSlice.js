@@ -55,7 +55,7 @@ export const fetchGreenRoomMessages = createAsyncThunk(
   async (matchId, { rejectWithValue }) => {
     try {
       const { data } = await axios.get(`${baseURL}/v1/matching/messages/${matchId}/`);
-      return data?.data || [];
+      return { matchId, messages: data?.data || [] };
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || error?.message || 'Failed to fetch messages'
@@ -387,7 +387,10 @@ const readersMatchSlice = createSlice({
       })
       .addCase(fetchGreenRoomMessages.fulfilled, (state, action) => {
         state.messagesLoading = false;
-        state.greenRoomMessages = action.payload;
+        const { matchId, messages } = action.payload;
+        if (matchId) {
+          state.greenRoomMessages[matchId] = messages;
+        }
       })
       .addCase(fetchGreenRoomMessages.rejected, (state, action) => {
         state.messagesLoading = false;
