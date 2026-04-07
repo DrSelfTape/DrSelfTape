@@ -1,13 +1,17 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Video, Square, X, Download, Send, RotateCcw } from 'lucide-react';
+import { Video, Square, X, Download, Send, RotateCcw, Volume2 } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import endPoints from '../../../redux/constant';
 
 export default function SelfTapeRecorder({ lines, userRole, onClose }) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const streamRef = useRef(null);
+  const [aiVoiceEnabled, setAiVoiceEnabled] = useState(true);
+  const [currentLineIdx, setCurrentLineIdx] = useState(-1);
+  const aiPlayingRef = useRef(false);
   const scrollRef = useRef(null);
 
   const [recording, setRecording] = useState(false);
@@ -67,18 +71,70 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     setTimer(0);
     timerRef.current = setInterval(() => setTimer((t) => t + 1), 1000);
 
-    // Auto-scroll teleprompter
-    if (scrollRef.current) {
-      const el = scrollRef.current;
-      const scroll = () => {
-        el.scrollTop += 0.8;
-        if (el.scrollTop < el.scrollHeight - el.clientHeight) {
-          requestAnimationFrame(scroll);
-        }
-      };
-      requestAnimationFrame(scroll);
+    // Play through lines with AI voice for partner lines
+    if (aiVoiceEnabled) {
+      playThroughLines(0);
+    } else {
+      // Just auto-scroll
+      if (scrollRef.current) {
+        const el = scrollRef.current;
+        const scroll = () => {
+          el.scrollTop += 0.8;
+          if (el.scrollTop < el.scrollHeight - el.clientHeight) requestAnimationFrame(scroll);
+        };
+        requestAnimationFrame(scroll);
+      }
     }
-  }, []);
+  }, [aiVoiceEnabled]);
+
+  // Play through lines — AI reads partner lines, pauses for user lines
+  const playThroughLines = useCallback(async (startIdx) => {
+    for (let i = startIdx; i < lines.length; i++) {
+      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') break;
+
+      const line = lines[i];
+      const isUser = line.character === userRole;
+      setCurrentLineIdx(i);
+
+      // Scroll to current line
+      if (scrollRef.current) {
+        const lineEl = scrollRef.current.querySelector(`[data-line="${i}"]`);
+        if (lineEl) lineEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      if (!isUser && aiVoiceEnabled) {
+        // AI reads the partner line via TTS
+        try {
+          aiPlayingRef.current = true;
+          const response = await axios.post(
+            `${baseURL}/v1/ai/tts/`,
+            { text: line.dialogue, voice: 'partner_male' },
+            { responseType: 'arraybuffer', timeout: 15000 }
+          );
+          if (response.data && response.data.byteLength > 0) {
+            const blob = new Blob([response.data], { type: 'audio/mpeg' });
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            await new Promise((resolve) => {
+              audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
+              audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
+              audio.play().catch(resolve);
+            });
+          }
+        } catch {
+          // TTS failed — just pause briefly
+          await new Promise((r) => setTimeout(r, 2000));
+        }
+        aiPlayingRef.current = false;
+      } else {
+        // User's line — pause to let them deliver it
+        // Estimate ~3 seconds per line + 1 second per 10 words
+        const words = (line.dialogue || '').split(' ').length;
+        const pauseMs = Math.max(3000, 1000 + words * 400);
+        await new Promise((r) => setTimeout(r, pauseMs));
+      }
+    }
+  }, [lines, userRole, aiVoiceEnabled]);
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
@@ -181,12 +237,14 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
           >
             {lines.map((line, i) => {
               const isUser = line.character === userRole;
+              const isCurrent = i === currentLineIdx;
               return (
-                <div key={i} className="mb-3">
+                <div key={i} data-line={i} className={`mb-3 px-3 py-2 rounded-lg transition-all ${isCurrent ? 'bg-white/10 border-l-2 border-[#C855F0]' : ''}`}>
                   <span className={`text-xs font-bold uppercase tracking-wider ${isUser ? 'text-[#C855F0]' : 'text-[#A7ECDA]'}`}>
                     {line.character}
+                    {!isUser && isCurrent && aiVoiceEnabled && <span className="ml-2 text-[10px] normal-case">🔊 speaking...</span>}
                   </span>
-                  <p className={`text-base leading-relaxed mt-0.5 ${isUser ? 'text-white font-semibold' : 'text-white/60'}`}>
+                  <p className={`text-base leading-relaxed mt-0.5 ${isUser ? 'text-white font-semibold' : isCurrent ? 'text-white/90' : 'text-white/50'}`}>
                     {line.dialogue}
                   </p>
                 </div>
@@ -197,7 +255,24 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
       </div>
 
       {/* Bottom controls */}
-      <div className="px-6 py-5 bg-black/90 flex items-center justify-center gap-6">
+      <div className="px-6 py-5 flex flex-col items-center gap-4" style={{ background: 'rgba(0,0,0,0.95)', paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 20px)' }}>
+        {/* AI Voice toggle */}
+        {!recordedUrl && (
+          <button
+            onClick={() => setAiVoiceEnabled(!aiVoiceEnabled)}
+            className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-colors"
+            style={{
+              background: aiVoiceEnabled ? 'rgba(167,236,218,0.15)' : 'rgba(255,255,255,0.1)',
+              border: aiVoiceEnabled ? '1px solid rgba(167,236,218,0.3)' : '1px solid rgba(255,255,255,0.2)',
+              color: aiVoiceEnabled ? '#A7ECDA' : '#999',
+            }}
+          >
+            <Volume2 className="w-3.5 h-3.5" />
+            {aiVoiceEnabled ? 'AI Voice: ON' : 'AI Voice: OFF'}
+          </button>
+        )}
+
+        <div className="flex items-center justify-center gap-6">
         {!recordedUrl ? (
           <>
             {!recording ? (
@@ -238,6 +313,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
