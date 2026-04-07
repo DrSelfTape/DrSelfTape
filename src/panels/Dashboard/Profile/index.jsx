@@ -59,7 +59,7 @@ export default function Profile() {
     session_rate_60: '20',
   });
   const [connectLoading, setConnectLoading] = useState(false);
-  const [stripeConnected, setStripeConnected] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState('not_connected'); // 'connected' | 'pending' | 'not_connected'
   const [showMarketplaceTutorial, setShowMarketplaceTutorial] = useState(false);
   const [referral, setReferral] = useState({ code: '', share_url: '', uses: 0 });
   const [codeCopied, setCodeCopied] = useState(false);
@@ -90,7 +90,7 @@ export default function Profile() {
           session_rate_30: String(d.session_rate_30 || 10),
           session_rate_60: String(d.session_rate_60 || 20),
         });
-        setStripeConnected(d.stripe_connected || false);
+        setStripeStatus(d.stripe_status || 'not_connected');
       })
       .catch(() => {});
   }, [dispatch]);
@@ -644,12 +644,19 @@ export default function Profile() {
                   {/* Connect Stripe button */}
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Payment Setup</p>
-                  {stripeConnected ? (
-                    <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold"
+                  {stripeStatus === 'connected' ? (
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold"
                       style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
                     >
                       <Check className="w-4 h-4" />
-                      Bank Account Connected
+                      Bank Account Connected — Payouts Active
+                    </div>
+                  ) : stripeStatus === 'pending' ? (
+                    <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold"
+                      style={{ background: 'rgba(252,224,114,0.1)', border: '1px solid rgba(252,224,114,0.3)', color: '#FCE072' }}
+                    >
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Verification Pending — Stripe is reviewing your account
                     </div>
                   ) : (
                     <button
