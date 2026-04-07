@@ -602,6 +602,10 @@ export const usePeerConnection = ({
             }
           }
           break;
+        case 'chat':
+          // Forward to meeting room chat handler
+          if (window.__drst_chat_handler) window.__drst_chat_handler(data);
+          break;
         case 'screen-share':
           console.log('📥 Processing screen-share:', data);
           if (setIsRemoteScreenSharing && data.isSharing !== undefined) {

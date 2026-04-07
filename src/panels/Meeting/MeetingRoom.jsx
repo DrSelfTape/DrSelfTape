@@ -15,6 +15,7 @@ import { usePeerConnection } from '../../components/MeetingRoom/Hooks/usePeerCon
 
 import { isMeetingHost, meetingUrlForId } from '../../utils/meeting';
 import { PreJoinScreen } from '../../components/MeetingRoom/PreJoin/PreJoinScreen';
+import MeetingChat from '../../components/MeetingRoom/Controls/MeetingChat';
 
 const Meeting = () => {
   const { meetingId } = useParams();
@@ -53,6 +54,36 @@ const Meeting = () => {
   const [isRemoteScreenSharing, setIsRemoteScreenSharing] = useState(false);
   const isRemoteScreenSharingFromDataChannelRef = useRef(false); // Track if set via data channel
   const [isRemoteMuted, setIsRemoteMuted] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatUnread, setChatUnread] = useState(0);
+
+  // Send chat message via data channel
+  const sendChatMessage = (text) => {
+    const msg = {
+      type: 'chat',
+      text,
+      sender: displayName || user?.first_name || 'You',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    // Broadcast to all peers
+    dataConnectionsRef.current.forEach((c) => {
+      if (c?.open) try { c.send(msg); } catch {}
+    });
+    // Add to local state
+    setChatMessages((prev) => [...prev, { ...msg, isMine: true }]);
+  };
+
+  // Listen for incoming chat messages
+  useEffect(() => {
+    const originalHandler = window.__drst_chat_handler;
+    window.__drst_chat_handler = (data) => {
+      if (data?.type === 'chat') {
+        setChatMessages((prev) => [...prev, { ...data, isMine: false }]);
+        setChatUnread((n) => n + 1);
+      }
+    };
+    return () => { window.__drst_chat_handler = originalHandler; };
+  }, []);
 
   // Debug: Log when isRemoteScreenSharing changes
   useEffect(() => {
@@ -564,8 +595,13 @@ const Meeting = () => {
               />
             </div>
 
-            {/* Right side - Actions */}
+            {/* Right side - Chat + Actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
+              <MeetingChat
+                messages={chatMessages}
+                onSend={(text) => { setChatUnread(0); sendChatMessage(text); }}
+                unreadCount={chatUnread}
+              />
               {isHost && (
                 <Tooltip title={copyState} arrow placement="top">
                   <IconButton
