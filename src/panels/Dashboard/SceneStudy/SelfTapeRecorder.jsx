@@ -224,32 +224,46 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
           />
         )}
 
-        {/* Teleprompter overlay — bottom half */}
+        {/* Teleprompter overlay — bottom half, centered */}
         {!recordedUrl && (
           <div
             ref={scrollRef}
             className="absolute bottom-0 left-0 right-0 overflow-y-auto"
             style={{
-              maxHeight: '40%',
-              background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.85) 20%, rgba(0,0,0,0.95))',
-              padding: '40px 20px 20px',
+              maxHeight: '50%',
+              background: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.7) 10%, rgba(0,0,0,0.92) 30%, rgba(0,0,0,0.98) 100%)',
+              padding: '50px 16px 16px',
             }}
           >
-            {lines.map((line, i) => {
-              const isUser = line.character === userRole;
-              const isCurrent = i === currentLineIdx;
-              return (
-                <div key={i} data-line={i} className={`mb-3 px-3 py-2 rounded-lg transition-all ${isCurrent ? 'bg-white/10 border-l-2 border-[#C855F0]' : ''}`}>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isUser ? 'text-[#C855F0]' : 'text-[#A7ECDA]'}`}>
-                    {line.character}
-                    {!isUser && isCurrent && aiVoiceEnabled && <span className="ml-2 text-[10px] normal-case">🔊 speaking...</span>}
-                  </span>
-                  <p className={`text-base leading-relaxed mt-0.5 ${isUser ? 'text-white font-semibold' : isCurrent ? 'text-white/90' : 'text-white/50'}`}>
-                    {line.dialogue}
-                  </p>
-                </div>
-              );
-            })}
+            <div style={{ maxWidth: 600, margin: '0 auto' }}>
+              {lines.map((line, i) => {
+                const isUser = line.character === userRole;
+                const isCurrent = i === currentLineIdx;
+                return (
+                  <div key={i} data-line={i} className="text-center mb-4" style={{
+                    padding: '10px 16px',
+                    borderRadius: 12,
+                    background: isCurrent ? 'rgba(255,255,255,0.08)' : 'transparent',
+                    borderLeft: isCurrent ? '3px solid #C855F0' : '3px solid transparent',
+                    transition: 'all 0.3s',
+                  }}>
+                    <span className={`text-xs font-bold uppercase tracking-[2px] ${isUser ? 'text-[#C855F0]' : 'text-[#A7ECDA]'}`}>
+                      {line.character}
+                      {!isUser && isCurrent && aiVoiceEnabled && <span className="ml-2 text-[10px] normal-case tracking-normal">🔊 speaking...</span>}
+                    </span>
+                    <p className={`text-lg leading-relaxed mt-1 ${
+                      isUser
+                        ? 'text-white font-bold'
+                        : isCurrent
+                          ? 'text-white/90 font-medium'
+                          : 'text-white/40'
+                    }`} style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      {line.dialogue}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
