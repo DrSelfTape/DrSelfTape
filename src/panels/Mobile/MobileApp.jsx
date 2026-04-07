@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
-import { fetchAuditionsThunk, fetchAuditionStatsThunk, createAuditionThunk } from "../../redux/features/auditions/auditionsSlice";
+import { fetchAuditionsThunk, fetchAuditionStatsThunk, createAuditionThunk, updateAuditionThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
@@ -931,18 +931,45 @@ function AuditionsScreen() {
               ))}
             </div>
 
-            {/* Actions */}
-            <div style={{ display: "flex", gap: 10 }}>
-              <button onClick={() => setSelected(null)} style={{
-                flex: 1, padding: "14px", borderRadius: 12, border: `1px solid ${BORDER_ACTIVE}`,
-                background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, fontWeight: 600, cursor: "pointer",
-              }}>Close</button>
-              <button onClick={() => setSelected(null)} style={{
-                flex: 1, padding: "14px", borderRadius: 12, border: "none",
-                background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
-                fontSize: 14, fontWeight: 600, cursor: "pointer",
-              }}>Got It</button>
+            {/* Change Status */}
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Update Status</p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {columns.map(col => {
+                  const isActive = selected.status === col.id;
+                  const color = STATUS_COLORS[col.id] || TEXT_MUTED;
+                  return (
+                    <button
+                      key={col.id}
+                      onClick={async () => {
+                        if (isActive) return;
+                        try {
+                          await dispatch(updateAuditionThunk({ id: selected.id, data: { status: col.id } })).unwrap();
+                          dispatch(fetchAuditionsThunk());
+                          setSelected({ ...selected, status: col.id });
+                        } catch {}
+                      }}
+                      style={{
+                        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
+                        fontSize: 12, fontWeight: 600, transition: "all 0.15s",
+                        background: isActive ? `${color}25` : BG_CARD,
+                        color: isActive ? color : TEXT_SECONDARY,
+                        border: isActive ? `2px solid ${color}` : `1px solid ${BORDER}`,
+                      }}
+                    >
+                      {col.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Close */}
+            <button onClick={() => setSelected(null)} style={{
+              width: "100%", padding: "14px", borderRadius: 12, border: "none",
+              background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
+              fontSize: 14, fontWeight: 600, cursor: "pointer",
+            }}>Done</button>
           </div>
         </div>
       )}
