@@ -108,16 +108,21 @@ export default function NotificationBell({ onNavigate }) {
       </button>
 
       {/* Dropdown — full screen on mobile, positioned on desktop */}
+      {open && isMobile && (
+        <div className="fixed inset-0 z-[9998] bg-black/50" onClick={() => setOpen(false)} />
+      )}
       {open && (
         <div
           className={isMobile
-            ? "fixed inset-0 z-[9999] flex flex-col"
+            ? "fixed left-0 right-0 bottom-0 z-[9999] flex flex-col"
             : "absolute right-0 top-12 w-[380px] z-[9999] flex flex-col rounded-2xl shadow-2xl"
           }
           style={{
             background: 'var(--bg-elevated)',
             border: isMobile ? 'none' : '1px solid var(--border-default)',
-            maxHeight: isMobile ? '100vh' : '80vh',
+            top: isMobile ? 'calc(50px + env(safe-area-inset-top, 0px))' : undefined,
+            borderRadius: isMobile ? '0' : undefined,
+            maxHeight: isMobile ? undefined : '80vh',
             animation: 'fadeIn 0.15s ease-out',
           }}
         >
