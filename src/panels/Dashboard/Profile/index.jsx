@@ -651,11 +651,46 @@ export default function Profile() {
                       Bank Account Connected — Payouts Active
                     </div>
                   ) : stripeStatus === 'pending' ? (
-                    <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold"
-                      style={{ background: 'rgba(252,224,114,0.1)', border: '1px solid rgba(252,224,114,0.3)', color: '#FCE072' }}
-                    >
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Verification Pending — Stripe is reviewing your account
+                    <div>
+                      <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold mb-2"
+                        style={{ background: 'rgba(252,224,114,0.1)', border: '1px solid rgba(252,224,114,0.3)', color: '#FCE072' }}
+                      >
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Verification Pending — Stripe is reviewing your account
+                      </div>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        This can take a few minutes. Refresh the page to check again.
+                      </p>
+                    </div>
+                  ) : stripeStatus === 'incomplete' ? (
+                    <div>
+                      <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold mb-2"
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        Setup Incomplete — Finish connecting your bank
+                      </div>
+                      <button
+                        type="button"
+                        disabled={connectLoading}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setConnectLoading(true);
+                          axios.post(`${baseURL}/v1/growth/marketplace/connect/`)
+                            .then(({ data }) => {
+                              const url = data?.data?.onboarding_url;
+                              if (url) window.location.href = url;
+                              else setConnectLoading(false);
+                            })
+                            .catch(() => setConnectLoading(false));
+                        }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                        style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        {connectLoading ? 'Loading...' : 'Complete Setup'}
+                      </button>
                     </div>
                   ) : (
                     <button
