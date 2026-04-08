@@ -16,6 +16,7 @@ import {
   UserCircle,
   LogOut,
   Clapperboard,
+  Shield,
 } from 'lucide-react'
 
 const BASE_NAV_ITEMS = [
@@ -37,12 +38,16 @@ export default function Sidebar() {
   const profile = useSelector((s) => s.profile?.profile)
   const pendingLikes = useSelector((s) => s.readersMatch?.matchingStats?.pending_likes_count || 0)
 
-  const navItems = BASE_NAV_ITEMS.map((item) => {
-    if (item.badgeKey === 'find-a-reader' || item.badgeKey === 'who-wants-to-read') {
-      return { ...item, badge: pendingLikes > 0 ? String(pendingLikes) : 'NEW' }
-    }
-    return item
-  })
+  const navItems = [
+    ...BASE_NAV_ITEMS.map((item) => {
+      if (item.badgeKey === 'find-a-reader' || item.badgeKey === 'who-wants-to-read') {
+        return { ...item, badge: pendingLikes > 0 ? String(pendingLikes) : 'NEW' }
+      }
+      return item
+    }),
+    // Admin — only visible to staff users
+    ...(user?.is_staff ? [{ label: 'Admin', path: '/dashboard/admin', icon: Shield, badge: 'ADMIN' }] : []),
+  ]
 
   const displayName = profile?.first_name
     ? `${profile.first_name} ${profile.last_name || ''}`.trim()

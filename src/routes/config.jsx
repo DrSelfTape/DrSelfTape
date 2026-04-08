@@ -60,6 +60,7 @@ const CastingDirectorAI = lazy(() => import('../panels/Dashboard/CastingDirector
 const Referral = lazy(() => import('../panels/Dashboard/Referral'));
 const Marketplace = lazy(() => import('../panels/Dashboard/Marketplace'));
 const SelfTapes = lazy(() => import('../panels/Dashboard/SelfTapes'));
+const Admin = lazy(() => import('../panels/Dashboard/Admin'));
 
 // Lazy-loaded Find a Reader imports
 const FindAReader = lazy(() => import('../panels/Dashboard/FindAReader'));
@@ -134,6 +135,7 @@ export const commonRoutes = [
       { path: 'referral', moduleName: 'Referral', element: <Referral /> },
       { path: 'marketplace', moduleName: 'Marketplace', element: <Marketplace /> },
       { path: 'self-tapes', moduleName: 'SelfTapes', element: <SelfTapes /> },
+      { path: 'admin', moduleName: 'Admin', element: <Admin /> },
     ],
   },
   // Admin routes (accessible to all authenticated users, guarded by AdminLayout)
