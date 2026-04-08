@@ -1640,7 +1640,7 @@ export default function DrSelfTapeApp() {
       `}</style>
 
       {isMobile ? (
-        <div style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
           {/* Top Bar */}
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
@@ -1650,6 +1650,7 @@ export default function DrSelfTapeApp() {
             height: "calc(50px + env(safe-area-inset-top, 0px))",
             borderBottom: "1px solid var(--border-default)",
             transition: "background 0.3s",
+            flexShrink: 0,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {/* Logo */}
@@ -1673,10 +1674,11 @@ export default function DrSelfTapeApp() {
           {/* Scrollable Content Area — sits between fixed top and bottom bars */}
           <div style={{
             flex: 1,
+            minHeight: 0,
             overflowY: "auto",
             overflowX: "hidden",
-            marginTop: "calc(50px + env(safe-area-inset-top, 0px))",
-            marginBottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
+            paddingTop: "calc(50px + env(safe-area-inset-top, 0px))",
+            paddingBottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
             WebkitOverflowScrolling: "touch",
             position: "relative", zIndex: 1,
           }}>
