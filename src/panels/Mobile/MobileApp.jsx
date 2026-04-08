@@ -1619,7 +1619,7 @@ export default function DrSelfTapeApp() {
       )}
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; overflow: hidden; }
+        html, body { height: 100%; overflow: hidden; position: fixed; width: 100%; }
         ::-webkit-scrollbar { display: none; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
         @keyframes confettiFall {
@@ -1640,7 +1640,7 @@ export default function DrSelfTapeApp() {
       `}</style>
 
       {isMobile ? (
-        <div style={{ display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100dvh" }}>
           {/* Top Bar */}
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
