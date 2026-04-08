@@ -184,6 +184,7 @@ export const authSlice = createSlice({
           role: src?.active_role || src?.role,
           is_active: src?.is_active,
           is_reset_password: src?.is_reset_password,
+          is_staff: src?.is_staff,
         };
         state.loading = false;
         state.user = src?.is_reset_password ? null : userData;
@@ -213,6 +214,7 @@ export const authSlice = createSlice({
           role: action.payload?.active_role || action.payload?.role, // Use active_role if available
           is_active: action.payload?.is_active,
           is_reset_password: action.payload?.is_reset_password,
+          is_staff: action.payload?.is_staff,
         };
         state.user = action.payload?.is_reset_password ? null : userData;
         state.error = null;
