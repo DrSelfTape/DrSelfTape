@@ -141,6 +141,13 @@ const BLUE = "#7eb8ec";
 const AMBER = GOLD;
 const RED = CORAL;
 
+/* ── UI Refinement tokens ── */
+const RADIUS_LG = 22;
+const RADIUS_MD = 16;
+const SPACING_SECTION = 28;
+const CARD_BORDER = "rgba(167,236,218,0.04)";
+const CARD_SHADOW = "0 2px 16px rgba(0,0,0,0.12)";
+
 const STATUS_COLORS = {
   submitted: TEXT_MUTED,
   in_review: BLUE,
@@ -346,7 +353,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const callbacks = auditions.filter(a => callbackBadge(a.callbackDate));
 
   return (
-    <div style={{ padding: "0 16px 24px" }}>
+    <div style={{ padding: "0 20px 32px" }}>
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
@@ -356,52 +363,52 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       </div>
 
       {/* Greeting */}
-      <div style={{ padding: "24px 0 24px" }}>
-        <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif" }}>Good evening</p>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: TEXT_PRIMARY, margin: "4px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif" }}>
+      <div style={{ padding: "28px 0 20px" }}>
+        <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif", textTransform: "uppercase", letterSpacing: "1px" }}>Good evening</p>
+        <h1 style={{ fontSize: 32, fontWeight: 700, color: TEXT_PRIMARY, margin: "6px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif", lineHeight: 1.1 }}>
           Welcome back
         </h1>
       </div>
 
       {/* Quick Actions */}
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 14, marginBottom: SPACING_SECTION }}>
         <button onClick={() => setTab("live")} style={{
-          flex: 1, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none",
-          borderRadius: 16, padding: "14px 16px", cursor: "pointer", textAlign: "left",
+          flex: 1, background: `linear-gradient(135deg, rgba(200,85,240,0.85), rgba(200,85,240,0.65))`, border: "none",
+          borderRadius: RADIUS_LG, padding: "16px 18px", cursor: "pointer", textAlign: "left",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Icon name="mic" size={20} color="#fff" />
             <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Go Live</span>
           </div>
-
         </button>
         <button onClick={() => setCurrentPanel("generator")} style={{
-          flex: 1, background: BG_ELEVATED, border: `1px solid ${BORDER_ACTIVE}`,
-          borderRadius: 16, padding: "14px 16px", cursor: "pointer", textAlign: "left",
+          flex: 1, background: BG_ELEVATED, border: `1px solid rgba(167,236,218,0.08)`,
+          borderRadius: RADIUS_LG, padding: "16px 18px", cursor: "pointer", textAlign: "left",
+          boxShadow: CARD_SHADOW,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Icon name="sparkle" size={20} color={MINT} />
             <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY }}>Generate</span>
           </div>
-
         </button>
       </div>
 
       {/* Availability toggle */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: SPACING_SECTION }}>
         <button
           onClick={() => !availabilityToggling && dispatch(toggleAvailability(!isAvailable))}
           style={{
             width: "100%", display: "flex", alignItems: "center", gap: 10,
             background: isAvailable ? "rgba(34,197,94,0.08)" : BG_CARD,
-            border: isAvailable ? "1px solid rgba(34,197,94,0.2)" : `1px solid ${BORDER}`,
-            borderRadius: 14, padding: "14px 16px", cursor: "pointer",
+            border: isAvailable ? "1px solid rgba(34,197,94,0.2)" : `1px solid ${CARD_BORDER}`,
+            borderRadius: RADIUS_LG, padding: "16px 18px", cursor: "pointer",
+            boxShadow: CARD_SHADOW,
           }}
         >
           <span style={{
             width: 10, height: 10, borderRadius: "50%",
             background: isAvailable ? "#22c55e" : "#666",
-            boxShadow: isAvailable ? "0 0 8px rgba(34,197,94,0.5)" : "none",
+            boxShadow: isAvailable ? "0 0 6px rgba(34,197,94,0.3)" : "none",
           }} />
           <span style={{ fontSize: 14, fontWeight: 600, color: isAvailable ? "#22c55e" : TEXT_SECONDARY }}>
             {isAvailable ? "Available to Read" : "Go Available"}
@@ -413,9 +420,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       <div
         onClick={() => setTab("find-a-reader")}
         style={{
-          background: BG_CARD, borderRadius: 16, padding: "16px",
-          border: `1px solid rgba(167,236,218,0.15)`, marginBottom: 24,
-          cursor: "pointer", borderLeft: `3px solid ${MINT}`,
+          background: BG_CARD, borderRadius: RADIUS_LG, padding: "18px 20px",
+          border: `1px solid ${CARD_BORDER}`, marginBottom: SPACING_SECTION,
+          cursor: "pointer", boxShadow: CARD_SHADOW,
         }}
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -442,13 +449,16 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </div>
       </div>
 
+      {/* Your Progress */}
+      <h2 style={{ fontSize: 13, fontWeight: 600, color: TEXT_SECONDARY, margin: `0 0 14px`, letterSpacing: "0.5px", textTransform: "uppercase" }}>Your Progress</h2>
+
       {/* Daily Challenge */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: 14 }}>
         <DailyChallengeCard />
       </div>
 
       {/* Tutorial checklist */}
-      <div style={{ marginBottom: 20 }}>
+      <div style={{ marginBottom: SPACING_SECTION }}>
         <TutorialChecklist onNavigate={({ tab, panel }) => {
           if (tab) { setTab(tab); }
           if (panel) { setCurrentPanel(panel); }
@@ -456,13 +466,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       </div>
 
       {/* Key stats — 2 numbers only */}
-      <div style={{ display: "flex", gap: 10, marginBottom: 24 }}>
+      <div style={{ display: "flex", gap: 14, marginBottom: SPACING_SECTION }}>
         {[
           { label: "Auditions", value: s.total_auditions || 0, color: CORAL_SOFT },
           { label: "Booked", value: s.total_booked || 0, color: GREEN },
         ].map(stat => (
-          <div key={stat.label} style={{ flex: 1, background: BG_CARD, borderRadius: 16, padding: "16px", border: `1px solid ${BORDER}`, textAlign: "center" }}>
-            <span style={{ fontSize: 32, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-1px", fontFamily: "'Playfair Display', serif", display: "block" }}>{stat.value}</span>
+          <div key={stat.label} style={{ flex: 1, background: BG_CARD, borderRadius: RADIUS_LG, padding: "20px", border: `1px solid ${CARD_BORDER}`, textAlign: "center", boxShadow: CARD_SHADOW }}>
+            <span style={{ fontSize: 36, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-1px", fontFamily: "'Playfair Display', serif", display: "block" }}>{stat.value}</span>
             <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>{stat.label}</span>
           </div>
         ))}
@@ -470,7 +480,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
       {/* Token balance */}
       {balance !== null && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24, background: 'rgba(167,236,218,0.06)', borderRadius: 12, padding: '12px 14px', border: '1px solid rgba(167,236,218,0.1)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: SPACING_SECTION, background: 'rgba(167,236,218,0.04)', borderRadius: RADIUS_LG, padding: '16px 18px', border: `1px solid rgba(167,236,218,0.06)`, boxShadow: CARD_SHADOW }}>
           <span style={{ fontSize: 16 }}>🎟️</span>
           <div style={{ flex: 1 }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: '#A7ECDA' }}>{balance}</span>
@@ -486,18 +496,18 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
       {/* Upcoming Callbacks */}
       {callbacks.length > 0 && (
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-            <h2 style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.2px" }}>Upcoming Callbacks</h2>
+        <div style={{ marginBottom: SPACING_SECTION }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <h2 style={{ fontSize: 13, fontWeight: 600, color: TEXT_SECONDARY, margin: 0, letterSpacing: "0.5px", textTransform: "uppercase" }}>Upcoming Callbacks</h2>
             <button onClick={() => setTab("auditions")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>See all</button>
           </div>
           {callbacks.map(a => {
             const cb = callbackBadge(a.callbackDate);
             return (
               <div key={a.id} style={{
-                background: BG_CARD, borderRadius: 14, padding: "16px", marginBottom: 10,
-                border: cb?.urgent ? `1px solid ${CORAL}35` : `1px solid ${BORDER}`,
-                boxShadow: cb?.urgent ? `0 0 24px ${CORAL}12` : "none",
+                background: BG_CARD, borderRadius: RADIUS_LG, padding: "18px 20px", marginBottom: 10,
+                border: cb?.urgent ? `1px solid ${CORAL}35` : `1px solid ${CARD_BORDER}`,
+                boxShadow: cb?.urgent ? `0 0 24px ${CORAL}12` : CARD_SHADOW,
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
@@ -516,16 +526,14 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </div>
       )}
 
-
-
       {/* Recent Scripts */}
       <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <h2 style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.2px" }}>Continue Practicing</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <h2 style={{ fontSize: 13, fontWeight: 600, color: TEXT_SECONDARY, margin: 0, letterSpacing: "0.5px", textTransform: "uppercase" }}>Continue Practicing</h2>
           <button onClick={() => setTab("scenes")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>All scripts</button>
         </div>
         {scripts.slice(0, 2).map(sc => (
-          <div key={sc.id} style={{ background: BG_CARD, borderRadius: 14, padding: "14px 16px", marginBottom: 12, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
+          <div key={sc.id} style={{ background: BG_CARD, borderRadius: RADIUS_LG, padding: "16px 18px", marginBottom: 12, border: `1px solid ${CARD_BORDER}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer", boxShadow: CARD_SHADOW }}>
             <ProgressRing pct={sc.progress} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
@@ -1648,14 +1656,14 @@ export default function DrSelfTapeApp() {
             padding: "env(safe-area-inset-top, 0px) 16px 0",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             height: "calc(50px + env(safe-area-inset-top, 0px))",
-            borderBottom: "1px solid var(--border-default)",
+            boxShadow: "0 1px 12px rgba(0,0,0,0.08)",
             transition: "background 0.3s",
             flexShrink: 0,
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               {/* Logo */}
               <img src={logo} alt="Dr Self Tape" style={{ width: 30, height: 30, objectFit: "contain" }} />
-              <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
             </div>
             <NotificationBell onNavigate={({ panel, tab }) => {
               if (panel) setCurrentPanel(panel);
@@ -1693,10 +1701,10 @@ export default function DrSelfTapeApp() {
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
             background: "var(--topbar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-            borderTop: "1px solid var(--border-default)",
+            boxShadow: "0 -4px 24px rgba(0,0,0,0.15)",
             transition: "background 0.3s",
             display: "flex", justifyContent: "space-around", alignItems: "center",
-            paddingBottom: "env(safe-area-inset-bottom, 8px)", paddingTop: 8,
+            paddingBottom: "env(safe-area-inset-bottom, 8px)", paddingTop: 10,
             height: "calc(60px + env(safe-area-inset-bottom, 0px))",
           }}>
             {TABS.map(t => {
@@ -1704,11 +1712,10 @@ export default function DrSelfTapeApp() {
               return (
                 <button key={t.id} onClick={() => handleSetTab(t.id)} style={{
                   background: "none", border: "none", cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "4px 12px",
+                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "6px 14px",
                 }}>
-                  <Icon name={t.icon} size={22} color={a ? CORAL : TEXT_MUTED} />
-                  <span style={{ fontSize: 10, fontWeight: 600, color: a ? CORAL : TEXT_MUTED }}>{t.label}</span>
-                  {a && <div style={{ width: 4, height: 4, borderRadius: "50%", background: CORAL, marginTop: -1 }} />}
+                  <Icon name={t.icon} size={24} color={a ? TEXT_PRIMARY : TEXT_MUTED} />
+                  <span style={{ fontSize: 11, fontWeight: a ? 700 : 500, color: a ? TEXT_PRIMARY : TEXT_MUTED }}>{t.label}</span>
                 </button>
               );
             })}

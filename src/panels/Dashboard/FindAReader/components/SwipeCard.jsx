@@ -115,7 +115,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1a0a2e 0%,#0f0f1a 50%,#0a1a0a 100%);display:flex;align-items:center;justify-content:center"><span style="font-size:${isMobile ? 120 : 80}px;font-weight:800;color:rgba(200,85,240,0.3);user-select:none">${initials}</span></div>`); }}
             />
             {/* Brand gradient overlay */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(200,85,240,0.22) 0%, transparent 50%, rgba(167,236,218,0.15) 100%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(200,85,240,0.12) 0%, transparent 50%, rgba(167,236,218,0.08) 100%)', pointerEvents: 'none' }} />
           </>
         ) : (
           <div style={{
@@ -133,17 +133,17 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* Gradient overlay — bottom heavy */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 35%, rgba(0,0,0,0.1) 65%, transparent 100%)',
+        background: 'linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.08) 60%, transparent 100%)',
         pointerEvents: 'none',
       }} />
 
       {/* ── Free / Paid badge */}
       <div style={{
         position: 'absolute', top: isMobile ? 60 : 16, right: 16,
-        padding: '5px 14px', borderRadius: 20, zIndex: 5,
+        padding: '6px 14px', borderRadius: 12, zIndex: 5,
         background: actor?.is_paid_reader ? 'rgba(252,224,114,0.9)' : 'rgba(34,197,94,0.9)',
         color: actor?.is_paid_reader ? '#1a1a2e' : '#fff',
-        fontSize: 12, fontWeight: 800, letterSpacing: 0.5,
+        fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
         boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
       }}>
         {actor?.is_paid_reader ? `$${actor.session_rate || ''}/session` : 'FREE'}
@@ -152,8 +152,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* ── SLATE stamp (swipe right) */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, left: 20,
-        border: '3px solid #C855F0', color: '#C855F0',
-        fontSize: isMobile ? 28 : 22, fontWeight: 900, letterSpacing: 2,
+        border: '2.5px solid #C855F0', color: '#C855F0',
+        fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
         padding: '4px 14px', borderRadius: 6,
         opacity: slateOpacity,
         transform: 'rotate(-12deg)',
@@ -164,8 +164,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* ── PASS stamp (swipe left) */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, right: 20,
-        border: '3px solid #666', color: '#888',
-        fontSize: isMobile ? 28 : 22, fontWeight: 900, letterSpacing: 2,
+        border: '2.5px solid #666', color: '#888',
+        fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
         padding: '4px 14px', borderRadius: 6,
         opacity: passOpacity,
         transform: 'rotate(12deg)',
@@ -179,7 +179,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       }}>
         {/* Name + Union */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-          <h3 style={{ fontSize: isMobile ? 32 : 24, fontWeight: 800, color: '#fff', margin: 0, lineHeight: 1.1 }}>
+          <h3 style={{ fontSize: isMobile ? 30 : 24, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.1 }}>
             {actor?.name || 'Actor'}
           </h3>
           {unionLabel && (
@@ -207,7 +207,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
 
         {/* Bio */}
         {actor?.bio && (
-          <p style={{ color: '#ccc', fontSize: 14, lineHeight: 1.5, margin: '0 0 10px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 1.6, margin: '0 0 10px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {actor.bio}
           </p>
         )}
@@ -216,7 +216,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         {actor?.genres?.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {actor.genres.slice(0, 4).map((g) => (
-              <span key={g} style={{ background: 'rgba(255,255,255,0.1)', color: '#ddd', fontSize: 12, padding: '3px 10px', borderRadius: 20 }}>
+              <span key={g} style={{ background: 'rgba(255,255,255,0.08)', color: '#ddd', fontSize: 12, padding: '5px 12px', borderRadius: 20 }}>
                 {g}
               </span>
             ))}
@@ -225,16 +225,16 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
 
         {/* Mobile action buttons overlaid at bottom */}
         {isMobile && isTop && (
-          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 20 }}>
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 20, alignItems: 'center' }}>
             {/* Pass */}
             <button
               onTouchEnd={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
               onClick={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
               style={{
-                width: 60, height: 60, borderRadius: '50%',
-                background: 'rgba(30,30,30,0.9)', border: '2px solid #444',
+                width: 56, height: 56, borderRadius: '50%',
+                background: 'rgba(20,20,28,0.85)', border: '1.5px solid rgba(255,255,255,0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, cursor: 'pointer', backdropFilter: 'blur(10px)',
+                fontSize: 22, cursor: 'pointer', backdropFilter: 'blur(10px)',
               }}
             >✕</button>
 
@@ -243,8 +243,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onTouchEnd={(e) => { e.stopPropagation(); onStar?.(); }}
               onClick={(e) => { e.stopPropagation(); onStar?.(); }}
               style={{
-                width: 50, height: 50, borderRadius: '50%',
-                background: 'rgba(30,30,30,0.9)', border: '2px solid rgba(252,224,114,0.4)',
+                width: 56, height: 56, borderRadius: '50%',
+                background: 'rgba(20,20,28,0.85)', border: '1.5px solid rgba(252,224,114,0.25)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 20, cursor: 'pointer', backdropFilter: 'blur(10px)',
               }}
@@ -255,12 +255,12 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onTouchEnd={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               onClick={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               style={{
-                width: 60, height: 60, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #C855F0, #A040C8)',
+                width: 56, height: 56, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #C855F0, #B045D8)',
                 border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 24, cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(200,85,240,0.4)',
+                fontSize: 22, cursor: 'pointer',
+                boxShadow: '0 4px 16px rgba(200,85,240,0.25)',
               }}
             >🎬</button>
           </div>
