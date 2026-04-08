@@ -103,15 +103,21 @@ export default function DashboardHome() {
     count: s.by_status?.[step] || 0,
   }));
 
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? "Hey, what's up" : 'Working late';
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
       <PendingLikesBanner />
 
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-secondary, #8a9a96)' }}>{greeting}</p>
+          <h1 className="text-3xl font-bold text-white mt-1" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '-0.5px' }}>Dashboard</h1>
+        </div>
         <div className="flex items-center gap-3">
           <AvailabilityToggle />
           <NotificationBell />
@@ -122,14 +128,20 @@ export default function DashboardHome() {
       {/* Find a Reader CTA */}
       <FindAReaderCTA />
 
-      {/* Daily Challenge */}
-      <DailyChallengeCard />
-
-      {/* Tutorial Checklist */}
-      <TutorialChecklist />
+      {/* Your Progress */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-secondary, #8a9a96)' }}>Your Progress</h2>
+        <div className="space-y-4">
+          <DailyChallengeCard />
+          <TutorialChecklist />
+        </div>
+      </div>
 
       {/* Feature Banners */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-secondary, #8a9a96)' }}>Tools</h2>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* AI Scene Generator Banner */}
         <div
           onClick={() => navigate('/dashboard/generator')}
@@ -186,13 +198,19 @@ export default function DashboardHome() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-secondary, #8a9a96)' }}>Stats</h2>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {isLoading
           ? Array.from({ length: 4 }).map((_, i) => <LoadingSkeleton key={i} />)
           : statCards.map((stat) => <StatsCard key={stat.title} {...stat} />)}
       </div>
 
       {/* Charts Row */}
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: 'var(--text-secondary, #8a9a96)' }}>Analytics</h2>
+      </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Audition Breakdown by Type — Donut */}
         <div className="lg:col-span-1">
