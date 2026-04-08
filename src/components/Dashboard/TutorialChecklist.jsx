@@ -67,6 +67,7 @@ export default function TutorialChecklist({ onNavigate }) {
   const totalSteps = STEPS.length;
   const percent = Math.round((completedCount / totalSteps) * 100);
   const allComplete = completedCount === totalSteps;
+  const remainingSteps = STEPS.filter((s) => !progress[s.id]);
 
   const handleGo = useCallback((step) => {
     if (step.action === 'toggle_available') {
@@ -84,128 +85,123 @@ export default function TutorialChecklist({ onNavigate }) {
   if (dismissed) return null;
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-[#C855F0]/20" style={{
+    <div style={{
+      borderRadius: 22,
+      overflow: 'hidden',
+      border: '1px solid rgba(200,85,240,0.12)',
       background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-input) 40%, var(--bg-deepest) 100%)',
+      boxShadow: '0 2px 16px rgba(0,0,0,0.12)',
+      position: 'relative',
     }}>
-      {/* Subtle glow */}
-      <div className="absolute inset-0 pointer-events-none" style={{
-        background: 'radial-gradient(ellipse at top left, rgba(200,85,240,0.08), transparent 60%)',
-      }} />
-
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="relative w-full flex items-center justify-between px-5 py-4 cursor-pointer"
+        style={{
+          position: 'relative', width: '100%', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer',
+          background: 'none', border: 'none',
+        }}
       >
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{
-              background: 'linear-gradient(135deg, #C855F0, #7B2FBE)',
-              boxShadow: '0 4px 15px rgba(200,85,240,0.3)',
-            }}>
-              {allComplete ? <Trophy className="w-5 h-5 text-white" /> : <Zap className="w-5 h-5 text-white" />}
-            </div>
-            {!allComplete && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-[#FCE072] text-[10px] font-bold flex items-center justify-center shadow-md" style={{ color: 'var(--bg-deep)' }}>
-                {totalSteps - completedCount}
-              </span>
-            )}
-          </div>
-          <div className="text-left">
-            <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-              {allComplete ? 'Tutorial Complete!' : 'Your Setup Checklist'}
-            </p>
-            <p className="text-xs text-[#A7ECDA] font-medium">
-              {completedCount} of {totalSteps} done
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          {/* Circular progress */}
-          <div className="relative w-10 h-10">
-            <svg className="w-10 h-10 -rotate-90" viewBox="0 0 36 36">
-              <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--border-default)" strokeWidth="3" />
-              <circle cx="18" cy="18" r="15.5" fill="none"
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {/* Progress ring */}
+          <div style={{ position: 'relative', width: 44, height: 44, flexShrink: 0 }}>
+            <svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx="22" cy="22" r="18" fill="none" stroke="var(--border-default)" strokeWidth="3" />
+              <circle cx="22" cy="22" r="18" fill="none"
                 stroke={allComplete ? '#22c55e' : '#C855F0'}
                 strokeWidth="3" strokeLinecap="round"
-                strokeDasharray={`${percent} 100`}
-                className="transition-all duration-700"
+                strokeDasharray={`${percent * 1.13} 113`}
+                style={{ transition: 'stroke-dasharray 0.7s ease' }}
               />
             </svg>
-            <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold" style={{ color: 'var(--text-primary)' }}>
-              {percent}%
+            <span style={{
+              position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 11, fontWeight: 700, color: 'var(--text-primary)',
+            }}>
+              {allComplete ? <Trophy size={16} color="#22c55e" /> : `${percent}%`}
             </span>
           </div>
-          {expanded ? <ChevronUp className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} /> : <ChevronDown className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />}
+
+          <div style={{ textAlign: 'left' }}>
+            <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+              {allComplete ? 'All done!' : 'Get Started'}
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '2px 0 0' }}>
+              {allComplete ? 'You explored everything' : `${remainingSteps.length} step${remainingSteps.length !== 1 ? 's' : ''} left`}
+            </p>
+          </div>
         </div>
+
+        {expanded
+          ? <ChevronUp size={18} color="var(--text-secondary)" />
+          : <ChevronDown size={18} color="var(--text-secondary)" />
+        }
       </button>
 
-      {/* Steps */}
+      {/* Steps — only show incomplete */}
       {expanded && (
-        <div className="relative px-4 pb-4 space-y-2">
-          {/* Progress track line */}
-          <div className="absolute left-[2.15rem] top-0 bottom-4 w-[2px]" style={{ background: 'var(--border-default)' }} />
-
-          {STEPS.map((step, i) => {
-            const done = progress[step.id];
+        <div style={{ padding: '0 16px 16px' }}>
+          {remainingSteps.length > 0 ? remainingSteps.map((step, i) => {
             const Icon = step.icon;
-            const color = STEP_COLORS[i];
-            const isNext = !done && STEPS.slice(0, i).every((s) => progress[s.id]);
+            const isNext = i === 0;
 
             return (
               <div
                 key={step.id}
-                className={`relative flex items-center gap-3 p-3 rounded-xl transition-all duration-200 ${
-                  done ? '' : isNext ? 'bg-[#C855F0]/5 border border-[#C855F0]/20' : 'hover:bg-[#ffffff05]'
-                }`}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
+                  borderRadius: 14, marginBottom: 6,
+                  background: isNext ? 'rgba(200,85,240,0.06)' : 'transparent',
+                  border: isNext ? '1px solid rgba(200,85,240,0.15)' : '1px solid transparent',
+                }}
               >
-                {/* Step circle */}
-                <div className={`relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all ${
-                  done
-                    ? 'bg-emerald-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]'
-                    : isNext
-                      ? 'border-2 border-[#C855F0] bg-[#C855F0]/10'
-                      : ''
-                }`} style={!done && !isNext ? { border: '1px solid var(--border-active)', background: 'var(--bg-surface)' } : {}}>
-                  {done ? (
-                    <Check className="w-4 h-4 text-white" strokeWidth={3} />
-                  ) : (
-                    <Icon className="w-3.5 h-3.5" style={{ color: isNext ? '#C855F0' : 'var(--text-muted)' }} />
-                  )}
+                {/* Icon */}
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: isNext ? 'rgba(200,85,240,0.12)' : 'var(--bg-surface, rgba(255,255,255,0.04))',
+                  border: isNext ? '1px solid rgba(200,85,240,0.25)' : '1px solid var(--border-default, rgba(255,255,255,0.06))',
+                }}>
+                  <Icon size={16} color={isNext ? '#C855F0' : 'var(--text-muted)'} />
                 </div>
 
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold ${done ? 'text-emerald-400' : ''}`} style={!done ? { color: 'var(--text-primary)' } : {}}>
-                    {step.label}
-                  </p>
-                  <p className={`text-xs mt-0.5 ${done ? 'text-emerald-400/60' : ''}`} style={!done ? { color: 'var(--text-secondary)' } : {}}>
-                    {done ? 'Completed' : step.desc}
-                  </p>
+                {/* Text */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{step.label}</p>
+                  <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: '1px 0 0' }}>{step.desc}</p>
                 </div>
 
-                {/* Action */}
-                {!done && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleGo(step); }}
-                    className={`shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-all ${
-                      isNext
-                        ? 'bg-[#C855F0] text-white hover:bg-[#A040C8] shadow-[0_2px_10px_rgba(200,85,240,0.3)]'
-                        : 'hover:border-[#C855F0]/50 hover:text-white'
-                    }`}
-                    style={!isNext ? { background: 'var(--bg-surface)', color: 'var(--text-secondary)', border: '1px solid var(--border-active)' } : {}}
-                  >
-                    {isNext ? 'Start' : 'Go'} <ArrowRight className="w-3 h-3" />
-                  </button>
-                )}
-                {done && (
-                  <div className="shrink-0 w-6 h-6 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                    <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                )}
+                {/* Button */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleGo(step); }}
+                  style={{
+                    flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
+                    padding: isNext ? '8px 16px' : '8px 12px', borderRadius: 10,
+                    fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none',
+                    background: isNext ? '#C855F0' : 'var(--bg-surface, rgba(255,255,255,0.04))',
+                    color: isNext ? '#fff' : 'var(--text-secondary)',
+                    boxShadow: isNext ? '0 2px 8px rgba(200,85,240,0.25)' : 'none',
+                  }}
+                >
+                  {isNext ? 'Start' : 'Go'} <ArrowRight size={12} />
+                </button>
               </div>
             );
-          })}
+          }) : null}
+
+          {/* Completed count summary */}
+          {completedCount > 0 && !allComplete && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
+              borderRadius: 10, marginTop: 4,
+              background: 'rgba(34,197,94,0.06)',
+            }}>
+              <Check size={14} color="#22c55e" />
+              <span style={{ fontSize: 12, color: '#22c55e', fontWeight: 600 }}>
+                {completedCount} completed
+              </span>
+            </div>
+          )}
 
           {/* Claim button */}
           {allComplete && (
@@ -215,10 +211,11 @@ export default function TutorialChecklist({ onNavigate }) {
                 setDismissed(true);
                 window.dispatchEvent(new CustomEvent('drst-tutorial-complete'));
               }}
-              className="w-full mt-3 py-3.5 rounded-xl text-white font-bold text-sm transition-all hover:shadow-xl"
               style={{
-                background: 'linear-gradient(135deg, #C855F0 0%, #A7ECDA 50%, #22c55e 100%)',
-                boxShadow: '0 4px 20px rgba(200,85,240,0.3)',
+                width: '100%', marginTop: 8, padding: '14px', borderRadius: 14,
+                color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #C855F0, #22c55e)',
+                boxShadow: '0 4px 16px rgba(200,85,240,0.25)',
               }}
             >
               Claim Achievement

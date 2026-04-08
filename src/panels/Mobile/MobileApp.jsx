@@ -364,7 +364,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
       {/* Greeting */}
       <div style={{ padding: "28px 0 20px" }}>
-        <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif", textTransform: "uppercase", letterSpacing: "1px" }}>Good evening</p>
+        {(() => {
+          const h = new Date().getHours();
+          const greeting = h < 12 ? "Good morning" : h < 17 ? "Hey, what's up" : "Working late";
+          return <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif", textTransform: "uppercase", letterSpacing: "1px" }}>{greeting}</p>;
+        })()}
         <h1 style={{ fontSize: 32, fontWeight: 700, color: TEXT_PRIMARY, margin: "6px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif", lineHeight: 1.1 }}>
           Welcome back
         </h1>
