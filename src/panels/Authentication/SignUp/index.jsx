@@ -30,39 +30,11 @@ export const Signup = () => {
     confirmPassword: '',
     accountType: { label: 'Actor', value: 'actor' },
     phoneNo: '',
-    // Actor fields
-    bio: '',
-    headshot: null,
-    reelUrl: '',
-
-    availability: {},
-    metricsOptIn: false,
-    // Casting Director fields
-    companyName: '',
-    companyPhone: '',
-    website: '',
-    officeAddress: '',
-    logo: null,
-    description: '',
-    // Agent fields
-    agencyName: '',
-    agencyPhone: '',
-    agencyEmail: '',
-    // Coach fields
-    display_name: '',
-    specialties: [],
-    hourly_rate: '',
   });
   const fieldRefs = {
     email: useRef(null),
     password: useRef(null),
     confirmPassword: useRef(null),
-    headshot: useRef(null),
-
-    logo: useRef(null),
-    agencyEmail: useRef(null),
-    reelUrl: useRef(null),
-    website: useRef(null),
   };
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [errors, setErrors] = useState({});
@@ -71,20 +43,8 @@ export const Signup = () => {
   const handleChange = (e) => {
     let { name, value, type, files } = e.target;
 
-    if (
-      name === 'phoneNo' ||
-      name === 'companyPhone' ||
-      name === 'agencyPhone'
-    ) {
+    if (name === 'phoneNo') {
       value = value.replace(/[^0-9+\-\s()]/g, '');
-    }
-
-    if (type === 'file') {
-      value = files[0] || null;
-    }
-
-    if (name === 'metricsOptIn') {
-      value = e.target.checked;
     }
 
     setFormData((prev) => ({
@@ -96,21 +56,6 @@ export const Signup = () => {
       ...prev,
       [name]: '',
     }));
-  };
-
-  const validateFile = (file, allowedTypes) => {
-    if (!file) return true;
-    const extension = file.name.split('.').pop().toLowerCase();
-    return allowedTypes.includes(extension);
-  };
-  
-  const validateURL = (url) => {
-    try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -129,45 +74,6 @@ export const Signup = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
-    // File validations
-    if (formData.accountType?.value === 'actor') {
-      if (
-        formData.headshot &&
-        !validateFile(formData.headshot, ['jpg', 'jpeg', 'png', 'webp'])
-      ) {
-        newErrors.headshot =
-          'Invalid file format. Allowed: jpg, jpeg, png, webp';
-      }
-    }
-
-    if (
-      formData.accountType?.value === 'casting_director' ||
-      formData.accountType?.value === 'agent'
-    ) {
-      if (
-        formData.logo &&
-        !validateFile(formData.logo, ['jpg', 'jpeg', 'png', 'webp'])
-      ) {
-        newErrors.logo = 'Invalid file format. Allowed: jpg, jpeg, png, webp';
-      }
-    }
-
-    if (
-      formData.accountType?.value === 'agent' &&
-      formData.agencyEmail &&
-      !validateEmail(formData.agencyEmail?.trim())
-    ) {
-      newErrors.agencyEmail = 'Invalid Agency Email';
-    }
-
-    if (formData.reelUrl && !validateURL(formData.reelUrl.trim())) {
-      newErrors.reelUrl = 'Invalid URL format for Reel';
-    }
-
-    if (formData.website && !validateURL(formData.website.trim())) {
-      newErrors.website = 'Invalid URL format for Website';
-    }
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       const firstErrorField = Object.keys(newErrors)[0];
@@ -184,73 +90,7 @@ export const Signup = () => {
     registrationPayload.append('email', formData?.email?.trim()?.toLowerCase());
     registrationPayload.append('password', formData?.password);
     registrationPayload.append('first_name', formData?.firstName?.trim());
-    registrationPayload.append(
-      'role',
-      formData?.accountType?.value?.toLowerCase()
-    );
-    registrationPayload.append('phone_no', formData?.phoneNo?.trim());
-
-    // Append role-specific fields
-    if (formData.accountType?.value === 'actor') {
-      if (formData.bio) registrationPayload.append('bio', formData.bio);
-      if (formData.headshot)
-        registrationPayload.append('headshot', formData.headshot);
-      if (formData.reelUrl)
-        registrationPayload.append('reel_url', formData.reelUrl);
-      if (Object.keys(formData.availability).length > 0) {
-        registrationPayload.append(
-          'availability',
-          JSON.stringify(formData.availability)
-        );
-      }
-      registrationPayload.append('metrics_opt_in', formData.metricsOptIn);
-    }
-
-    if (formData.accountType?.value === 'casting_director') {
-      if (formData.companyName)
-        registrationPayload.append('company_name', formData.companyName);
-      if (formData.companyPhone)
-        registrationPayload.append('company_phone', formData.companyPhone);
-      if (formData.website)
-        registrationPayload.append('website', formData.website);
-      if (formData.officeAddress)
-        registrationPayload.append('office_address', formData.officeAddress);
-      if (formData.logo) registrationPayload.append('logo', formData.logo);
-      if (formData.description)
-        registrationPayload.append('description', formData.description);
-    }
-
-    if (formData.accountType?.value === 'agent') {
-      if (formData.agencyName)
-        registrationPayload.append('agency_name', formData.agencyName);
-      if (formData.agencyPhone)
-        registrationPayload.append('agency_phone', formData.agencyPhone);
-      if (formData.agencyEmail)
-        registrationPayload.append('agency_email', formData.agencyEmail);
-      if (formData.website)
-        registrationPayload.append('website', formData.website);
-      if (formData.officeAddress)
-        registrationPayload.append('office_address', formData.officeAddress);
-      if (formData.logo) registrationPayload.append('logo', formData.logo);
-      if (formData.bio) registrationPayload.append('bio', formData.bio);
-    }
-
-    if (formData.accountType?.value === 'coach') {
-      if (formData.display_name)
-        registrationPayload.append(
-          'display_name',
-          formData.display_name.trim()
-        );
-      if (formData.specialties.length > 0)
-        registrationPayload.append(
-          'specialties',
-          JSON.stringify(formData.specialties.map((s) => s.value || s))
-        );
-      if (formData.hourly_rate)
-        registrationPayload.append('hourly_rate', formData.hourly_rate);
-      // Automatically add services for coach
-      registrationPayload.append('services', JSON.stringify(['Reader']));
-    }
+    registrationPayload.append('role', 'actor');
 
     try {
       setLoading(true);
@@ -265,23 +105,7 @@ export const Signup = () => {
           confirmPassword: '',
           accountType: { label: 'Actor', value: 'actor' },
           phoneNo: '',
-          bio: '',
-          headshot: null,
-          reelUrl: '',
-      
-          availability: {},
-          metricsOptIn: false,
-          companyName: '',
-          companyPhone: '',
-          website: '',
-          officeAddress: '',
-          logo: null,
-          description: '',
-          agencyName: '',
-          agencyPhone: '',
-          agencyEmail: '',
         });
-
         setLoading(false);
       } else if (data?.meta?.requestStatus === 'rejected') {
         setLoading(false);
@@ -293,13 +117,6 @@ export const Signup = () => {
       console.error('Registration failed:', err);
     }
   };
-
-  const accountOptions = [
-    { label: 'Actor', value: 'actor' },
-    { label: 'Casting Director', value: 'casting_director' },
-    { label: 'Agent', value: 'agent' },
-    { label: 'Reader', value: 'coach' },
-  ];
 
   const passwordValidation = useMemo(
     () => validatePassword(formData?.password),
@@ -318,11 +135,11 @@ export const Signup = () => {
         <h2 className='text-3xl font-bold text-white tracking-tight'>
           Create account
         </h2>
-        <p className='mt-2 text-sm text-[#888]'>Join the Dr. Self Tape community</p>
+        <p className='mt-2 text-sm text-[#888]'>Start practicing in under 60 seconds</p>
 
         <div className='mt-8'>
           <form onSubmit={handleSubmit} className=''>
-            <div className='space-y-8'>
+            <div className='space-y-6'>
               <CustomInput dark
                 label='Full Name'
                 name='firstName'
@@ -330,7 +147,7 @@ export const Signup = () => {
                 autoFocus
                 value={formData.firstName}
                 onChange={handleChange}
-                placeholder='Enter your first name'
+                placeholder='Your name'
                 required
               />
 
@@ -340,7 +157,7 @@ export const Signup = () => {
                 type='text'
                 value={formData.email}
                 onChange={handleChange}
-                placeholder='Enter your email'
+                placeholder='you@email.com'
                 error={!!errors.email}
                 errorMsg={errors.email}
                 required
@@ -354,7 +171,7 @@ export const Signup = () => {
                   type='password'
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder='Enter your password'
+                  placeholder='Create a password'
                   error={!!errors.password}
                   errorMsg={errors.password}
                   required
@@ -378,243 +195,9 @@ export const Signup = () => {
                 errorMsg={errors.confirmPassword}
                 ref={fieldRefs.confirmPassword}
               />
-
-              <CustomInput dark
-                label='Phone Number'
-                name='phoneNo'
-                value={formData.phoneNo}
-                onChange={handleChange}
-                placeholder='Enter your phone number'
-                required
-              />
-
-              {/* Account type hidden — all users are actors for now */}
-
-              {formData.accountType?.value === 'actor' && (
-                <div className='space-y-8'>
-                  {/* Bio — dark */}
-                  <div className='flex flex-col gap-1'>
-                    <label className='text-sm font-medium text-[#999999]'>Bio</label>
-                    <textarea
-                      name='bio'
-                      value={formData.bio}
-                      onChange={handleChange}
-                      placeholder='Tell us about yourself as an actor...'
-                      rows={3}
-                      className='w-full bg-[#111318] border border-[#2a2d35] rounded-lg px-4 py-3 text-white text-sm placeholder-[#555] focus:border-[#C855F0]/60 focus:ring-1 focus:ring-[#C855F0]/30 outline-none resize-none transition-colors'
-                    />
-                  </div>
-
-                  {/* Headshot — dark file picker */}
-                  <div className='flex flex-col gap-1'>
-                    <label className='text-sm font-medium text-[#999999]'>Headshot</label>
-                    <label className='flex items-center gap-3 w-full bg-[#111318] border border-[#2a2d35] rounded-lg px-4 py-3 cursor-pointer hover:border-[#C855F0]/50 transition-colors'>
-                      <svg className='w-5 h-5 text-[#666]' fill='none' viewBox='0 0 24 24' stroke='currentColor' strokeWidth={1.5}>
-                        <path strokeLinecap='round' strokeLinejoin='round' d='M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5' />
-                      </svg>
-                      <span className={`text-sm ${formData.headshot ? 'text-white' : 'text-[#555]'}`}>
-                        {formData.headshot ? formData.headshot.name : 'Upload headshot (.jpg, .png, .webp)'}
-                      </span>
-                      <input
-                        type='file'
-                        name='headshot'
-                        accept='.jpg,.jpeg,.png,.webp'
-                        onChange={handleChange}
-                        className='hidden'
-                      />
-                    </label>
-                    {errors.headshot && <p className='text-red-400 text-xs mt-1'>{errors.headshot}</p>}
-                  </div>
-
-                  <CustomInput dark
-                    label='Reel URL'
-                    name='reelUrl'
-                    type='text'
-                    value={formData.reelUrl}
-                    onChange={handleChange}
-                    placeholder='Enter your reel URL'
-                    error={!!errors.reelUrl}
-                    errorMsg={errors.reelUrl}
-                    ref={fieldRefs.reelUrl}
-                  />
-                  {/* <CustomCheckbox
-                    label='Opt-in for Metrics'
-                    name='metricsOptIn'
-                    checked={formData.metricsOptIn}
-                    onChange={handleChange}
-                    className='mt-[3px] accent-primary w-4 h-4'
-                  /> */}
-                </div>
-              )}
-
-              {formData.accountType?.value === 'casting_director' && (
-                <div className='space-y-8'>
-                  <CustomInput dark
-                    label='Company Name'
-                    name='companyName'
-                    type='text'
-                    value={formData.companyName}
-                    onChange={handleChange}
-                    placeholder='Enter your company name'
-                    required
-                  />
-                  <CustomInput dark
-                    label='Company Phone'
-                    name='companyPhone'
-                    value={formData.companyPhone}
-                    onChange={handleChange}
-                    placeholder='Enter your company phone'
-                  />
-                  <CustomInput dark
-                    label='Website'
-                    name='website'
-                    type='text'
-                    value={formData.website}
-                    onChange={handleChange}
-                    placeholder='Enter your website'
-                    error={!!errors.website}
-                    errorMsg={errors.website}
-                    ref={fieldRefs.website}
-                  />
-                  <CustomInput dark
-                    label='Office Address'
-                    name='officeAddress'
-                    type='text'
-                    value={formData.officeAddress}
-                    onChange={handleChange}
-                    placeholder='Enter your office address'
-                  />
-                  <FilePicker
-                    label='Logo'
-                    name='logo'
-                    type='file'
-                    accept='.jpg,.jpeg,.png,.webp'
-                    onChange={handleChange}
-                    error={!!errors.logo}
-                    errorMsg={errors.logo}
-                    ref={fieldRefs.logo}
-                  />
-                  <Textarea
-                    label='Description'
-                    name='description'
-                    type='text'
-                    value={formData.description}
-                    onChange={handleChange}
-                    placeholder='Enter your description'
-                  />
-                </div>
-              )}
-
-              {formData.accountType?.value === 'agent' && (
-                <div className='space-y-8'>
-                  <CustomInput dark
-                    label='Agency Name'
-                    name='agencyName'
-                    type='text'
-                    value={formData.agencyName}
-                    onChange={handleChange}
-                    placeholder='Enter your agency name'
-                    required
-                  />
-                  <CustomInput dark
-                    label='Agency Phone'
-                    name='agencyPhone'
-                    value={formData.agencyPhone}
-                    onChange={handleChange}
-                    placeholder='Enter your agency phone'
-                  />
-                  <CustomInput dark
-                    label='Agency Email'
-                    name='agencyEmail'
-                    type='text'
-                    value={formData.agencyEmail}
-                    onChange={handleChange}
-                    placeholder='Enter your agency email'
-                    error={!!errors.agencyEmail}
-                    errorMsg={errors.agencyEmail}
-                    ref={fieldRefs.agencyEmail}
-                  />
-                  <CustomInput dark
-                    label='Website'
-                    name='website'
-                    type='text'
-                    value={formData.website}
-                    onChange={handleChange}
-                    placeholder='Enter your website'
-                    error={!!errors.website}
-                    errorMsg={errors.website}
-                    ref={fieldRefs.website}
-                  />
-                  <CustomInput dark
-                    label='Office Address'
-                    name='officeAddress'
-                    type='text'
-                    value={formData.officeAddress}
-                    onChange={handleChange}
-                    placeholder='Enter your office address'
-                  />
-                  <FilePicker
-                    label='Logo'
-                    name='logo'
-                    type='file'
-                    accept='.jpg,.jpeg,.png,.webp'
-                    onChange={handleChange}
-                    error={!!errors.logo}
-                    errorMsg={errors.logo}
-                    ref={fieldRefs.logo}
-                  />
-                  <Textarea
-                    label='Bio'
-                    name='bio'
-                    type='text'
-                    value={formData.bio}
-                    onChange={handleChange}
-                    placeholder='Enter your bio'
-                  />
-                </div>
-              )}
-              {formData.accountType?.value === 'coach' && (
-                <div className='space-y-8'>
-                  <CustomInput dark
-                    label='Display Name'
-                    name='display_name'
-                    type='text'
-                    value={formData.display_name}
-                    onChange={handleChange}
-                    placeholder='Enter your display name'
-                    required
-                  />
-
-                  <SelectDropdown
-                    label='Specialties'
-                    name='specialties'
-                    value={formData.specialties}
-                    onChange={handleChange}
-                    options={[
-                      { label: 'Drama', value: 'Drama' },
-                      { label: 'Comedy', value: 'Comedy' },
-                      { label: 'Character Work', value: 'Character Work' },
-                      { label: 'Improv', value: 'Improv' },
-                    ]}
-                    placeholder='Select your specialties'
-                    multiSelect={true}
-                    required
-                  />
-
-                  <CustomInput dark
-                    label='Hourly Rate'
-                    name='hourly_rate'
-                    type='number'
-                    value={formData.hourly_rate}
-                    onChange={handleChange}
-                    placeholder='Enter your hourly rate'
-                    required
-                  />
-                </div>
-              )}
             </div>
 
-            <div className='space-y-5 mt-5'>
+            <div className='space-y-5 mt-6'>
               <CustomCheckbox
                 type='checkbox'
                 required={true}
@@ -631,20 +214,8 @@ export const Signup = () => {
                     !formData.email ||
                     !formData.password ||
                     !formData.confirmPassword ||
-                    !formData.accountType ||
-                    !formData.phoneNo ||
-                    (formData.accountType?.value === 'actor' &&
-                      !formData.bio) ||
-                    (formData.accountType?.value === 'casting_director' &&
-                      !formData.companyName) ||
-                    (formData.accountType?.value === 'agent' &&
-                      !formData.agencyName) ||
                     !isPasswordValid ||
-                    !agreeTerms ||
-                    (formData.accountType?.value === 'coach' &&
-                      (!formData.display_name ||
-                        !formData.specialties.length ||
-                        !formData.hourly_rate))
+                    !agreeTerms
                   }
                   type='submit'
                   loading={loading}
@@ -652,7 +223,7 @@ export const Signup = () => {
                     width: '100%',
                   }}
                 >
-                  Sign Up
+                  Get Started
                 </CustomButton>
 
                 <p className='text-sm text-center'>
