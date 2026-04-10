@@ -272,7 +272,7 @@ const TABS = [
 ];
 
 const MORE_FEATURES = [
-  { id: "cd-sim", label: "CD Sim Mode", desc: "Live audition — real-time CD feedback", emoji: "🎬", color: "#C855F0" },
+  { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#C855F0" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
   { id: "reports", label: "Reports", desc: "Your career at a glance", emoji: "📊", color: "#b89aff" },
@@ -307,6 +307,25 @@ const PANEL_COMPONENTS = {
 /* ═══════════════════════════════════════════════════
    HOME
    ═══════════════════════════════════════════════════ */
+/* ── Smart next step for mobile ── */
+function getMobileNextStep({ profile, stats, submissions, scripts }) {
+  const hasHeadshot = profile?.actor_profile?.headshot;
+  const hasAuditions = (stats?.total_auditions || 0) > 0;
+  const hasSubs = Array.isArray(submissions) && submissions.length > 0;
+  const hasScripts = Array.isArray(scripts) && scripts.length > 0;
+
+  if (!hasHeadshot) {
+    return { title: 'Complete your profile', desc: 'Add a headshot so scene partners can find you.', cta: 'Add Headshot', icon: 'community', action: 'profile' };
+  }
+  if (!hasScripts) {
+    return { title: 'Generate your first scene', desc: 'Pick a genre and tone — get custom sides in seconds.', cta: 'Generate', icon: 'sparkle', action: 'generator' };
+  }
+  if (!hasSubs) {
+    return { title: 'Practice with AI', desc: 'Run your scene with an AI partner and record a take.', cta: 'Start Practicing', icon: 'mic', action: 'live' };
+  }
+  return { title: 'Ready to work?', desc: 'Jump back into scene study or try the acting coach.', cta: 'Continue', icon: 'play', action: 'live' };
+}
+
 function HomeScreen({ setTab, setCurrentPanel }) {
   const dispatch = useDispatch();
   const { permission, subscribe, supported, showIOSPrompt, setShowIOSPrompt } = usePushNotifications();
@@ -318,13 +337,15 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const matchingStats = useSelector((state) => state.readersMatch.matchingStats);
   const isAvailable = useSelector((state) => state.readersMatch.isAvailable);
   const availabilityToggling = useSelector((state) => state.readersMatch.availabilityToggling);
+  const profile = useSelector((state) => state.profile?.profile);
 
   const auditions = rawAuditions.map(mapAudition);
   const scripts = rawScripts.map(mapScript);
-  const recentSubmissions = submissions.slice(0, 4);
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTutorialAchievement, setShowTutorialAchievement] = useState(false);
+
+  const nextStep = getMobileNextStep({ profile, stats: s, submissions, scripts: rawScripts });
 
   useEffect(() => {
     const handler = () => setShowTutorialAchievement(true);
@@ -344,13 +365,19 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     }
   }, [dispatch]);
 
-  const stats = [
-    { label: "Submissions", value: submissions.length || 0, icon: "auditions", color: MINT },
-    { label: "Callbacks", value: s.total_callbacks || 0, icon: "fire", color: GOLD },
-    { label: "Auditions", value: s.total_auditions || 0, icon: "calendar", color: CORAL_SOFT },
-    { label: "Booked", value: s.total_booked || 0, icon: "star", color: GREEN },
-  ];
+  const hasStats = (s.total_auditions || 0) > 0 || (s.total_booked || 0) > 0;
   const callbacks = auditions.filter(a => callbackBadge(a.callbackDate));
+  const firstName = profile?.first_name || '';
+  const hour = new Date().getHours();
+  const greeting = firstName
+    ? (hour < 12 ? `Good morning, ${firstName}` : hour < 17 ? `Hey ${firstName}` : `Working late, ${firstName}?`)
+    : (hour < 12 ? 'Good morning' : hour < 17 ? "Hey, what's up" : 'Working late');
+
+  const handleNextStep = () => {
+    if (nextStep.action === 'profile') setCurrentPanel('profile');
+    else if (nextStep.action === 'generator') setCurrentPanel('generator');
+    else if (nextStep.action === 'live') setTab('live');
+  };
 
   return (
     <div style={{ padding: "0 20px 32px" }}>
@@ -363,105 +390,110 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       </div>
 
       {/* Greeting */}
-      <div style={{ padding: "28px 0 20px" }}>
-        {(() => {
-          const h = new Date().getHours();
-          const greeting = h < 12 ? "Good morning" : h < 17 ? "Hey, what's up" : "Working late";
-          return <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: 0, fontFamily: "'Poppins', sans-serif", textTransform: "uppercase", letterSpacing: "1px" }}>{greeting}</p>;
-        })()}
-        <h1 style={{ fontSize: 32, fontWeight: 700, color: TEXT_PRIMARY, margin: "6px 0 0", letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif", lineHeight: 1.1 }}>
-          Welcome back
+      <div style={{ padding: "24px 0 18px" }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif", lineHeight: 1.2 }}>
+          {greeting}
         </h1>
       </div>
 
-      {/* Quick Actions */}
-      <div style={{ display: "flex", gap: 14, marginBottom: SPACING_SECTION }}>
-        <button onClick={() => setTab("live")} style={{
-          flex: 1, background: `linear-gradient(135deg, rgba(200,85,240,0.85), rgba(200,85,240,0.65))`, border: "none",
-          borderRadius: RADIUS_LG, padding: "16px 18px", cursor: "pointer", textAlign: "left",
+      {/* ── Smart Next Step CTA ── */}
+      <button
+        onClick={handleNextStep}
+        style={{
+          width: "100%", display: "flex", alignItems: "center", gap: 14,
+          background: `linear-gradient(135deg, rgba(200,85,240,0.15), rgba(200,85,240,0.05))`,
+          border: "1px solid rgba(200,85,240,0.2)",
+          borderRadius: RADIUS_LG, padding: "18px 20px", cursor: "pointer",
+          marginBottom: 18, textAlign: "left",
+        }}
+      >
+        <div style={{
+          width: 44, height: 44, borderRadius: 14,
+          background: "rgba(200,85,240,0.15)",
+          display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Icon name="mic" size={20} color="#fff" />
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>Go Live</span>
-          </div>
-        </button>
-        <button onClick={() => setCurrentPanel("generator")} style={{
-          flex: 1, background: BG_ELEVATED, border: `1px solid rgba(167,236,218,0.08)`,
-          borderRadius: RADIUS_LG, padding: "16px 18px", cursor: "pointer", textAlign: "left",
-          boxShadow: CARD_SHADOW,
+          <Icon name={nextStep.icon} size={22} color={CORAL} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>{nextStep.title}</p>
+          <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "3px 0 0", lineHeight: 1.3 }}>{nextStep.desc}</p>
+        </div>
+        <span style={{
+          fontSize: 12, fontWeight: 700, color: "#fff",
+          background: CORAL, padding: "6px 14px", borderRadius: 12,
+          whiteSpace: "nowrap", flexShrink: 0,
         }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Icon name="sparkle" size={20} color={MINT} />
-            <span style={{ fontSize: 15, fontWeight: 700, color: TEXT_PRIMARY }}>Generate</span>
-          </div>
-        </button>
+          {nextStep.cta}
+        </span>
+      </button>
+
+      {/* ── Quick Access Row — 3 icons ── */}
+      <div style={{ display: "flex", gap: 10, marginBottom: SPACING_SECTION }}>
+        {[
+          { label: "Coach", icon: "star", emoji: "🎭", action: () => setCurrentPanel("cd-sim") },
+          { label: "Study", icon: "mic", emoji: "📖", action: () => setTab("live") },
+          { label: "Readers", icon: "community", emoji: "🤝", action: () => setTab("find-a-reader") },
+        ].map((item) => (
+          <button
+            key={item.label}
+            onClick={item.action}
+            style={{
+              flex: 1, background: BG_CARD, border: `1px solid ${CARD_BORDER}`,
+              borderRadius: RADIUS_LG, padding: "14px 8px", cursor: "pointer",
+              textAlign: "center", boxShadow: CARD_SHADOW,
+            }}
+          >
+            <span style={{ fontSize: 22, display: "block", marginBottom: 4 }}>{item.emoji}</span>
+            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_PRIMARY }}>{item.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Availability toggle */}
-      <div style={{ marginBottom: SPACING_SECTION }}>
+      {/* Availability + Find Reader row */}
+      <div style={{ display: "flex", gap: 10, marginBottom: SPACING_SECTION }}>
         <button
           onClick={() => !availabilityToggling && dispatch(toggleAvailability(!isAvailable))}
           style={{
-            width: "100%", display: "flex", alignItems: "center", gap: 10,
+            flex: 1, display: "flex", alignItems: "center", gap: 8,
             background: isAvailable ? "rgba(34,197,94,0.08)" : BG_CARD,
             border: isAvailable ? "1px solid rgba(34,197,94,0.2)" : `1px solid ${CARD_BORDER}`,
-            borderRadius: RADIUS_LG, padding: "16px 18px", cursor: "pointer",
+            borderRadius: RADIUS_LG, padding: "14px 16px", cursor: "pointer",
             boxShadow: CARD_SHADOW,
           }}
         >
           <span style={{
-            width: 10, height: 10, borderRadius: "50%",
+            width: 8, height: 8, borderRadius: "50%",
             background: isAvailable ? "#22c55e" : "#666",
             boxShadow: isAvailable ? "0 0 6px rgba(34,197,94,0.3)" : "none",
           }} />
-          <span style={{ fontSize: 14, fontWeight: 600, color: isAvailable ? "#22c55e" : TEXT_SECONDARY }}>
-            {isAvailable ? "Available to Read" : "Go Available"}
+          <span style={{ fontSize: 13, fontWeight: 600, color: isAvailable ? "#22c55e" : TEXT_SECONDARY }}>
+            {isAvailable ? "Available" : "Go Available"}
           </span>
         </button>
+
+        {(matchingStats?.pending_likes_count || 0) > 0 && (
+          <button
+            onClick={() => setTab("find-a-reader")}
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              background: BG_CARD, border: `1px solid ${CARD_BORDER}`,
+              borderRadius: RADIUS_LG, padding: "14px 16px", cursor: "pointer",
+              boxShadow: CARD_SHADOW,
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_PRIMARY }}>
+              {matchingStats.pending_likes_count} matches
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: MINT }}>View</span>
+          </button>
+        )}
       </div>
 
-      {/* Find a Reader CTA */}
-      <div
-        onClick={() => setTab("find-a-reader")}
-        style={{
-          background: BG_CARD, borderRadius: RADIUS_LG, padding: "18px 20px",
-          border: `1px solid ${CARD_BORDER}`, marginBottom: SPACING_SECTION,
-          cursor: "pointer", boxShadow: CARD_SHADOW,
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: TEXT_PRIMARY }}>Find a Reader</span>
-              {(matchingStats?.pending_likes_count || 0) > 0 && (
-                <span style={{
-                  fontSize: 11, fontWeight: 700, color: "#fff", background: "#C855F0",
-                  padding: "2px 8px", borderRadius: 20, minWidth: 20, textAlign: "center",
-                }}>
-                  {matchingStats.pending_likes_count}
-                </span>
-              )}
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block" }} />
-              <span style={{ fontSize: 12, color: MINT, fontWeight: 500 }}>
-                {matchingStats?.available_count || 0} online now
-              </span>
-            </div>
-          </div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: MINT }}>Go &rarr;</span>
-        </div>
-      </div>
-
-      {/* Your Progress */}
-      <h2 style={{ fontSize: 13, fontWeight: 600, color: TEXT_SECONDARY, margin: `0 0 14px`, letterSpacing: "0.5px", textTransform: "uppercase" }}>Your Progress</h2>
-
-      {/* Daily Challenge */}
+      {/* Progress section */}
       <div style={{ marginBottom: 14 }}>
         <DailyChallengeCard />
       </div>
 
-      {/* Tutorial checklist */}
       <div style={{ marginBottom: SPACING_SECTION }}>
         <TutorialChecklist onNavigate={({ tab, panel }) => {
           if (tab) { setTab(tab); }
@@ -469,18 +501,38 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         }} />
       </div>
 
-      {/* Key stats — 2 numbers only */}
-      <div style={{ display: "flex", gap: 14, marginBottom: SPACING_SECTION }}>
-        {[
-          { label: "Auditions", value: s.total_auditions || 0, color: CORAL_SOFT },
-          { label: "Booked", value: s.total_booked || 0, color: GREEN },
-        ].map(stat => (
-          <div key={stat.label} style={{ flex: 1, background: BG_CARD, borderRadius: RADIUS_LG, padding: "20px", border: `1px solid ${CARD_BORDER}`, textAlign: "center", boxShadow: CARD_SHADOW }}>
-            <span style={{ fontSize: 36, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-1px", fontFamily: "'Playfair Display', serif", display: "block" }}>{stat.value}</span>
-            <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>{stat.label}</span>
-          </div>
-        ))}
-      </div>
+      {/* Stats — only when user has data */}
+      {hasStats ? (
+        <div style={{ display: "flex", gap: 14, marginBottom: SPACING_SECTION }}>
+          {[
+            { label: "Auditions", value: s.total_auditions || 0, color: CORAL_SOFT },
+            { label: "Booked", value: s.total_booked || 0, color: GREEN },
+          ].map(stat => (
+            <div key={stat.label} style={{ flex: 1, background: BG_CARD, borderRadius: RADIUS_LG, padding: "20px", border: `1px solid ${CARD_BORDER}`, textAlign: "center", boxShadow: CARD_SHADOW }}>
+              <span style={{ fontSize: 36, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-1px", fontFamily: "'Playfair Display', serif", display: "block" }}>{stat.value}</span>
+              <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div style={{
+          background: BG_CARD, borderRadius: RADIUS_LG, padding: "24px 20px",
+          border: `1px solid ${CARD_BORDER}`, marginBottom: SPACING_SECTION,
+          textAlign: "center", boxShadow: CARD_SHADOW,
+        }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
+          <p style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: "0 0 4px" }}>Your stats will appear here</p>
+          <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: 0, lineHeight: 1.4 }}>
+            Start tracking auditions to see callbacks, bookings, and your pipeline.
+          </p>
+          <button
+            onClick={() => setTab("auditions")}
+            style={{ background: "none", border: "none", cursor: "pointer", color: CORAL, fontSize: 13, fontWeight: 600, marginTop: 12 }}
+          >
+            Log your first audition &rarr;
+          </button>
+        </div>
+      )}
 
       {/* Token balance */}
       {balance !== null && (
