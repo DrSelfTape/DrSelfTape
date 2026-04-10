@@ -2,6 +2,23 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
 import { createAuditionThunk } from '../../../redux/features/auditions/auditionsSlice';
 import VideoTrimmer from './VideoTrimmer';
+import axios from '../../../redux/http';
+import { baseURL } from '../../../redux/constant';
+
+// Pick a supported video mimeType (MP4 for Safari/iOS, WebM otherwise)
+function getSupportedMimeType() {
+  const types = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+    'video/mp4;codecs=h264,aac',
+    'video/mp4',
+  ];
+  for (const t of types) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return '';
+}
 
 export default function RecordTake({ onBack }) {
   const dispatch = useDispatch();
@@ -9,6 +26,7 @@ export default function RecordTake({ onBack }) {
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
   const chunksRef = useRef([]);
+  const mimeTypeRef = useRef(getSupportedMimeType());
 
   const [status, setStatus] = useState('idle'); // idle | recording | recorded | trimming
   const [recordedUrl, setRecordedUrl] = useState(null);
@@ -34,8 +52,15 @@ export default function RecordTake({ onBack }) {
   }, []);
 
   useEffect(() => {
+    // Lock orientation to portrait during recording component
+    const lockOrientation = async () => {
+      try { await screen.orientation?.lock?.('portrait'); } catch { /* unsupported */ }
+    };
+    lockOrientation();
+
     startCamera();
     return () => {
+      try { screen.orientation?.unlock?.(); } catch { /* ignore */ }
       streamRef.current?.getTracks().forEach((t) => t.stop());
       if (recordedUrl) URL.revokeObjectURL(recordedUrl);
     };
@@ -44,23 +69,24 @@ export default function RecordTake({ onBack }) {
   const startRecording = () => {
     if (!streamRef.current) return;
     chunksRef.current = [];
-    const mr = new MediaRecorder(streamRef.current, {
-      mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
-        ? 'video/webm;codecs=vp9'
-        : 'video/webm',
-    });
+
+    const mimeType = mimeTypeRef.current;
+    const recorderOpts = mimeType ? { mimeType } : undefined;
+
+    const mr = new MediaRecorder(streamRef.current, recorderOpts);
     mr.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
     mr.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: 'video/webm' });
+      const actualType = mimeType || mr.mimeType || 'video/webm';
+      const blob = new Blob(chunksRef.current, { type: actualType });
       const url = URL.createObjectURL(blob);
       setRecordedBlob(blob);
       setRecordedUrl(url);
       setStatus('recorded');
     };
     mediaRecorderRef.current = mr;
-    mr.start();
+    mr.start(1000);
     setStatus('recording');
   };
 
@@ -111,14 +137,15 @@ export default function RecordTake({ onBack }) {
     if (!recordedBlob) return;
     setSaving(true);
     try {
-      const videoUrl = URL.createObjectURL(recordedBlob);
-      await dispatch(
-        createAuditionThunk({
-          project: 'Scene Study Take',
-          role: 'Self-tape',
-          video_url: videoUrl,
-        })
-      );
+      const ext = (mimeTypeRef.current || '').includes('mp4') ? 'mp4' : 'webm';
+      const fd = new FormData();
+      fd.append('video', recordedBlob, `scene-take-${Date.now()}.${ext}`);
+      fd.append('project', 'Scene Study Take');
+      fd.append('role', 'Self-tape');
+      fd.append('title', `Self-Tape ${new Date().toLocaleDateString()}`);
+      await axios.post(`${baseURL}/v1/growth/self-tapes/upload/`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
       setSaved(true);
     } catch {
       // error handled in redux

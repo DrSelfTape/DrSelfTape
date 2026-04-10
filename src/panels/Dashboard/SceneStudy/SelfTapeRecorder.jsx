@@ -4,6 +4,46 @@ import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import endPoints from '../../../redux/constant';
 
+// Helper: pick a supported video mimeType (MP4 for Safari/iOS, WebM otherwise)
+function getSupportedMimeType() {
+  const types = [
+    'video/webm;codecs=vp9,opus',
+    'video/webm;codecs=vp8,opus',
+    'video/webm',
+    'video/mp4;codecs=h264,aac',
+    'video/mp4',
+  ];
+  for (const t of types) {
+    if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(t)) return t;
+  }
+  return ''; // let browser pick default
+}
+
+function getFileExt(mimeType) {
+  return mimeType.includes('mp4') ? 'mp4' : 'webm';
+}
+
+// Helper: lock orientation to portrait during recording
+async function lockOrientation() {
+  try {
+    if (screen.orientation?.lock) {
+      await screen.orientation.lock('portrait');
+    }
+  } catch {
+    // Not supported on all browsers — that's fine
+  }
+}
+
+function unlockOrientation() {
+  try {
+    if (screen.orientation?.unlock) {
+      screen.orientation.unlock();
+    }
+  } catch {
+    // Ignore
+  }
+}
+
 export default function SelfTapeRecorder({ lines, userRole, onClose }) {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
@@ -13,6 +53,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
   const [currentLineIdx, setCurrentLineIdx] = useState(-1);
   const aiPlayingRef = useRef(false);
   const scrollRef = useRef(null);
+  const cancelledRef = useRef(false);
 
   const [recording, setRecording] = useState(false);
   const [recordedUrl, setRecordedUrl] = useState(null);
@@ -22,6 +63,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const timerRef = useRef(null);
+  const mimeTypeRef = useRef(getSupportedMimeType());
 
   // Start camera
   useEffect(() => {
@@ -39,6 +81,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     });
 
     return () => {
+      unlockOrientation();
+      cancelledRef.current = true;
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
@@ -46,20 +90,25 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     };
   }, []);
 
-  const startRecording = useCallback(() => {
+  const startRecording = useCallback(async () => {
     if (!streamRef.current) return;
     chunksRef.current = [];
+    cancelledRef.current = false;
 
-    const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-      ? 'video/webm;codecs=vp9,opus'
-      : 'video/webm';
+    // Lock to portrait so rotation doesn't kill the stream
+    await lockOrientation();
 
-    const recorder = new MediaRecorder(streamRef.current, { mimeType });
+    const mimeType = mimeTypeRef.current;
+    const recorderOpts = mimeType ? { mimeType } : undefined;
+
+    const recorder = new MediaRecorder(streamRef.current, recorderOpts);
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
     recorder.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: mimeType });
+      unlockOrientation();
+      const actualType = mimeType || recorder.mimeType || 'video/webm';
+      const blob = new Blob(chunksRef.current, { type: actualType });
       const url = URL.createObjectURL(blob);
       setRecordedUrl(url);
       setRecordedBlob(blob);
@@ -90,6 +139,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
   // Play through lines — AI reads partner lines, pauses for user lines
   const playThroughLines = useCallback(async (startIdx) => {
     for (let i = startIdx; i < lines.length; i++) {
+      // Check both recorder state AND cancellation flag
+      if (cancelledRef.current) break;
       if (!mediaRecorderRef.current || mediaRecorderRef.current.state === 'inactive') break;
 
       const line = lines[i];
@@ -103,32 +154,58 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
       }
 
       if (!isUser && aiVoiceEnabled) {
+        // Skip empty dialogue
+        const text = line.dialogue?.trim();
+        if (!text) continue;
+
         // AI reads the partner line via TTS
         try {
           aiPlayingRef.current = true;
           const response = await axios.post(
             `${baseURL}/v1/ai/tts/`,
-            { text: line.dialogue, voice: 'partner_male' },
+            { text, voice: 'partner_male' },
             { responseType: 'arraybuffer', timeout: 15000 }
           );
+          if (cancelledRef.current) break;
           if (response.data && response.data.byteLength > 0) {
             const blob = new Blob([response.data], { type: 'audio/mpeg' });
             const url = URL.createObjectURL(blob);
             const audio = new Audio(url);
             await new Promise((resolve) => {
-              audio.onended = () => { URL.revokeObjectURL(url); resolve(); };
-              audio.onerror = () => { URL.revokeObjectURL(url); resolve(); };
-              audio.play().catch(resolve);
+              // Safety timeout — if audio doesn't end within 30s, move on
+              const timeout = setTimeout(() => {
+                audio.pause();
+                URL.revokeObjectURL(url);
+                resolve();
+              }, 30000);
+              audio.onended = () => { clearTimeout(timeout); URL.revokeObjectURL(url); resolve(); };
+              audio.onerror = () => {
+                clearTimeout(timeout);
+                URL.revokeObjectURL(url);
+                console.warn(`TTS audio playback error on line ${i}`);
+                resolve();
+              };
+              audio.play().catch(() => {
+                clearTimeout(timeout);
+                URL.revokeObjectURL(url);
+                console.warn(`TTS audio.play() failed on line ${i}`);
+                resolve();
+              });
             });
+          } else {
+            // Server returned empty audio — estimate pause from word count
+            const words = text.split(' ').length;
+            await new Promise((r) => setTimeout(r, Math.max(2000, words * 400)));
           }
-        } catch {
-          // TTS failed — just pause briefly
-          await new Promise((r) => setTimeout(r, 2000));
+        } catch (err) {
+          console.warn(`TTS request failed for line ${i}:`, err?.message || err);
+          // Estimate pause so the scene still flows
+          const words = (text || '').split(' ').length;
+          await new Promise((r) => setTimeout(r, Math.max(2000, words * 400)));
         }
         aiPlayingRef.current = false;
       } else {
         // User's line — pause to let them deliver it
-        // Estimate ~3 seconds per line + 1 second per 10 words
         const words = (line.dialogue || '').split(' ').length;
         const pauseMs = Math.max(3000, 1000 + words * 400);
         await new Promise((r) => setTimeout(r, pauseMs));
@@ -137,6 +214,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
   }, [lines, userRole, aiVoiceEnabled]);
 
   const stopRecording = useCallback(() => {
+    cancelledRef.current = true;
+    unlockOrientation();
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop();
     }
@@ -164,7 +243,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     setSaving(true);
     try {
       const fd = new FormData();
-      fd.append('video', recordedBlob, `self-tape-${Date.now()}.webm`);
+      const ext = getFileExt(mimeTypeRef.current);
+      fd.append('video', recordedBlob, `self-tape-${Date.now()}.${ext}`);
       fd.append('title', `Self-Tape ${new Date().toLocaleDateString()}`);
       fd.append('duration_seconds', String(timer));
       await axios.post(`${baseURL}/v1/growth/self-tapes/upload/`, fd, {
@@ -181,7 +261,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     if (!recordedUrl) return;
     const a = document.createElement('a');
     a.href = recordedUrl;
-    a.download = `DrSelfTape-${new Date().toISOString().slice(0, 16)}.webm`;
+    const ext = getFileExt(mimeTypeRef.current);
+    a.download = `DrSelfTape-${new Date().toISOString().slice(0, 16)}.${ext}`;
     a.click();
   };
 
