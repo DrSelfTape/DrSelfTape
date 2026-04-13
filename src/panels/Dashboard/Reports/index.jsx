@@ -124,7 +124,7 @@ export default function Reports() {
       </div>
 
       {/* Top Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {loading ? (
           Array.from({ length: 4 }).map((_, i) => <LoadingSkeleton key={i} />)
         ) : (
@@ -139,12 +139,12 @@ export default function Reports() {
 
       {/* Row 1: Line Charts */}
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <LoadingSkeleton className="h-72" />
           <LoadingSkeleton className="h-72" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Auditions Over Time */}
           <Card>
             <CardHeader>
@@ -197,12 +197,12 @@ export default function Reports() {
 
       {/* Row 2: Donut + Funnel */}
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <LoadingSkeleton className="h-72" />
           <LoadingSkeleton className="h-72" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Audition Types — Donut */}
           <Card>
             <CardHeader>
@@ -266,12 +266,12 @@ export default function Reports() {
 
       {/* Bottom: Top Casting Offices + Busiest Month */}
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           <LoadingSkeleton className="h-64" />
           <LoadingSkeleton className="h-64" />
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Top Casting Offices */}
           <Card>
             <CardHeader>

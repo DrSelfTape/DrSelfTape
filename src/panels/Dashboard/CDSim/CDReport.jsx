@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Volume2, Download, RotateCcw, Square, Loader2 } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -13,8 +13,12 @@ const SECTIONS = [
 
 // Map voice picker names to backend voice keys
 const VOICE_KEY_MAP = {
-  'Classic Director': 'cd_male',
+  'The Traditionalist': 'cd_male',
   'The Method Coach': 'cd_male',
+  'The Commercial Pro': 'cd_female',
+  'The Artistic Eye': 'cd_male',
+  // Legacy keys for existing reports
+  'Classic Director': 'cd_male',
   'Commercial Queen': 'cd_female',
   'The Auteur': 'cd_male',
 };
@@ -80,10 +84,21 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
   const audioRef = useRef(null);
   const audioCtxRef = useRef(null);
   const sourceRef = useRef(null);
+  const fetchIdRef = useRef(0); // Track which fetch is current to cancel stale ones
   const [playingSection, setPlayingSection] = useState(null);
   const [playingLabel, setPlayingLabel] = useState(null);
 
   const voiceKey = VOICE_KEY_MAP[selectedVoice] || 'cd_female';
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      fetchIdRef.current++; // Cancel any in-flight fetches
+      if (sourceRef.current) { try { sourceRef.current.stop(); } catch (_) {} }
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+      if (audioCtxRef.current) { try { audioCtxRef.current.close(); } catch (_) {} }
+    };
+  }, []);
 
   // Get or create a shared AudioContext (must be created on user gesture)
   const getAudioCtx = () => {
@@ -154,6 +169,8 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
   const fetchAndPlay = async (text, label) => {
     if (playingLabel === label) { stopAudio(); return; }
     stopAudio();
+    // Increment fetch ID so any in-flight request becomes stale
+    const currentFetchId = ++fetchIdRef.current;
     setPlayingLabel(label);
     setPlayingSection('loading');
     try {
@@ -162,9 +179,12 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
         { text, voice: voiceKey },
         { responseType: 'blob' }
       );
+      // If another fetch started while we were waiting, discard this result
+      if (fetchIdRef.current !== currentFetchId) return;
       const blob = new Blob([response.data], { type: 'audio/mpeg' });
       await playBlob(blob, label);
     } catch (err) {
+      if (fetchIdRef.current !== currentFetchId) return;
       console.error('TTS error:', err);
       setPlayingSection(null);
       setPlayingLabel(null);
@@ -194,7 +214,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div>
           <h2 className="font-serif text-2xl font-bold text-white">
-            Your CD Direction Report
+            Your Coach's Notes
           </h2>
           <p className="text-[#999999] mt-1 text-sm">
             AI-generated direction based on your scene and role.

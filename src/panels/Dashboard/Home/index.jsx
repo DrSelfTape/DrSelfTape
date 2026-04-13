@@ -155,7 +155,7 @@ export default function DashboardHome() {
   const greeting = hour < 12 ? `Good morning, ${firstName}` : hour < 17 ? `Hey ${firstName}` : `Working late, ${firstName}?`;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
@@ -236,7 +236,7 @@ export default function DashboardHome() {
           </button>
 
           {showAnalytics && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Audition Breakdown by Type — Donut */}
               <div className="lg:col-span-1">
                 <Card>

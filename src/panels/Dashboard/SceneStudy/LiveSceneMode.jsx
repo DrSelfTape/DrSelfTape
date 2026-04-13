@@ -175,6 +175,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const [sceneStarted, setSceneStarted] = useState(false);
   const [sceneComplete, setSceneComplete] = useState(false);
   const [showMicPermission, setShowMicPermission] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const isPausedRef = useRef(false);
 
   // Keep conversationHistory ref in sync
   useEffect(() => {
@@ -571,10 +573,52 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   );
 
   /**
+   * Pause the live scene — stop recognition and audio, keep state.
+   */
+  const pauseScene = useCallback(() => {
+    isPausedRef.current = true;
+    setIsPaused(true);
+    isActiveRef.current = false;
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+    if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+    if (audioRef.current) {
+      try { audioRef.current.stop(); } catch(e) {}
+      audioRef.current = null;
+    }
+    if (audioContextRef.current?.state === 'running') {
+      audioContextRef.current.suspend();
+    }
+    setStatus('idle');
+  }, []);
+
+  /**
+   * Resume from pause — restart recognition and audio context.
+   */
+  const resumeScene = useCallback(() => {
+    isPausedRef.current = false;
+    setIsPaused(false);
+    isActiveRef.current = true;
+    if (audioContextRef.current?.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+
+    const currentLine = lines[currentLineIdxRef.current];
+    if (currentLine && currentLine.character === userRole) {
+      setStatus('listening');
+      startRecognition();
+    } else if (currentLine && currentLine.character !== userRole) {
+      playAiLinesFrom(currentLineIdxRef.current, conversationHistoryRef.current);
+    }
+  }, [lines, userRole, startRecognition, playAiLinesFrom]);
+
+  /**
    * End the scene and clean up.
    */
   const endScene = useCallback(() => {
     isActiveRef.current = false;
+    isPausedRef.current = false;
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
     }
@@ -638,7 +682,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           <div className="text-5xl mb-4">🚫</div>
           <h2 className="text-white text-xl font-bold mb-2">Browser Not Supported</h2>
           <p className="text-[#666666] mb-6">
-            Your browser doesn&apos;t support the Web Speech API. Please use Google Chrome for Live Scene Mode.
+            Your browser doesn&apos;t support the Web Speech API. Please use Google Chrome for Live Study Mode.
           </p>
           <button
             onClick={onExit}
@@ -664,7 +708,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         isOpen={showMicPermission}
         requireCamera={false}
         requireMic={true}
-        context="Live Scene Mode"
+        context="Live Study Mode"
         onGranted={() => {
           // Just resume the already-created AudioContext inside the user gesture
           if (audioContextRef.current?.state === 'suspended') {
@@ -682,7 +726,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-[#C855F0] animate-pulse" />
-            <span className="text-white font-semibold text-sm">Live Scene Mode</span>
+            <span className="text-white font-semibold text-sm">Live Study Mode</span>
           {readerMode === 'pretimed' && (
             <span className="text-xs bg-[#C855F0]/20 text-[#C855F0] border border-[#C855F0]/30 px-2 py-0.5 rounded-full font-semibold ml-2">
               ⏱ Pre-Timed
@@ -694,12 +738,26 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             </span>
           )}
         </div>
-        <button
-          onClick={endScene}
-          className="px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors cursor-pointer"
-        >
-          End Scene
-        </button>
+        <div className="flex items-center gap-2">
+          {sceneStarted && (
+            <button
+              onClick={isPaused ? resumeScene : pauseScene}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+                isPaused
+                  ? 'bg-[#C855F0] text-white hover:bg-[#A040C8]'
+                  : 'border border-[#C855F0]/40 text-[#C855F0] hover:bg-[#C855F0]/10'
+              }`}
+            >
+              {isPaused ? '▶ Resume' : '⏸ Pause'}
+            </button>
+          )}
+          <button
+            onClick={endScene}
+            className="px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors cursor-pointer"
+          >
+            End Scene
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
@@ -761,7 +819,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
                 </svg>
               </div>
-              <h2 className="text-white text-2xl font-bold mb-2">Ready for Live Scene?</h2>
+              <h2 className="text-white text-2xl font-bold mb-2">Ready to Study?</h2>
               <p className="text-[#666666] text-sm mb-2">
                 Playing <span className="text-[#C855F0] font-semibold">{userRole}</span> opposite <span className="text-white font-semibold">{partnerName}</span>
               </p>
@@ -791,6 +849,29 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 </svg>
                 Start Scene
               </button>
+            </div>
+          )}
+
+          {/* Paused Overlay */}
+          {isPaused && sceneStarted && (
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0f0f1a]/80 backdrop-blur-sm">
+              <div className="text-6xl mb-4">⏸</div>
+              <h2 className="text-white text-2xl font-bold mb-2">Scene Paused</h2>
+              <p className="text-[#999999] text-sm mb-6">Take a moment. Resume when you&apos;re ready.</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={resumeScene}
+                  className="bg-[#C855F0] hover:bg-[#A040C8] text-white px-8 py-3 rounded-xl font-semibold transition-colors cursor-pointer flex items-center gap-2"
+                >
+                  <span>▶</span> Resume Scene
+                </button>
+                <button
+                  onClick={endScene}
+                  className="border border-red-500/40 text-red-400 hover:bg-red-500/10 px-6 py-3 rounded-xl font-semibold transition-colors cursor-pointer"
+                >
+                  End Scene
+                </button>
+              </div>
             </div>
           )}
 
@@ -875,16 +956,39 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       </div>
 
       {/* Bottom Status Bar */}
-      <div className="px-6 py-3 border-t border-[#1a1a2e] flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs text-[#999999]">
+      <div className="px-4 sm:px-6 py-3 border-t border-[#1a1a2e] flex items-center justify-between">
+        <div className="flex items-center gap-3 sm:gap-4 text-xs text-[#999999]">
           <span>
             Line {Math.min(currentLineIdx + 1, lines.length)} of {lines.length}
           </span>
           <span className="hidden sm:inline">|</span>
           <span className="hidden sm:inline">{conversationHistory.length} exchanges</span>
         </div>
-        <div className="text-xs text-[#999999]">
-          {voice === 'partner_male' ? 'George' : voice === 'partner_female' ? 'Lily' : 'River'}
+        <div className="flex items-center gap-2">
+          {/* Mobile pause/end buttons — compact for bottom bar */}
+          {sceneStarted && (
+            <div className="flex items-center gap-2 sm:hidden">
+              <button
+                onClick={isPaused ? resumeScene : pauseScene}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  isPaused
+                    ? 'bg-[#C855F0] text-white'
+                    : 'border border-[#C855F0]/40 text-[#C855F0]'
+                }`}
+              >
+                {isPaused ? '▶' : '⏸'}
+              </button>
+              <button
+                onClick={endScene}
+                className="px-3 py-1.5 rounded-lg border border-red-500/40 text-red-400 text-xs font-semibold transition-colors cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+          <span className="text-xs text-[#999999] hidden sm:inline">
+            {voice === 'partner_male' ? 'George' : voice === 'partner_female' ? 'Lily' : 'River'}
+          </span>
         </div>
       </div>
     </div>

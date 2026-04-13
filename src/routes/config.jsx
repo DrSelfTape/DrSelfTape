@@ -164,7 +164,7 @@ export const actorRoutes = [
         <AuditionTracker />
       </Layout>
     ),
-    child: [
+    children: [
       {
         path: '/auditions-tracker/:action',
         moduleName: 'Audition',
@@ -184,7 +184,7 @@ export const actorRoutes = [
         <ComingSoon />
       </Layout>
     ),
-    child: [
+    children: [
       {
         path: '/scene-study/analysis',
         moduleName: 'Analysis',
@@ -252,7 +252,7 @@ export const castingDirectorRoutes = [
         <CastingDirectorAuditions />
       </Layout>
     ),
-    child: [
+    children: [
       {
         path: '/auditions/audition-details',
         moduleName: 'Audition',

@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Bell, HeartHandshake, Clapperboard, MessageSquare, X, Megaphone } from 'lucide-react';
+import { Bell, HeartHandshake, Clapperboard, MessageSquare, X, Megaphone, CheckCheck } from 'lucide-react';
 import { getNotifications, markNotificationRead } from '../../redux/features/notifications/notificationsSlice';
+import useNotificationActions from '../../hooks/useNotificationActions';
 
 const NOTIF_ICONS = {
   scene_partner_like: HeartHandshake,
@@ -37,8 +38,10 @@ export default function NotificationBell({ onNavigate }) {
   const navigate = useNavigate();
   const { notifications = [], loading } = useSelector((s) => s.notifications);
   const [open, setOpen] = useState(false);
+  const [markingAll, setMarkingAll] = useState(false);
   const panelRef = useRef(null);
   const isMobile = window.innerWidth < 768;
+  const { markAllAsRead } = useNotificationActions();
 
   useEffect(() => { dispatch(getNotifications()); }, [dispatch]);
 
@@ -82,9 +85,28 @@ export default function NotificationBell({ onNavigate }) {
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C855F0]/15 text-[#C855F0]">{unread.length} new</span>
           )}
         </div>
-        <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          {unread.length > 0 && (
+            <button
+              onClick={async () => {
+                setMarkingAll(true);
+                try {
+                  await markAllAsRead(sorted, { onComplete: () => {} });
+                  dispatch(getNotifications());
+                } finally { setMarkingAll(false); }
+              }}
+              disabled={markingAll}
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
+              style={{ color: '#C855F0', background: 'rgba(200,85,240,0.08)' }}
+            >
+              <CheckCheck className="w-3 h-3" />
+              {markingAll ? 'Marking...' : unread.length === 1 ? 'Mark read' : 'Mark all read'}
+            </button>
+          )}
+          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       {/* List */}

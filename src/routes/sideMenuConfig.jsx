@@ -50,7 +50,7 @@ const actorMenu = [
   },
   {
     path: '/dashboard/cd-sim',
-    text: 'CD Sim',
+    text: 'Acting Coach',
     icon: <SparklesIcon height={19} width={19} />,
   },
   {

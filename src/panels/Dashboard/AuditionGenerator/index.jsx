@@ -342,7 +342,7 @@ export default function AuditionGenerator() {
                   boxShadow: '0 4px 24px rgba(200,85,240,0.25)',
                 }}
               >
-                🎬 Launch in CD Sim
+                🎭 Get Coach Feedback
               </button>
 
               <div style={{ display: 'flex', gap: 10 }}>

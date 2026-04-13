@@ -8,7 +8,7 @@ import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 
 const STEPS = ['upload', 'role', 'voice', 'analyzing', 'report'];
-const STEP_LABELS = ['Upload Sides', 'Pick Role', 'CD Voice', 'Analyzing', 'Report'];
+const STEP_LABELS = ['Upload Sides', 'Pick Role', 'Coach Style', 'Analyzing', 'Feedback'];
 
 /**
  * Parse script text into lines with character + dialogue.
@@ -224,9 +224,9 @@ export default function CDSim() {
       {step === 'analyzing' && (
         <div className="flex flex-col items-center justify-center py-24">
           <div className="w-12 h-12 border-4 border-[#C855F0] border-t-transparent rounded-full animate-spin mb-6" />
-          <h2 className="text-xl font-semibold text-white mb-2">Analyzing your scene...</h2>
+          <h2 className="text-xl font-semibold text-white mb-2">Your coach is reviewing your scene...</h2>
           <p className="text-[#999999] text-sm">
-            Your casting director is reviewing the script and preparing direction.
+            Breaking down the beats, choices, and moments. Preparing your notes.
           </p>
           {error && (
             <div className="mt-8 text-center">

@@ -183,6 +183,24 @@ export const onboardReader = createAsyncThunk(
   }
 );
 
+export const submitReaderRating = createAsyncThunk(
+  'readersMatch/submitReaderRating',
+  async ({ match_id, rating, review }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(`${baseURL}/v1/matching/rate/`, {
+        match_id,
+        rating,
+        review,
+      });
+      return data?.data || data;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || error?.message || 'Failed to submit rating'
+      );
+    }
+  }
+);
+
 // ========== Slice ==========
 
 // ─── Mock seed data (shown when API isn't connected) ───────────────────────

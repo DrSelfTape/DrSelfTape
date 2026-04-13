@@ -41,7 +41,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
   }, [autoScroll, paused, speed, updateProgress]);
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 120px)', maxWidth: '48rem', margin: '0 auto' }}>
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 180px)', maxWidth: '44rem', margin: '0 auto', width: '100%' }}>
 
       {/* ── Header ── */}
       <div className="flex items-start justify-between mb-3 px-1">

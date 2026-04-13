@@ -3,32 +3,32 @@ import React from 'react';
 const VOICES = [
   {
     key: 'classic_director',
-    name: 'Classic Director',
-    description: 'Old-school Hollywood. Firm but fair. Expects precision.',
+    name: 'The Traditionalist',
+    description: 'Technique-driven. Focuses on craft, precision, and hitting your marks.',
   },
   {
     key: 'method_coach',
     name: 'The Method Coach',
-    description: 'Deep emotional work. Will push you to find the truth.',
+    description: 'Deep emotional work. Will push you to find the truth in every line.',
   },
   {
     key: 'commercial_queen',
-    name: 'Commercial Queen',
-    description: 'Upbeat energy. Knows exactly what the client wants.',
+    name: 'The Commercial Pro',
+    description: 'Upbeat energy. Knows how to land the booking and deliver for clients.',
   },
   {
     key: 'the_auteur',
-    name: 'The Auteur',
-    description: 'Visionary filmmaker. Cares about subtext and nuance.',
+    name: 'The Artistic Eye',
+    description: 'All about subtext, nuance, and finding the layers in your performance.',
   },
 ];
 
 export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinue }) {
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-2">Choose Your Casting Director</h2>
+      <h2 className="text-2xl font-bold text-white mb-2">Choose Your Coach</h2>
       <p className="text-[#999999] mb-8">
-        Each director brings a unique perspective to your scene.
+        Each coach brings a different approach to breaking down your scene.
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">

@@ -12,8 +12,8 @@ const PLANS = [
     color: '#A7ECDA',
     features: [
       '10 AI tokens per month',
-      'CD Sim sessions',
-      'Live Scene Mode',
+      'Acting Coach sessions',
+      'Live Study Mode',
       'Scene Generator',
       'Audition Tracker',
     ],
@@ -105,9 +105,9 @@ export default function Membership() {
   const tokenBalance = status?.balance ?? 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-4xl mx-auto px-4 py-6">
       {/* Header */}
-      <div className="text-center mb-10">
+      <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
           Choose Your Plan
         </h1>
@@ -125,7 +125,7 @@ export default function Membership() {
       </div>
 
       {/* Billing toggle */}
-      <div className="flex items-center justify-center gap-3 mb-10">
+      <div className="flex items-center justify-center gap-3 mb-6">
         <button
           onClick={() => setBilling('monthly')}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
@@ -150,7 +150,7 @@ export default function Membership() {
       </div>
 
       {/* Plan cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
         {PLANS.map(plan => {
           const price = billing === 'monthly' ? plan.monthly : plan.yearly;
           const isActive = currentPlan === plan.id;

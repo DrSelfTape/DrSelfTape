@@ -80,7 +80,7 @@ export default function RolePicker({
       <div className="mb-5">
         <h3 className="text-base font-bold text-white mb-1">Choose Your AI Scene Partner's Voice</h3>
         <p className="text-[#999999] text-sm">
-          This voice will read the other character's lines during practice and Live Scene Mode.
+          This voice will read the other character's lines during practice and Live Study Mode.
         </p>
       </div>
 

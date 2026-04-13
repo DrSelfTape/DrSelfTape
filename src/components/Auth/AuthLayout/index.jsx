@@ -71,7 +71,7 @@ export const AuthLayout = ({ children }) => {
             {/* Three trust points */}
             <div className="mt-8 flex flex-col gap-3">
               {[
-                { icon: '🎬', text: 'AI-powered scene partner & CD simulation' },
+                { icon: '🎬', text: 'AI-powered scene partner & acting coach' },
                 { icon: '🎙️', text: 'Professional studio recording tools' },
                 { icon: '📊', text: 'Track every audition, callback & booking' },
               ].map(({ icon, text }) => (

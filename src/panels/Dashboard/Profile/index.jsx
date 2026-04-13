@@ -1,6 +1,7 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift, RefreshCw } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -34,6 +35,7 @@ function getInitials(profile) {
 
 export default function Profile() {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { profile, loading, updateLoading } = useSelector((s) => s.profile);
   const auditionStats = useSelector((s) => s.auditionTracker?.stats?.data || s.auditions?.stats?.data || null);
   const avatarInputRef = useRef(null);
@@ -59,7 +61,9 @@ export default function Profile() {
     session_rate_60: '20',
   });
   const [connectLoading, setConnectLoading] = useState(false);
-  const [stripeStatus, setStripeStatus] = useState('not_connected'); // 'connected' | 'pending' | 'not_connected'
+  const [stripeStatus, setStripeStatus] = useState('not_connected'); // 'connected' | 'pending' | 'not_connected' | 'error'
+  const [stripeDetails, setStripeDetails] = useState({});
+  const [checkingStatus, setCheckingStatus] = useState(false);
   const [showMarketplaceTutorial, setShowMarketplaceTutorial] = useState(false);
   const [referral, setReferral] = useState({ code: '', share_url: '', uses: 0 });
   const [codeCopied, setCodeCopied] = useState(false);
@@ -73,15 +77,8 @@ export default function Profile() {
   const [showBadge, setShowBadge] = useState(false);
   const hadProfileBefore = useRef(false);
 
-  useEffect(() => {
-    dispatch(fetchProfileThunk());
-    dispatch(fetchAuditionStatsThunk());
-    // Load referral code
-    axios.get(`${baseURL}/v1/growth/referral/code/`)
-      .then(({ data }) => setReferral(data?.data || {}))
-      .catch(() => {});
-    // Load reader marketplace profile
-    axios.get(`${baseURL}/v1/growth/marketplace/profile/`)
+  const fetchReaderProfile = useCallback(() => {
+    return axios.get(`${baseURL}/v1/growth/marketplace/profile/`)
       .then(({ data }) => {
         const d = data?.data || {};
         setReaderForm({
@@ -91,9 +88,37 @@ export default function Profile() {
           session_rate_60: String(d.session_rate_60 || 20),
         });
         setStripeStatus(d.stripe_status || 'not_connected');
+        setStripeDetails(d.stripe_details || {});
+        return d.stripe_status;
       })
       .catch(() => {});
-  }, [dispatch]);
+  }, []);
+
+  useEffect(() => {
+    dispatch(fetchProfileThunk());
+    dispatch(fetchAuditionStatsThunk());
+    axios.get(`${baseURL}/v1/growth/referral/code/`)
+      .then(({ data }) => setReferral(data?.data || {}))
+      .catch(() => {});
+    fetchReaderProfile();
+  }, [dispatch, fetchReaderProfile]);
+
+  // Auto-refresh Stripe status when returning from onboarding
+  useEffect(() => {
+    if (searchParams.get('connect') === 'complete') {
+      searchParams.delete('connect');
+      setSearchParams(searchParams, { replace: true });
+      // Poll a few times — Stripe can take a moment to update
+      let attempts = 0;
+      const poll = setInterval(() => {
+        attempts++;
+        fetchReaderProfile().then((status) => {
+          if (status === 'connected' || attempts >= 5) clearInterval(poll);
+        });
+      }, 3000);
+      return () => clearInterval(poll);
+    }
+  }, [searchParams, setSearchParams, fetchReaderProfile]);
 
   useEffect(() => {
     if (profile) {
@@ -203,8 +228,8 @@ export default function Profile() {
   const completion = getCompletionPercent(profile);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>My Profile</h1>
+    <div className="px-4 py-6 max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>My Profile</h1>
 
       {/* Badge */}
       <ProfileCompleteBadge show={showBadge} onClose={() => setShowBadge(false)} />
@@ -658,9 +683,60 @@ export default function Profile() {
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Verification Pending — Stripe is reviewing your account
                       </div>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        This can take a few minutes. Refresh the page to check again.
-                      </p>
+                      <div className="flex items-center gap-3 mb-2">
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                          This can take a few minutes.
+                        </p>
+                        <button
+                          type="button"
+                          disabled={checkingStatus}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCheckingStatus(true);
+                            fetchReaderProfile().finally(() => {
+                              setTimeout(() => setCheckingStatus(false), 1000);
+                            });
+                          }}
+                          className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-md transition-colors"
+                          style={{ color: '#FCE072', background: 'rgba(252,224,114,0.08)', border: '1px solid rgba(252,224,114,0.2)', opacity: checkingStatus ? 0.6 : 1 }}
+                        >
+                          {checkingStatus
+                            ? <><Loader2 className="w-3 h-3 animate-spin" /> Checking...</>
+                            : <><RefreshCw className="w-3 h-3" /> Check Status</>
+                          }
+                        </button>
+                      </div>
+                      {stripeDetails && (stripeDetails.error || stripeDetails.requirements?.length > 0 || stripeDetails.disabled_reason) && (
+                        <div className="text-xs px-3 py-2 rounded-md mt-1" style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--text-muted)' }}>
+                          {stripeDetails.error && <p>Error: {stripeDetails.error}</p>}
+                          {stripeDetails.disabled_reason && <p>Reason: {stripeDetails.disabled_reason}</p>}
+                          {stripeDetails.requirements?.length > 0 && <p>Pending: {stripeDetails.requirements.join(', ')}</p>}
+                        </div>
+                      )}
+                    </div>
+                  ) : stripeStatus === 'error' ? (
+                    <div>
+                      <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold mb-2"
+                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        Unable to verify — {stripeDetails?.error || 'Unknown error'}
+                      </div>
+                      <button
+                        type="button"
+                        disabled={checkingStatus}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCheckingStatus(true);
+                          fetchReaderProfile().finally(() => setTimeout(() => setCheckingStatus(false), 1000));
+                        }}
+                        className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-md transition-colors"
+                        style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+                      >
+                        {checkingStatus ? <><Loader2 className="w-3 h-3 animate-spin" /> Retrying...</> : <><RefreshCw className="w-3 h-3" /> Retry</>}
+                      </button>
                     </div>
                   ) : stripeStatus === 'incomplete' ? (
                     <div>

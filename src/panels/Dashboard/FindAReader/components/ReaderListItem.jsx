@@ -66,6 +66,27 @@ const ReaderListItem = ({ match, onClick }) => {
             )}
           </div>
 
+          {/* Reader metrics */}
+          {(other?.rating > 0 || other?.total_sessions > 0 || other?.response_rate > 0) && (
+            <div className="flex items-center gap-2 flex-wrap">
+              {other.rating > 0 && (
+                <span className="text-[11px] font-semibold" style={{ color: '#FCE072' }}>
+                  ⭐ {other.rating.toFixed(1)}{other.review_count > 0 ? ` (${other.review_count})` : ''}
+                </span>
+              )}
+              {other.response_rate > 0 && (
+                <span className="text-[11px] font-semibold" style={{ color: '#A7ECDA' }}>
+                  ⚡ {other.response_rate}%
+                </span>
+              )}
+              {other.total_sessions > 0 && (
+                <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
+                  {other.total_sessions} session{other.total_sessions !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+          )}
+
           {/* Last message or bio */}
           {match?.last_message ? (
             <p className="truncate text-xs" style={{ color: 'var(--text-muted)' }}>{match.last_message}</p>

@@ -90,7 +90,7 @@ function ReaderCard({ reader, onBook }) {
 
         {/* Duration Picker + Price */}
         <div className="mt-auto pt-4">
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-2">
             {DURATIONS.map((d) => (
               <button
                 key={d.value}
@@ -236,13 +236,13 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
         Reader Marketplace
       </h1>
 
       {loading ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
@@ -261,7 +261,7 @@ export default function Marketplace() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5">
           {readers.map((reader) => (
             <ReaderCard key={reader.id} reader={reader} onBook={handleBook} />
           ))}

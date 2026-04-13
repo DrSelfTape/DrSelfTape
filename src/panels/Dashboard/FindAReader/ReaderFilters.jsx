@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import {
@@ -27,6 +28,23 @@ const EXPERIENCE_LEVELS = [
   'Professional',
 ];
 
+const ACCENT_OPTIONS = [
+  'American (Standard)',
+  'American (Southern)',
+  'British (RP)',
+  'British (Regional)',
+  'Australian',
+  'Irish',
+  'Scottish',
+  'New York',
+  'Midwest',
+  'Spanish',
+  'French',
+  'Other',
+];
+
+const AGE_RANGE_OPTIONS = ['18-25', '26-35', '36-45', '46-55', '55+', 'Any'];
+
 const UNION_OPTIONS = ['SAG-AFTRA', 'Non-Union', 'Both'];
 const AVAILABILITY_OPTIONS = ['Online Now', 'Any'];
 const GENDER_OPTIONS = ['Male', 'Female', 'Non-Binary', 'Any'];
@@ -46,6 +64,8 @@ const ReaderFilters = ({ onClose }) => {
     savedFilters.availability || 'Any'
   );
   const [gender, setGender] = useState(savedFilters.gender || 'Any');
+  const [accent, setAccent] = useState(savedFilters.accent || '');
+  const [ageRange, setAgeRange] = useState(savedFilters.age_range || 'Any');
 
   const toggleGenre = (genre) => {
     setGenres((prev) =>
@@ -60,6 +80,8 @@ const ReaderFilters = ({ onClose }) => {
       union_status: unionStatus,
       availability,
       gender,
+      accent,
+      age_range: ageRange,
     };
 
     dispatch(setFiltersLocal(filters));
@@ -81,11 +103,13 @@ const ReaderFilters = ({ onClose }) => {
     setUnionStatus('Both');
     setAvailability('Any');
     setGender('Any');
+    setAccent('');
+    setAgeRange('Any');
     localStorage.removeItem('drst-reader-filters');
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/60"
@@ -94,10 +118,10 @@ const ReaderFilters = ({ onClose }) => {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-t-2xl bg-[#1E1E1E] p-6 sm:rounded-2xl">
+      <div className="relative w-full max-w-md rounded-t-2xl bg-[#1E1E1E] px-5 pb-5 pt-4 sm:rounded-2xl sm:p-6">
         {/* Header */}
-        <div className="mb-5 flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white">Filters</h2>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-base font-bold text-white sm:text-lg">Filters</h2>
           <button
             type="button"
             onClick={onClose}
@@ -108,7 +132,7 @@ const ReaderFilters = ({ onClose }) => {
           </button>
         </div>
 
-        <div className="max-h-[60vh] space-y-6 overflow-y-auto">
+        <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1 sm:space-y-6 sm:max-h-[60vh]">
           {/* Genre */}
           <div>
             <h3 className="mb-2 text-sm font-semibold text-white">
@@ -200,6 +224,48 @@ const ReaderFilters = ({ onClose }) => {
             </div>
           </div>
 
+          {/* Accent */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-white">
+              Accent
+            </h3>
+            <select
+              value={accent}
+              onChange={(e) => setAccent(e.target.value)}
+              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#C855F0]"
+            >
+              <option value="">Any</option>
+              {ACCENT_OPTIONS.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Age Range */}
+          <div>
+            <h3 className="mb-2 text-sm font-semibold text-white">
+              Age Range
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {AGE_RANGE_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setAgeRange(option)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
+                    ageRange === option
+                      ? 'bg-[#0f0f1a] text-white'
+                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
+                  }`}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Gender */}
           <div>
             <h3 className="mb-2 text-sm font-semibold text-white">
@@ -225,7 +291,7 @@ const ReaderFilters = ({ onClose }) => {
         </div>
 
         {/* Actions */}
-        <div className="mt-6 flex gap-3">
+        <div className="mt-4 flex gap-3 sm:mt-6">
           <button
             type="button"
             onClick={handleReset}
@@ -242,7 +308,8 @@ const ReaderFilters = ({ onClose }) => {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

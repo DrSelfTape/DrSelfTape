@@ -235,17 +235,9 @@ const FindAReader = () => {
         />
       )}
 
-      {/* Filters drawer */}
+      {/* Filters drawer — ReaderFilters handles its own fixed backdrop */}
       {showFilters && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center"
-          style={{ background: 'rgba(0,0,0,0.6)' }}
-          onClick={() => setShowFilters(false)}
-        >
-          <div onClick={(e) => e.stopPropagation()}>
-            <ReaderFilters onClose={() => setShowFilters(false)} />
-          </div>
-        </div>
+        <ReaderFilters onClose={() => setShowFilters(false)} />
       )}
     </div>
   );

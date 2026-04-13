@@ -6,6 +6,8 @@ import Teleprompter from './Teleprompter';
 import RecordTake from './RecordTake';
 import LiveSceneMode from './LiveSceneMode';
 import SelfTapeRecorder from './SelfTapeRecorder';
+import PostSessionJournal from '../../../components/Shared/PostSessionJournal';
+import FocusMode from '../../../components/Shared/FocusMode';
 
 const STEPS = ['upload', 'pick-role', 'practice'];
 const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice'];
@@ -83,6 +85,9 @@ export default function SceneStudy() {
   const [scriptText, setScriptText] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedVoice, setSelectedVoice] = useState('partner_male');
+  const [showJournal, setShowJournal] = useState(null); // null or session type string
+  const [showFocusMode, setShowFocusMode] = useState(false);
+  const [pendingStep, setPendingStep] = useState(null); // step to go to after focus mode
 
   // Check for preloaded script from route state or sessionStorage
   useEffect(() => {
@@ -122,14 +127,28 @@ export default function SceneStudy() {
     }
   }, [step]);
 
+  // Focus mode — breathing exercise before recording
+  if (showFocusMode) {
+    return (
+      <FocusMode
+        onComplete={() => {
+          setShowFocusMode(false);
+          if (pendingStep) { setStep(pendingStep); setPendingStep(null); }
+        }}
+      />
+    );
+  }
+
   // Self-tape recording mode — full screen camera overlay
   if (step === 'self-tape') {
     return (
-      <SelfTapeRecorder
-        lines={parsedLines}
-        userRole={selectedRole}
-        onClose={() => setStep('practice')}
-      />
+      <>
+        <SelfTapeRecorder
+          lines={parsedLines}
+          userRole={selectedRole}
+          onClose={() => { setShowJournal('self-tape'); setStep('practice'); }}
+        />
+      </>
     );
   }
 
@@ -141,22 +160,22 @@ export default function SceneStudy() {
         userRole={selectedRole}
         characters={characters}
         initialVoice={selectedVoice}
-        onExit={() => setStep('practice')}
+        onExit={() => { setShowJournal('live-scene'); setStep('practice'); }}
       />
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Live Scene Mode Banner */}
+    <div className="max-w-5xl mx-auto px-2">
+      {/* Live Study Mode Banner */}
       {(step === 'practice' || step === 'pick-role') && selectedRole && (
-        <div className="mb-6 bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f0f23] rounded-2xl p-5 border border-[#2a2a4a] relative overflow-hidden">
+        <div className="mb-4 sm:mb-6 bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f0f23] rounded-2xl p-5 border border-[#2a2a4a] relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_rgba(255,107,53,0.12),_transparent_60%)]" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="bg-[#C855F0] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>
-                <h3 className="text-white font-bold text-base">Live Scene Mode</h3>
+                <h3 className="text-white font-bold text-base">Live Study Mode</h3>
               </div>
               <p className="text-gray-400 text-sm">
                 Hands-free real-time AI scene partner. Say your lines — the AI responds with voice instantly.
@@ -170,14 +189,14 @@ export default function SceneStudy() {
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
                 <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
               </svg>
-              Go Live
+              Study with AI
             </button>
           </div>
         </div>
       )}
 
       {/* Step Indicator */}
-      <div className="flex items-center gap-2 mb-8">
+      <div className="flex items-center gap-2 mb-4 sm:mb-8">
         {STEPS.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
             <div
@@ -236,10 +255,30 @@ export default function SceneStudy() {
           onRecord={() => setStep('record')}
           onBack={() => setStep('pick-role')}
           onGoLive={() => setStep('live')}
-          onSelfTape={() => setStep('self-tape')}
+          onSelfTape={() => {
+            // Offer focus mode before self-tape recording
+            setShowFocusMode(true);
+            setPendingStep('self-tape');
+          }}
         />
       )}
 
+      {step === 'record' && (
+        <RecordTake
+          lines={parsedLines}
+          userRole={selectedRole}
+          onBack={() => { setShowJournal('scene-study'); setStep('practice'); }}
+        />
+      )}
+
+      {/* Post-session journal modal */}
+      {showJournal && (
+        <PostSessionJournal
+          sessionType={showJournal}
+          scriptTitle={selectedRole ? `${selectedRole}'s scene` : ''}
+          onClose={() => setShowJournal(null)}
+        />
+      )}
     </div>
   );
 }

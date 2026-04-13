@@ -1,25 +1,34 @@
 import { useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   ArrowLeft, Send, Loader2, Video, Paperclip, X,
-  FileText, Bot, Users, ChevronUp,
+  FileText, Bot, Users, ChevronUp, DollarSign, Clock, Check,
 } from 'lucide-react';
 import GreenRoomMessage from './components/GreenRoomMessage';
 import {
   fetchGreenRoomMessages,
   sendGreenRoomMessage,
   appendMessage,
+  submitReaderRating,
 } from '../../../redux/features/readers/readersMatchSlice';
+import ReaderRatingModal from '../../../components/Shared/ReaderRatingModal';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { isMeetingHost } from '../../../utils/meeting';
+
+const DURATIONS = [
+  { min: 15, label: '15 min' },
+  { min: 30, label: '30 min' },
+  { min: 60, label: '60 min' },
+];
 
 const GreenRoomChat = (props = {}) => {
   const params = useParams();
   const matchId = props.matchId || params.matchId;
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const { greenRoomMessages: allMessages, messagesLoading, matches } = useSelector(
     (state) => state.readersMatch
@@ -27,9 +36,18 @@ const GreenRoomChat = (props = {}) => {
   const greenRoomMessages = Array.isArray(allMessages?.[matchId]) ? allMessages[matchId] : [];
 
   const match = matches?.find((m) => String(m.id) === String(matchId));
-  const partnerName = match?.reader?.name || 'Your Reader';
+  const partnerName = match?.reader?.name || match?.other_actor?.name || 'Your Reader';
   const partnerInitials = partnerName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
   const currentUser = useSelector((state) => state.auth?.user);
+
+  // Paid reader info
+  const otherActor = match?.other_actor || {};
+  const isPaidReader = otherActor.is_paid_reader || false;
+  const readerRates = {
+    15: otherActor.session_rate_15 || 0,
+    30: otherActor.session_rate_30 || 0,
+    60: otherActor.session_rate_60 || 0,
+  };
 
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -38,9 +56,29 @@ const GreenRoomChat = (props = {}) => {
   const [showActions, setShowActions] = useState(false);
   const [sidesFile, setSidesFile] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [showBooking, setShowBooking] = useState(false);
+  const [selectedDuration, setSelectedDuration] = useState(30);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [sessionBooked, setSessionBooked] = useState(false);
+  const [showRating, setShowRating] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const actionsRef = useRef(null);
+
+  // Handle return from Stripe checkout
+  useEffect(() => {
+    if (searchParams.get('booking') === 'success') {
+      setSessionBooked(true);
+      searchParams.delete('booking');
+      setSearchParams(searchParams, { replace: true });
+    }
+    // Show rating modal when returning from a rehearsal
+    if (searchParams.get('rehearsal') === 'ended') {
+      setShowRating(true);
+      searchParams.delete('rehearsal');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     if (matchId) dispatch(fetchGreenRoomMessages(matchId));
@@ -134,9 +172,38 @@ const GreenRoomChat = (props = {}) => {
     }
   };
 
+  // Book a paid session via Stripe
+  const handleBookSession = async () => {
+    setBookingLoading(true);
+    try {
+      const { data } = await axios.post(`${baseURL}/v1/growth/marketplace/book/`, {
+        reader_id: otherActor.id,
+        duration: selectedDuration,
+        match_id: matchId,
+      });
+      const checkoutUrl = data?.data?.checkout_url;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        setRehearsalError('Payment setup failed. Please try again.');
+        setShowBooking(false);
+      }
+    } catch (err) {
+      setRehearsalError(err?.response?.data?.message || 'Booking failed. Please try again.');
+      setShowBooking(false);
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
   // Start live rehearsal with Daily.co
   const handleStartRehearsal = async () => {
     if (startingRehearsal) return;
+    // If paid reader and not yet booked, show booking prompt
+    if (isPaidReader && !sessionBooked) {
+      setShowBooking(true);
+      return;
+    }
     setStartingRehearsal(true);
     setRehearsalError('');
     setShowActions(false);
@@ -236,6 +303,80 @@ const GreenRoomChat = (props = {}) => {
         </div>
       )}
 
+      {/* Session booked success banner */}
+      {sessionBooked && (
+        <div className="mx-4 mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold"
+          style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
+        >
+          <Check size={14} />
+          <span className="flex-1">Session booked! You can now start your rehearsal.</span>
+          <button onClick={() => setSessionBooked(false)}><X size={14} /></button>
+        </div>
+      )}
+
+      {/* Paid reader booking prompt */}
+      {showBooking && (
+        <div className="mx-4 mt-3 rounded-2xl overflow-hidden"
+          style={{ background: 'var(--bg-surface)', border: '1px solid rgba(252,224,114,0.2)' }}
+        >
+          <div className="px-4 pt-4 pb-2">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <DollarSign size={16} color="#FCE072" />
+                <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Book a Session</p>
+              </div>
+              <button onClick={() => setShowBooking(false)} className="p-1 rounded-full" style={{ color: 'var(--text-muted)' }}>
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-xs mb-4" style={{ color: 'var(--text-secondary)' }}>
+              {partnerName.split(' ')[0]} is a paid reader. Choose your session length to get started.
+            </p>
+
+            {/* Duration picker */}
+            <div className="flex gap-2 mb-4">
+              {DURATIONS.map((d) => {
+                const isSelected = selectedDuration === d.min;
+                const rate = readerRates[d.min];
+                return (
+                  <button
+                    key={d.min}
+                    type="button"
+                    onClick={() => setSelectedDuration(d.min)}
+                    className="flex-1 flex flex-col items-center gap-1 rounded-xl py-3 text-xs font-semibold transition-all"
+                    style={{
+                      background: isSelected ? 'rgba(252,224,114,0.12)' : 'var(--bg-input)',
+                      border: isSelected ? '1.5px solid #FCE072' : '1px solid var(--border-active)',
+                      color: isSelected ? '#FCE072' : 'var(--text-secondary)',
+                    }}
+                  >
+                    <Clock size={14} />
+                    <span>{d.label}</span>
+                    <span className="text-[11px] font-bold" style={{ color: isSelected ? '#FCE072' : 'var(--text-muted)' }}>${rate}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Book button */}
+            <button
+              type="button"
+              onClick={handleBookSession}
+              disabled={bookingLoading}
+              className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-black transition-all disabled:opacity-50"
+              style={{ background: 'linear-gradient(135deg, #FCE072, #F5D54A)', boxShadow: '0 3px 12px rgba(252,224,114,0.3)' }}
+            >
+              {bookingLoading ? <Loader2 size={16} className="animate-spin" /> : <DollarSign size={16} />}
+              {bookingLoading ? 'Redirecting to payment...' : `Book & Pay $${readerRates[selectedDuration]}`}
+            </button>
+
+            <p className="text-center text-[10px] mt-2 pb-1" style={{ color: 'var(--text-muted)' }}>
+              Secure payment via Stripe. {partnerName.split(' ')[0]} keeps 80%.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Session options banner */}
       <div className="flex gap-2 px-4 pt-3">
         <button
@@ -244,7 +385,10 @@ const GreenRoomChat = (props = {}) => {
           className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all border border-[#C855F0]/30 text-[#C855F0] hover:bg-[#C855F0]/10 disabled:opacity-50"
         >
           <Users size={14} />
-          Live Session with {partnerName.split(' ')[0]}
+          {isPaidReader && !sessionBooked
+            ? `Book Session — from $${readerRates[15]}`
+            : `Live Session with ${partnerName.split(' ')[0]}`
+          }
         </button>
         <button
           onClick={handleAISession}
@@ -383,6 +527,18 @@ const GreenRoomChat = (props = {}) => {
           </button>
         </form>
       </div>
+
+      {/* Post-rehearsal rating modal */}
+      {showRating && (
+        <ReaderRatingModal
+          partnerName={partnerName}
+          matchId={matchId}
+          onSubmit={async (rating, review) => {
+            await dispatch(submitReaderRating({ match_id: matchId, rating, review })).unwrap();
+          }}
+          onClose={() => setShowRating(false)}
+        />
+      )}
     </div>
   );
 };

@@ -103,7 +103,7 @@ function formatDateTime(iso) {
 // --- Skeleton ---
 
 const SkeletonCard = () => (
-  <div className="bg-[#1E1E1E] rounded-xl shadow-sm p-5 animate-pulse">
+  <div className="bg-[#1E1E1E] rounded-xl shadow-sm p-4 animate-pulse">
     <div className="flex justify-between mb-3">
       <div className="h-5 bg-[#2A2A2A] rounded w-1/3" />
       <div className="h-5 bg-[#2A2A2A] rounded w-16" />
@@ -271,7 +271,7 @@ export default function Submissions() {
       </div>
 
       {/* Stats Bar */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <StatsCard title="Total Sent" value={String(totalSent)} />
         <StatsCard title="Callbacks" value={String(callbacks)} />
         <StatsCard title="Booked" value={String(booked)} />
@@ -352,7 +352,7 @@ export default function Submissions() {
           {sorted.map((sub) => (
             <div
               key={sub.id}
-              className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-5 hover:shadow-md transition-shadow"
+              className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">

@@ -175,66 +175,83 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* ── Actor info — bottom */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: isMobile ? '0 24px calc(env(safe-area-inset-bottom, 0px) + 120px)' : '0 20px 20px',
+        padding: isMobile ? '0 20px calc(env(safe-area-inset-bottom, 0px) + 16px)' : '0 20px 20px',
+        display: 'flex', flexDirection: 'column', gap: isMobile ? 6 : 8,
       }}>
         {/* Name + Union */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6, flexWrap: 'wrap' }}>
-          <h3 style={{ fontSize: isMobile ? 30 : 24, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <h3 style={{ fontSize: isMobile ? 26 : 24, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.1 }}>
             {actor?.name || 'Actor'}
           </h3>
           {unionLabel && (
             <span style={{
               background: 'rgba(200,85,240,0.2)', border: '1px solid rgba(200,85,240,0.4)',
-              color: '#C855F0', fontSize: 11, fontWeight: 700,
-              padding: '3px 10px', borderRadius: 20,
+              color: '#C855F0', fontSize: 10, fontWeight: 700,
+              padding: '2px 8px', borderRadius: 20,
             }}>{unionLabel}</span>
           )}
         </div>
 
-        {/* Location + Years */}
-        <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
+        {/* Location + Years + Metrics — single compact row */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           {(actor?.based_in || actor?.experience) && (
-            <span style={{ color: '#aaa', fontSize: 14, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ color: '#aaa', fontSize: isMobile ? 12 : 14, display: 'flex', alignItems: 'center', gap: 3 }}>
               📍 {actor.based_in || actor.experience}
             </span>
           )}
           {actor?.years_experience && (
-            <span style={{ color: '#aaa', fontSize: 14 }}>
+            <span style={{ color: '#aaa', fontSize: isMobile ? 12 : 14 }}>
               🎬 {actor.years_experience}yr{actor.years_experience !== 1 ? 's' : ''}
+            </span>
+          )}
+          {actor?.rating > 0 && (
+            <span style={{ color: '#FCE072', fontSize: isMobile ? 12 : 13, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 2 }}>
+              ⭐ {actor.rating.toFixed(1)}
+              {actor.review_count > 0 && <span style={{ color: '#888', fontWeight: 400, fontSize: 11 }}>({actor.review_count})</span>}
+            </span>
+          )}
+          {actor?.response_rate > 0 && (
+            <span style={{ color: '#A7ECDA', fontSize: isMobile ? 12 : 13, fontWeight: 600 }}>
+              ⚡ {actor.response_rate}%
+            </span>
+          )}
+          {actor?.total_sessions > 0 && (
+            <span style={{ color: '#aaa', fontSize: isMobile ? 12 : 13 }}>
+              {actor.total_sessions} session{actor.total_sessions !== 1 ? 's' : ''}
             </span>
           )}
         </div>
 
-        {/* Bio */}
+        {/* Bio — 1 line on mobile, 2 on desktop */}
         {actor?.bio && (
-          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, lineHeight: 1.6, margin: '0 0 10px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: isMobile ? 13 : 15, lineHeight: 1.5, margin: 0, display: '-webkit-box', WebkitLineClamp: isMobile ? 1 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {actor.bio}
           </p>
         )}
 
         {/* Genres */}
         {actor?.genres?.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {actor.genres.slice(0, 4).map((g) => (
-              <span key={g} style={{ background: 'rgba(255,255,255,0.08)', color: '#ddd', fontSize: 12, padding: '5px 12px', borderRadius: 20 }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+            {actor.genres.slice(0, isMobile ? 3 : 4).map((g) => (
+              <span key={g} style={{ background: 'rgba(255,255,255,0.08)', color: '#ddd', fontSize: isMobile ? 10 : 12, padding: isMobile ? '3px 8px' : '5px 12px', borderRadius: 20 }}>
                 {g}
               </span>
             ))}
           </div>
         )}
 
-        {/* Mobile action buttons overlaid at bottom */}
+        {/* Mobile action buttons */}
         {isMobile && isTop && (
-          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginTop: 20, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', paddingTop: 8, paddingBottom: 8, alignItems: 'center' }}>
             {/* Pass */}
             <button
               onTouchEnd={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
               onClick={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
               style={{
-                width: 56, height: 56, borderRadius: '50%',
+                width: 52, height: 52, borderRadius: '50%',
                 background: 'rgba(20,20,28,0.85)', border: '1.5px solid rgba(255,255,255,0.12)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, cursor: 'pointer', backdropFilter: 'blur(10px)',
+                fontSize: 20, cursor: 'pointer', backdropFilter: 'blur(10px)',
               }}
             >✕</button>
 
@@ -243,10 +260,10 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onTouchEnd={(e) => { e.stopPropagation(); onStar?.(); }}
               onClick={(e) => { e.stopPropagation(); onStar?.(); }}
               style={{
-                width: 56, height: 56, borderRadius: '50%',
+                width: 52, height: 52, borderRadius: '50%',
                 background: 'rgba(20,20,28,0.85)', border: '1.5px solid rgba(252,224,114,0.25)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, cursor: 'pointer', backdropFilter: 'blur(10px)',
+                fontSize: 18, cursor: 'pointer', backdropFilter: 'blur(10px)',
               }}
             >⭐</button>
 
@@ -255,11 +272,11 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onTouchEnd={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               onClick={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               style={{
-                width: 56, height: 56, borderRadius: '50%',
+                width: 52, height: 52, borderRadius: '50%',
                 background: 'linear-gradient(135deg, #C855F0, #B045D8)',
                 border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, cursor: 'pointer',
+                fontSize: 20, cursor: 'pointer',
                 boxShadow: '0 4px 16px rgba(200,85,240,0.25)',
               }}
             >🎬</button>

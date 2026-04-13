@@ -104,7 +104,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <form onSubmit={handleSubmit} className="bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+      <form onSubmit={handleSubmit} className="bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <h2 className="text-lg font-bold text-white mb-4">Add Script</h2>
 
         {/* Title */}
@@ -196,7 +196,7 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
   const lines = countLines(script.content);
 
   return (
-    <div className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-5 flex flex-col gap-3">
+    <div className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-4 flex flex-col gap-3">
       <h3 className="font-bold text-white text-base truncate">
         {script.title}
       </h3>
@@ -218,7 +218,7 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
           onClick={onCDSim}
           className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg border-2 border-[#C855F0] text-[#C855F0] hover:bg-[#C855F0]/10 transition"
         >
-          CD Sim
+          Coach
         </button>
         {confirmDelete ? (
           <button
