@@ -58,6 +58,8 @@ const FindAReader = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       dispatch(fetchProfileThunk());
+      // Mark tutorial step
+      try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('headshot'); } catch {}
     } catch (err) {
       console.error('Failed to upload photo:', err);
     }

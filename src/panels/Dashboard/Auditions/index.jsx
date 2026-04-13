@@ -902,6 +902,8 @@ export default function DashboardAuditions() {
       await dispatch(createAuditionThunk(form)).unwrap();
       dispatch(fetchTrackerThunk());
       dispatch(fetchAuditionStatsThunk());
+      // Mark tutorial step
+      try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('track_audition'); } catch {}
     },
     [dispatch]
   );

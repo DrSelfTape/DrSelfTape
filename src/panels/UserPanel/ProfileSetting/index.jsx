@@ -595,6 +595,10 @@ const Profile = () => {
       toast.success('Profile updated', 'success');
       setInitialPersonalFormData(personalFormData);
       await fetchUserDetails();
+      // Mark tutorial step if headshot was uploaded
+      if (personalFormData.headshot) {
+        try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('headshot'); } catch {}
+      }
     } else {
       toast.error(result?.payload || 'Failed to update profile', 'error');
     }

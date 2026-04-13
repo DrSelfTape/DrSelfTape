@@ -202,6 +202,11 @@ export default function Profile() {
       setHeadshotFile(null);
       setResumeFile(null);
 
+      // Mark tutorial step if headshot uploaded
+      if (hasPhoto) {
+        try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('headshot'); } catch {}
+      }
+
       // Show badge + confetti if photo uploaded or first time completing profile
       if (hasPhoto || wasIncomplete) {
         setShowBadge(true);

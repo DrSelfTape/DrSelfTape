@@ -666,6 +666,8 @@ function AuditionsScreen() {
 
       await dispatch(createAuditionThunk(payload)).unwrap();
       dispatch(fetchAuditionsThunk());
+      // Mark tutorial step
+      try { const { markStep } = require('../../components/Dashboard/TutorialChecklist'); markStep('track_audition'); } catch {}
       setAddForm({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
       setShowAddForm(false);
     } catch (err) {
