@@ -21,6 +21,7 @@ import {
   updateProfile,
 } from '../../../redux/features/auth/authSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
+import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import dayjs from 'dayjs';
 
 const Profile = () => {
@@ -597,7 +598,7 @@ const Profile = () => {
       await fetchUserDetails();
       // Mark tutorial step if headshot was uploaded
       if (personalFormData.headshot) {
-        try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('headshot'); } catch {}
+        markStep('headshot');
       }
     } else {
       toast.error(result?.payload || 'Failed to update profile', 'error');

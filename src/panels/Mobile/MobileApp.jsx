@@ -8,6 +8,7 @@ import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScr
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
+import { markStep } from "../../components/Dashboard/TutorialChecklist";
 import { logoutUser } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
@@ -667,7 +668,7 @@ function AuditionsScreen() {
       await dispatch(createAuditionThunk(payload)).unwrap();
       dispatch(fetchAuditionsThunk());
       // Mark tutorial step
-      try { const { markStep } = require('../../components/Dashboard/TutorialChecklist'); markStep('track_audition'); } catch {}
+      markStep('track_audition');
       setAddForm({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
       setShowAddForm(false);
     } catch (err) {

@@ -5,6 +5,7 @@ import { Loader2, Users, Users2 } from 'lucide-react';
 import ReaderListItem from './components/ReaderListItem';
 import ActivityFeedCard from './components/ActivityFeedCard';
 import { fetchMatches, fetchActivityFeed } from '../../../redux/features/readers/readersMatchSlice';
+import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 
 const GreenRoom = ({ onSelectMatch } = {}) => {
   const dispatch = useDispatch();
@@ -18,7 +19,7 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
     dispatch(fetchMatches());
     dispatch(fetchActivityFeed());
     // Mark tutorial step
-    try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('green_room'); } catch {}
+    markStep('green_room');
   }, [dispatch]);
 
   return (

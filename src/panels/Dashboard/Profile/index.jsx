@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift, RefreshCw } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
+import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
@@ -204,7 +205,7 @@ export default function Profile() {
 
       // Mark tutorial step if headshot uploaded
       if (hasPhoto) {
-        try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('headshot'); } catch {}
+        markStep('headshot');
       }
 
       // Show badge + confetti if photo uploaded or first time completing profile

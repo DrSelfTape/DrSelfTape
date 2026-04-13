@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleAvailability } from '../../redux/features/readers/readersMatchSlice';
+import { markStep } from './TutorialChecklist';
 
 export default function AvailabilityToggle({ compact = false }) {
   const dispatch = useDispatch();
@@ -12,7 +13,7 @@ export default function AvailabilityToggle({ compact = false }) {
       dispatch(toggleAvailability(!isAvailable));
       // Mark tutorial step
       if (!isAvailable) {
-        try { const { markStep } = require('./TutorialChecklist'); markStep('go_available'); } catch {}
+        markStep('go_available');
       }
     }
   };
@@ -22,7 +23,7 @@ export default function AvailabilityToggle({ compact = false }) {
     const handler = () => {
       if (!isAvailable && !toggling) {
         dispatch(toggleAvailability(true));
-        try { const { markStep } = require('./TutorialChecklist'); markStep('go_available'); } catch {}
+        markStep('go_available');
       }
     };
     window.addEventListener('drst-tutorial-toggle-available', handler);

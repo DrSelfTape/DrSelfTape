@@ -8,6 +8,7 @@ import LiveSceneMode from './LiveSceneMode';
 import SelfTapeRecorder from './SelfTapeRecorder';
 import PostSessionJournal from '../../../components/Shared/PostSessionJournal';
 import FocusMode from '../../../components/Shared/FocusMode';
+import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 
 const STEPS = ['upload', 'pick-role', 'practice'];
 const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice'];
@@ -123,7 +124,7 @@ export default function SceneStudy() {
   // Mark tutorial step when user starts practicing
   useEffect(() => {
     if (step === 'practice' || step === 'live') {
-      try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('practice_ai'); } catch {}
+      markStep('practice_ai');
     }
   }, [step]);
 

@@ -12,6 +12,7 @@ import {
 import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 
 const FindAReader = () => {
   const dispatch = useDispatch();
@@ -30,8 +31,7 @@ const FindAReader = () => {
 
   useEffect(() => {
     dispatch(fetchProfileThunk());
-    // Mark tutorial step
-    try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('find_reader'); } catch {}
+    markStep('find_reader');
     // Restore saved filters and pass to API
     try {
       const saved = JSON.parse(localStorage.getItem('drst-reader-filters') || '{}');
@@ -58,8 +58,7 @@ const FindAReader = () => {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       dispatch(fetchProfileThunk());
-      // Mark tutorial step
-      try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('headshot'); } catch {}
+      markStep('headshot');
     } catch (err) {
       console.error('Failed to upload photo:', err);
     }

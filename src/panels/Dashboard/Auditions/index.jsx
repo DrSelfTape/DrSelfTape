@@ -40,6 +40,7 @@ import {
   deleteAuditionThunk,
   createAuditionThunk,
 } from '../../../redux/features/auditions/auditionsSlice';
+import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 
 /* ═══════════════════════════════════════════════════════════════════
    CONSTANTS
@@ -903,7 +904,7 @@ export default function DashboardAuditions() {
       dispatch(fetchTrackerThunk());
       dispatch(fetchAuditionStatsThunk());
       // Mark tutorial step
-      try { const { markStep } = require('../../../components/Dashboard/TutorialChecklist'); markStep('track_audition'); } catch {}
+      markStep('track_audition');
     },
     [dispatch]
   );
