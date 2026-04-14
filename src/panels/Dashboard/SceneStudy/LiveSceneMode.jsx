@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
 import ModePicker from './ModePicker';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import PermissionsModal from '../../../components/PermissionsModal';
+import { logSession } from '../../../redux/features/jericho/jerichoSlice';
 
 const SILENCE_TIMEOUT = 1500;
 
@@ -145,6 +147,8 @@ const STATUS_MESSAGES = {
 };
 
 export default function LiveSceneMode({ lines, userRole, characters, initialVoice, onExit }) {
+  const dispatch = useDispatch();
+  const sceneStartTimeRef = useRef(null);
   const [status, setStatus] = useState('idle'); // idle | listening | thinking | playing | error
   const [showVoicePicker, setShowVoicePicker] = useState(!initialVoice);
   const [showModePicker, setShowModePicker] = useState(false);
@@ -509,6 +513,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       setShowModePicker(false);
       setReaderMode('voice');
       isActiveRef.current = true;
+      sceneStartTimeRef.current = Date.now();
 
       const firstLine = lines[0];
       if (firstLine && firstLine.character !== userRole) {
@@ -631,8 +636,17 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       try { audioContextRef.current.close(); } catch(e) {}
       audioContextRef.current = null;
     }
+    // Log session to Jericho (fire and forget)
+    const duration = sceneStartTimeRef.current ? Math.round((Date.now() - sceneStartTimeRef.current) / 1000) : 0;
+    dispatch(logSession({
+      session_type: 'live_scene',
+      script_text: lines.map((l) => `${l.character}: ${l.dialogue}`).join('\n').slice(0, 2000),
+      role_played: userRole,
+      ai_feedback: { conversation_history: conversationHistoryRef.current?.slice(-20) || [] },
+      duration_seconds: duration,
+    }));
     onExit();
-  }, [onExit]);
+  }, [onExit, dispatch, lines, userRole]);
 
   // Cleanup on unmount
   useEffect(() => {

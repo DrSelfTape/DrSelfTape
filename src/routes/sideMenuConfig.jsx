@@ -49,6 +49,11 @@ const actorMenu = [
     icon: <SparklesIcon height={19} width={19} />,
   },
   {
+    path: '/dashboard/jericho',
+    text: 'My Growth',
+    icon: <SparklesIcon height={19} width={19} />,
+  },
+  {
     path: '/dashboard/cd-sim',
     text: 'Acting Coach',
     icon: <SparklesIcon height={19} width={19} />,

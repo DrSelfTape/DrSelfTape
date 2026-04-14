@@ -88,6 +88,7 @@ async function extractPdfText(file) {
 
 /* Lazy-load dashboard panels for the "More" menu */
 const CDSim = lazy(() => import("../Dashboard/CDSim"));
+const Jericho = lazy(() => import("../Dashboard/Jericho"));
 
 const WhoWantsToRead = lazy(() => import("../Dashboard/FindAReader/WhoWantsToRead"));
 const Favorites = lazy(() => import("../Dashboard/FindAReader/Favorites"));
@@ -273,6 +274,7 @@ const TABS = [
 ];
 
 const MORE_FEATURES = [
+  { id: "jericho", label: "My Growth", desc: "Your evolving actor DNA and coaching insights", emoji: "🧠", color: "#C855F0" },
   { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#C855F0" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
@@ -291,6 +293,7 @@ const PANEL_COMPONENTS = {
   "find-a-reader": FindAReader,
   "green-room": GreenRoom,
   "cd-sim": CDSim,
+  "jericho": Jericho,
   "scripts": Scripts,
   "submissions": Submissions,
   "reports": Reports,
@@ -1446,7 +1449,7 @@ function MoreScreen({ setCurrentPanel }) {
    PANEL SCREEN — Wraps a dashboard panel for mobile
    ═══════════════════════════════════════════════════ */
 // Panels that already use dark brand styling (inline dark bg/colors)
-const DARK_PANELS = new Set(["cd-sim", "generator", "find-a-reader", "green-room", "who-wants-to-read", "favorites"]);
+const DARK_PANELS = new Set(["cd-sim", "generator", "find-a-reader", "green-room", "who-wants-to-read", "favorites", "jericho"]);
 
 // Wrapper to inject matchId into GreenRoomChat without React Router params
 function GreenRoomChatWrapper({ matchId }) {

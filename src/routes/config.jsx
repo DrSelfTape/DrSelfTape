@@ -61,6 +61,7 @@ const Referral = lazy(() => import('../panels/Dashboard/Referral'));
 const Marketplace = lazy(() => import('../panels/Dashboard/Marketplace'));
 const SelfTapes = lazy(() => import('../panels/Dashboard/SelfTapes'));
 const Admin = lazy(() => import('../panels/Dashboard/Admin'));
+const Jericho = lazy(() => import('../panels/Dashboard/Jericho'));
 
 // Lazy-loaded Find a Reader imports
 const FindAReader = lazy(() => import('../panels/Dashboard/FindAReader'));
@@ -123,6 +124,7 @@ export const commonRoutes = [
       { path: 'membership', moduleName: 'Membership', element: <Membership /> },
       { path: 'profile', moduleName: 'Profile', element: <DashboardProfile /> },
       { path: 'generator', moduleName: 'AuditionGenerator', element: <AuditionGenerator /> },
+      { path: 'jericho', moduleName: 'Jericho', element: <Jericho /> },
       { path: 'casting-director-ai', moduleName: 'CastingDirectorAI', element: <CastingDirectorAI /> },
       // Find a Reader
       { path: 'find-a-reader', moduleName: 'FindAReader', element: <FindAReader /> },

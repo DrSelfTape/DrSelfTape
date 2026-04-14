@@ -29,6 +29,7 @@ import reportsSlice from './features/reports/reportsSlice';
 import communitySlice from './features/community/communitySlice';
 import submissionsSlice from './features/submissions/submissionsSlice';
 import readersMatchSlice from './features/readers/readersMatchSlice';
+import jerichoSlice from './features/jericho/jerichoSlice';
 
 // Admin panel slice
 import adminSlice from './features/admin/adminSlice';
@@ -61,6 +62,7 @@ const rootReducer = combineReducers({
   community: communitySlice,
   submissions: submissionsSlice,
   readersMatch: readersMatchSlice,
+  jericho: jerichoSlice,
   // Admin panel reducer
   admin: adminSlice,
 });

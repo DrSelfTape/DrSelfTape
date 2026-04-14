@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { X, BookOpen, Check } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { X, BookOpen, Check, Star } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
+import { updateSessionLog } from '../../redux/features/jericho/jerichoSlice';
 
 const MOOD_OPTIONS = [
   { emoji: '🔥', label: 'Nailed it' },
@@ -20,22 +22,36 @@ const MOOD_OPTIONS = [
  *   onClose     — dismiss
  */
 export default function PostSessionJournal({ sessionType, scriptTitle, onClose }) {
+  const dispatch = useDispatch();
+  const lastSessionLogId = useSelector((s) => s.jericho?.lastSessionLogId);
   const [mood, setMood] = useState(null);
+  const [rating, setRating] = useState(0);
+  const [hoveredStar, setHoveredStar] = useState(0);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   const handleSave = async () => {
-    if (!mood && !note.trim()) { onClose(); return; }
+    if (!mood && !note.trim() && rating === 0) { onClose(); return; }
     setSaving(true);
     try {
       await axios.post(`${baseURL}/v1/growth/journal/`, {
         session_type: sessionType,
         script_title: scriptTitle || '',
         mood: mood?.label || '',
+        rating: rating || undefined,
         note: note.trim(),
         created_at: new Date().toISOString(),
       });
+      // Also update the Jericho session log with mood/rating/notes
+      if (lastSessionLogId) {
+        dispatch(updateSessionLog({
+          sessionId: lastSessionLogId,
+          user_mood: mood?.label || '',
+          user_rating: rating || undefined,
+          user_notes: note.trim(),
+        }));
+      }
       setSaved(true);
       setTimeout(onClose, 1000);
     } catch {
@@ -45,6 +61,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
         session_type: sessionType,
         script_title: scriptTitle || '',
         mood: mood?.label || '',
+        rating: rating || undefined,
         note: note.trim(),
         created_at: new Date().toISOString(),
       });
@@ -106,6 +123,30 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
               </span>
             </button>
           ))}
+        </div>
+
+        {/* Self-rating */}
+        <div className="mb-4">
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary, #999)' }}>Rate your performance</p>
+          <div className="flex justify-center gap-1">
+            {[1, 2, 3, 4, 5].map((star) => {
+              const active = star <= (hoveredStar || rating);
+              return (
+                <button
+                  key={star}
+                  type="button"
+                  onMouseEnter={() => setHoveredStar(star)}
+                  onMouseLeave={() => setHoveredStar(0)}
+                  onClick={() => setRating(rating === star ? 0 : star)}
+                  className="transition-transform hover:scale-110 p-1"
+                >
+                  <Star
+                    className={`w-7 h-7 transition-colors ${active ? 'text-amber-400 fill-amber-400' : 'text-[#3A3A3A]'}`}
+                  />
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Notes */}

@@ -108,6 +108,13 @@ const endPoints = {
   transcribe: `${baseURL}/v1/ai/transcribe/`,
   tts: `${baseURL}/v1/ai/tts/`,
 
+  // Jericho — Self-Evolving AI Coach
+  actorMemory: `${baseURL}/v1/ai/actor-memory/`,
+  sessionLog: `${baseURL}/v1/ai/session-log/`,
+  aiInsights: `${baseURL}/v1/ai/insights/`,
+  aiEvolution: `${baseURL}/v1/ai/evolution/`,
+  jerichoCoach: `${baseURL}/v1/ai/jericho/coach/`,
+
   // Push Notifications
   pushSubscribe: `${baseURL}/v1/notifications/push/subscribe/`,
   pushVapidKey: `${baseURL}/v1/notifications/push/vapid-key/`,

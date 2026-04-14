@@ -1,11 +1,13 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import SidesUpload from './SidesUpload';
 import RoleSelect from './RoleSelect';
 import VoicePicker from './VoicePicker';
 import CDReport from './CDReport';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import { logSession } from '../../../redux/features/jericho/jerichoSlice';
 
 const STEPS = ['upload', 'role', 'voice', 'analyzing', 'report'];
 const STEP_LABELS = ['Upload Sides', 'Pick Role', 'Coach Style', 'Analyzing', 'Feedback'];
@@ -77,6 +79,8 @@ function extractCharacters(lines) {
 export default function CDSim() {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const sessionStartRef = useRef(null);
   const [step, setStep] = useState('upload');
   const [scriptText, setScriptText] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
@@ -118,25 +122,35 @@ export default function CDSim() {
     let cancelled = false;
     setLoading(true);
     setError('');
+    sessionStartRef.current = Date.now();
 
-    axios
-      .post(`${baseURL}/v1/ai/cd-feedback/`, {
-        script: scriptText,
-        role: selectedRole,
-        voice: selectedVoice,
-      })
+    const payload = { script: scriptText, role: selectedRole, voice: selectedVoice };
+
+    // Try Jericho enriched endpoint first, fallback to standard cd-feedback
+    const tryJericho = axios
+      .post(`${baseURL}/v1/ai/jericho/coach/`, { ...payload, session_type: 'cd_coach' })
+      .catch(() => axios.post(`${baseURL}/v1/ai/cd-feedback/`, payload));
+
+    tryJericho
       .then((res) => {
         if (!cancelled) {
-          // API returns { data: { interpretation, performance, ... }, success, message }
-          setReport(res.data?.data || res.data);
+          const reportData = res.data?.data || res.data;
+          setReport(reportData);
           setStep('report');
+          // Log session to Jericho memory (fire and forget)
+          const duration = Math.round((Date.now() - (sessionStartRef.current || Date.now())) / 1000);
+          dispatch(logSession({
+            session_type: 'cd_coach',
+            script_text: scriptText.slice(0, 2000),
+            role_played: selectedRole,
+            ai_feedback: reportData,
+            duration_seconds: duration,
+          }));
         }
       })
       .catch((err) => {
         if (!cancelled) {
           const status = err?.response?.status;
-          // 402 is handled globally by the axios interceptor → NoTokensModal
-          // Just reset back to the voice picker step so user can retry after upgrading
           if (status === 402) {
             setStep('voice');
           } else {
