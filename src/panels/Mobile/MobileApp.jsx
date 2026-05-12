@@ -378,7 +378,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     : (hour < 12 ? 'Good morning' : hour < 17 ? "Hey, what's up" : 'Working late');
 
   const handleNextStep = () => {
-    if (nextStep.action === 'profile') setCurrentPanel('profile');
+    // 'profile' action routes to the DashProfile edit form panel.
+    // PANEL_COMPONENTS uses the id 'dash-profile' for this; using 'profile'
+    // here previously rendered nothing because no PANEL_COMPONENTS entry
+    // matched.
+    if (nextStep.action === 'profile') setCurrentPanel('dash-profile');
     else if (nextStep.action === 'generator') setCurrentPanel('generator');
     else if (nextStep.action === 'live') setTab('live');
   };
@@ -1559,6 +1563,85 @@ function PanelScreen({ panelId, onBack }) {
 }
 
 /* ═══════════════════════════════════════════════════
+   TOP-BAR AVATAR
+   ───────────────────────────────────────────────────
+   Compact avatar button shown in the mobile top bar.
+   Falls back to initials over the brand gradient when
+   no headshot URL is available.
+   ═══════════════════════════════════════════════════ */
+function TopBarAvatar({ active, onClick }) {
+  const user = useSelector((state) => state.auth?.user);
+  const profileData = useSelector((state) => state.profile?.profile);
+  const headshot =
+    profileData?.user_image ||
+    profileData?.actor_profile?.headshot ||
+    profileData?.headshot ||
+    user?.user_image ||
+    null;
+  const first = user?.first_name?.[0] || profileData?.first_name?.[0] || "";
+  const last = user?.last_name?.[0] || profileData?.last_name?.[0] || "";
+  const initials = (first + last).toUpperCase() || "A";
+
+  const size = 34;
+  const ringColor = active ? MINT : "rgba(255,255,255,0.18)";
+
+  return (
+    <button
+      type="button"
+      aria-label="Profile and settings"
+      onClick={onClick}
+      style={{
+        background: "none",
+        border: "none",
+        padding: 0,
+        cursor: "pointer",
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        position: "relative",
+        boxShadow: `inset 0 0 0 1.5px ${ringColor}`,
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      {headshot ? (
+        <img
+          src={headshot}
+          alt=""
+          onError={(e) => { e.target.style.display = "none"; }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "top",
+            display: "block",
+          }}
+        />
+      ) : (
+        <span
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT}, ${CORAL})`,
+            color: BG_DEEPEST,
+            fontSize: 13,
+            fontWeight: 700,
+            fontFamily: "'Playfair Display', serif",
+          }}
+        >
+          {initials}
+        </span>
+      )}
+    </button>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
    APP SHELL — Mobile + Desktop
    ═══════════════════════════════════════════════════ */
 export default function DrSelfTapeApp() {
@@ -1727,10 +1810,20 @@ export default function DrSelfTapeApp() {
               <img src={logo} alt="Dr Self Tape" style={{ width: 30, height: 30, objectFit: "contain" }} />
               <span style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
             </div>
-            <NotificationBell onNavigate={({ panel, tab }) => {
-              if (panel) setCurrentPanel(panel);
-              if (tab) { setCurrentPanel(null); setTab(tab); }
-            }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <NotificationBell onNavigate={({ panel, tab }) => {
+                if (panel) setCurrentPanel(panel);
+                if (tab) { setCurrentPanel(null); setTab(tab); }
+              }} />
+              {/* Profile avatar — opens ProfileScreen with Edit Profile / Membership /
+                  Reports / Log Out menu. Discoverable entry point so users can edit
+                  their profile after first login (the only other path was buried in
+                  the More-tab grid). */}
+              <TopBarAvatar
+                active={tab === "profile" && !currentPanel}
+                onClick={() => { setCurrentPanel(null); setTab("profile"); }}
+              />
+            </div>
           </div>
 
           {/* Logo watermark */}
