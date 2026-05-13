@@ -104,14 +104,23 @@
   --aurora-line: rgba(10,10,10,0.06);
   --aurora-line-soft: rgba(10,10,10,0.04);
 
-  --aurora-accent: #FF8280;
-  --aurora-accent-deep: #C05957;
-  --aurora-accent-light: #FFB49A;
+  /* Primary accent — antique gold per Aurora design reference.
+   * Coral is preserved as --aurora-coral for explicit brand-mark usage
+   * (logo, wordmark, special branded moments). */
+  --aurora-accent: #D4A85F;
+  --aurora-accent-deep: #7A5A18;
+  --aurora-accent-light: #F0D097;
+
+  --aurora-coral: #FF8280;
+  --aurora-coral-deep: #C05957;
+  --aurora-coral-light: #FFB49A;
 
   --aurora-gold: #FCE072;
   --aurora-gold-deep: #8A6D14;
   --aurora-gold-light: #FFF0B2;
 
+  /* Heritage gold = same as accent in light mode (single warm accent).
+   * Kept as separate token so dark mode can have a different heritage tone. */
   --aurora-heritage-gold: #D4A85F;
   --aurora-heritage-gold-deep: #7A5A18;
   --aurora-heritage-gold-light: #F0D097;
@@ -125,7 +134,7 @@
   --aurora-shadow-card:  0 4px 20px rgba(10,10,10,0.04), inset 0 1px 0 rgba(255,255,255,0.70);
   --aurora-shadow-modal: 0 24px 60px rgba(10,10,10,0.18);
   --aurora-shadow-dock:  0 10px 30px rgba(10,10,10,0.06);
-  --aurora-shadow-coral: 0 12px 30px rgba(255,130,128,0.30);
+  --aurora-shadow-coral: 0 12px 30px rgba(212,168,95,0.30);
   --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.30);
 }
 
