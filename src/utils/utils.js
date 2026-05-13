@@ -1,17 +1,4 @@
 import { useEffect } from 'react';
-import { setAuthToken } from '../redux/http';
-import { useStoreData } from '../hooks/useStoreData';
-
-export const isAuthenticatedUser = () => {
-  const { token } = useStoreData();
-
-  if (token) {
-    setAuthToken(token);
-    return true;
-  } else {
-    return false;
-  }
-};
 
 // Email Validation
 export const validateEmail = (email) => {
