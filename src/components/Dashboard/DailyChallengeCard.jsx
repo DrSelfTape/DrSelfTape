@@ -82,7 +82,7 @@ export default function DailyChallengeCard({ onNavigate }) {
         {completed ? (
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center">
-              <Check className="w-4 h-4 text-white" strokeWidth={3} />
+              <Check className="w-4 h-4 text-[#0A0A0A]" strokeWidth={3} />
             </div>
             <span className="text-sm font-semibold text-emerald-400">
               {justCompleted ? `+${challenge.xp_reward} XP earned!` : 'Completed today!'}
@@ -92,7 +92,7 @@ export default function DailyChallengeCard({ onNavigate }) {
           <button
             onClick={handleComplete}
             disabled={completing}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-white text-sm font-bold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] text-sm font-bold transition-all disabled:opacity-50"
           >
             {completing ? 'Completing...' : `Complete (+${challenge.xp_reward} XP)`}
             <ChevronRight className="w-4 h-4" />

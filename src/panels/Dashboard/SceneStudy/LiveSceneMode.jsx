@@ -17,9 +17,9 @@ function VoicePicker({ characters, userRole, onSelect, onCancel }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-      <div className="bg-[#161628] rounded-2xl border border-[#2a2a4a] p-8 max-w-md w-full mx-4 shadow-2xl">
-        <h3 className="text-white text-xl font-bold mb-2">Who plays opposite you?</h3>
-        <p className="text-[#666666] text-sm mb-6">
+      <div className="bg-white rounded-2xl border border-[rgba(10,10,10,0.08)] p-8 max-w-md w-full mx-4 shadow-2xl">
+        <h3 className="text-[#0A0A0A] text-xl font-bold mb-2">Who plays opposite you?</h3>
+        <p className="text-[rgba(10,10,10,0.4)] text-sm mb-6">
           {partnerChars.length > 0
             ? `Your scene partner: ${partnerChars.join(', ')}`
             : 'Choose a voice for the AI scene partner'}
@@ -37,11 +37,11 @@ function VoicePicker({ characters, userRole, onSelect, onCancel }) {
               className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                 selected === v.id
                   ? 'border-[#FF8280] bg-[#FF8280]/10'
-                  : 'border-[#2a2a4a] hover:border-[#3a3a5a] bg-[#1a1a2e]'
+                  : 'border-[rgba(10,10,10,0.08)] hover:border-[rgba(10,10,10,0.14)] bg-white'
               }`}
             >
               <span className="text-2xl">{v.icon}</span>
-              <span className={`font-medium ${selected === v.id ? 'text-white' : 'text-gray-300'}`}>
+              <span className={`font-medium ${selected === v.id ? 'text-[#0A0A0A]' : 'text-gray-300'}`}>
                 {v.label}
               </span>
             </button>
@@ -51,13 +51,13 @@ function VoicePicker({ characters, userRole, onSelect, onCancel }) {
         <div className="flex gap-3 mt-8">
           <button
             onClick={onCancel}
-            className="flex-1 px-5 py-3 rounded-xl border border-[#2a2a4a] text-[#666666] hover:text-white hover:border-[#3a3a5a] transition-colors cursor-pointer font-medium"
+            className="flex-1 px-5 py-3 rounded-xl border border-[rgba(10,10,10,0.08)] text-[rgba(10,10,10,0.4)] hover:text-[#0A0A0A] hover:border-[rgba(10,10,10,0.14)] transition-colors cursor-pointer font-medium"
           >
             Cancel
           </button>
           <button
             onClick={() => onSelect(selected)}
-            className="flex-1 px-5 py-3 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold transition-colors cursor-pointer"
+            className="flex-1 px-5 py-3 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] font-semibold transition-colors cursor-pointer"
           >
             Start Scene
           </button>
@@ -691,16 +691,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   // Error state for unsupported browsers
   if (!SpeechRecognition && status !== 'error') {
     return (
-      <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center p-6">
+      <div className="min-h-screen bg-transparent flex items-center justify-center p-6">
         <div className="text-center max-w-md">
           <div className="text-5xl mb-4">🚫</div>
-          <h2 className="text-white text-xl font-bold mb-2">Browser Not Supported</h2>
-          <p className="text-[#666666] mb-6">
+          <h2 className="text-[#0A0A0A] text-xl font-bold mb-2">Browser Not Supported</h2>
+          <p className="text-[rgba(10,10,10,0.4)] mb-6">
             Your browser doesn&apos;t support the Web Speech API. Please use Google Chrome for Live Study Mode.
           </p>
           <button
             onClick={onExit}
-            className="bg-[#FF8280] hover:bg-[#A040C8] text-white px-6 py-3 rounded-xl font-semibold cursor-pointer transition-colors"
+            className="bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-6 py-3 rounded-xl font-semibold cursor-pointer transition-colors"
           >
             Go Back
           </button>
@@ -716,7 +716,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     : STATUS_MESSAGES[status];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-[#0f0f1a] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-[60] bg-transparent flex flex-col overflow-hidden">
       {/* Mic Permission Modal */}
       <PermissionsModal
         isOpen={showMicPermission}
@@ -740,7 +740,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-[#FF8280] animate-pulse" />
-            <span className="text-white font-semibold text-sm">Live Study Mode</span>
+            <span className="text-[#0A0A0A] font-semibold text-sm">Live Study Mode</span>
           {readerMode === 'pretimed' && (
             <span className="text-xs bg-[#FF8280]/20 text-[#FF8280] border border-[#FF8280]/30 px-2 py-0.5 rounded-full font-semibold ml-2">
               ⏱ Pre-Timed
@@ -758,7 +758,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               onClick={isPaused ? resumeScene : pauseScene}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                 isPaused
-                  ? 'bg-[#FF8280] text-white hover:bg-[#A040C8]'
+                  ? 'bg-[#FF8280] text-[#0A0A0A] hover:bg-[#A040C8]'
                   : 'border border-[#FF8280]/40 text-[#FF8280] hover:bg-[#FF8280]/10'
               }`}
             >
@@ -789,7 +789,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           style={{ height: 'var(--script-panel-h, 45vh)' }}
         >
           <style>{`@media (min-width: 1024px) { :root { --script-panel-h: 100%; } }`}</style>
-          <h3 className="text-[#999999] text-xs font-bold uppercase tracking-wider mb-4">Script</h3>
+          <h3 className="text-[rgba(10,10,10,0.62)] text-xs font-bold uppercase tracking-wider mb-4">Script</h3>
           <div className="space-y-2">
             {lines.map((line, i) => {
               const isUser = line.character === userRole;
@@ -808,12 +808,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 >
                   <span
                     className={`text-[10px] font-bold uppercase tracking-wider block mb-0.5 ${
-                      isUser ? 'text-[#FF8280]' : 'text-[#999999]'
+                      isUser ? 'text-[#FF8280]' : 'text-[rgba(10,10,10,0.62)]'
                     }`}
                   >
                     {line.character}
                   </span>
-                  <p className={`text-xs leading-relaxed ${isCurrent ? 'text-gray-200' : 'text-[#999999]'}`}>
+                  <p className={`text-xs leading-relaxed ${isCurrent ? 'text-gray-200' : 'text-[rgba(10,10,10,0.62)]'}`}>
                     {line.dialogue}
                   </p>
                 </div>
@@ -833,30 +833,30 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
                 </svg>
               </div>
-              <h2 className="text-white text-2xl font-bold mb-2">Ready to Study?</h2>
-              <p className="text-[#666666] text-sm mb-2">
-                Playing <span className="text-[#FF8280] font-semibold">{userRole}</span> opposite <span className="text-white font-semibold">{partnerName}</span>
+              <h2 className="text-[#0A0A0A] text-2xl font-bold mb-2">Ready to Study?</h2>
+              <p className="text-[rgba(10,10,10,0.4)] text-sm mb-2">
+                Playing <span className="text-[#FF8280] font-semibold">{userRole}</span> opposite <span className="text-[#0A0A0A] font-semibold">{partnerName}</span>
               </p>
-              <p className="text-[#999999] text-xs mb-8">
+              <p className="text-[rgba(10,10,10,0.62)] text-xs mb-8">
                 Speak your lines naturally. The AI will respond automatically after a short pause.
               </p>
               <div className="bg-white/5 rounded-xl p-4 mb-8 text-left space-y-2">
-                <div className="flex items-center gap-2 text-xs text-[#666666]">
+                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
                   <span className="text-[#FF8280]">🎙️</span> Speak your line — pause when done
                 </div>
-                <div className="flex items-center gap-2 text-xs text-[#666666]">
+                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
                   <span className="text-[#FF8280]">🤖</span> AI responds as {partnerName}
                 </div>
-                <div className="flex items-center gap-2 text-xs text-[#666666]">
+                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
                   <span className="text-[#FF8280]">🔊</span> ElevenLabs voice reads it aloud
                 </div>
-                <div className="flex items-center gap-2 text-xs text-[#666666]">
+                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
                   <span className="text-[#FF8280]">🔁</span> Scene flows hands-free
                 </div>
               </div>
               <button
                 onClick={() => setShowMicPermission(true)}
-                className="w-full bg-[#FF8280] hover:bg-[#A040C8] text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer flex items-center justify-center gap-3"
+                className="w-full bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-8 py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer flex items-center justify-center gap-3"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
@@ -868,14 +868,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
           {/* Paused Overlay */}
           {isPaused && sceneStarted && (
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-[#0f0f1a]/80 backdrop-blur-sm">
+            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-transparent/80 backdrop-blur-sm">
               <div className="text-6xl mb-4">⏸</div>
-              <h2 className="text-white text-2xl font-bold mb-2">Scene Paused</h2>
-              <p className="text-[#999999] text-sm mb-6">Take a moment. Resume when you&apos;re ready.</p>
+              <h2 className="text-[#0A0A0A] text-2xl font-bold mb-2">Scene Paused</h2>
+              <p className="text-[rgba(10,10,10,0.62)] text-sm mb-6">Take a moment. Resume when you&apos;re ready.</p>
               <div className="flex gap-3">
                 <button
                   onClick={resumeScene}
-                  className="bg-[#FF8280] hover:bg-[#A040C8] text-white px-8 py-3 rounded-xl font-semibold transition-colors cursor-pointer flex items-center gap-2"
+                  className="bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-8 py-3 rounded-xl font-semibold transition-colors cursor-pointer flex items-center gap-2"
                 >
                   <span>▶</span> Resume Scene
                 </button>
@@ -897,12 +897,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 <span className="text-[#FF8280] text-xs font-bold uppercase tracking-widest block mb-3">
                   {partnerName}
                 </span>
-                <p className="text-white text-2xl md:text-3xl font-light leading-relaxed">
+                <p className="text-[#0A0A0A] text-2xl md:text-3xl font-light leading-relaxed">
                   {aiCurrentLine}
                 </p>
               </>
             ) : status === 'listening' ? (
-              <p className="text-[#999999] text-lg">Your turn...</p>
+              <p className="text-[rgba(10,10,10,0.62)] text-lg">Your turn...</p>
             ) : null}
           </div>
           )}
@@ -925,7 +925,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   ? 'bg-white/5 text-gray-300'
                   : status === 'error'
                   ? 'bg-red-500/10 text-red-400'
-                  : 'text-[#999999]'
+                  : 'text-[rgba(10,10,10,0.62)]'
               }`}
             >
               {statusLabel}
@@ -935,7 +935,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           {/* Live Transcript */}
           <div className="max-w-xl w-full min-h-[60px] text-center">
             {liveTranscript && status === 'listening' && (
-              <p className="text-[#666666] text-lg italic animate-pulse">&ldquo;{liveTranscript}&rdquo;</p>
+              <p className="text-[rgba(10,10,10,0.4)] text-lg italic animate-pulse">&ldquo;{liveTranscript}&rdquo;</p>
             )}
           </div>
 
@@ -955,7 +955,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   className={`text-xs px-3 py-2 rounded-lg ${
                     turn.role === 'actor'
                       ? 'bg-[#FF8280]/10 text-[#FF8280]/70 text-right'
-                      : 'bg-white/5 text-[#999999] text-left'
+                      : 'bg-white/5 text-[rgba(10,10,10,0.62)] text-left'
                   }`}
                 >
                   <span className="font-bold uppercase text-[10px] block mb-0.5">
@@ -971,7 +971,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
       {/* Bottom Status Bar */}
       <div className="px-4 sm:px-6 py-3 border-t border-[#1a1a2e] flex items-center justify-between">
-        <div className="flex items-center gap-3 sm:gap-4 text-xs text-[#999999]">
+        <div className="flex items-center gap-3 sm:gap-4 text-xs text-[rgba(10,10,10,0.62)]">
           <span>
             Line {Math.min(currentLineIdx + 1, lines.length)} of {lines.length}
           </span>
@@ -986,7 +986,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 onClick={isPaused ? resumeScene : pauseScene}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   isPaused
-                    ? 'bg-[#FF8280] text-white'
+                    ? 'bg-[#FF8280] text-[#0A0A0A]'
                     : 'border border-[#FF8280]/40 text-[#FF8280]'
                 }`}
               >
@@ -1000,7 +1000,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               </button>
             </div>
           )}
-          <span className="text-xs text-[#999999] hidden sm:inline">
+          <span className="text-xs text-[rgba(10,10,10,0.62)] hidden sm:inline">
             {voice === 'partner_male' ? 'George' : voice === 'partner_female' ? 'Lily' : 'River'}
           </span>
         </div>

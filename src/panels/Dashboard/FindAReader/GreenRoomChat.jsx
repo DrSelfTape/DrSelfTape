@@ -286,7 +286,7 @@ const GreenRoomChat = (props = {}) => {
           disabled={startingRehearsal}
           className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-white transition-all disabled:opacity-50 shrink-0"
           style={{
-            background: 'linear-gradient(135deg, #FF8280, #E88BF5)',
+            background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
             boxShadow: '0 3px 12px rgba(255, 130, 128,0.35)',
           }}
         >

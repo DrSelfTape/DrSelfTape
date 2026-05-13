@@ -144,8 +144,8 @@ export default function ScriptUpload({ onSubmit }) {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Upload Your Script</h2>
-        <p className="text-[#999999] text-sm mt-1">
+        <h2 className="text-2xl font-bold text-[#0A0A0A]">Upload Your Script</h2>
+        <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
           Upload a .txt or .pdf file, or paste your script below
         </p>
       </div>
@@ -155,7 +155,7 @@ export default function ScriptUpload({ onSubmit }) {
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-4 ${
           dragActive
             ? 'border-[#FF8280] bg-[#FF8280]/10'
-            : 'border-[#3A3A3A] hover:border-[#FF8280] bg-[#1E1E1E]'
+            : 'border-[rgba(10,10,10,0.14)] hover:border-[#FF8280] bg-[#1E1E1E]'
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -168,13 +168,13 @@ export default function ScriptUpload({ onSubmit }) {
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
               <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
             </svg>
-            <p className="text-sm font-medium text-white">{pdfStatus || 'Processing...'}</p>
+            <p className="text-sm font-medium text-[#0A0A0A]">{pdfStatus || 'Processing...'}</p>
             <p className="text-xs text-[#666]">This may take a few seconds</p>
           </div>
         ) : (
           <>
             <svg
-              className="w-10 h-10 mx-auto text-[#666666] mb-3"
+              className="w-10 h-10 mx-auto text-[rgba(10,10,10,0.4)] mb-3"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -186,10 +186,10 @@ export default function ScriptUpload({ onSubmit }) {
                 d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
               />
             </svg>
-            <p className="text-sm font-medium text-[#999999]">
+            <p className="text-sm font-medium text-[rgba(10,10,10,0.62)]">
               {fileName || 'Drag & drop your script file here'}
             </p>
-            <p className="text-xs text-[#666666] mt-1">Accepts .txt and .pdf files</p>
+            <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">Accepts .txt and .pdf files</p>
           </>
         )}
         <input
@@ -208,9 +208,9 @@ export default function ScriptUpload({ onSubmit }) {
       )}
 
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 h-px bg-[#2A2A2A]" />
-        <span className="text-xs text-[#666666] font-medium">OR PASTE BELOW</span>
-        <div className="flex-1 h-px bg-[#2A2A2A]" />
+        <div className="flex-1 h-px bg-[#F4F4EE]" />
+        <span className="text-xs text-[rgba(10,10,10,0.4)] font-medium">OR PASTE BELOW</span>
+        <div className="flex-1 h-px bg-[#F4F4EE]" />
       </div>
 
       {/* Textarea */}
@@ -221,16 +221,16 @@ export default function ScriptUpload({ onSubmit }) {
           if (fileName) setFileName('');
         }}
         placeholder={`Paste your script here...\n\nFormat example:\nJOHN: Hey, how's it going?\nSARAH: Not bad, just got back from the audition.\nJOHN: How did it go?`}
-        className="w-full h-56 border border-[#3A3A3A] rounded-xl px-4 py-3 text-sm focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none resize-none bg-[#1E1E1E]"
+        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none resize-none bg-[#1E1E1E]"
       />
 
       {/* Preview */}
       {canContinue && (
-        <div className="mt-4 bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] p-4">
-          <p className="text-xs font-semibold text-[#999999] mb-2 uppercase tracking-wide">
+        <div className="mt-4 bg-[#1E1E1E] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
+          <p className="text-xs font-semibold text-[rgba(10,10,10,0.62)] mb-2 uppercase tracking-wide">
             Script Preview
           </p>
-          <pre className="text-sm text-[#999999] whitespace-pre-wrap max-h-40 overflow-y-auto font-sans leading-relaxed">
+          <pre className="text-sm text-[rgba(10,10,10,0.62)] whitespace-pre-wrap max-h-40 overflow-y-auto font-sans leading-relaxed">
             {scriptText.slice(0, 1000)}
             {scriptText.length > 1000 && '...'}
           </pre>
@@ -240,7 +240,7 @@ export default function ScriptUpload({ onSubmit }) {
       <button
         onClick={() => onSubmit(scriptText)}
         disabled={!canContinue}
-        className="mt-6 w-full bg-[#FF8280] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="mt-6 w-full bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Continue
       </button>

@@ -121,11 +121,11 @@ const ReaderFilters = ({ onClose }) => {
       <div className="relative w-full max-w-md rounded-t-2xl bg-[#1E1E1E] px-5 pb-5 pt-4 sm:rounded-2xl sm:p-6">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-bold text-white sm:text-lg">Filters</h2>
+          <h2 className="text-base font-bold text-[#0A0A0A] sm:text-lg">Filters</h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full p-1 text-[#666666] transition-colors hover:bg-[#2A2A2A] hover:text-[#999999]"
+            className="rounded-full p-1 text-[rgba(10,10,10,0.4)] transition-colors hover:bg-[#F4F4EE] hover:text-[rgba(10,10,10,0.62)]"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -135,7 +135,7 @@ const ReaderFilters = ({ onClose }) => {
         <div className="max-h-[70vh] space-y-4 overflow-y-auto pr-1 sm:space-y-6 sm:max-h-[60vh]">
           {/* Genre */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">
+            <h3 className="mb-2 text-sm font-semibold text-[#0A0A0A]">
               Genre
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -148,8 +148,8 @@ const ReaderFilters = ({ onClose }) => {
                     onClick={() => toggleGenre(genre)}
                     className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                       selected
-                        ? 'bg-[#A7ECDA] text-white'
-                        : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
+                        ? 'bg-[#A7ECDA] text-[#0A0A0A]'
+                        : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-gray-200'
                     }`}
                   >
                     {genre}
@@ -161,13 +161,13 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Experience Level */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">
+            <h3 className="mb-2 text-sm font-semibold text-[#0A0A0A]">
               Experience Level
             </h3>
             <select
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
-              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#FF8280]"
+              className="w-full rounded-lg border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] px-3 py-2 text-sm text-[#0A0A0A] outline-none focus:border-[#FF8280]"
             >
               <option value="">Any</option>
               {EXPERIENCE_LEVELS.map((level) => (
@@ -180,7 +180,7 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Union Status */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">
+            <h3 className="mb-2 text-sm font-semibold text-[#0A0A0A]">
               Union Status
             </h3>
             <div className="flex gap-2">
@@ -191,8 +191,8 @@ const ReaderFilters = ({ onClose }) => {
                   onClick={() => setUnionStatus(option)}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     unionStatus === option
-                      ? 'bg-[#0f0f1a] text-white'
-                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
+                      ? 'bg-transparent text-[#0A0A0A]'
+                      : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-gray-200'
                   }`}
                 >
                   {option}
@@ -203,7 +203,7 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Availability */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">
+            <h3 className="mb-2 text-sm font-semibold text-[#0A0A0A]">
               Availability
             </h3>
             <div className="flex gap-2">
@@ -214,8 +214,8 @@ const ReaderFilters = ({ onClose }) => {
                   onClick={() => setAvailability(option)}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     availability === option
-                      ? 'bg-[#0f0f1a] text-white'
-                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
+                      ? 'bg-transparent text-[#0A0A0A]'
+                      : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-gray-200'
                   }`}
                 >
                   {option}
@@ -226,13 +226,13 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Accent */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">
+            <h3 className="mb-2 text-sm font-semibold text-[#0A0A0A]">
               Accent
             </h3>
             <select
               value={accent}
               onChange={(e) => setAccent(e.target.value)}
-              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#FF8280]"
+              className="w-full rounded-lg border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] px-3 py-2 text-sm text-[#0A0A0A] outline-none focus:border-[#FF8280]"
             >
               <option value="">Any</option>
               {ACCENT_OPTIONS.map((a) => (
@@ -245,7 +245,7 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Age Range */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">
+            <h3 className="mb-2 text-sm font-semibold text-[#0A0A0A]">
               Age Range
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -256,8 +256,8 @@ const ReaderFilters = ({ onClose }) => {
                   onClick={() => setAgeRange(option)}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     ageRange === option
-                      ? 'bg-[#0f0f1a] text-white'
-                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
+                      ? 'bg-transparent text-[#0A0A0A]'
+                      : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-gray-200'
                   }`}
                 >
                   {option}
@@ -268,7 +268,7 @@ const ReaderFilters = ({ onClose }) => {
 
           {/* Gender */}
           <div>
-            <h3 className="mb-2 text-sm font-semibold text-white">
+            <h3 className="mb-2 text-sm font-semibold text-[#0A0A0A]">
               Gender
             </h3>
             <div className="flex flex-wrap gap-2">
@@ -279,8 +279,8 @@ const ReaderFilters = ({ onClose }) => {
                   onClick={() => setGender(option)}
                   className={`rounded-full px-3 py-1.5 text-xs font-medium transition-colors ${
                     gender === option
-                      ? 'bg-[#0f0f1a] text-white'
-                      : 'bg-[#2A2A2A] text-[#999999] hover:bg-gray-200'
+                      ? 'bg-transparent text-[#0A0A0A]'
+                      : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-gray-200'
                   }`}
                 >
                   {option}
@@ -295,14 +295,14 @@ const ReaderFilters = ({ onClose }) => {
           <button
             type="button"
             onClick={handleReset}
-            className="flex-1 rounded-lg border border-[#3A3A3A] px-4 py-2.5 text-sm font-medium text-[#999999] transition-colors hover:bg-[#1E1E1E]"
+            className="flex-1 rounded-lg border border-[rgba(10,10,10,0.14)] px-4 py-2.5 text-sm font-medium text-[rgba(10,10,10,0.62)] transition-colors hover:bg-[#1E1E1E]"
           >
             Reset
           </button>
           <button
             type="button"
             onClick={handleApply}
-            className="flex-1 rounded-lg bg-[#FF8280] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#ff6e6c]"
+            className="flex-1 rounded-lg bg-[#FF8280] px-4 py-2.5 text-sm font-medium text-[#0A0A0A] transition-colors hover:bg-[#ff6e6c]"
           >
             Apply Filters
           </button>

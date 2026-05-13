@@ -919,11 +919,17 @@ function AuditionsScreen() {
 
       {/* Add Audition Modal */}
       {showAddForm && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", padding: 16 }}>
-          <div style={{ background: BG_CARD, borderRadius: 20, border: `1px solid ${BORDER_ACTIVE}`, width: "100%", maxWidth: 400, maxHeight: "85vh", overflow: "auto", padding: 24 }}>
+        <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,10,0.45)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", padding: 16 }}>
+          <div style={{
+            background: 'var(--aurora-surface-solid)',
+            borderRadius: 24,
+            border: '1px solid var(--aurora-line)',
+            width: "100%", maxWidth: 400, maxHeight: "85vh", overflow: "auto", padding: 24,
+            boxShadow: 'var(--aurora-shadow-modal)',
+          }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>Add Audition</h2>
-              <button onClick={() => setShowAddForm(false)} style={{ background: "none", border: "none", color: TEXT_MUTED, fontSize: 22, cursor: "pointer", lineHeight: 1 }}>&times;</button>
+              <h2 className="aurora-display" style={{ fontSize: 20, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.3px' }}>Add Audition</h2>
+              <button onClick={() => setShowAddForm(false)} style={{ background: "none", border: "none", color: 'var(--aurora-dim)', fontSize: 24, cursor: "pointer", lineHeight: 1 }}>×</button>
             </div>
             {/* Scan Screenshot Button */}
             <button
@@ -932,18 +938,18 @@ function AuditionsScreen() {
               disabled={scanLoading}
               style={{
                 width: "100%", padding: "14px", borderRadius: 14, cursor: "pointer",
-                background: "linear-gradient(135deg, rgba(255, 130, 128,0.12), rgba(167,236,218,0.08))",
-                border: `1.5px dashed rgba(255, 130, 128,0.4)`,
+                background: "color-mix(in oklch, var(--aurora-accent) 8%, var(--aurora-surface-solid))",
+                border: `1.5px dashed color-mix(in oklch, var(--aurora-accent) 40%, transparent)`,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                 marginBottom: 20, transition: "all 0.2s",
               }}
             >
               {scanLoading ? (
-                <span style={{ fontSize: 13, fontWeight: 600, color: MINT }}>Scanning with AI...</span>
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--aurora-accent-deep)' }}>Scanning with AI...</span>
               ) : (
                 <>
                   <span style={{ fontSize: 18 }}>📸</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>Scan Screenshot with AI</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--aurora-text)' }}>Scan Screenshot with AI</span>
                 </>
               )}
             </button>
@@ -956,21 +962,21 @@ function AuditionsScreen() {
                 { key: "casting_director", label: "Casting Director", placeholder: "e.g. Jane Smith Casting" },
               ].map(f => (
                 <div key={f.key} style={{ marginBottom: 14 }}>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>{f.label}</label>
+                  <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--aurora-sub)', display: "block", marginBottom: 6 }}>{f.label}</label>
                   <input
                     value={addForm[f.key]}
                     onChange={(e) => setAddForm(prev => ({ ...prev, [f.key]: e.target.value }))}
                     placeholder={f.placeholder}
-                    style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                    style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: `1px solid var(--aurora-line)`, background: 'var(--aurora-surface-solid)', color: 'var(--aurora-text)', fontSize: 14, outline: "none", boxSizing: "border-box" }}
                   />
                 </div>
               ))}
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>Project Type</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--aurora-sub)', display: "block", marginBottom: 6 }}>Project Type</label>
                 <select
                   value={addForm.project_type}
                   onChange={(e) => setAddForm(prev => ({ ...prev, project_type: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: `1px solid var(--aurora-line)`, background: 'var(--aurora-surface-solid)', color: 'var(--aurora-text)', fontSize: 14, outline: "none" }}
                 >
                   {[["film","Film/TV"],["commercial","Commercial"],["theatrical","Theatrical"],["voiceover","Voiceover"],["theater","Theater"]].map(([v,l]) => (
                     <option key={v} value={v}>{l}</option>
@@ -978,30 +984,31 @@ function AuditionsScreen() {
                 </select>
               </div>
               <div style={{ marginBottom: 14 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>Callback Date</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--aurora-sub)', display: "block", marginBottom: 6 }}>Callback Date</label>
                 <input
                   type="date"
                   value={addForm.callback_date}
                   onChange={(e) => setAddForm(prev => ({ ...prev, callback_date: e.target.value }))}
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none", boxSizing: "border-box" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: `1px solid var(--aurora-line)`, background: 'var(--aurora-surface-solid)', color: 'var(--aurora-text)', fontSize: 14, outline: "none", boxSizing: "border-box" }}
                 />
               </div>
               <div style={{ marginBottom: 20 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: TEXT_SECONDARY, display: "block", marginBottom: 6 }}>Notes</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--aurora-sub)', display: "block", marginBottom: 6 }}>Notes</label>
                 <textarea
                   value={addForm.notes}
                   onChange={(e) => setAddForm(prev => ({ ...prev, notes: e.target.value }))}
                   rows={3}
                   placeholder="Any additional details..."
-                  style={{ width: "100%", padding: "10px 12px", borderRadius: 10, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box" }}
+                  style={{ width: "100%", padding: "10px 12px", borderRadius: 12, border: `1px solid var(--aurora-line)`, background: 'var(--aurora-surface-solid)', color: 'var(--aurora-text)', fontSize: 14, outline: "none", resize: "none", boxSizing: "border-box" }}
                 />
               </div>
               <button
                 type="submit"
                 disabled={addSaving || !addForm.project.trim()}
                 style={{
-                  width: "100%", padding: "14px", borderRadius: 12, border: "none", cursor: "pointer",
-                  background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
+                  width: "100%", padding: "14px", borderRadius: 14, border: "none", cursor: "pointer",
+                  background: `linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))`, color: "#fff",
+                  boxShadow: 'var(--aurora-shadow-coral)',
                   fontSize: 15, fontWeight: 700, opacity: addSaving || !addForm.project.trim() ? 0.5 : 1,
                 }}
               >
@@ -1406,8 +1413,14 @@ function ScenesScreen({ setTab }) {
     <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
-        <button style={{ width: 38, height: 38, borderRadius: 10, background: BG_ELEVATED, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
-          <Icon name="search" size={18} color={TEXT_SECONDARY} />
+        <button style={{
+          width: 38, height: 38, borderRadius: 12,
+          background: 'var(--aurora-glass)',
+          border: '1px solid var(--aurora-glass-border)',
+          backdropFilter: 'blur(12px)',
+          display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+        }}>
+          <Icon name="search" size={16} color="var(--aurora-text)" />
         </button>
       </div>
 
@@ -1443,20 +1456,23 @@ function ScenesScreen({ setTab }) {
       {/* Confirm delete dialog */}
       {confirmDelete && (
         <>
-          <div onClick={() => setConfirmDelete(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 100 }} />
+          <div onClick={() => setConfirmDelete(null)} style={{ position: "fixed", inset: 0, background: "rgba(10,10,10,0.45)", backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', zIndex: 100 }} />
           <div style={{
             position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 101,
-            background: BG_DEEP, borderRadius: "20px 20px 0 0", padding: "20px 20px 40px",
+            background: 'var(--aurora-surface-solid)',
+            borderRadius: "24px 24px 0 0",
+            padding: "20px 20px calc(40px + env(safe-area-inset-bottom, 0px))",
+            boxShadow: 'var(--aurora-shadow-modal)',
           }}>
-            <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(167,236,218,0.15)", margin: "0 auto 20px" }} />
-            <p style={{ fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY, margin: "0 0 6px", textAlign: "center" }}>Delete Script?</p>
-            <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "0 0 24px", textAlign: "center" }}>
+            <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--aurora-line)", margin: "0 auto 20px" }} />
+            <p className="aurora-display" style={{ fontSize: 18, color: 'var(--aurora-text)', margin: "0 0 6px", textAlign: "center", letterSpacing: '-0.3px' }}>Delete Script?</p>
+            <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "0 0 24px", textAlign: "center" }}>
               "{confirmDelete.title}" will be permanently removed.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => setConfirmDelete(null)} style={{
-                flex: 1, padding: "14px", borderRadius: 14, border: `1px solid ${BORDER_ACTIVE}`,
-                background: BG_ELEVATED, color: TEXT_PRIMARY, fontSize: 14, fontWeight: 600, cursor: "pointer",
+                flex: 1, padding: "14px", borderRadius: 14, border: `1px solid var(--aurora-line)`,
+                background: 'var(--aurora-surface-solid)', color: 'var(--aurora-text)', fontSize: 14, fontWeight: 600, cursor: "pointer",
               }}>Cancel</button>
               <button
                 onClick={async () => {
@@ -2063,27 +2079,28 @@ export default function DrSelfTapeApp() {
           {/* Modal */}
           <div style={{
             position: 'absolute', bottom: 80, left: 16, right: 16,
-            background: 'linear-gradient(145deg, #1a0d24, #0f0f1a)',
-            border: '1px solid rgba(255, 130, 128,0.5)',
-            borderRadius: 24, padding: '28px 24px', textAlign: 'center',
+            background: 'var(--aurora-surface-solid)',
+            border: '1px solid var(--aurora-line)',
+            borderRadius: 28, padding: '28px 24px', textAlign: 'center',
             animation: 'celebrationPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
-            boxShadow: '0 0 60px rgba(255, 130, 128,0.3)',
+            boxShadow: '0 24px 60px rgba(212,168,95,0.30), var(--aurora-shadow-modal)',
             pointerEvents: 'all',
           }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🎬</div>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#f2f0ed', margin: '0 0 8px', fontFamily: "'Playfair Display', serif" }}>
+            <h2 className="aurora-display" style={{ fontSize: 22, color: 'var(--aurora-text)', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
               Welcome to Dr Self Tape
             </h2>
-            <p style={{ fontSize: 14, color: '#8a9a96', margin: '0 0 20px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 14, color: 'var(--aurora-sub)', margin: '0 0 20px', lineHeight: 1.5 }}>
               Your membership is active. Tokens are ready to use.
             </p>
             <button
               onClick={() => setShowCelebration(false)}
               style={{
-                background: 'linear-gradient(135deg, #FF8280, #9333ea)',
+                background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
                 border: 'none', borderRadius: 14, padding: '14px 32px',
                 fontSize: 15, fontWeight: 700, color: 'white', cursor: 'pointer',
                 width: '100%',
+                boxShadow: 'var(--aurora-shadow-coral)',
               }}
             >
               Start Rehearsing 🎭

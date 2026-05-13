@@ -157,8 +157,8 @@ export default function RecordTake({ onBack }) {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Record Your Take</h2>
-        <p className="text-[#999999] text-sm mt-1">
+        <h2 className="text-2xl font-bold text-[#0A0A0A]">Record Your Take</h2>
+        <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
           {status === 'idle' && 'Position yourself and hit record'}
           {status === 'recording' && 'Recording in progress...'}
           {status === 'recorded' && 'Review your take below'}
@@ -206,7 +206,7 @@ export default function RecordTake({ onBack }) {
             <button
               onClick={startRecording}
               disabled={!!cameraError}
-              className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="6" />
@@ -215,7 +215,7 @@ export default function RecordTake({ onBack }) {
             </button>
             <button
               onClick={onBack}
-              className="px-5 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] hover:bg-[#2A2A2A] rounded-lg transition-colors cursor-pointer"
+              className="px-5 py-3 text-sm font-semibold text-[rgba(10,10,10,0.62)] bg-[#F4F4EE] hover:bg-[#F4F4EE] rounded-lg transition-colors cursor-pointer"
             >
               Back to Practice
             </button>
@@ -225,7 +225,7 @@ export default function RecordTake({ onBack }) {
         {status === 'recording' && (
           <button
             onClick={stopRecording}
-            className="flex-1 bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 bg-red-600 hover:bg-red-700 text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <rect x="6" y="6" width="12" height="12" rx="1" />
@@ -239,7 +239,7 @@ export default function RecordTake({ onBack }) {
             {/* Save to Phone — primary CTA */}
             <button
               onClick={() => handleSaveToPhone()}
-              className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -250,7 +250,7 @@ export default function RecordTake({ onBack }) {
             {/* Trim */}
             <button
               onClick={() => setStatus('trimming')}
-              className="flex-1 bg-[#1E1E1E] border border-[#3A3A3A] hover:border-[#FF8280]/50 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 bg-[#1E1E1E] border border-[rgba(10,10,10,0.14)] hover:border-[#FF8280]/50 text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               ✂️ Trim
             </button>
@@ -259,14 +259,14 @@ export default function RecordTake({ onBack }) {
             <button
               onClick={handleSave}
               disabled={saving || saved}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
             >
               {saved ? '✓ Saved!' : saving ? 'Saving...' : 'Save to Auditions'}
             </button>
 
             <button
               onClick={handleRedo}
-              className="px-5 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] rounded-lg transition-colors cursor-pointer"
+              className="px-5 py-3 text-sm font-semibold text-[rgba(10,10,10,0.62)] bg-[#F4F4EE] rounded-lg transition-colors cursor-pointer"
             >
               Redo
             </button>

@@ -23,8 +23,8 @@ export default function RolePicker({
     <div className="max-w-2xl mx-auto">
       {/* Role selection */}
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Pick Your Role</h2>
-        <p className="text-[#999999] text-sm mt-1">
+        <h2 className="text-2xl font-bold text-[#0A0A0A]">Pick Your Role</h2>
+        <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
           Select the character you'll be reading for
         </p>
       </div>
@@ -45,12 +45,12 @@ export default function RolePicker({
                 className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                   isSelected
                     ? 'border-[#FF8280] bg-[#FF8280]/10 text-[#FF8280] shadow-sm'
-                    : 'border-[#3A3A3A] bg-[#1E1E1E] text-[#999999] hover:border-gray-300'
+                    : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] text-[rgba(10,10,10,0.62)] hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <svg
-                    className={`w-5 h-5 ${isSelected ? 'text-[#FF8280]' : 'text-[#666666]'}`}
+                    className={`w-5 h-5 ${isSelected ? 'text-[#FF8280]' : 'text-[rgba(10,10,10,0.4)]'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -74,12 +74,12 @@ export default function RolePicker({
       )}
 
       {/* Divider */}
-      <div className="mt-8 mb-6 border-t border-[#2A2A2A]" />
+      <div className="mt-8 mb-6 border-t border-[rgba(10,10,10,0.08)]" />
 
       {/* AI Voice selection */}
       <div className="mb-5">
-        <h3 className="text-base font-bold text-white mb-1">Choose Your AI Scene Partner's Voice</h3>
-        <p className="text-[#999999] text-sm">
+        <h3 className="text-base font-bold text-[#0A0A0A] mb-1">Choose Your AI Scene Partner's Voice</h3>
+        <p className="text-[rgba(10,10,10,0.62)] text-sm">
           This voice will read the other character's lines during practice and Live Study Mode.
         </p>
       </div>
@@ -94,19 +94,19 @@ export default function RolePicker({
               className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
                 isSelected
                   ? 'border-[#FF8280] bg-[#FF8280]/10 shadow-sm'
-                  : 'border-[#3A3A3A] bg-[#1E1E1E] hover:border-gray-300'
+                  : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] hover:border-gray-300'
               }`}
             >
               <span className="text-2xl">{v.emoji}</span>
               <div className="flex-1 min-w-0">
-                <div className={`font-semibold text-sm ${isSelected ? 'text-[#FF8280]' : 'text-white'}`}>
+                <div className={`font-semibold text-sm ${isSelected ? 'text-[#FF8280]' : 'text-[#0A0A0A]'}`}>
                   {v.label}
                 </div>
-                <div className="text-xs text-[#999999] truncate">{v.desc}</div>
+                <div className="text-xs text-[rgba(10,10,10,0.62)] truncate">{v.desc}</div>
               </div>
               <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                <span className="px-2 py-0.5 rounded-full bg-[#2A2A2A] text-[10px] text-[#999999]">{v.gender}</span>
-                <span className="px-2 py-0.5 rounded-full bg-[#2A2A2A] text-[10px] text-[#999999]">{v.accent}</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#F4F4EE] text-[10px] text-[rgba(10,10,10,0.62)]">{v.gender}</span>
+                <span className="px-2 py-0.5 rounded-full bg-[#F4F4EE] text-[10px] text-[rgba(10,10,10,0.62)]">{v.accent}</span>
               </div>
             </button>
           );
@@ -116,14 +116,14 @@ export default function RolePicker({
       <div className="flex gap-3 mt-6">
         <button
           onClick={onBack}
-          className="flex-1 px-4 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] hover:bg-[#2A2A2A] rounded-lg transition-colors cursor-pointer"
+          className="flex-1 px-4 py-3 text-sm font-semibold text-[rgba(10,10,10,0.62)] bg-[#F4F4EE] hover:bg-[#F4F4EE] rounded-lg transition-colors cursor-pointer"
         >
           Back
         </button>
         <button
           onClick={onStart}
           disabled={!selectedRole}
-          className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Start Practice
         </button>
