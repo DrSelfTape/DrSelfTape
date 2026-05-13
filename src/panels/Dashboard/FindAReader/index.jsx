@@ -101,33 +101,45 @@ const FindAReader = () => {
 
   return (
     <div
-      className="flex min-h-screen flex-col items-center px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))]"
-      style={{ background: 'var(--bg-deep)' }}
+      className="aurora-orbs flex min-h-screen flex-col items-center px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))]"
+      style={{ background: 'var(--aurora-bg)' }}
     >
       {/* Nav bar */}
-      <div
-        className="flex w-full max-w-sm items-center justify-between mb-4 px-1"
-      >
-        <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Find a Reader</h1>
+      <div className="flex w-full max-w-sm items-end justify-between mb-4 px-1">
+        <div>
+          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>FIND A READER</span>
+          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
+            Match
+          </h1>
+        </div>
         <button
           onClick={() => setShowFilters(true)}
-          className="flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-medium text-white transition-colors"
-          style={{ background: 'rgba(255,255,255,0.1)' }}
+          className="aurora-mono flex items-center gap-1.5 rounded-full px-3.5 py-1.5"
+          style={{
+            background: 'var(--aurora-glass)',
+            border: '1px solid var(--aurora-glass-border)',
+            color: 'var(--aurora-text)',
+            fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+            backdropFilter: 'blur(12px)',
+          }}
         >
-          <Filter size={14} />
+          <Filter size={12} />
           Filters
         </button>
       </div>
 
       {/* Photo required gate */}
       {!hasPhoto && !readersLoading && (
-        <div className="w-full max-w-sm flex flex-col items-center text-center py-12 px-6">
-          <div className="w-20 h-20 rounded-full bg-[#FF8280]/10 flex items-center justify-center mb-4">
-            <Camera className="w-10 h-10 text-[#FF8280]" />
+        <div className="aurora-glass w-full max-w-sm flex flex-col items-center text-center p-8 mt-4">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5" style={{
+            background: 'color-mix(in oklch, var(--aurora-accent) 18%, transparent)',
+          }}>
+            <Camera className="w-9 h-9" style={{ color: 'var(--aurora-accent)' }} />
           </div>
-          <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Add a Headshot to Start</h2>
-          <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
-            Other actors want to see who they're reading with. Upload a photo to start matching.
+          <span className="aurora-eyebrow mb-2">STEP 1</span>
+          <h2 className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>Add a headshot</h2>
+          <p className="text-sm mb-6" style={{ color: 'var(--aurora-sub)' }}>
+            Other actors want to see who they're reading with.
           </p>
           <input
             ref={fileInputRef}
@@ -139,9 +151,14 @@ const FindAReader = () => {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm disabled:opacity-50"
+            className="aurora-mono px-8 py-3 rounded-full text-white transition-all disabled:opacity-50"
+            style={{
+              background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
+              fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+              boxShadow: 'var(--aurora-shadow-coral)',
+            }}
           >
-            {uploading ? 'Uploading...' : 'Upload Photo'}
+            {uploading ? 'Uploading…' : 'Upload Photo'}
           </button>
           <button
             onClick={() => {
@@ -152,8 +169,8 @@ const FindAReader = () => {
                 navigate('/dashboard/profile');
               }
             }}
-            className="mt-3 text-xs hover:text-white transition-colors"
-            style={{ color: 'var(--text-secondary)' }}
+            className="mt-3 text-xs transition-colors"
+            style={{ color: 'var(--aurora-sub)' }}
           >
             Or update your full profile
           </button>
@@ -162,11 +179,15 @@ const FindAReader = () => {
 
       {/* Online count badge */}
       {hasPhoto && !readersLoading && readers.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-5">
-          <Users size={14} color="#A7ECDA" />
-          <span className="text-sm" style={{ color: '#A7ECDA' }}>
-            {onlineCount ?? readers.length} readers online
-          </span>
+        <div className="aurora-mono flex items-center gap-1.5 mb-5 px-3 py-1.5 rounded-full" style={{
+          background: 'color-mix(in oklch, var(--aurora-mint) 18%, transparent)',
+          border: '1px solid color-mix(in oklch, var(--aurora-mint) 35%, transparent)',
+          color: 'color-mix(in oklch, var(--aurora-mint) 80%, var(--aurora-text))',
+          fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+          backdropFilter: 'blur(12px)',
+        }}>
+          <Users size={11} />
+          {onlineCount ?? readers.length} readers online
         </div>
       )}
 
@@ -182,18 +203,26 @@ const FindAReader = () => {
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-              style={{ background: 'var(--border-default)' }}
+              style={{
+                background: 'var(--aurora-glass)',
+                border: '1px solid var(--aurora-glass-border)',
+                backdropFilter: 'blur(12px)',
+              }}
             >
-              <Users size={32} color="#9CA3AF" />
+              <Users size={28} color="var(--aurora-sub)" />
             </div>
-            <p className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>No more readers</p>
-            <p className="text-sm mb-5" style={{ color: 'var(--text-secondary)' }}>
+            <p className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>You're caught up</p>
+            <p className="text-sm mb-5" style={{ color: 'var(--aurora-sub)' }}>
               Check back later or adjust your filters.
             </p>
             <button
               onClick={() => { setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
-              className="px-6 py-2.5 rounded-full text-sm font-semibold text-white transition-transform active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
+              className="aurora-mono px-6 py-2.5 rounded-full text-white transition-transform active:scale-95"
+              style={{
+                background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
+                fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+                boxShadow: 'var(--aurora-shadow-coral)',
+              }}
             >
               Refresh
             </button>
