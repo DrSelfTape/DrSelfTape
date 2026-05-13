@@ -32,10 +32,10 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
               ? 'rounded-br-md'
               : 'rounded-bl-md'
           }`}
-          style={isOwn ? { background: 'linear-gradient(135deg, #C855F0, #E88BF5)', color: 'white' } : { background: 'var(--border-default)', color: 'var(--text-primary)' }}
+          style={isOwn ? { background: 'linear-gradient(135deg, #FF8280, #E88BF5)', color: 'white' } : { background: 'var(--border-default)', color: 'var(--text-primary)' }}
         >
           {!isOwn && message.senderName && (
-            <p className="text-[10px] font-semibold mb-1 text-[#C855F0]">{message.senderName}</p>
+            <p className="text-[10px] font-semibold mb-1 text-[#FF8280]">{message.senderName}</p>
           )}
           <a
             href={fileUrl}
@@ -43,8 +43,8 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
             rel="noreferrer"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isOwn ? 'bg-white/20' : 'bg-[#C855F0]/20'}`}>
-              <FileText size={18} className={isOwn ? 'text-white' : 'text-[#C855F0]'} />
+            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isOwn ? 'bg-white/20' : 'bg-[#FF8280]/20'}`}>
+              <FileText size={18} className={isOwn ? 'text-white' : 'text-[#FF8280]'} />
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium truncate">{fileName}</p>
@@ -63,8 +63,8 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3 items-end gap-2`}>
       {!isOwn && (
-        <div className="w-7 h-7 rounded-full bg-[#C855F0]/20 flex items-center justify-center shrink-0 mb-1">
-          <span className="text-[#C855F0] text-[9px] font-bold">
+        <div className="w-7 h-7 rounded-full bg-[#FF8280]/20 flex items-center justify-center shrink-0 mb-1">
+          <span className="text-[#FF8280] text-[9px] font-bold">
             {(message.senderName || 'R').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
           </span>
         </div>
@@ -73,10 +73,10 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
         className={`max-w-[72%] rounded-2xl px-4 py-2.5 ${
           isOwn ? 'rounded-br-sm' : 'rounded-bl-sm'
         }`}
-        style={isOwn ? { background: 'linear-gradient(135deg, #C855F0, #E88BF5)' } : { background: 'var(--border-default)' }}
+        style={isOwn ? { background: 'linear-gradient(135deg, #FF8280, #E88BF5)' } : { background: 'var(--border-default)' }}
       >
         {!isOwn && message.senderName && (
-          <p className="text-[10px] font-semibold mb-0.5 text-[#C855F0]">{message.senderName}</p>
+          <p className="text-[10px] font-semibold mb-0.5 text-[#FF8280]">{message.senderName}</p>
         )}
         <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{text}</p>
         <p className={`text-[10px] mt-1 text-right ${isOwn ? 'text-white/60' : ''}`} style={!isOwn ? { color: 'var(--text-muted)' } : {}}>

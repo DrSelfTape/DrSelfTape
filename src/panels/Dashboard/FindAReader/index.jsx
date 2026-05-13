@@ -122,8 +122,8 @@ const FindAReader = () => {
       {/* Photo required gate */}
       {!hasPhoto && !readersLoading && (
         <div className="w-full max-w-sm flex flex-col items-center text-center py-12 px-6">
-          <div className="w-20 h-20 rounded-full bg-[#C855F0]/10 flex items-center justify-center mb-4">
-            <Camera className="w-10 h-10 text-[#C855F0]" />
+          <div className="w-20 h-20 rounded-full bg-[#FF8280]/10 flex items-center justify-center mb-4">
+            <Camera className="w-10 h-10 text-[#FF8280]" />
           </div>
           <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Add a Headshot to Start</h2>
           <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>
@@ -139,7 +139,7 @@ const FindAReader = () => {
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm disabled:opacity-50"
+            className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm disabled:opacity-50"
           >
             {uploading ? 'Uploading...' : 'Upload Photo'}
           </button>
@@ -174,7 +174,7 @@ const FindAReader = () => {
       {hasPhoto && <div className="relative flex w-full max-w-[340px] items-start justify-center" style={{ minHeight: 520 }}>
         {readersLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 size={36} color="#C855F0" className="animate-spin" />
+            <Loader2 size={36} color="#FF8280" className="animate-spin" />
           </div>
         )}
 
@@ -193,7 +193,7 @@ const FindAReader = () => {
             <button
               onClick={() => { setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
               className="px-6 py-2.5 rounded-full text-sm font-semibold text-white transition-transform active:scale-95"
-              style={{ background: 'linear-gradient(135deg, #C855F0, #E88BF5)' }}
+              style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
             >
               Refresh
             </button>

@@ -41,7 +41,7 @@ export default function PostCallScreen({ partnerName, onClose }) {
       <div className="max-w-md w-full px-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-[#C855F0]/15 flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 rounded-full bg-[#FF8280]/15 flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">🎬</span>
           </div>
           <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)', fontFamily: "'Playfair Display', serif" }}>
@@ -94,9 +94,9 @@ export default function PostCallScreen({ partnerName, onClose }) {
                   onClick={() => { setTipAmount(a); setCustomTip(''); }}
                   className="py-2.5 rounded-lg text-sm font-bold transition-all"
                   style={{
-                    background: tipAmount === a ? '#C855F0' : 'var(--bg-input)',
+                    background: tipAmount === a ? '#FF8280' : 'var(--bg-input)',
                     color: tipAmount === a ? '#fff' : 'var(--text-primary)',
-                    border: tipAmount === a ? '2px solid #C855F0' : '1px solid var(--border-active)',
+                    border: tipAmount === a ? '2px solid #FF8280' : '1px solid var(--border-active)',
                   }}
                 >
                   ${a}
@@ -122,7 +122,7 @@ export default function PostCallScreen({ partnerName, onClose }) {
               onClick={handleSendTip}
               disabled={sending || (!tipAmount && !customTip)}
               className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-40"
-              style={{ background: '#C855F0' }}
+              style={{ background: '#FF8280' }}
             >
               {sending ? 'Processing...' : `Send $${tipAmount || customTip || '0'} Tip`}
             </button>

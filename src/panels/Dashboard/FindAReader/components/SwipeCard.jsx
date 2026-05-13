@@ -112,10 +112,10 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               alt={actor.name}
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
               draggable={false}
-              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1a0a2e 0%,#0f0f1a 50%,#0a1a0a 100%);display:flex;align-items:center;justify-content:center"><span style="font-size:${isMobile ? 120 : 80}px;font-weight:800;color:rgba(200,85,240,0.3);user-select:none">${initials}</span></div>`); }}
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1a0a2e 0%,#0f0f1a 50%,#0a1a0a 100%);display:flex;align-items:center;justify-content:center"><span style="font-size:${isMobile ? 120 : 80}px;font-weight:800;color:rgba(255, 130, 128,0.3);user-select:none">${initials}</span></div>`); }}
             />
             {/* Brand gradient overlay */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(200,85,240,0.12) 0%, transparent 50%, rgba(167,236,218,0.08) 100%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255, 130, 128,0.12) 0%, transparent 50%, rgba(167,236,218,0.08) 100%)', pointerEvents: 'none' }} />
           </>
         ) : (
           <div style={{
@@ -123,7 +123,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
             background: 'linear-gradient(160deg, #1a0a2e 0%, #0f0f1a 50%, #0a1a0a 100%)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <span style={{ fontSize: isMobile ? 120 : 80, fontWeight: 800, color: 'rgba(200,85,240,0.3)', userSelect: 'none' }}>
+            <span style={{ fontSize: isMobile ? 120 : 80, fontWeight: 800, color: 'rgba(255, 130, 128,0.3)', userSelect: 'none' }}>
               {initials}
             </span>
           </div>
@@ -152,13 +152,13 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* ── SLATE stamp (swipe right) */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, left: 20,
-        border: '2.5px solid #C855F0', color: '#C855F0',
+        border: '2.5px solid #FF8280', color: '#FF8280',
         fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
         padding: '4px 14px', borderRadius: 6,
         opacity: slateOpacity,
         transform: 'rotate(-12deg)',
         pointerEvents: 'none',
-        textShadow: '0 0 20px rgba(200,85,240,0.5)',
+        textShadow: '0 0 20px rgba(255, 130, 128,0.5)',
       }}>SLATE</div>
 
       {/* ── PASS stamp (swipe left) */}
@@ -185,8 +185,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
           </h3>
           {unionLabel && (
             <span style={{
-              background: 'rgba(200,85,240,0.2)', border: '1px solid rgba(200,85,240,0.4)',
-              color: '#C855F0', fontSize: 10, fontWeight: 700,
+              background: 'rgba(255, 130, 128,0.2)', border: '1px solid rgba(255, 130, 128,0.4)',
+              color: '#FF8280', fontSize: 10, fontWeight: 700,
               padding: '2px 8px', borderRadius: 20,
             }}>{unionLabel}</span>
           )}
@@ -273,11 +273,11 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onClick={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               style={{
                 width: 52, height: 52, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #C855F0, #B045D8)',
+                background: 'linear-gradient(135deg, #FF8280, #B045D8)',
                 border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 20, cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(200,85,240,0.25)',
+                boxShadow: '0 4px 16px rgba(255, 130, 128,0.25)',
               }}
             >🎬</button>
           </div>

@@ -181,7 +181,7 @@ export default function CDSim() {
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                   i <= currentStepIdx
-                    ? 'bg-[#C855F0] text-white'
+                    ? 'bg-[#FF8280] text-white'
                     : 'bg-[#2A2A2A] text-[#666666]'
                 }`}
               >
@@ -197,7 +197,7 @@ export default function CDSim() {
               {i < STEPS.length - 1 && (
                 <div
                   className={`w-8 h-0.5 ${
-                    i < currentStepIdx ? 'bg-[#C855F0]' : 'bg-[#2A2A2A]'
+                    i < currentStepIdx ? 'bg-[#FF8280]' : 'bg-[#2A2A2A]'
                   }`}
                 />
               )}
@@ -237,7 +237,7 @@ export default function CDSim() {
 
       {step === 'analyzing' && (
         <div className="flex flex-col items-center justify-center py-24">
-          <div className="w-12 h-12 border-4 border-[#C855F0] border-t-transparent rounded-full animate-spin mb-6" />
+          <div className="w-12 h-12 border-4 border-[#FF8280] border-t-transparent rounded-full animate-spin mb-6" />
           <h2 className="text-xl font-semibold text-white mb-2">Your coach is reviewing your scene...</h2>
           <p className="text-[#999999] text-sm">
             Breaking down the beats, choices, and moments. Preparing your notes.
@@ -250,7 +250,7 @@ export default function CDSim() {
                   setError('');
                   setStep('analyzing');
                 }}
-                className="px-6 py-3 rounded-xl bg-[#C855F0] text-white font-semibold hover:bg-[#A040C8] transition-colors"
+                className="px-6 py-3 rounded-xl bg-[#FF8280] text-white font-semibold hover:bg-[#A040C8] transition-colors"
               >
                 Retry
               </button>

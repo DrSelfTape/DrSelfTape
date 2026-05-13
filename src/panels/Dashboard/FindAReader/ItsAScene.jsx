@@ -18,7 +18,7 @@ const ItsAScene = (props = {}) => {
     <div
       className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
       style={{
-        background: 'linear-gradient(160deg, #C855F0 0%, #9B30FF 50%, #1A1A1A 100%)',
+        background: 'linear-gradient(160deg, #FF8280 0%, #9B30FF 50%, #1A1A1A 100%)',
       }}
     >
       {/* Headshots */}
@@ -31,7 +31,7 @@ const ItsAScene = (props = {}) => {
         </div>
         <div
           className="w-32 h-32 rounded-full border-4 border-white shadow-2xl flex items-center justify-center -ml-6"
-          style={{ background: 'linear-gradient(135deg, #C855F0, #E88BF5)' }}
+          style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
         >
           <span className="text-3xl font-bold text-white">{theirInitials}</span>
         </div>
@@ -58,7 +58,7 @@ const ItsAScene = (props = {}) => {
       <button
         onClick={() => props.onGoToGreenRoom ? props.onGoToGreenRoom(matchId) : navigate(`/dashboard/green-room/${matchId}`)}
         className="font-bold px-10 py-3.5 rounded-full shadow-xl text-lg transition-transform active:scale-95"
-        style={{ color: '#C855F0', background: 'white' }}
+        style={{ color: '#FF8280', background: 'white' }}
       >
         Go to Green Room
       </button>

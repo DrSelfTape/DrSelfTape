@@ -127,15 +127,15 @@ const SceneNavigator = ({
       className="rounded-xl border px-4 py-3 mb-3"
       style={{
         background: '#0f0f1a',
-        borderColor: sceneComplete ? 'rgba(200,85,240,0.4)' : '#1E1E1E',
-        boxShadow: sceneComplete ? '0 0 20px rgba(200,85,240,0.1)' : 'none',
+        borderColor: sceneComplete ? 'rgba(255, 130, 128,0.4)' : '#1E1E1E',
+        boxShadow: sceneComplete ? '0 0 20px rgba(255, 130, 128,0.1)' : 'none',
       }}
     >
       {/* Top row: scene count + title */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <BookOpen size={14} style={{ color: '#C855F0' }} />
-          <span className="text-xs font-semibold" style={{ color: '#C855F0' }}>
+          <BookOpen size={14} style={{ color: '#FF8280' }} />
+          <span className="text-xs font-semibold" style={{ color: '#FF8280' }}>
             Scene {currentScene.sceneNumber} of {totalScenes}
           </span>
           {sceneComplete && (
@@ -161,7 +161,7 @@ const SceneNavigator = ({
               width: `${sceneProgress}%`,
               background: sceneComplete
                 ? 'linear-gradient(90deg, #22C55E, #4ADE80)'
-                : 'linear-gradient(90deg, #C855F0, #E88BF5)',
+                : 'linear-gradient(90deg, #FF8280, #E88BF5)',
             }}
           />
         </div>
@@ -197,7 +197,7 @@ const SceneNavigator = ({
                   width: isActive ? 20 : 8,
                   height: 8,
                   borderRadius: 4,
-                  background: scDone ? '#22C55E' : isActive ? '#C855F0' : '#2A2A2A',
+                  background: scDone ? '#22C55E' : isActive ? '#FF8280' : '#2A2A2A',
                   border: 'none',
                   cursor: 'pointer',
                   padding: 0,
@@ -240,11 +240,11 @@ const SceneNavigator = ({
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ml-auto disabled:opacity-40"
             style={{
               background: sceneComplete
-                ? 'linear-gradient(135deg, #C855F0, #E88BF5)'
+                ? 'linear-gradient(135deg, #FF8280, #E88BF5)'
                 : '#1A1A1A',
               border: sceneComplete ? 'none' : '1px solid #2A2A2A',
               color: sceneComplete ? '#fff' : '#666666',
-              boxShadow: sceneComplete ? '0 3px 12px rgba(200,85,240,0.35)' : 'none',
+              boxShadow: sceneComplete ? '0 3px 12px rgba(255, 130, 128,0.35)' : 'none',
             }}
           >
             {sceneComplete ? 'Move to Next Scene' : 'Next Scene'}

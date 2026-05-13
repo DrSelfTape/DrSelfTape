@@ -42,7 +42,7 @@ const Favorites = () => {
 
         {favoritesLoading && (
           <div className="flex h-60 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#C855F0]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#FF8280]" />
           </div>
         )}
 

@@ -167,7 +167,7 @@ const ReaderFilters = ({ onClose }) => {
             <select
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
-              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#C855F0]"
+              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#FF8280]"
             >
               <option value="">Any</option>
               {EXPERIENCE_LEVELS.map((level) => (
@@ -232,7 +232,7 @@ const ReaderFilters = ({ onClose }) => {
             <select
               value={accent}
               onChange={(e) => setAccent(e.target.value)}
-              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#C855F0]"
+              className="w-full rounded-lg border border-[#3A3A3A] bg-[#2A2A2A] px-3 py-2 text-sm text-white outline-none focus:border-[#FF8280]"
             >
               <option value="">Any</option>
               {ACCENT_OPTIONS.map((a) => (
@@ -302,7 +302,7 @@ const ReaderFilters = ({ onClose }) => {
           <button
             type="button"
             onClick={handleApply}
-            className="flex-1 rounded-lg bg-[#C855F0] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#ff6e6c]"
+            className="flex-1 rounded-lg bg-[#FF8280] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#ff6e6c]"
           >
             Apply Filters
           </button>

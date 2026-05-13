@@ -15,7 +15,7 @@ const NOTIF_ICONS = {
 };
 
 const NOTIF_COLORS = {
-  scene_partner_like: '#C855F0',
+  scene_partner_like: '#FF8280',
   scene_partner_match: '#A7ECDA',
   rehearsal_started: '#eab308',
   new_message: '#60A5FA',
@@ -79,10 +79,10 @@ export default function NotificationBell({ onNavigate }) {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border-default)' }}>
         <div className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-[#C855F0]" />
+          <Bell className="w-4 h-4 text-[#FF8280]" />
           <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
           {unread.length > 0 && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#C855F0]/15 text-[#C855F0]">{unread.length} new</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FF8280]/15 text-[#FF8280]">{unread.length} new</span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export default function NotificationBell({ onNavigate }) {
               }}
               disabled={markingAll}
               className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
-              style={{ color: '#C855F0', background: 'rgba(200,85,240,0.08)' }}
+              style={{ color: '#FF8280', background: 'rgba(255, 130, 128,0.08)' }}
             >
               <CheckCheck className="w-3 h-3" />
               {markingAll ? 'Marking...' : unread.length === 1 ? 'Mark read' : 'Mark all read'}
@@ -113,7 +113,7 @@ export default function NotificationBell({ onNavigate }) {
       <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-[#C855F0]/30 border-t-[#C855F0] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#FF8280]/30 border-t-[#FF8280] rounded-full animate-spin" />
           </div>
         )}
         {!loading && sorted.length === 0 && (
@@ -132,7 +132,7 @@ export default function NotificationBell({ onNavigate }) {
           return (
             <div key={notif.id} onClick={() => handleClick(notif)}
               className="flex items-start gap-3 px-5 py-4 cursor-pointer transition-colors"
-              style={{ background: isUnread ? 'rgba(200,85,240,0.04)' : 'transparent', borderBottom: '1px solid var(--border-default)' }}
+              style={{ background: isUnread ? 'rgba(255, 130, 128,0.04)' : 'transparent', borderBottom: '1px solid var(--border-default)' }}
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15` }}>
                 <Icon className="w-5 h-5" style={{ color }} />
@@ -142,7 +142,7 @@ export default function NotificationBell({ onNavigate }) {
                   <p className={`text-sm leading-snug ${isUnread ? 'font-semibold' : 'font-medium'}`} style={{ color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                     {notif.title}
                   </p>
-                  {isUnread && <span className="w-2.5 h-2.5 rounded-full bg-[#C855F0] shrink-0 mt-1.5" />}
+                  {isUnread && <span className="w-2.5 h-2.5 rounded-full bg-[#FF8280] shrink-0 mt-1.5" />}
                 </div>
                 {notif.message && <p className="text-xs mt-1 line-clamp-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{notif.message}</p>}
                 <p className="text-[11px] mt-1.5 font-medium" style={{ color: 'var(--text-dim)' }}>{timeAgo(notif.created_at)}</p>
@@ -167,7 +167,7 @@ export default function NotificationBell({ onNavigate }) {
       >
         <Bell className="w-[18px] h-[18px]" style={{ color: 'var(--text-secondary)' }} />
         {unread.length > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] rounded-full bg-[#C855F0] text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg shadow-[#C855F0]/30">
+          <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] rounded-full bg-[#FF8280] text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg shadow-[#FF8280]/30">
             {unread.length > 9 ? '9+' : unread.length}
           </span>
         )}

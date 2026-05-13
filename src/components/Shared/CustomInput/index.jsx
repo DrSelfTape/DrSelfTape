@@ -44,7 +44,7 @@ export const CustomInput = ({
   const bgClass   = dark ? 'bg-[#111318]' : (disabled ? 'bg-input-disabled cursor-not-allowed text-input-placeholder' : 'bg-white');
   const textClass = dark ? 'text-white placeholder-[#555]' : 'text-black';
   const borderBase = dark
-    ? 'border-[#2a2d35] hover:border-[#C855F0]/60 focus:border-[#C855F0]'
+    ? 'border-[#2a2d35] hover:border-[#FF8280]/60 focus:border-[#FF8280]'
     : 'border-input hover:border-input-hover focus:border-input-active';
   const borderErr = 'border-danger focus:border-danger';
   const labelBg   = dark ? 'bg-[#111318]' : 'bg-white';

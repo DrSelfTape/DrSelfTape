@@ -38,7 +38,7 @@ export default function TutorialAchievement({ show, onClose }) {
             width: i % 3 === 0 ? 10 : 8,
             height: i % 3 === 0 ? 10 : 14,
             borderRadius: i % 2 === 0 ? '50%' : '2px',
-            background: ['#C855F0', '#A7ECDA', '#FCE072', '#FFB49A', '#22c55e', '#ffffff'][i % 6],
+            background: ['#FF8280', '#A7ECDA', '#FCE072', '#FFB49A', '#22c55e', '#ffffff'][i % 6],
             animation: `confettiFall ${1.5 + (i % 5) * 0.3}s ease-in ${(i % 10) * 0.12}s forwards`,
             transform: `rotate(${i * 12}deg)`,
           }}
@@ -47,10 +47,10 @@ export default function TutorialAchievement({ show, onClose }) {
 
       {/* Badge */}
       <div
-        className="relative bg-gradient-to-br from-[#1a0d24] to-[#0f0f1a] border border-[#C855F0]/40 rounded-3xl px-8 py-10 flex flex-col items-center gap-5 shadow-2xl max-w-sm w-full mx-4"
+        className="relative bg-gradient-to-br from-[#1a0d24] to-[#0f0f1a] border border-[#FF8280]/40 rounded-3xl px-8 py-10 flex flex-col items-center gap-5 shadow-2xl max-w-sm w-full mx-4"
         style={{
           animation: 'badgePop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
-          boxShadow: '0 0 80px rgba(200,85,240,0.3), 0 0 160px rgba(167,236,218,0.1)',
+          boxShadow: '0 0 80px rgba(255, 130, 128,0.3), 0 0 160px rgba(167,236,218,0.1)',
         }}
       >
         <button onClick={handleClose} className="absolute top-4 right-4 text-[#666] hover:text-white">
@@ -59,10 +59,10 @@ export default function TutorialAchievement({ show, onClose }) {
 
         {/* Trophy with glow */}
         <div className="relative">
-          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#C855F0] to-[#7B2FBE] flex items-center justify-center shadow-lg">
+          <div className="w-24 h-24 rounded-full bg-gradient-to-br from-[#FF8280] to-[#7B2FBE] flex items-center justify-center shadow-lg">
             <Trophy className="w-12 h-12 text-white" />
           </div>
-          <div className="absolute inset-0 rounded-full bg-[#C855F0]/30 animate-ping" />
+          <div className="absolute inset-0 rounded-full bg-[#FF8280]/30 animate-ping" />
           {/* Floating stars */}
           {[0, 1, 2].map((i) => (
             <div
@@ -97,7 +97,7 @@ export default function TutorialAchievement({ show, onClose }) {
             className="h-full rounded-full"
             style={{
               width: '100%',
-              background: 'linear-gradient(90deg, #C855F0, #A7ECDA, #22c55e)',
+              background: 'linear-gradient(90deg, #FF8280, #A7ECDA, #22c55e)',
               animation: 'progressFill 1s ease-out 0.5s both',
             }}
           />
@@ -106,7 +106,7 @@ export default function TutorialAchievement({ show, onClose }) {
 
         <button
           onClick={handleClose}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#C855F0] to-[#A7ECDA] text-white font-bold text-sm transition-all hover:shadow-lg"
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF8280] to-[#A7ECDA] text-white font-bold text-sm transition-all hover:shadow-lg"
         >
           Let's Go!
         </button>

@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui
 import { fetchReportsThunk } from '../../../redux/features/reports/reportsSlice';
 
 const TYPE_COLORS = {
-  film: '#C855F0',
+  film: '#FF8280',
   commercial: '#3b82f6',
   theatrical: '#8b5cf6',
   industrial: '#6b7280',
@@ -60,7 +60,7 @@ export default function Reports() {
   const typeData = Object.entries(r.type_breakdown || {}).map(([key, count]) => ({
     name: TYPE_LABELS[key] || key,
     value: count,
-    color: TYPE_COLORS[key] || '#C855F0',
+    color: TYPE_COLORS[key] || '#FF8280',
   }));
 
   if (!loading && error) {
@@ -77,7 +77,7 @@ export default function Reports() {
           <p className="text-[#999999] max-w-md mb-6">Please try again.</p>
           <button
             onClick={() => dispatch(fetchReportsThunk())}
-            className="px-5 py-2.5 bg-[#C855F0] hover:bg-[#A040C8] text-white text-sm font-semibold rounded-lg transition-colors"
+            className="px-5 py-2.5 bg-[#FF8280] hover:bg-[#A040C8] text-white text-sm font-semibold rounded-lg transition-colors"
           >
             Retry
           </button>
@@ -113,7 +113,7 @@ export default function Reports() {
               onClick={() => setRange(opt.value)}
               className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                 range === opt.value
-                  ? 'bg-[#C855F0] text-white'
+                  ? 'bg-[#FF8280] text-white'
                   : 'bg-[#2A2A2A] text-[#999999] hover:bg-[#3A3A3A]'
               }`}
             >
@@ -155,15 +155,15 @@ export default function Reports() {
                 <AreaChart data={r.auditions_by_month || []}>
                   <defs>
                     <linearGradient id="colorAuditions" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#C855F0" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#C855F0" stopOpacity={0} />
+                      <stop offset="5%" stopColor="#FF8280" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#FF8280" stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" />
                   <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#666666' }} axisLine={false} tickLine={false} />
                   <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: '#666666' }} axisLine={false} tickLine={false} />
                   <Tooltip contentStyle={{ borderRadius: '8px', border: '1px solid #3A3A3A', backgroundColor: '#1E1E1E', color: '#fff' }} />
-                  <Area type="monotone" dataKey="count" stroke="#C855F0" strokeWidth={2} fill="url(#colorAuditions)" name="Auditions" />
+                  <Area type="monotone" dataKey="count" stroke="#FF8280" strokeWidth={2} fill="url(#colorAuditions)" name="Auditions" />
                 </AreaChart>
               </ResponsiveContainer>
             </CardContent>
@@ -254,7 +254,7 @@ export default function Reports() {
                   <Tooltip formatter={(value) => [value, 'Auditions']} contentStyle={{ borderRadius: '8px', border: '1px solid #3A3A3A', backgroundColor: '#1E1E1E', color: '#fff' }} />
                   <Bar dataKey="value" radius={[0, 6, 6, 0]}>
                     {funnelData.map((_, i) => (
-                      <Cell key={i} fill={`rgba(200, 85, 240, ${1 - i * 0.25})`} />
+                      <Cell key={i} fill={`rgba(255, 130, 128, ${1 - i * 0.25})`} />
                     ))}
                   </Bar>
                 </BarChart>
@@ -287,7 +287,7 @@ export default function Reports() {
                         <span className="text-sm font-medium text-[#999999] w-40 truncate">{office.name}</span>
                         <div className="flex-1 bg-[#2A2A2A] rounded-full h-3 overflow-hidden">
                           <div
-                            className="bg-[#C855F0] h-full rounded-full transition-all"
+                            className="bg-[#FF8280] h-full rounded-full transition-all"
                             style={{ width: `${(office.count / maxCount) * 100}%` }}
                           />
                         </div>
@@ -310,7 +310,7 @@ export default function Reports() {
             <CardContent className="flex flex-col items-center justify-center py-8">
               {r.busiest_month ? (
                 <>
-                  <div className="text-4xl font-bold text-[#C855F0] mb-2">{r.busiest_month}</div>
+                  <div className="text-4xl font-bold text-[#FF8280] mb-2">{r.busiest_month}</div>
                   <p className="text-sm text-[#999999]">Your most active month for auditions</p>
                 </>
               ) : (

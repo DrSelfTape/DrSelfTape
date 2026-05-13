@@ -114,14 +114,14 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Breaking Bad — Pilot"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C855F0] mb-4"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280] mb-4"
         />
 
         {/* Tabs */}
         <div className="flex gap-2 mb-4">
           {[{ key: 'upload', label: '📄 Upload File' }, { key: 'paste', label: '✏️ Paste Text' }].map(t => (
             <button key={t.key} type="button" onClick={() => setTab(t.key)}
-              className={`px-4 py-1.5 text-sm rounded-lg font-medium transition ${tab === t.key ? 'bg-[#C855F0] text-white' : 'bg-[#2A2A2A] text-[#999999] hover:bg-[#3A3A3A]'}`}>
+              className={`px-4 py-1.5 text-sm rounded-lg font-medium transition ${tab === t.key ? 'bg-[#FF8280] text-white' : 'bg-[#2A2A2A] text-[#999999] hover:bg-[#3A3A3A]'}`}>
               {t.label}
             </button>
           ))}
@@ -134,12 +134,12 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
             onDragLeave={() => setDragActive(false)}
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors mb-4 ${
-              dragActive ? 'border-[#C855F0] bg-[#C855F0]/10' : 'border-[#3A3A3A] hover:border-[#C855F0]'
+              dragActive ? 'border-[#FF8280] bg-[#FF8280]/10' : 'border-[#3A3A3A] hover:border-[#FF8280]'
             }`}
           >
             {pdfLoading ? (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 text-[#C855F0] animate-spin" viewBox="0 0 24 24" fill="none">
+                <svg className="w-8 h-8 text-[#FF8280] animate-spin" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
                   <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                 </svg>
@@ -167,7 +167,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
             onChange={(e) => setContent(e.target.value)}
             rows={10}
             placeholder={'CHARACTER: Dialogue line...\nOTHER CHARACTER: Response...'}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#C855F0] mb-4 resize-none"
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#FF8280] mb-4 resize-none"
           />
         )}
 
@@ -179,7 +179,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
           <button
             type="submit"
             disabled={!title.trim() || !content.trim() || loading || pdfLoading}
-            className="px-5 py-2 text-sm font-semibold rounded-lg bg-[#C855F0] text-white hover:bg-[#A040C8] disabled:opacity-50 transition"
+            className="px-5 py-2 text-sm font-semibold rounded-lg bg-[#FF8280] text-white hover:bg-[#A040C8] disabled:opacity-50 transition"
           >
             {loading ? 'Saving...' : 'Save Script'}
           </button>
@@ -210,13 +210,13 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
       <div className="flex gap-2 mt-auto pt-2">
         <button
           onClick={onPractice}
-          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg bg-[#C855F0] text-white hover:bg-[#A040C8] transition"
+          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg bg-[#FF8280] text-white hover:bg-[#A040C8] transition"
         >
           Practice
         </button>
         <button
           onClick={onCDSim}
-          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg border-2 border-[#C855F0] text-[#C855F0] hover:bg-[#C855F0]/10 transition"
+          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg border-2 border-[#FF8280] text-[#FF8280] hover:bg-[#FF8280]/10 transition"
         >
           Coach
         </button>
@@ -258,10 +258,10 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
 function EmptyState({ onAdd }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-24 h-24 mb-6 rounded-full bg-[#C855F0]/10 flex items-center justify-center">
+      <div className="w-24 h-24 mb-6 rounded-full bg-[#FF8280]/10 flex items-center justify-center">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          className="w-12 h-12 text-[#C855F0]"
+          className="w-12 h-12 text-[#FF8280]"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -280,7 +280,7 @@ function EmptyState({ onAdd }) {
       </p>
       <button
         onClick={onAdd}
-        className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#C855F0] text-white hover:bg-[#A040C8] transition"
+        className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#FF8280] text-white hover:bg-[#A040C8] transition"
       >
         Add your first script
       </button>
@@ -328,7 +328,7 @@ export default function Scripts() {
         <h1 className="text-2xl font-bold text-white">My Scripts</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#C855F0] text-white hover:bg-[#A040C8] transition"
+          className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#FF8280] text-white hover:bg-[#A040C8] transition"
         >
           + Add Script
         </button>
@@ -342,7 +342,7 @@ export default function Scripts() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search scripts..."
-            className="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#C855F0]"
+            className="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]"
           />
         </div>
       )}

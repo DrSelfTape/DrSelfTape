@@ -41,21 +41,21 @@ export const AuthLayout = ({ children }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-[#080a0f] via-[#080a0f]/60 to-transparent" />
 
         {/* Brand colour wash — purple tint from top, mint glow bottom-right */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#C855F0]/20 via-transparent to-[#A7ECDA]/10" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FF8280]/20 via-transparent to-[#A7ECDA]/10" />
 
         {/* Subtle left-edge fade so it blends into the form panel */}
         <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#080a0f] to-transparent" />
 
         {/* Decorative accent line */}
-        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-[#C855F0]/40 to-transparent" />
+        <div className="absolute top-0 right-0 w-px h-full bg-gradient-to-b from-transparent via-[#FF8280]/40 to-transparent" />
 
         {/* Bottom text block */}
         {headline && (
           <div className="relative z-10 p-12 pb-16">
             {/* Glowing pill badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#C855F0]/15 border border-[#C855F0]/30 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C855F0] animate-pulse" />
-              <span className="text-[#C855F0] text-xs font-semibold tracking-wider uppercase">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#FF8280]/15 border border-[#FF8280]/30 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF8280] animate-pulse" />
+              <span className="text-[#FF8280] text-xs font-semibold tracking-wider uppercase">
                 Professional Studio
               </span>
             </div>

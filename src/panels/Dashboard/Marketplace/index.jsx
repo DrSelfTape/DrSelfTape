@@ -38,7 +38,7 @@ function ReaderCard({ reader, onBook }) {
       style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
     >
       {/* Headshot */}
-      <div className="relative h-44 bg-gradient-to-br from-[#C855F0]/20 to-[#A7ECDA]/10">
+      <div className="relative h-44 bg-gradient-to-br from-[#FF8280]/20 to-[#A7ECDA]/10">
         {reader.headshot ? (
           <img
             src={reader.headshot}
@@ -47,7 +47,7 @@ function ReaderCard({ reader, onBook }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-5xl font-bold text-[#C855F0]/40">
+            <span className="text-5xl font-bold text-[#FF8280]/40">
               {(reader.name || 'R')[0].toUpperCase()}
             </span>
           </div>
@@ -97,7 +97,7 @@ function ReaderCard({ reader, onBook }) {
                 onClick={() => setDuration(d.value)}
                 className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
                   duration === d.value
-                    ? 'bg-[#C855F0] text-white'
+                    ? 'bg-[#FF8280] text-white'
                     : ''
                 }`}
                 style={
@@ -121,7 +121,7 @@ function ReaderCard({ reader, onBook }) {
             </span>
             <button
               onClick={() => onBook(reader, duration)}
-              className="bg-[#C855F0] hover:bg-[#A040C8] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              className="bg-[#FF8280] hover:bg-[#A040C8] text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
             >
               Book Session
             </button>
@@ -186,7 +186,7 @@ function ConfirmModal({ reader, duration, onConfirm, onClose, booking }) {
           <button
             onClick={onConfirm}
             disabled={booking}
-            className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
           >
             {booking ? 'Booking...' : 'Confirm'}
           </button>

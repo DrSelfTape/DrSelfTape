@@ -38,7 +38,7 @@ export default function AdminDashboard() {
   if (statsLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -130,10 +130,10 @@ export default function AdminDashboard() {
               <Line
                 type="monotone"
                 dataKey="signups"
-                stroke="#C855F0"
+                stroke="#FF8280"
                 strokeWidth={2.5}
-                dot={{ r: 4, fill: '#C855F0', strokeWidth: 0 }}
-                activeDot={{ r: 6, fill: '#C855F0', strokeWidth: 2, stroke: '#1A1A1A' }}
+                dot={{ r: 4, fill: '#FF8280', strokeWidth: 0 }}
+                activeDot={{ r: 6, fill: '#FF8280', strokeWidth: 2, stroke: '#1A1A1A' }}
               />
             </LineChart>
           </ResponsiveContainer>

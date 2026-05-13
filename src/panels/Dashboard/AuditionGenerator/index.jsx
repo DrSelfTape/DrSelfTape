@@ -23,7 +23,7 @@ const MINT_BG     = 'rgba(167,236,218,0.10)';
 const MINT_BD     = 'rgba(167,236,218,0.30)';
 
 /* Button gradient: gold → coral → magenta, matching the screenshot */
-const BTN_GRADIENT = 'linear-gradient(90deg, #F5D76E 0%, #FFB49A 50%, #C855F0 100%)';
+const BTN_GRADIENT = 'linear-gradient(90deg, #F5D76E 0%, #FFB49A 50%, #FF8280 100%)';
 const BTN_TEXT     = '#0d0d0d';
 
 /* ═══════════════════════════════════════════════════
@@ -287,7 +287,7 @@ export default function AuditionGenerator() {
                 color: BTN_TEXT, fontSize: 16, fontWeight: 700,
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                 opacity: loading ? 0.75 : 1, transition: 'opacity 0.2s',
-                boxShadow: loading ? 'none' : '0 4px 24px rgba(200,85,240,0.25)',
+                boxShadow: loading ? 'none' : '0 4px 24px rgba(255, 130, 128,0.25)',
               }}
             >
               {loading ? (
@@ -339,7 +339,7 @@ export default function AuditionGenerator() {
                   width: '100%', padding: '17px', borderRadius: 14, border: 'none',
                   cursor: 'pointer', background: BTN_GRADIENT,
                   color: BTN_TEXT, fontSize: 16, fontWeight: 700,
-                  boxShadow: '0 4px 24px rgba(200,85,240,0.25)',
+                  boxShadow: '0 4px 24px rgba(255, 130, 128,0.25)',
                 }}
               >
                 🎭 Get Coach Feedback

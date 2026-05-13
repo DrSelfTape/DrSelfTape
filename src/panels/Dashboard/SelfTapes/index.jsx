@@ -154,7 +154,7 @@ function UploadModal({ onClose, onUploaded }) {
           <button
             onClick={handleSubmit}
             disabled={uploading}
-            className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
           >
             {uploading ? 'Uploading...' : 'Upload'}
           </button>
@@ -237,7 +237,7 @@ function SubmitModal({ tape, onClose }) {
             <button
               onClick={handleSubmit}
               disabled={submitting || !submittedTo.trim()}
-              className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+              className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
@@ -259,13 +259,13 @@ function TapeCard({ tape, onPlay, onSubmitCasting }) {
         {tape.thumbnail ? (
           <img src={tape.thumbnail} alt={tape.title} className="w-full h-full object-cover" />
         ) : (
-          <Film className="w-10 h-10 text-[#C855F0]/40" />
+          <Film className="w-10 h-10 text-[#FF8280]/40" />
         )}
         <button
           onClick={() => onPlay(tape)}
           className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors group"
         >
-          <div className="w-12 h-12 rounded-full bg-[#C855F0]/90 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <div className="w-12 h-12 rounded-full bg-[#FF8280]/90 flex items-center justify-center group-hover:scale-110 transition-transform">
             <Play className="w-5 h-5 text-white ml-0.5" fill="white" />
           </div>
         </button>
@@ -321,7 +321,7 @@ function TapeCard({ tape, onPlay, onSubmitCasting }) {
           </button>
           <button
             onClick={() => onSubmitCasting(tape)}
-            className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+            className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
           >
             <Send className="w-3.5 h-3.5" />
             Submit
@@ -366,7 +366,7 @@ export default function SelfTapes() {
         </h1>
         <button
           onClick={() => setShowUpload(true)}
-          className="bg-[#C855F0] hover:bg-[#A040C8] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
+          className="bg-[#FF8280] hover:bg-[#A040C8] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
         >
           <Upload className="w-4 h-4" />
           Upload
@@ -394,7 +394,7 @@ export default function SelfTapes() {
           </p>
           <button
             onClick={() => setShowUpload(true)}
-            className="mt-4 bg-[#C855F0] hover:bg-[#A040C8] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+            className="mt-4 bg-[#FF8280] hover:bg-[#A040C8] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
           >
             Upload Self-Tape
           </button>

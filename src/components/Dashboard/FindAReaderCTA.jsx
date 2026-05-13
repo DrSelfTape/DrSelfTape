@@ -37,8 +37,8 @@ export default function FindAReaderCTA() {
           </div>
           {pendingLikes > 0 && (
             <div className="flex items-center gap-2 mt-2">
-              <HeartHandshake className="w-4 h-4 text-[#C855F0]" />
-              <p className="text-[#C855F0] text-sm font-medium">
+              <HeartHandshake className="w-4 h-4 text-[#FF8280]" />
+              <p className="text-[#FF8280] text-sm font-medium">
                 {pendingLikes} {pendingLikes === 1 ? 'actor wants' : 'actors want'} to read with you!
               </p>
             </div>
