@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const SPEED_MAP = { slow: 0.5, medium: 1, fast: 2 };
 const SPEED_LABELS = ['slow', 'medium', 'fast'];
 
-export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLive, onSelfTape }) {
+export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLive, onSelfTape, hideHeader = false }) {
   const [autoScroll, setAutoScroll] = useState(false);
   const [speed, setSpeed] = useState('medium');
   const [paused, setPaused] = useState(false);
@@ -44,28 +44,30 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
     <div className="flex flex-col" style={{ height: 'calc(100vh - 180px)', maxWidth: '44rem', margin: '0 auto', width: '100%' }}>
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between mb-3 px-1">
-        <div>
-          <h2 className="text-xl font-bold text-white leading-tight">Practice Mode</h2>
-          <p className="text-[#666666] text-xs mt-0.5">
-            Your lines are highlighted in <span className="text-[#FF8280]">coral</span>
-          </p>
+      {!hideHeader && (
+        <div className="flex items-start justify-between mb-3 px-1">
+          <div>
+            <h2 className="text-xl font-bold text-white leading-tight">Practice Mode</h2>
+            <p className="text-[#666666] text-xs mt-0.5">
+              Your lines are highlighted in <span className="text-[#FF8280]">coral</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-2 ml-3 shrink-0">
+            {/* Self-Tape button */}
+            {onSelfTape && (
+              <button
+                onClick={onSelfTape}
+                className="flex items-center gap-1.5 bg-[#FF8280] text-white px-3 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
+              >
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
+                </svg>
+                Self-Tape
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2 ml-3 shrink-0">
-          {/* Self-Tape button */}
-          {onSelfTape && (
-            <button
-              onClick={onSelfTape}
-              className="flex items-center gap-1.5 bg-[#FF8280] text-white px-3 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
-            >
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
-              </svg>
-              Self-Tape
-            </button>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* ── Controls Bar — single row, compact ── */}
       <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">

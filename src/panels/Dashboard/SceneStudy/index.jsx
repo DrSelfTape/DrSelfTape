@@ -1,8 +1,9 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import ScriptUpload from './ScriptUpload';
 import RolePicker from './RolePicker';
 import Teleprompter from './Teleprompter';
+import PracticeV2 from './PracticeV2';
 import RecordTake from './RecordTake';
 import LiveSceneMode from './LiveSceneMode';
 import SelfTapeRecorder from './SelfTapeRecorder';
@@ -82,6 +83,8 @@ function extractCharacters(lines) {
 
 export default function SceneStudy() {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const useV2 = searchParams.get('layout') === 'v2';
   const [step, setStep] = useState('upload');
   const [scriptText, setScriptText] = useState('');
   const [selectedRole, setSelectedRole] = useState('');
@@ -168,8 +171,8 @@ export default function SceneStudy() {
 
   return (
     <div className="max-w-5xl mx-auto px-2">
-      {/* Live Study Mode Banner */}
-      {(step === 'practice' || step === 'pick-role') && selectedRole && (
+      {/* Live Study Mode Banner — hidden in v2 layout (tabs replace it) */}
+      {!useV2 && (step === 'practice' || step === 'pick-role') && selectedRole && (
         <div className="mb-4 sm:mb-6 bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f0f23] rounded-2xl p-5 border border-[#2a2a4a] relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_rgba(255,107,53,0.12),_transparent_60%)]" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -196,8 +199,8 @@ export default function SceneStudy() {
         </div>
       )}
 
-      {/* Step Indicator */}
-      <div className="flex items-center gap-2 mb-4 sm:mb-8">
+      {/* Step Indicator — hidden in v2 practice view (tabs replace it) */}
+      {!(useV2 && step === 'practice') && <div className="flex items-center gap-2 mb-4 sm:mb-8">
         {STEPS.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
             <div
@@ -225,7 +228,7 @@ export default function SceneStudy() {
             )}
           </div>
         ))}
-      </div>
+      </div>}
 
       {/* Step Content */}
       {step === 'upload' && (
@@ -249,7 +252,7 @@ export default function SceneStudy() {
         />
       )}
 
-      {step === 'practice' && (
+      {step === 'practice' && !useV2 && (
         <Teleprompter
           lines={parsedLines}
           userRole={selectedRole}
@@ -258,6 +261,19 @@ export default function SceneStudy() {
           onGoLive={() => setStep('live')}
           onSelfTape={() => {
             // Offer focus mode before self-tape recording
+            setShowFocusMode(true);
+            setPendingStep('self-tape');
+          }}
+        />
+      )}
+
+      {step === 'practice' && useV2 && (
+        <PracticeV2
+          lines={parsedLines}
+          userRole={selectedRole}
+          onBack={() => setStep('pick-role')}
+          onGoLive={() => setStep('live')}
+          onSelfTape={() => {
             setShowFocusMode(true);
             setPendingStep('self-tape');
           }}
