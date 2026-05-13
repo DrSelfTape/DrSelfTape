@@ -38,25 +38,31 @@ export default function PracticeV2({
   ];
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100dvh - 140px)', maxWidth: '44rem', margin: '0 auto', width: '100%' }}>
+    <div className="flex flex-col aurora-orbs" style={{ height: 'calc(100dvh - 140px)', maxWidth: '44rem', margin: '0 auto', width: '100%' }}>
       {/* ── Top row: back + role pill ── */}
       <div className="flex items-center justify-between px-1 mb-3">
         <button
           onClick={onBack}
-          className="flex items-center gap-1.5 text-sm font-medium px-2 py-1.5 rounded-lg transition-colors cursor-pointer"
-          style={{ color: 'var(--text-secondary)' }}
+          className="aurora-mono flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors cursor-pointer"
+          style={{ color: 'var(--aurora-sub)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}
         >
-          <ArrowLeft size={16} />
+          <ArrowLeft size={14} />
           Back
         </button>
         {userRole && (
-          <div className="flex items-center gap-1.5 text-xs px-3 py-1 rounded-full" style={{ background: 'rgba(255,130,128,0.10)', color: '#FF8280', border: '1px solid rgba(255,130,128,0.25)' }}>
-            Playing <span className="font-semibold uppercase tracking-wider">{userRole}</span>
+          <div className="aurora-mono flex items-center gap-1.5 px-3 py-1 rounded-full" style={{
+            background: 'color-mix(in oklch, var(--aurora-accent) 18%, transparent)',
+            color: 'var(--aurora-accent)',
+            border: '1px solid color-mix(in oklch, var(--aurora-accent) 40%, transparent)',
+            fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+            backdropFilter: 'blur(12px)',
+          }}>
+            Playing <span style={{ fontWeight: 700 }}>{userRole}</span>
           </div>
         )}
       </div>
 
-      {/* ── Mode tabs — replaces v1 promo banner + stepper + Self-Tape pill ── */}
+      {/* ── Mode tabs ── */}
       <div className="flex items-stretch gap-1 mb-3 px-1">
         {TABS.map((t) => {
           const active = activeTab === t.id;
@@ -64,17 +70,22 @@ export default function PracticeV2({
             <button
               key={t.id}
               onClick={() => handleTab(t.id)}
-              className={`flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                active
-                  ? 'bg-[#FF8280] text-white'
-                  : 'bg-[#1A1A1A] text-[#999999] hover:text-white'
-              }`}
-              style={!active ? { border: '1px solid #2A2A2A' } : undefined}
+              className="aurora-mono flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all cursor-pointer"
+              style={{
+                background: active ? 'var(--aurora-accent)' : 'var(--aurora-glass)',
+                color: active ? '#fff' : 'var(--aurora-sub)',
+                border: active ? 'none' : '1px solid var(--aurora-glass-border)',
+                backdropFilter: active ? 'none' : 'blur(12px)',
+                fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
+                boxShadow: active ? 'var(--aurora-shadow-coral)' : 'none',
+              }}
             >
               <div className="relative">
-                <t.icon size={16} />
+                <t.icon size={15} />
                 {t.badge && !active && (
-                  <span className="absolute -top-1.5 -right-3 bg-[#FF8280] text-white text-[8px] font-bold px-1 rounded-full leading-tight">
+                  <span className="aurora-mono absolute -top-1.5 -right-3 px-1 rounded-full leading-tight" style={{
+                    background: 'var(--aurora-accent)', color: '#fff', fontSize: 8, fontWeight: 700,
+                  }}>
                     {t.badge}
                   </span>
                 )}

@@ -258,6 +258,184 @@ function ProgressRing({ pct, size = 36, stroke = 3 }) {
   );
 }
 
+/* ── Aurora hero metric ring ──
+ * Three-tab interactive ring showing callback rate / submissions / booked.
+ * Animated arc + 12 trend dots + center number.
+ * Tap a dot to scrub; tap a metric pill to switch.
+ */
+function AuroraHeroRing({ stats }) {
+  const total   = Math.max(stats?.total_auditions || 0, 0);
+  const cbCount = Math.max(stats?.callbacks      || 0, 0);
+  const booked  = Math.max(stats?.total_booked   || 0, 0);
+  const cbRate  = total > 0 ? Math.round((cbCount / total) * 100) : 0;
+
+  const METRICS = [
+    { id: 'cb',  label: 'CB',  color: 'var(--aurora-accent)',         value: cbRate,    suffix: '%', subline: 'callback rate' },
+    { id: 'sub', label: 'SUB', color: 'var(--aurora-sky)',            value: total,     suffix: '',  subline: 'submissions'  },
+    { id: 'bk',  label: 'BK',  color: 'var(--aurora-mint)',           value: booked,    suffix: '',  subline: 'booked'       },
+  ];
+
+  const [active, setActive] = useState('cb');
+  const m = METRICS.find(x => x.id === active);
+  const arcMax = active === 'cb' ? 100 : Math.max(total, 10);
+  const arcPct = Math.min(m.value / arcMax, 1);
+
+  const SIZE = 234;
+  const STROKE = 12;
+  const r = 86;
+  const cx = SIZE / 2;
+  const cy = SIZE / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ * (1 - arcPct);
+  const angle = -Math.PI / 2 + (2 * Math.PI * arcPct);
+  const dotX = cx + r * Math.cos(angle);
+  const dotY = cy + r * Math.sin(angle);
+
+  return (
+    <div className="aurora-glass" style={{ padding: 20, marginBottom: 18 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <span className="aurora-eyebrow">{active === 'cb' ? 'CALLBACK RATE' : active === 'sub' ? 'SUBMISSIONS' : 'BOOKINGS'}</span>
+        <span className="aurora-micro" style={{ color: 'var(--aurora-sub)' }}>ALL TIME</span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 14 }}>
+        {METRICS.map(x => (
+          <button
+            key={x.id}
+            onClick={() => setActive(x.id)}
+            className="aurora-mono"
+            style={{
+              padding: '8px 0', borderRadius: 100, border: 'none', cursor: 'pointer',
+              fontSize: 11, letterSpacing: '0.1em',
+              background: active === x.id ? x.color : 'var(--aurora-line)',
+              color: active === x.id ? '#0A0A0A' : 'var(--aurora-sub)',
+              boxShadow: active === x.id ? `0 4px 12px ${x.color === 'var(--aurora-accent)' ? 'rgba(255,130,128,0.3)' : x.color === 'var(--aurora-sky)' ? 'rgba(167,214,255,0.3)' : 'rgba(159,230,180,0.3)'}` : 'none',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            {x.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ position: 'relative', width: SIZE, height: SIZE, margin: '0 auto' }}>
+        <svg width={SIZE} height={SIZE} style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--aurora-line)" strokeWidth={STROKE} />
+          <circle
+            cx={cx} cy={cy} r={r} fill="none"
+            stroke={m.color} strokeWidth={STROKE}
+            strokeDasharray={circ} strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.65s cubic-bezier(.5,.1,.2,1)' }}
+          />
+          {m.value > 0 && (
+            <circle cx={dotX} cy={dotY} r={6} fill={m.color} stroke="var(--aurora-bg)" strokeWidth={2.5}
+              style={{ transition: 'cx 0.65s cubic-bezier(.5,.1,.2,1), cy 0.65s cubic-bezier(.5,.1,.2,1)' }}
+            />
+          )}
+        </svg>
+
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', pointerEvents: 'none',
+        }}>
+          <span className="aurora-mono" style={{ fontSize: 58, color: 'var(--aurora-text)' }}>
+            {m.value}
+            <span style={{ fontSize: 24, color: 'var(--aurora-dim)', marginLeft: 2 }}>{m.suffix}</span>
+          </span>
+          <span style={{ fontSize: 13, color: 'var(--aurora-sub)', marginTop: -4 }}>{m.subline}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ── Aurora practice strip ── 7-day bar chart of practice intensity */
+function AuroraPracticeStrip({ scripts }) {
+  const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+  const todayIdx = ((new Date().getDay() + 6) % 7);
+  const counts = [0, 0, 0, 0, 0, 0, 0];
+  scripts.forEach(s => {
+    const dt = s.created_at || s.updated_at;
+    if (!dt) return;
+    const dayOfWeek = ((new Date(dt).getDay() + 6) % 7);
+    const daysAgo = Math.floor((Date.now() - new Date(dt).getTime()) / 86400000);
+    if (daysAgo >= 0 && daysAgo < 7) counts[dayOfWeek]++;
+  });
+  const max = Math.max(...counts, 1);
+
+  return (
+    <div className="aurora-glass" style={{ padding: 16, marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span className="aurora-eyebrow">PRACTICE · 7-DAY</span>
+        <span className="aurora-micro" style={{ color: 'var(--aurora-sub)' }}>
+          {counts.reduce((a, b) => a + b, 0)} / 7
+        </span>
+      </div>
+      <div style={{ display: 'flex', gap: 6, height: 56, alignItems: 'flex-end' }}>
+        {counts.map((c, i) => {
+          const h = (c / max) * 100;
+          const isToday = i === todayIdx;
+          return (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div style={{
+                width: '100%',
+                height: c > 0 ? `${Math.max(h, 12)}%` : 4,
+                background: isToday ? 'var(--aurora-accent)' : c > 0 ? 'var(--aurora-sky)' : 'var(--aurora-line)',
+                borderRadius: 4,
+                transition: 'height 0.4s ease',
+              }} />
+              <span className="aurora-micro" style={{
+                fontSize: 9, color: isToday ? 'var(--aurora-text)' : 'var(--aurora-dim)',
+                fontWeight: isToday ? 700 : 500,
+              }}>{days[i]}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ── Aurora pipeline blocks ── Submitted / Reviewed / Callback / Booked */
+function AuroraPipeline({ stats, auditions, setTab }) {
+  const counts = {
+    sub: auditions.filter(a => a.status === 'submitted').length,
+    rev: auditions.filter(a => a.status === 'in_review').length,
+    cb:  auditions.filter(a => a.status === 'callback' || a.status === 'audition').length,
+    bk:  stats?.total_booked || auditions.filter(a => a.status === 'booked').length,
+  };
+  const blocks = [
+    { id: 'sub', label: 'SUB', val: counts.sub, color: 'var(--aurora-sky)',    shadow: 'rgba(167,214,255,0.35)' },
+    { id: 'rev', label: 'REV', val: counts.rev, color: 'var(--aurora-purple)', shadow: 'rgba(216,197,242,0.35)' },
+    { id: 'cb',  label: 'CB',  val: counts.cb,  color: 'var(--aurora-accent)', shadow: 'rgba(255,130,128,0.35)' },
+    { id: 'bk',  label: 'BK',  val: counts.bk,  color: 'var(--aurora-mint)',   shadow: 'rgba(159,230,180,0.35)' },
+  ];
+  return (
+    <div className="aurora-glass" style={{ padding: 16, marginBottom: 14 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <span className="aurora-eyebrow">PIPELINE</span>
+        <button onClick={() => setTab('auditions')} className="aurora-micro" style={{
+          background: 'none', border: 'none', color: 'var(--aurora-sub)', cursor: 'pointer',
+        }}>VIEW ALL →</button>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+        {blocks.map(b => (
+          <div key={b.id} style={{
+            background: `linear-gradient(180deg, ${b.color}, color-mix(in oklch, ${b.color} 60%, transparent))`,
+            borderRadius: 14, padding: '14px 8px', textAlign: 'center',
+            boxShadow: `0 6px 14px ${b.shadow}`,
+            border: '1px solid rgba(255,255,255,0.5)',
+          }}>
+            <div className="aurora-mono" style={{ fontSize: 22, color: '#0A0A0A' }}>{b.val}</div>
+            <div className="aurora-micro" style={{ color: 'rgba(10,10,10,0.65)' }}>{b.label}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function callbackBadge(dateStr) {
   if (!dateStr) return null;
   const d = new Date(dateStr);
@@ -392,8 +570,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     else if (nextStep.action === 'live') setTab('live');
   };
 
+  const firstCallback = callbacks[0];
+
   return (
-    <div style={{ padding: "0 20px 32px" }}>
+    <div className="aurora-orbs" style={{ padding: "0 20px 32px", minHeight: '100%' }}>
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
@@ -402,218 +582,247 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
 
-      {/* Greeting */}
-      <div style={{ padding: "24px 0 18px" }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.5px", fontFamily: "'Playfair Display', serif", lineHeight: 1.2 }}>
-          {greeting}
+      {/* ── Aurora header — wordmark + bell ── */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '14px 0 8px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: 10,
+            background: `url(${logo}) center/cover`,
+            boxShadow: '0 0 0 1px var(--aurora-line)',
+            flexShrink: 0,
+          }} />
+          <span className="aurora-micro" style={{ color: 'var(--aurora-dim)' }}>DR · SELF · TAPE</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {(s.current_streak || 0) > 0 && (
+            <span className="aurora-mono" style={{
+              fontSize: 11, padding: '4px 10px', borderRadius: 100,
+              background: 'color-mix(in oklch, var(--aurora-mint) 18%, transparent)',
+              color: 'var(--aurora-mint)', display: 'inline-flex', alignItems: 'center', gap: 4,
+              border: '1px solid color-mix(in oklch, var(--aurora-mint) 30%, transparent)',
+            }}>
+              🔥 {s.current_streak}D
+            </span>
+          )}
+          <NotificationBell />
+        </div>
+      </div>
+
+      {/* ── Greeting block ── */}
+      <div style={{ padding: '18px 0 22px' }}>
+        <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 6 }}>
+          {new Date().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()}
+        </span>
+        <h1 className="aurora-display" style={{
+          fontSize: 30, color: 'var(--aurora-text)', margin: 0,
+          letterSpacing: '-0.7px', lineHeight: 1.15,
+        }}>
+          {greeting} <span style={{ color: 'var(--aurora-accent)' }}>✦</span>
         </h1>
       </div>
 
       {/* ── Smart Next Step CTA ── */}
       <button
         onClick={handleNextStep}
+        className="aurora-glass"
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 14,
-          background: `linear-gradient(135deg, rgba(255, 130, 128,0.15), rgba(255, 130, 128,0.05))`,
-          border: "1px solid rgba(255, 130, 128,0.2)",
-          borderRadius: RADIUS_LG, padding: "18px 20px", cursor: "pointer",
-          marginBottom: 18, textAlign: "left",
+          padding: "16px 18px", cursor: "pointer", textAlign: "left",
+          marginBottom: 18, color: 'var(--aurora-text)',
         }}
       >
         <div style={{
           width: 44, height: 44, borderRadius: 14,
-          background: "rgba(255, 130, 128,0.15)",
+          background: "color-mix(in oklch, var(--aurora-accent) 18%, transparent)",
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
           <Icon name={nextStep.icon} size={22} color={CORAL} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>{nextStep.title}</p>
-          <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "3px 0 0", lineHeight: 1.3 }}>{nextStep.desc}</p>
+          <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>{nextStep.title}</p>
+          <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "3px 0 0", lineHeight: 1.3 }}>{nextStep.desc}</p>
         </div>
-        <span style={{
-          fontSize: 12, fontWeight: 700, color: "#fff",
-          background: CORAL, padding: "6px 14px", borderRadius: 12,
+        <span className="aurora-micro" style={{
+          fontSize: 11, fontWeight: 700, color: "#fff",
+          background: 'var(--aurora-accent)', padding: "8px 14px", borderRadius: 100,
           whiteSpace: "nowrap", flexShrink: 0,
+          boxShadow: 'var(--aurora-shadow-coral)',
         }}>
           {nextStep.cta}
         </span>
       </button>
 
-      {/* ── Quick Access Row — 3 icons ── */}
-      <div style={{ display: "flex", gap: 10, marginBottom: SPACING_SECTION }}>
-        {[
-          { label: "Coach", icon: "star", emoji: "🎭", action: () => setCurrentPanel("cd-sim") },
-          { label: "Study", icon: "mic", emoji: "📖", action: () => setTab("live") },
-          { label: "Readers", icon: "community", emoji: "🤝", action: () => setTab("find-a-reader") },
-        ].map((item) => (
-          <button
-            key={item.label}
-            onClick={item.action}
-            style={{
-              flex: 1, background: BG_CARD, border: `1px solid ${CARD_BORDER}`,
-              borderRadius: RADIUS_LG, padding: "14px 8px", cursor: "pointer",
-              textAlign: "center", boxShadow: CARD_SHADOW,
-            }}
-          >
-            <span style={{ fontSize: 22, display: "block", marginBottom: 4 }}>{item.emoji}</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: TEXT_PRIMARY }}>{item.label}</span>
-          </button>
-        ))}
-      </div>
+      {/* ── Hero metric ring ── */}
+      <AuroraHeroRing stats={s} />
 
-      {/* Availability + Find Reader row */}
-      <div style={{ display: "flex", gap: 10, marginBottom: SPACING_SECTION }}>
+      {/* ── Callback card (Aurora gold gradient) ── */}
+      {firstCallback && (
         <button
-          onClick={() => !availabilityToggling && dispatch(toggleAvailability(!isAvailable))}
+          onClick={() => setTab('auditions')}
           style={{
-            flex: 1, display: "flex", alignItems: "center", gap: 8,
-            background: isAvailable ? "rgba(34,197,94,0.08)" : BG_CARD,
-            border: isAvailable ? "1px solid rgba(34,197,94,0.2)" : `1px solid ${CARD_BORDER}`,
-            borderRadius: RADIUS_LG, padding: "14px 16px", cursor: "pointer",
-            boxShadow: CARD_SHADOW,
+            width: '100%', display: 'block', textAlign: 'left', cursor: 'pointer',
+            background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-heritage-gold-light))',
+            borderRadius: 24, padding: '20px 22px', marginBottom: 14,
+            border: 'none', position: 'relative', overflow: 'hidden',
+            boxShadow: '0 12px 30px rgba(212,168,95,0.30)',
           }}
         >
-          <span style={{
-            width: 8, height: 8, borderRadius: "50%",
-            background: isAvailable ? "#22c55e" : "#666",
-            boxShadow: isAvailable ? "0 0 6px rgba(34,197,94,0.3)" : "none",
+          <div style={{
+            position: 'absolute', top: -40, right: -40, width: 180, height: 180,
+            background: 'radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%)',
+            pointerEvents: 'none',
           }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: isAvailable ? "#22c55e" : TEXT_SECONDARY }}>
-            {isAvailable ? "Available" : "Go Available"}
-          </span>
-        </button>
-
-        {(matchingStats?.pending_likes_count || 0) > 0 && (
-          <button
-            onClick={() => setTab("find-a-reader")}
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              background: BG_CARD, border: `1px solid ${CARD_BORDER}`,
-              borderRadius: RADIUS_LG, padding: "14px 16px", cursor: "pointer",
-              boxShadow: CARD_SHADOW,
-            }}
-          >
-            <span style={{ fontSize: 12, fontWeight: 700, color: TEXT_PRIMARY }}>
-              {matchingStats.pending_likes_count} matches
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+            <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>NEXT CALLBACK</span>
+            <span className="aurora-mono" style={{
+              fontSize: 11, padding: '4px 10px', borderRadius: 100,
+              background: 'rgba(10,10,10,0.85)', color: '#fff',
+            }}>
+              {callbackBadge(firstCallback.callbackDate)?.text?.toUpperCase()}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: MINT }}>View</span>
-          </button>
-        )}
-      </div>
+          </div>
+          <div className="aurora-display" style={{ fontSize: 22, color: '#0E0D0A', lineHeight: 1.2, marginBottom: 4 }}>
+            {firstCallback.project} — {firstCallback.character}
+          </div>
+          <div className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)', marginTop: 8 }}>
+            {firstCallback.cd}
+          </div>
+        </button>
+      )}
 
-      {/* Progress section */}
-      <div style={{ marginBottom: 14 }}>
-        <DailyChallengeCard />
-      </div>
+      {/* ── Practice strip ── */}
+      <AuroraPracticeStrip scripts={rawScripts} />
 
-      <div style={{ marginBottom: SPACING_SECTION }}>
-        <TutorialChecklist onNavigate={({ tab, panel }) => {
-          if (tab) { setTab(tab); }
-          if (panel) { setCurrentPanel(panel); }
-        }} />
-      </div>
+      {/* ── Pipeline blocks ── */}
+      {hasStats && <AuroraPipeline stats={s} auditions={auditions} setTab={setTab} />}
 
-      {/* Stats — only when user has data */}
-      {hasStats ? (
-        <div style={{ display: "flex", gap: 14, marginBottom: SPACING_SECTION }}>
-          {[
-            { label: "Auditions", value: s.total_auditions || 0, color: CORAL_SOFT },
-            { label: "Booked", value: s.total_booked || 0, color: GREEN },
-          ].map(stat => (
-            <div key={stat.label} style={{ flex: 1, background: BG_CARD, borderRadius: RADIUS_LG, padding: "20px", border: `1px solid ${CARD_BORDER}`, textAlign: "center", boxShadow: CARD_SHADOW }}>
-              <span style={{ fontSize: 36, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-1px", fontFamily: "'Playfair Display', serif", display: "block" }}>{stat.value}</span>
-              <span style={{ fontSize: 11, color: TEXT_SECONDARY, fontWeight: 500, textTransform: "uppercase", letterSpacing: "0.5px" }}>{stat.label}</span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div style={{
-          background: BG_CARD, borderRadius: RADIUS_LG, padding: "24px 20px",
-          border: `1px solid ${CARD_BORDER}`, marginBottom: SPACING_SECTION,
-          textAlign: "center", boxShadow: CARD_SHADOW,
-        }}>
+      {/* ── Empty state when no stats ── */}
+      {!hasStats && (
+        <div className="aurora-glass" style={{ padding: '24px 20px', marginBottom: 14, textAlign: 'center' }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
-          <p style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: "0 0 4px" }}>Your stats will appear here</p>
-          <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: 0, lineHeight: 1.4 }}>
+          <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: "0 0 4px" }}>Your stats will appear here</p>
+          <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: 0, lineHeight: 1.4 }}>
             Start tracking auditions to see callbacks, bookings, and your pipeline.
           </p>
           <button
             onClick={() => setTab("auditions")}
             style={{ background: "none", border: "none", cursor: "pointer", color: CORAL, fontSize: 13, fontWeight: 600, marginTop: 12 }}
           >
-            Log your first audition &rarr;
+            Log your first audition →
           </button>
         </div>
       )}
 
-      {/* Token balance */}
+      {/* ── Tutorial + daily challenge — kept; Aurora glass treatment via wrapper ── */}
+      <div style={{ marginBottom: 14 }}>
+        <DailyChallengeCard />
+      </div>
+      <div style={{ marginBottom: 14 }}>
+        <TutorialChecklist onNavigate={({ tab, panel }) => {
+          if (tab) { setTab(tab); }
+          if (panel) { setCurrentPanel(panel); }
+        }} />
+      </div>
+
+      {/* ── Availability toggle ── */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+        <button
+          onClick={() => !availabilityToggling && dispatch(toggleAvailability(!isAvailable))}
+          className="aurora-glass"
+          style={{
+            flex: 1, display: "flex", alignItems: "center", gap: 8,
+            padding: "12px 16px", cursor: "pointer", border: 'none',
+            background: isAvailable ? 'color-mix(in oklch, var(--aurora-mint) 16%, var(--aurora-glass))' : 'var(--aurora-glass)',
+            color: 'var(--aurora-text)',
+          }}
+        >
+          <span style={{
+            width: 8, height: 8, borderRadius: "50%",
+            background: isAvailable ? 'var(--aurora-mint)' : 'var(--aurora-dim)',
+            boxShadow: isAvailable ? '0 0 8px var(--aurora-mint)' : 'none',
+          }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: isAvailable ? 'var(--aurora-mint)' : 'var(--aurora-sub)' }}>
+            {isAvailable ? "Available for readers" : "Go available"}
+          </span>
+        </button>
+
+        {(matchingStats?.pending_likes_count || 0) > 0 && (
+          <button
+            onClick={() => setTab("find-a-reader")}
+            className="aurora-glass"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "12px 16px", cursor: "pointer", border: 'none',
+              color: 'var(--aurora-text)',
+            }}
+          >
+            <span style={{ fontSize: 12, fontWeight: 700 }}>
+              {matchingStats.pending_likes_count} matches
+            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--aurora-accent)' }}>View →</span>
+          </button>
+        )}
+      </div>
+
+      {/* ── Token balance ── */}
       {balance !== null && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: SPACING_SECTION, background: 'rgba(167,236,218,0.04)', borderRadius: RADIUS_LG, padding: '16px 18px', border: `1px solid rgba(167,236,218,0.06)`, boxShadow: CARD_SHADOW }}>
+        <div className="aurora-glass" style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '12px 16px',
+        }}>
           <span style={{ fontSize: 16 }}>🎟️</span>
           <div style={{ flex: 1 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: '#A7ECDA' }}>{balance}</span>
-            <span style={{ fontSize: 12, color: '#8a9a96' }}> AI tokens remaining</span>
+            <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{balance}</span>
+            <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}> AI tokens remaining</span>
           </div>
           {balance === 0 && (
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#FF8280', background: 'rgba(255, 130, 128,0.15)', padding: '3px 10px', borderRadius: 20 }}>
+            <span style={{
+              fontSize: 11, fontWeight: 700, color: '#fff',
+              background: 'var(--aurora-accent)', padding: '4px 10px', borderRadius: 100,
+            }}>
               Upgrade
             </span>
           )}
         </div>
       )}
 
-      {/* Upcoming Callbacks */}
-      {callbacks.length > 0 && (
-        <div style={{ marginBottom: SPACING_SECTION }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 600, color: TEXT_SECONDARY, margin: 0, letterSpacing: "0.5px", textTransform: "uppercase" }}>Upcoming Callbacks</h2>
-            <button onClick={() => setTab("auditions")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>See all</button>
+      {/* ── Recent Scripts ── */}
+      {scripts.length > 0 && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+            <span className="aurora-eyebrow">CONTINUE PRACTICING</span>
+            <button onClick={() => setTab("scenes")} className="aurora-micro" style={{
+              background: "none", border: "none", color: 'var(--aurora-sub)', cursor: "pointer",
+            }}>ALL SCRIPTS →</button>
           </div>
-          {callbacks.map(a => {
-            const cb = callbackBadge(a.callbackDate);
-            return (
-              <div key={a.id} style={{
-                background: BG_CARD, borderRadius: RADIUS_LG, padding: "18px 20px", marginBottom: 10,
-                border: cb?.urgent ? `1px solid ${CORAL}35` : `1px solid ${CARD_BORDER}`,
-                boxShadow: cb?.urgent ? `0 0 24px ${CORAL}12` : CARD_SHADOW,
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0 }}>{a.project}</p>
-                    <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "2px 0 0" }}>as {a.character} · {a.cd}</p>
-                  </div>
-                  <span style={{
-                    fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20,
-                    background: cb?.urgent ? CORAL_DIM : GOLD_DIM,
-                    color: cb?.urgent ? CORAL : GOLD,
-                  }}>{cb?.text}</span>
-                </div>
+          {scripts.slice(0, 2).map(sc => (
+            <div
+              key={sc.id}
+              onClick={() => setTab("scenes")}
+              className="aurora-glass"
+              style={{
+                padding: "14px 16px", marginBottom: 10,
+                display: "flex", alignItems: "center", gap: 14, cursor: "pointer",
+              }}
+            >
+              <ProgressRing pct={sc.progress} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
+                <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "2px 0 0" }}>{sc.pages}{sc.lastPracticed ? ` · ${sc.lastPracticed}` : ""}</p>
               </div>
-            );
-          })}
+              <div style={{
+                width: 36, height: 36, borderRadius: 12,
+                background: 'color-mix(in oklch, var(--aurora-accent) 18%, transparent)',
+                display: "flex", alignItems: "center", justifyContent: "center",
+              }}>
+                <Icon name="play" size={16} color={CORAL} />
+              </div>
+            </div>
+          ))}
         </div>
       )}
-
-      {/* Recent Scripts */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-          <h2 style={{ fontSize: 13, fontWeight: 600, color: TEXT_SECONDARY, margin: 0, letterSpacing: "0.5px", textTransform: "uppercase" }}>Continue Practicing</h2>
-          <button onClick={() => setTab("scenes")} style={{ background: "none", border: "none", color: CORAL, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>All scripts</button>
-        </div>
-        {scripts.slice(0, 2).map(sc => (
-          <div key={sc.id} style={{ background: BG_CARD, borderRadius: RADIUS_LG, padding: "16px 18px", marginBottom: 12, border: `1px solid ${CARD_BORDER}`, display: "flex", alignItems: "center", gap: 14, cursor: "pointer", boxShadow: CARD_SHADOW }}>
-            <ProgressRing pct={sc.progress} />
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
-              <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "2px 0 0" }}>{sc.pages}{sc.lastPracticed ? ` · ${sc.lastPracticed}` : ""}</p>
-            </div>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: CORAL_DIM, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon name="play" size={16} color={CORAL} />
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
@@ -708,10 +917,21 @@ function AuditionsScreen() {
   ];
 
   return (
-    <div style={{ padding: "0 16px 24px" }}>
-      <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Auditions</h1>
-        <button onClick={() => setShowAddForm(true)} style={{ width: 38, height: 38, borderRadius: 12, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+    <div className="aurora-orbs" style={{ padding: "0 16px 24px", minHeight: '100%' }}>
+      <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div>
+          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>AUDITION TRACKER</span>
+          <h1 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>
+            <span className="aurora-mono" style={{ fontSize: 26 }}>{auditions.length}</span>{' '}
+            <span style={{ fontSize: 20, color: 'var(--aurora-sub)', fontWeight: 500 }}>submissions</span>
+          </h1>
+        </div>
+        <button onClick={() => setShowAddForm(true)} style={{
+          width: 42, height: 42, borderRadius: 14,
+          background: `linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))`,
+          border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          boxShadow: 'var(--aurora-shadow-coral)',
+        }}>
           <Icon name="plus" size={18} color="#fff" />
         </button>
       </div>
@@ -812,13 +1032,14 @@ function AuditionsScreen() {
       )}
 
       {/* Tab row */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: `1px solid ${BORDER}`, paddingBottom: 14 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, borderBottom: `1px solid var(--aurora-line)`, paddingBottom: 12 }}>
         {[{ key: "tracker", label: "Tracker" }, { key: "submissions", label: "Submissions" }].map(sec => (
-          <button key={sec.key} onClick={() => setViewSection(sec.key)} style={{
-            padding: "6px 16px", borderRadius: 20, border: "none", cursor: "pointer",
-            fontSize: 13, fontWeight: 600,
-            background: viewSection === sec.key ? CORAL : "transparent",
-            color: viewSection === sec.key ? "#fff" : TEXT_MUTED,
+          <button key={sec.key} onClick={() => setViewSection(sec.key)} className="aurora-mono" style={{
+            padding: "6px 16px", borderRadius: 100, border: "none", cursor: "pointer",
+            fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+            background: viewSection === sec.key ? 'var(--aurora-text)' : "transparent",
+            color: viewSection === sec.key ? 'var(--aurora-bg)' : 'var(--aurora-dim)',
+            transition: 'all 0.2s',
           }}>
             {sec.label}
           </button>
@@ -865,30 +1086,31 @@ function AuditionsScreen() {
       {viewSection === "submissions" ? (
         <div>
           {submissions.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", color: TEXT_MUTED, fontSize: 13, letterSpacing: "0.2px" }}>No submissions yet — start tracking your work.</div>
+            <div style={{ textAlign: "center", padding: "48px 0", color: 'var(--aurora-dim)', fontSize: 13 }}>No submissions yet — start tracking your work.</div>
           ) : submissions.map(sub => {
-            const statusColor = { sent: BLUE, viewed: "#b89aff", callback: GOLD, booked: GREEN }[sub.status] || TEXT_MUTED;
+            const auroraColor = { sent: 'var(--aurora-sky)', viewed: 'var(--aurora-purple)', callback: 'var(--aurora-heritage-gold)', booked: 'var(--aurora-mint)' }[sub.status] || 'var(--aurora-dim)';
             return (
-              <div key={sub.id} style={{
-                background: BG_CARD, borderRadius: 14, padding: "16px", marginBottom: 12,
-                border: `1px solid ${BORDER}`,
-              }}>
+              <div key={sub.id} className="aurora-glass" style={{ padding: "16px", marginBottom: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{sub.project_name || "Untitled"}</p>
-                  <span style={{
-                    fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 10, marginLeft: 8,
-                    background: `${statusColor}18`, color: statusColor, textTransform: "capitalize", whiteSpace: "nowrap",
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{sub.project_name || "Untitled"}</p>
+                  <span className="aurora-mono" style={{
+                    fontSize: 10, padding: "3px 10px", borderRadius: 100, marginLeft: 8,
+                    background: auroraColor, color: '#0A0A0A',
+                    textTransform: "uppercase", whiteSpace: "nowrap", letterSpacing: '0.08em',
                   }}>{sub.status || "sent"}</span>
                 </div>
-                <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "0 0 8px" }}>
+                <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "0 0 10px" }}>
                   {sub.role || ""}{sub.casting_director ? ` · ${sub.casting_director}` : ""}
                 </p>
-                <button onClick={() => dispatch(promoteToAuditionThunk({ id: sub.id }))} style={{
-                  background: GOLD_DIM, border: `1px solid ${GOLD}30`, borderRadius: 10,
-                  padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: GOLD,
-                  width: "100%", transition: "all 0.15s",
+                <button onClick={() => dispatch(promoteToAuditionThunk({ id: sub.id }))} className="aurora-mono" style={{
+                  background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)',
+                  border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 35%, transparent)',
+                  borderRadius: 100,
+                  padding: "8px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600,
+                  color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.1em',
+                  textTransform: 'uppercase', width: "100%",
                 }}>
-                  🎬  I Got an Audition
+                  🎬  I GOT AN AUDITION
                 </button>
               </div>
             );
@@ -896,18 +1118,20 @@ function AuditionsScreen() {
         </div>
       ) : (
         <>
-      {/* Filter Pills — Coral active, Mint tint on hover */}
+      {/* Filter Pills */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
         {types.map(t => {
           const count = t.key === "all" ? auditions.length : auditions.filter(a => a.type === t.key).length;
           const active = filter === t.key;
           return (
-            <button key={t.key} onClick={() => setFilter(t.key)} style={{
-              padding: "8px 14px", borderRadius: 20, border: "none", cursor: "pointer", whiteSpace: "nowrap",
-              fontSize: 13, fontWeight: 600,
-              background: active ? CORAL : BG_ELEVATED,
-              color: active ? "#fff" : TEXT_SECONDARY,
-              transition: "all 0.15s",
+            <button key={t.key} onClick={() => setFilter(t.key)} className="aurora-mono" style={{
+              padding: "7px 14px", borderRadius: 100, border: "none", cursor: "pointer", whiteSpace: "nowrap",
+              fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+              background: active ? 'var(--aurora-text)' : 'var(--aurora-glass)',
+              color: active ? 'var(--aurora-bg)' : 'var(--aurora-sub)',
+              border: active ? 'none' : '1px solid var(--aurora-glass-border)',
+              backdropFilter: active ? 'none' : 'blur(12px)',
+              transition: "all 0.2s",
             }}>
               {t.label} <span style={{ opacity: 0.6, marginLeft: 3 }}>{count}</span>
             </button>
@@ -926,35 +1150,46 @@ function AuditionsScreen() {
             const cb = callbackBadge(a.callbackDate);
             const statusColor = STATUS_COLORS[a.status] || TEXT_MUTED;
             const statusLabel = columns.find(c => c.id === a.status)?.label || a.status;
+            const isCallback = a.status === 'callback' || a.status === 'audition';
             return (
-              <div key={a.id} onClick={() => setSelected(a)} style={{
-                background: BG_CARD, borderRadius: 14, padding: "14px 16px", cursor: "pointer",
-                border: cb?.urgent ? `1px solid ${CORAL}30` : `1px solid ${BORDER}`,
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
-                {/* Status dot */}
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: statusColor, flexShrink: 0 }} />
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.project}</p>
-                  <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "2px 0 0" }}>
-                    {a.character ? `as ${a.character}` : ''}{a.cd ? ` · ${a.cd}` : ''}
-                  </p>
-                </div>
-                {/* Status + callback */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 8,
-                    background: `${statusColor}18`, color: statusColor,
+              <div
+                key={a.id}
+                onClick={() => setSelected(a)}
+                className="aurora-glass"
+                style={{
+                  padding: "14px 16px", cursor: "pointer",
+                  border: cb?.urgent
+                    ? `1px solid color-mix(in oklch, var(--aurora-accent) 40%, transparent)`
+                    : `1px solid var(--aurora-glass-border)`,
+                  boxShadow: cb?.urgent ? 'var(--aurora-shadow-coral)' : 'var(--aurora-shadow-card)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{a.project}</p>
+                  <span className="aurora-mono" style={{
+                    fontSize: 10, padding: "3px 10px", borderRadius: 100,
+                    background: statusColor, color: '#0A0A0A', textTransform: 'uppercase',
+                    letterSpacing: '0.08em', marginLeft: 8, whiteSpace: 'nowrap', flexShrink: 0,
                   }}>{statusLabel}</span>
-                  {cb && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 600, padding: "2px 6px", borderRadius: 6,
-                      background: cb.urgent ? CORAL_DIM : GOLD_DIM,
-                      color: cb.urgent ? CORAL : GOLD,
-                    }}>{cb.text}</span>
-                  )}
                 </div>
+                {a.character && (
+                  <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "0 0 4px" }}>{a.character}</p>
+                )}
+                <div className="aurora-micro" style={{ color: 'var(--aurora-dim)' }}>
+                  {[a.cd, a.type?.toUpperCase()].filter(Boolean).join(' · ')}
+                </div>
+                {cb && isCallback && (
+                  <div style={{
+                    marginTop: 10, padding: "6px 12px", borderRadius: 10,
+                    background: 'color-mix(in oklch, var(--aurora-heritage-gold) 20%, transparent)',
+                    border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 30%, transparent)',
+                    display: 'inline-block',
+                  }}>
+                    <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>
+                      CALLBACK · {cb.text.toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -965,58 +1200,99 @@ function AuditionsScreen() {
       {selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           {/* Backdrop */}
-          <div onClick={() => setSelected(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 0 }} />
+          <div onClick={() => setSelected(null)} style={{
+            position: "absolute", inset: 0,
+            background: "rgba(10,10,10,0.5)",
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 0,
+          }} />
           {/* Sheet */}
           <div style={{
             position: "relative", zIndex: 1, maxHeight: "85vh",
-            background: BG_DEEP, borderRadius: "20px 20px 0 0",
-            padding: "12px 20px calc(80px + env(safe-area-inset-bottom, 0px))",
+            background: 'var(--aurora-glass-strong)',
+            backdropFilter: 'blur(40px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(40px) saturate(1.5)',
+            border: '1px solid var(--aurora-glass-border)',
+            borderRadius: "28px 28px 0 0",
+            padding: "12px 22px calc(80px + env(safe-area-inset-bottom, 0px))",
             overflowY: "scroll", WebkitOverflowScrolling: "touch",
+            boxShadow: 'var(--aurora-shadow-modal)',
           }}>
-            {/* Handle + Close */}
+            {/* Handle */}
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(167,236,218,0.2)" }} />
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: "var(--aurora-line)" }} />
             </div>
             <button onClick={() => setSelected(null)} style={{
-              position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 10,
-              background: BG_ELEVATED, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-              color: TEXT_SECONDARY, fontSize: 18, lineHeight: 1,
-            }}>&times;</button>
+              position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 100,
+              background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)',
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+              color: 'var(--aurora-sub)', fontSize: 18, lineHeight: 1,
+              backdropFilter: 'blur(12px)',
+            }}>×</button>
 
             {/* Header */}
-            <div style={{ marginBottom: 20, paddingRight: 40 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>{selected.project}</h2>
-              <p style={{ fontSize: 14, color: TEXT_SECONDARY, margin: "4px 0 0" }}>as {selected.character}</p>
-              <span style={{
-                display: "inline-block", marginTop: 8,
-                fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20,
-                background: `${STATUS_COLORS[selected.status]}18`, color: STATUS_COLORS[selected.status],
-                textTransform: "capitalize",
+            <div style={{ marginBottom: 22, paddingRight: 40 }}>
+              <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 6 }}>
+                {(selected.type || 'AUDITION').toUpperCase()}
+                {selected.agency ? ` · ${selected.agency.toUpperCase()}` : ''}
+              </span>
+              <h2 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>
+                {selected.project}
+              </h2>
+              <p style={{ fontSize: 15, color: 'var(--aurora-sub)', margin: "4px 0 0" }}>
+                as {selected.character || '—'}
+              </p>
+              <span className="aurora-mono" style={{
+                display: "inline-block", marginTop: 10,
+                fontSize: 11, padding: "4px 12px", borderRadius: 100,
+                background: STATUS_COLORS[selected.status] || 'var(--aurora-line)',
+                color: '#0A0A0A', textTransform: "uppercase", letterSpacing: '0.1em',
               }}>{(selected.status || "").replace("_", " ")}</span>
             </div>
 
+            {/* Callback gold card if scheduled */}
+            {selected.callbackDate && (
+              <div style={{
+                background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-heritage-gold-light))',
+                borderRadius: 18, padding: '16px 18px', marginBottom: 20,
+                position: 'relative', overflow: 'hidden',
+                boxShadow: '0 12px 30px rgba(212,168,95,0.30)',
+              }}>
+                <div style={{
+                  position: 'absolute', top: -30, right: -30, width: 140, height: 140,
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%)',
+                }} />
+                <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)', display: 'block' }}>
+                  CALLBACK CONFIRMED
+                </span>
+                <p className="aurora-display" style={{ fontSize: 18, color: '#0E0D0A', margin: '4px 0 0' }}>
+                  {selected.callbackDate}
+                </p>
+              </div>
+            )}
+
             {/* Details grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
               {[
-                { label: "Casting Director", value: selected.cd || "—" },
-                { label: "Agency", value: selected.agency || "—" },
-                { label: "Type", value: selected.type || "—" },
-                { label: "Callback", value: selected.callbackDate || "—" },
+                { label: "CASTING", value: selected.cd || "—" },
+                { label: "AGENCY", value: selected.agency || "—" },
+                { label: "TYPE", value: selected.type || "—" },
+                { label: "CALLBACK", value: selected.callbackDate || "—" },
               ].map(f => (
-                <div key={f.label} style={{ background: BG_CARD, borderRadius: 12, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 10, color: TEXT_MUTED, margin: 0, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{f.label}</p>
-                  <p style={{ fontSize: 14, color: TEXT_PRIMARY, margin: "4px 0 0", fontWeight: 500 }}>{f.value}</p>
+                <div key={f.label} className="aurora-glass" style={{ padding: "12px 14px", borderRadius: 14 }}>
+                  <p className="aurora-micro" style={{ color: 'var(--aurora-dim)', margin: 0 }}>{f.label}</p>
+                  <p style={{ fontSize: 14, color: 'var(--aurora-text)', margin: "4px 0 0", fontWeight: 500 }}>{f.value}</p>
                 </div>
               ))}
             </div>
 
             {/* Change Status */}
             <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Update Status</p>
+              <p className="aurora-eyebrow" style={{ marginBottom: 12 }}>UPDATE STATUS</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {columns.map(col => {
                   const isActive = selected.status === col.id;
-                  const color = STATUS_COLORS[col.id] || TEXT_MUTED;
+                  const color = STATUS_COLORS[col.id] || 'var(--aurora-dim)';
                   return (
                     <button
                       key={col.id}
@@ -1028,12 +1304,15 @@ function AuditionsScreen() {
                           setSelected({ ...selected, status: col.id });
                         } catch {}
                       }}
+                      className="aurora-mono"
                       style={{
-                        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
-                        fontSize: 12, fontWeight: 600, transition: "all 0.15s",
-                        background: isActive ? `${color}25` : BG_CARD,
-                        color: isActive ? color : TEXT_SECONDARY,
-                        border: isActive ? `2px solid ${color}` : `1px solid ${BORDER}`,
+                        padding: "8px 14px", borderRadius: 100, cursor: "pointer",
+                        fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
+                        background: isActive ? color : 'var(--aurora-glass)',
+                        color: isActive ? '#0A0A0A' : 'var(--aurora-sub)',
+                        border: isActive ? 'none' : '1px solid var(--aurora-glass-border)',
+                        backdropFilter: isActive ? 'none' : 'blur(12px)',
+                        transition: 'all 0.2s',
                       }}
                     >
                       {col.label}
@@ -1045,8 +1324,8 @@ function AuditionsScreen() {
 
             {/* Close */}
             <button onClick={() => setSelected(null)} style={{
-              width: "100%", padding: "14px", borderRadius: 12, border: "none",
-              background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
+              width: "100%", padding: "14px", borderRadius: 14, border: "none",
+              background: 'var(--aurora-text)', color: 'var(--aurora-bg)',
               fontSize: 14, fontWeight: 600, cursor: "pointer",
             }}>Done</button>
           </div>
@@ -1319,89 +1598,124 @@ function ProfileScreen({ setCurrentPanel }) {
   ];
 
   return (
-    <div style={{ padding: "0 16px 32px" }}>
-      <div style={{ padding: "24px 0 32px", textAlign: "center" }}>
-        {/* Avatar — headshot with brand gradient overlay */}
-        <div style={{ width: 84, height: 84, borderRadius: "50%", margin: "0 auto 16px", position: "relative", overflow: "hidden" }}>
+    <div className="aurora-orbs" style={{ padding: "0 16px 32px", minHeight: '100%' }}>
+      <div style={{ padding: "24px 0 28px", textAlign: "center" }}>
+        {/* Eyebrow */}
+        <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 14 }}>YOUR PROFILE</span>
+
+        {/* Avatar */}
+        <div style={{
+          width: 92, height: 92, borderRadius: "50%", margin: "0 auto 14px",
+          position: "relative", overflow: "hidden",
+          boxShadow: '0 8px 28px rgba(255,130,128,0.18), 0 0 0 2px var(--aurora-glass-border)',
+        }}>
           {headshot ? (
             <>
               <img src={headshot} alt="Headshot" onError={(e) => e.target.style.display = 'none'} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255, 130, 128,0.25) 0%, transparent 50%, rgba(167,236,218,0.18) 100%)", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "inset 0 0 0 1.5px rgba(255, 130, 128,0.4)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255, 130, 128,0.15) 0%, transparent 60%, rgba(159,230,180,0.10) 100%)", pointerEvents: "none" }} />
             </>
           ) : (
             <div style={{
               width: "100%", height: "100%",
-              background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT}, ${CORAL})`,
+              background: `linear-gradient(135deg, var(--aurora-peach), var(--aurora-accent))`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 28, fontWeight: 700, color: BG_DEEPEST, fontFamily: "'Playfair Display', serif",
+              fontSize: 34, fontWeight: 600, color: '#fff',
+              fontFamily: '"Space Grotesk", sans-serif',
             }}>{initials}</div>
           )}
         </div>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY, margin: 0 }}>{userName}</h1>
-        <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "4px 0 0" }}>{userEmail}</p>
+
+        <h1 className="aurora-display" style={{ fontSize: 22, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.4px' }}>
+          {userName}
+        </h1>
+        <p className="aurora-micro" style={{ color: 'var(--aurora-dim)', margin: "6px 0 0" }}>
+          {userEmail}
+        </p>
+
         {(union || basedIn) && (
-          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 10 }}>
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
             {union && (
-              <span style={{ fontSize: 12, fontWeight: 600, color: MINT, padding: "4px 12px", borderRadius: 20, background: MINT_DIM }}>{union}</span>
+              <span className="aurora-mono" style={{
+                fontSize: 10, padding: "4px 12px", borderRadius: 100,
+                background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
+                color: 'color-mix(in oklch, var(--aurora-mint) 75%, var(--aurora-text))',
+                border: '1px solid color-mix(in oklch, var(--aurora-mint) 35%, transparent)',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+              }}>{union}</span>
             )}
             {basedIn && (
-              <span style={{ fontSize: 12, color: TEXT_SECONDARY, padding: "4px 12px", borderRadius: 20, background: BG_ELEVATED }}>📍 {basedIn}</span>
+              <span className="aurora-mono" style={{
+                fontSize: 10, padding: "4px 12px", borderRadius: 100,
+                background: 'var(--aurora-glass)',
+                color: 'var(--aurora-sub)',
+                border: '1px solid var(--aurora-glass-border)',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+                backdropFilter: 'blur(12px)',
+              }}>📍 {basedIn}</span>
             )}
           </div>
         )}
+
         {/* Subscription badge + token balance */}
         {subStatus?.plan && (
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
             {(() => {
               const badge = PLAN_BADGES[subStatus.plan];
               return badge ? (
-                <span style={{
-                  fontSize: 12, fontWeight: 700, color: badge.color,
-                  padding: '5px 14px', borderRadius: 20, background: badge.bg,
+                <span className="aurora-mono" style={{
+                  fontSize: 10, color: badge.color,
+                  padding: '5px 14px', borderRadius: 100, background: badge.bg,
                   display: 'inline-flex', alignItems: 'center', gap: 5,
+                  letterSpacing: '0.1em', textTransform: 'uppercase',
                 }}>
                   {badge.emoji} {badge.label}
                 </span>
               ) : null;
             })()}
-            <span style={{
-              fontSize: 12, fontWeight: 600, color: '#A7ECDA',
-              padding: '5px 14px', borderRadius: 20,
-              background: 'rgba(167,236,218,0.08)',
-              border: '1px solid rgba(167,236,218,0.2)',
+            <span className="aurora-mono" style={{
+              fontSize: 10, color: 'color-mix(in oklch, var(--aurora-mint) 75%, var(--aurora-text))',
+              padding: '5px 14px', borderRadius: 100,
+              background: 'color-mix(in oklch, var(--aurora-mint) 18%, transparent)',
+              border: '1px solid color-mix(in oklch, var(--aurora-mint) 35%, transparent)',
+              letterSpacing: '0.1em', textTransform: 'uppercase',
             }}>
-              {subStatus.balance ?? 0} tokens
+              {subStatus.balance ?? 0} TOKENS
             </span>
           </div>
         )}
-
       </div>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
-        {[{ n: auditionCount, l: "Auditions" }, { n: bookedCount, l: "Booked" }, { n: scriptsCount, l: "Scripts" }].map(s => (
-          <div key={s.l} style={{ flex: 1, textAlign: "center", background: BG_CARD, borderRadius: 14, padding: "16px 8px", border: `1px solid ${BORDER}` }}>
-            <p style={{ fontSize: 22, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>{s.n}</p>
-            <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "2px 0 0" }}>{s.l}</p>
+      {/* Stats grid */}
+      <div style={{ display: "flex", gap: 10, marginBottom: 22 }}>
+        {[{ n: auditionCount, l: "AUDITIONS" }, { n: bookedCount, l: "BOOKED" }, { n: scriptsCount, l: "SCRIPTS" }].map(stat => (
+          <div key={stat.l} className="aurora-glass" style={{ flex: 1, textAlign: "center", padding: "16px 8px", borderRadius: 18 }}>
+            <p className="aurora-mono" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0 }}>{stat.n}</p>
+            <p className="aurora-micro" style={{ color: 'var(--aurora-dim)', margin: "4px 0 0" }}>{stat.l}</p>
           </div>
         ))}
       </div>
 
-      <div style={{ background: BG_CARD, borderRadius: 18, border: `1px solid ${BORDER}`, overflow: "hidden" }}>
+      {/* Menu */}
+      <div className="aurora-glass" style={{ borderRadius: 20, overflow: "hidden" }}>
         {menu.map((item, i) => (
           <div key={item.label} onClick={item.action || undefined} style={{
-            display: "flex", alignItems: "center", gap: 14, padding: "15px 16px", cursor: "pointer",
-            borderBottom: i < menu.length - 1 ? `1px solid ${BORDER}` : "none",
+            display: "flex", alignItems: "center", gap: 14, padding: "16px 18px", cursor: "pointer",
+            borderBottom: i < menu.length - 1 ? `1px solid var(--aurora-line)` : "none",
           }}>
             <div style={{
-              width: 34, height: 34, borderRadius: 10,
-              background: item.danger ? 'rgba(239,68,68,0.08)' : `${MINT}08`,
+              width: 36, height: 36, borderRadius: 12,
+              background: item.danger
+                ? 'color-mix(in oklch, var(--aurora-rose) 30%, transparent)'
+                : 'color-mix(in oklch, var(--aurora-accent) 18%, transparent)',
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
-              <Icon name={item.icon} size={16} color={item.danger ? '#ef4444' : MINT} />
+              <Icon name={item.icon} size={16} color={item.danger ? '#E25E5E' : CORAL} />
             </div>
-            <span style={{ flex: 1, fontSize: 14, fontWeight: 500, color: item.danger ? '#ef4444' : TEXT_PRIMARY }}>{item.label}</span>
-            {!item.danger && <Icon name="chevron" size={14} color={TEXT_MUTED} />}
+            <span style={{
+              flex: 1, fontSize: 15, fontWeight: 500,
+              color: item.danger ? '#E25E5E' : 'var(--aurora-text)',
+            }}>{item.label}</span>
+            {!item.danger && <Icon name="chevron" size={14} color="var(--aurora-dim)" />}
           </div>
         ))}
       </div>
@@ -1415,24 +1729,25 @@ function ProfileScreen({ setCurrentPanel }) {
 function MoreScreen({ setCurrentPanel }) {
   const dispatch = useDispatch();
   return (
-    <div style={{ padding: "0 16px 32px" }}>
-      <div style={{ padding: "24px 0 24px" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>More features</h1>
-        <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: "6px 0 0" }}>All your tools in one place</p>
+    <div className="aurora-orbs" style={{ padding: "0 16px 32px", minHeight: '100%' }}>
+      <div style={{ padding: "24px 0 22px" }}>
+        <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>EXPLORE</span>
+        <h1 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>More features</h1>
+        <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "6px 0 0" }}>All your tools in one place</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {MORE_FEATURES.map(f => (
-          <button key={f.id} onClick={() => setCurrentPanel(f.id)} style={{
-            background: BG_CARD, border: `1px solid ${BORDER}`, borderRadius: 18,
-            padding: "20px 16px", cursor: "pointer", textAlign: "left",
-            transition: "border-color 0.15s, transform 0.15s",
+          <button key={f.id} onClick={() => setCurrentPanel(f.id)} className="aurora-glass" style={{
+            padding: "18px 16px", cursor: "pointer", textAlign: "left",
+            transition: "transform 0.15s, box-shadow 0.2s",
+            borderRadius: 18,
           }}>
             <div style={{
               width: 42, height: 42, borderRadius: 12,
-              background: `${f.color}14`, display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 28, marginBottom: 10,
+              background: `${f.color}22`, display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 26, marginBottom: 10,
             }}>{f.emoji}</div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, lineHeight: 1.3 }}>{f.label}</p>
+            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, lineHeight: 1.3 }}>{f.label}</p>
           </button>
         ))}
       </div>
@@ -1440,15 +1755,19 @@ function MoreScreen({ setCurrentPanel }) {
       {/* Log Out */}
       <button
         onClick={() => dispatch(logoutUser())}
+        className="aurora-mono"
         style={{
-          width: "100%", marginTop: 28, padding: "16px", borderRadius: 14,
-          background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+          width: "100%", marginTop: 24, padding: "14px", borderRadius: 100,
+          background: "color-mix(in oklch, var(--aurora-rose) 22%, transparent)",
+          border: "1px solid color-mix(in oklch, var(--aurora-rose) 40%, transparent)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-          cursor: "pointer",
+          cursor: "pointer", color: '#C04949',
+          fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+          backdropFilter: 'blur(12px)',
         }}
       >
-        <Icon name="logout" size={18} color="#ef4444" />
-        <span style={{ fontSize: 15, fontWeight: 600, color: "#ef4444" }}>Log Out</span>
+        <Icon name="logout" size={14} color="#C04949" />
+        Log Out
       </button>
     </div>
   );

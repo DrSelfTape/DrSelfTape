@@ -138,15 +138,16 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       }} />
 
       {/* ── Free / Paid badge */}
-      <div style={{
+      <div className="aurora-mono" style={{
         position: 'absolute', top: isMobile ? 60 : 16, right: 16,
-        padding: '6px 14px', borderRadius: 12, zIndex: 5,
-        background: actor?.is_paid_reader ? 'rgba(252,224,114,0.9)' : 'rgba(34,197,94,0.9)',
-        color: actor?.is_paid_reader ? '#1a1a2e' : '#fff',
-        fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+        padding: '6px 14px', borderRadius: 100, zIndex: 5,
+        background: actor?.is_paid_reader ? 'rgba(212,168,95,0.95)' : 'rgba(159,230,180,0.95)',
+        color: '#0E0D0A',
+        fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+        backdropFilter: 'blur(8px)',
       }}>
-        {actor?.is_paid_reader ? `$${actor.session_rate || ''}/session` : 'FREE'}
+        {actor?.is_paid_reader ? `$${actor.session_rate || ''}/SESSION` : 'FREE'}
       </div>
 
       {/* ── SLATE stamp (swipe right) */}
@@ -159,17 +160,19 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         transform: 'rotate(-12deg)',
         pointerEvents: 'none',
         textShadow: '0 0 20px rgba(255, 130, 128,0.5)',
+        fontFamily: '"Space Grotesk", sans-serif',
       }}>SLATE</div>
 
       {/* ── PASS stamp (swipe left) */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, right: 20,
-        border: '2.5px solid #666', color: '#888',
+        border: '2.5px solid rgba(255,255,255,0.4)', color: 'rgba(255,255,255,0.7)',
         fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
         padding: '4px 14px', borderRadius: 6,
         opacity: passOpacity,
         transform: 'rotate(12deg)',
         pointerEvents: 'none',
+        fontFamily: '"Space Grotesk", sans-serif',
       }}>PASS</div>
 
       {/* ── Actor info — bottom */}
@@ -184,10 +187,13 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
             {actor?.name || 'Actor'}
           </h3>
           {unionLabel && (
-            <span style={{
-              background: 'rgba(255, 130, 128,0.2)', border: '1px solid rgba(255, 130, 128,0.4)',
-              color: '#FF8280', fontSize: 10, fontWeight: 700,
-              padding: '2px 8px', borderRadius: 20,
+            <span className="aurora-mono" style={{
+              background: 'rgba(255, 130, 128,0.25)',
+              border: '1px solid rgba(255, 130, 128,0.5)',
+              color: '#FF8280',
+              fontSize: 9, padding: '3px 10px', borderRadius: 100,
+              letterSpacing: '0.1em', textTransform: 'uppercase',
+              backdropFilter: 'blur(8px)',
             }}>{unionLabel}</span>
           )}
         </div>
@@ -242,16 +248,20 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
 
         {/* Mobile action buttons */}
         {isMobile && isTop && (
-          <div style={{ display: 'flex', gap: 20, justifyContent: 'center', paddingTop: 8, paddingBottom: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 18, justifyContent: 'center', paddingTop: 12, paddingBottom: 8, alignItems: 'center' }}>
             {/* Pass */}
             <button
               onTouchEnd={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
               onClick={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
               style={{
-                width: 52, height: 52, borderRadius: '50%',
-                background: 'rgba(20,20,28,0.85)', border: '1.5px solid rgba(255,255,255,0.12)',
+                width: 56, height: 56, borderRadius: '50%',
+                background: 'rgba(255,255,255,0.12)',
+                border: '1px solid rgba(255,255,255,0.22)',
+                color: '#fff',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, cursor: 'pointer', backdropFilter: 'blur(10px)',
+                fontSize: 22, cursor: 'pointer',
+                backdropFilter: 'blur(20px) saturate(1.4)',
+                WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
               }}
             >✕</button>
 
@@ -260,10 +270,14 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onTouchEnd={(e) => { e.stopPropagation(); onStar?.(); }}
               onClick={(e) => { e.stopPropagation(); onStar?.(); }}
               style={{
-                width: 52, height: 52, borderRadius: '50%',
-                background: 'rgba(20,20,28,0.85)', border: '1.5px solid rgba(252,224,114,0.25)',
+                width: 50, height: 50, borderRadius: '50%',
+                background: 'rgba(252,224,114,0.18)',
+                border: '1px solid rgba(252,224,114,0.45)',
+                color: '#FCE072',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 18, cursor: 'pointer', backdropFilter: 'blur(10px)',
+                fontSize: 20, cursor: 'pointer',
+                backdropFilter: 'blur(20px) saturate(1.4)',
+                WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
               }}
             >⭐</button>
 
@@ -272,12 +286,12 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onTouchEnd={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               onClick={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               style={{
-                width: 52, height: 52, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #FF8280, #B045D8)',
+                width: 64, height: 64, borderRadius: '50%',
+                background: 'linear-gradient(135deg, #FF8280, #C05957)',
                 border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 20, cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(255, 130, 128,0.25)',
+                fontSize: 24, cursor: 'pointer',
+                boxShadow: '0 8px 22px rgba(255,130,128,0.45)',
               }}
             >🎬</button>
           </div>

@@ -162,12 +162,22 @@ export default function NotificationBell({ onNavigate }) {
       {/* Bell button */}
       <button
         onClick={() => { const next = !open; setOpen(next); if (next) dispatch(getNotifications()); }}
-        className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-colors"
-        style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+        className="relative w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+        style={{
+          background: 'var(--aurora-glass)',
+          border: '1px solid var(--aurora-glass-border)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+        }}
       >
-        <Bell className="w-[18px] h-[18px]" style={{ color: 'var(--text-secondary)' }} />
+        <Bell className="w-[16px] h-[16px]" style={{ color: 'var(--aurora-text)' }} />
         {unread.length > 0 && (
-          <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] rounded-full bg-[#FF8280] text-white text-[10px] font-bold flex items-center justify-center px-1 shadow-lg shadow-[#FF8280]/30">
+          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full text-white text-[10px] font-bold flex items-center justify-center px-1"
+            style={{
+              background: 'var(--aurora-accent)',
+              boxShadow: '0 4px 12px rgba(255,130,128,0.45)',
+            }}
+          >
             {unread.length > 9 ? '9+' : unread.length}
           </span>
         )}
@@ -175,8 +185,15 @@ export default function NotificationBell({ onNavigate }) {
 
       {/* Desktop dropdown */}
       {open && !isMobile && (
-        <div className="absolute right-0 top-12 w-[380px] z-[9999] flex flex-col rounded-2xl shadow-2xl"
-          style={{ background: 'var(--bg-elevated)', border: '1px solid var(--border-default)', maxHeight: '80vh', animation: 'fadeIn 0.15s ease-out' }}
+        <div className="absolute right-0 top-12 w-[380px] z-[9999] flex flex-col rounded-2xl"
+          style={{
+            background: 'var(--aurora-glass-strong)',
+            border: '1px solid var(--aurora-glass-border)',
+            backdropFilter: 'blur(28px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(28px) saturate(1.5)',
+            boxShadow: 'var(--aurora-shadow-modal)',
+            maxHeight: '80vh', animation: 'fadeIn 0.15s ease-out',
+          }}
         >
           {panelContent}
         </div>
@@ -185,12 +202,20 @@ export default function NotificationBell({ onNavigate }) {
       {/* Mobile — portal to document.body so it escapes parent z-index */}
       {open && isMobile && createPortal(
         <div ref={panelRef}>
-          <div className="fixed inset-0 z-[9998] bg-black/50" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} style={{
+            background: 'rgba(10,10,10,0.5)',
+            backdropFilter: 'blur(8px)',
+          }} />
           <div className="fixed left-0 right-0 bottom-0 z-[9999] flex flex-col"
             style={{
-              background: 'var(--bg-elevated)',
+              background: 'var(--aurora-glass-strong)',
+              border: '1px solid var(--aurora-glass-border)',
+              backdropFilter: 'blur(28px) saturate(1.5)',
+              WebkitBackdropFilter: 'blur(28px) saturate(1.5)',
               top: 'calc(50px + env(safe-area-inset-top, 0px))',
+              borderRadius: '28px 28px 0 0',
               animation: 'fadeIn 0.15s ease-out',
+              boxShadow: 'var(--aurora-shadow-modal)',
             }}
           >
             {panelContent}
