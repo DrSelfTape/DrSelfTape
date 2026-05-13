@@ -104,8 +104,10 @@ const FindAReader = () => {
       className="aurora-orbs flex min-h-screen flex-col items-center px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))]"
       style={{ background: 'var(--aurora-bg)' }}
     >
-      {/* Nav bar */}
-      <div className="flex w-full max-w-sm items-end justify-between mb-4 px-1">
+      {/* Nav bar — hidden on mobile because the SwipeCard takes over the
+       * full viewport. The bottom tab bar's active state already indicates
+       * which screen we're on. */}
+      <div className="hidden md:flex w-full max-w-sm items-end justify-between mb-4 px-1">
         <div>
           <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>FIND A READER</span>
           <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
@@ -127,6 +129,30 @@ const FindAReader = () => {
           Filters
         </button>
       </div>
+
+      {/* Floating filter button — mobile only, top-right corner above card */}
+      <button
+        onClick={() => setShowFilters(true)}
+        className="md:hidden aurora-mono"
+        style={{
+          position: 'fixed',
+          top: 'calc(50px + env(safe-area-inset-top, 0px) + 12px)',
+          right: 12,
+          zIndex: 41,
+          background: 'rgba(255,255,255,0.85)',
+          border: '1px solid var(--aurora-glass-border)',
+          backdropFilter: 'blur(20px) saturate(1.4)',
+          WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+          color: '#0A0A0A',
+          padding: '6px 12px', borderRadius: 100,
+          fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+          display: 'flex', alignItems: 'center', gap: 6,
+          boxShadow: '0 4px 14px rgba(10,10,10,0.10)',
+        }}
+      >
+        <Filter size={11} />
+        Filters
+      </button>
 
       {/* Photo required gate */}
       {!hasPhoto && !readersLoading && (

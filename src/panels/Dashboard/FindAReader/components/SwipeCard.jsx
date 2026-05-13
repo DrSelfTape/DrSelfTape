@@ -16,7 +16,15 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  const initials = (actor?.name || 'A')
+  // Strip "None" artifact when backend serializes a null last_name as the
+  // Python string "None" (e.g. "Courtney Richards None"). Also collapse
+  // doubled whitespace.
+  const cleanName = ((actor?.name || 'Actor')
+    .replace(/\bNone\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()) || 'Actor';
+
+  const initials = cleanName
     .split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 
   const unionLabel = {
@@ -63,18 +71,23 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   };
 
   const cardStyle = isMobile ? {
-    // Full screen on mobile — fills entire viewport
+    // Mobile: fit between the MobileApp top bar (50px + safe-area-top) and
+    // the bottom tab bar (60px + safe-area-bottom). Stops the action buttons
+    // from being clipped by the tab bar.
     position: 'fixed',
-    inset: 0,
+    top: 'calc(50px + env(safe-area-inset-top, 0px) + 8px)',
+    bottom: 'calc(60px + env(safe-area-inset-bottom, 0px) + 8px)',
+    left: 8,
+    right: 8,
     zIndex: 40,
-    borderRadius: 0,
-    width: '100%',
-    height: '100%',
+    borderRadius: 24,
+    overflow: 'hidden',
     transform,
     transition: dragState.current.isDragging ? 'none' : 'transform 0.3s ease',
     cursor: isTop ? 'grab' : 'default',
     background: '#0a0a0f',
     touchAction: 'none',
+    boxShadow: '0 20px 60px rgba(10,10,10,0.18)',
   } : {
     // Desktop card style
     position: 'relative',
@@ -109,7 +122,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
           <>
             <img
               src={actor.headshot || actor.user_image || actor.headshotUrl}
-              alt={actor.name}
+              alt={cleanName}
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
               draggable={false}
               onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1a0a2e 0%,#0f0f1a 50%,#0a1a0a 100%);display:flex;align-items:center;justify-content:center"><span style="font-size:${isMobile ? 120 : 80}px;font-weight:800;color:rgba(255, 130, 128,0.3);user-select:none">${initials}</span></div>`); }}
@@ -178,13 +191,13 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* ── Actor info — bottom */}
       <div style={{
         position: 'absolute', bottom: 0, left: 0, right: 0,
-        padding: isMobile ? '0 20px calc(env(safe-area-inset-bottom, 0px) + 16px)' : '0 20px 20px',
+        padding: '0 20px 16px',
         display: 'flex', flexDirection: 'column', gap: isMobile ? 6 : 8,
       }}>
         {/* Name + Union */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <h3 style={{ fontSize: isMobile ? 26 : 24, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.1 }}>
-            {actor?.name || 'Actor'}
+            {cleanName}
           </h3>
           {unionLabel && (
             <span className="aurora-mono" style={{
