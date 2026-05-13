@@ -23,24 +23,31 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
   }, [dispatch]);
 
   return (
-    <div className="min-h-[calc(100vh-80px)] px-4 py-8" style={{ background: 'var(--bg-deepest)' }}>
+    <div className="aurora-orbs min-h-[calc(100vh-80px)] px-4 py-8" style={{ background: 'var(--aurora-bg)' }}>
       <div className="mx-auto max-w-2xl">
-        <h1 className="mb-6 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Green Room</h1>
+        <div className="mb-6">
+          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>GREEN ROOM</span>
+          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
+            Your matches
+          </h1>
+        </div>
 
         {matchesLoading && (
           <div className="flex h-60 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#FF8280]" />
+            <Loader2 className="h-8 w-8 animate-spin" style={{ color: 'var(--aurora-accent)' }} />
           </div>
         )}
 
         {!matchesLoading && matches.length === 0 && (
-          <div className="flex flex-col items-center justify-center text-center py-8">
-            <div className="w-16 h-16 rounded-full bg-[#FF8280]/10 flex items-center justify-center mb-4">
-              <Users2 className="h-8 w-8 text-[#FF8280]" />
+          <div className="aurora-glass flex flex-col items-center justify-center text-center p-8 mt-6">
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4" style={{
+              background: 'color-mix(in oklch, var(--aurora-accent) 18%, transparent)',
+            }}>
+              <Users2 className="h-8 w-8" style={{ color: 'var(--aurora-accent)' }} />
             </div>
-            <p className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Your Green Room is empty</p>
-            <p className="text-sm mb-6 max-w-xs" style={{ color: 'var(--text-secondary)' }}>
-              Match with other actors to start running lines together
+            <p className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>Your Green Room is empty</p>
+            <p className="text-sm mb-6 max-w-xs" style={{ color: 'var(--aurora-sub)' }}>
+              Match with other actors to start running lines together.
             </p>
 
             {/* Activity stats to show the community is active */}
@@ -54,7 +61,12 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
 
             <button
               onClick={() => navigate('/dashboard/find-a-reader')}
-              className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm"
+              className="aurora-mono px-8 py-3 rounded-full text-white transition-all"
+              style={{
+                background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
+                fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+                boxShadow: 'var(--aurora-shadow-coral)',
+              }}
             >
               Start Swiping
             </button>

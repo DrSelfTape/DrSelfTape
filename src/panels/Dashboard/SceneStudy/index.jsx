@@ -84,7 +84,8 @@ function extractCharacters(lines) {
 export default function SceneStudy() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const useV2 = searchParams.get('layout') === 'v2';
+  // v2 is now the default; ?layout=v1 falls back to the legacy chrome.
+  const useV2 = searchParams.get('layout') !== 'v1';
   const [step, setStep] = useState('upload');
   const [scriptText, setScriptText] = useState('');
   const [selectedRole, setSelectedRole] = useState('');

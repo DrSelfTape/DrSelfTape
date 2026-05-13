@@ -71,14 +71,17 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
 
       {/* ── Controls Bar — single row, compact ── */}
       <div className="flex items-center gap-2 mb-2 px-1 flex-wrap">
-        {/* Auto-scroll toggle */}
         <button
           onClick={() => setAutoScroll(!autoScroll)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
-            autoScroll
-              ? 'bg-[#FF8280] border-[#FF8280] text-white'
-              : 'bg-[#1E1E1E] border-[#2A2A2A] text-[#999999]'
-          }`}
+          className="aurora-mono flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all cursor-pointer"
+          style={{
+            background: autoScroll ? 'var(--aurora-accent)' : 'var(--aurora-glass)',
+            color: autoScroll ? '#fff' : 'var(--aurora-sub)',
+            border: autoScroll ? 'none' : '1px solid var(--aurora-glass-border)',
+            backdropFilter: autoScroll ? 'none' : 'blur(12px)',
+            fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
+            boxShadow: autoScroll ? 'var(--aurora-shadow-coral)' : 'none',
+          }}
         >
           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
             <path d="M7 10l5 5 5-5H7z" />
@@ -86,25 +89,34 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
           {autoScroll ? 'Scrolling' : 'Auto-scroll'}
         </button>
 
-        {/* Speed pills — only when scrolling */}
+        {/* Speed pills */}
         {autoScroll && (
           <>
             {SPEED_LABELS.map((s) => (
               <button
                 key={s}
                 onClick={() => setSpeed(s)}
-                className={`text-xs px-2.5 py-1.5 rounded-full font-medium transition-colors cursor-pointer capitalize ${
-                  speed === s
-                    ? 'bg-[#FF8280] text-white'
-                    : 'bg-[#2A2A2A] text-[#666666]'
-                }`}
+                className="aurora-mono px-2.5 py-1.5 rounded-full transition-colors cursor-pointer"
+                style={{
+                  background: speed === s ? 'var(--aurora-text)' : 'var(--aurora-glass)',
+                  color: speed === s ? 'var(--aurora-bg)' : 'var(--aurora-dim)',
+                  border: speed === s ? 'none' : '1px solid var(--aurora-glass-border)',
+                  fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
+                  backdropFilter: speed === s ? 'none' : 'blur(12px)',
+                }}
               >
                 {s}
               </button>
             ))}
             <button
               onClick={() => setPaused(!paused)}
-              className="text-xs px-3 py-1.5 rounded-full font-semibold bg-[#2A2A2A] text-[#999999] cursor-pointer"
+              className="aurora-mono px-3 py-1.5 rounded-full cursor-pointer"
+              style={{
+                background: 'var(--aurora-glass)', color: 'var(--aurora-text)',
+                border: '1px solid var(--aurora-glass-border)',
+                fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
+                backdropFilter: 'blur(12px)',
+              }}
             >
               {paused ? '▶ Resume' : '⏸ Pause'}
             </button>
@@ -113,10 +125,13 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
       </div>
 
       {/* ── Progress Bar ── */}
-      <div className="w-full h-1 bg-[#1E1E1E] rounded-full mb-2 overflow-hidden">
+      <div className="w-full h-[2px] rounded-full mb-2 overflow-hidden" style={{ background: 'var(--aurora-line)' }}>
         <div
-          className="h-full bg-gradient-to-r from-[#FF8280] to-[#9333ea] rounded-full transition-all duration-200"
-          style={{ width: `${scrollProgress}%` }}
+          className="h-full rounded-full transition-all duration-200"
+          style={{
+            width: `${scrollProgress}%`,
+            background: 'linear-gradient(to right, var(--aurora-accent), var(--aurora-heritage-gold))',
+          }}
         />
       </div>
 
@@ -124,31 +139,45 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
       <div
         ref={containerRef}
         onScroll={updateProgress}
-        className="flex-1 min-h-0 overflow-y-auto rounded-2xl border border-[#2A2A2A] bg-[#0f0f14] space-y-1 p-3"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+        className="flex-1 min-h-0 overflow-y-auto rounded-2xl space-y-1 p-3"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          background: 'var(--aurora-glass)',
+          border: '1px solid var(--aurora-glass-border)',
+          backdropFilter: 'blur(20px) saturate(1.4)',
+        }}
       >
         {lines.map((line, i) => {
           const isUser = line.character === userRole;
           return (
             <div
               key={i}
-              className={`rounded-xl px-3 py-2.5 transition-colors ${
-                isUser
-                  ? 'bg-[#FF8280]/10 border-l-[3px] border-[#FF8280]'
-                  : 'bg-transparent border-l-[3px] border-[#2A2A2A]'
-              }`}
+              className="rounded-xl px-3 py-2.5 transition-colors"
+              style={{
+                background: isUser ? 'color-mix(in oklch, var(--aurora-accent) 12%, transparent)' : 'transparent',
+                borderLeft: isUser
+                  ? '3px solid var(--aurora-accent)'
+                  : '3px solid var(--aurora-line)',
+              }}
             >
               <span
-                className={`text-[10px] font-bold uppercase tracking-widest block mb-1 ${
-                  isUser ? 'text-[#FF8280]' : 'text-[#444444]'
-                }`}
+                className="aurora-mono"
+                style={{
+                  fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
+                  display: 'block', marginBottom: 4,
+                  color: isUser ? 'var(--aurora-accent)' : 'var(--aurora-dim)',
+                  fontWeight: 700,
+                }}
               >
                 {line.character}
               </span>
               <p
-                className={`leading-relaxed text-sm ${
-                  isUser ? 'text-white font-medium' : 'text-[#666666]'
-                }`}
+                style={{
+                  lineHeight: 1.5, fontSize: 15,
+                  color: isUser ? 'var(--aurora-text)' : 'var(--aurora-sub)',
+                  fontWeight: isUser ? 500 : 400,
+                  margin: 0,
+                }}
               >
                 {line.dialogue}
               </p>
