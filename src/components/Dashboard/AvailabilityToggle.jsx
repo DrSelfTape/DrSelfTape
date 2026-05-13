@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleAvailability } from '../../redux/features/readers/readersMatchSlice';
 import { markStep } from './TutorialChecklist';
+import { haptic } from '../../utils/haptics';
 
 export default function AvailabilityToggle({ compact = false }) {
   const dispatch = useDispatch();
@@ -10,6 +11,7 @@ export default function AvailabilityToggle({ compact = false }) {
 
   const handleToggle = () => {
     if (!toggling) {
+      haptic.medium();
       dispatch(toggleAvailability(!isAvailable));
       // Mark tutorial step
       if (!isAvailable) {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Flame, Trophy, Check, ChevronRight, Zap } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
+import { haptic } from '../../utils/haptics';
 
 export default function DailyChallengeCard({ onNavigate }) {
   const [challenge, setChallenge] = useState(null);
@@ -26,6 +27,7 @@ export default function DailyChallengeCard({ onNavigate }) {
     setCompleting(true);
     try {
       const { data } = await axios.post(`${baseURL}/v1/growth/challenge/complete/`);
+      haptic.success();
       setCompleted(true);
       setJustCompleted(true);
       setStreak({

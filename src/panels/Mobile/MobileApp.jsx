@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { haptic } from "../../utils/haptics";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
@@ -1694,6 +1695,7 @@ export default function DrSelfTapeApp() {
   }, []);
 
   const handleSetTab = (id) => {
+    haptic.light();
     setTab(id);
     setCurrentPanel(null);
   };
@@ -1714,7 +1716,7 @@ export default function DrSelfTapeApp() {
   };
 
   return (
-    <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: "'Poppins', sans-serif", color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
+    <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: "-apple-system, BlinkMacSystemFont, 'Poppins', sans-serif", color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
       {/* No tokens modal */}
       {showNoTokens && (
