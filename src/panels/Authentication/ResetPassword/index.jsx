@@ -99,11 +99,11 @@ export const ResetPassword = () => {
   return (
     <AuthLayout title="Reset Password">
       <div className="mx-auto w-full max-w-sm lg:w-96">
-        <Logo showText={false} />
-        <h2 className="mt-3 lg:mt-6 text-2xl font-semibold tracking-tight text-gray-900 max-lg:text-center">
+        <span className='aurora-eyebrow block mb-2'>NEW PASSWORD</span>
+        <h2 className="aurora-display text-3xl tracking-tight" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
           Reset your password
         </h2>
-        <p className="mt-2 text-sm text-gray-600 max-lg:text-center">
+        <p className="mt-2 text-sm" style={{ color: 'var(--aurora-sub)' }}>
           Create a new password
         </p>
 
@@ -141,24 +141,40 @@ export const ResetPassword = () => {
               />
             </div>
 
-            <div className="flex flex-col gap-2 space-y-5 mt-8">
+            <div className="flex flex-col gap-3 mt-8">
               <CustomButton
                 disabled={isEmpty(formData) || !isPasswordValid}
                 type="submit"
                 loading={loading}
-                   sx={{
-                  width:'100%'
+                sx={{
+                  width: '100%',
+                  height: '48px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  boxShadow: '0 8px 22px rgba(212,168,95,0.30)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #C09850, #6A4D14)',
+                    boxShadow: '0 10px 26px rgba(212,168,95,0.40)',
+                  },
+                  '&:disabled': {
+                    background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                    color: '#fff',
+                    opacity: 0.5,
+                  },
                 }}
               >
                 Set New Password
               </CustomButton>
 
-              <p className="text-sm text-center">
+              <p className="text-sm text-center" style={{ color: 'var(--aurora-sub)' }}>
                 Remember your password?{' '}
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  className="text-primary cursor-pointer font-medium hover:underline"
+                  className="cursor-pointer font-semibold hover:underline"
+                  style={{ color: 'var(--aurora-accent-deep)' }}
                 >
                   Back to Login
                 </button>

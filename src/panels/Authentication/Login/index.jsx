@@ -106,15 +106,16 @@ export const Login = () => {
   return (
     <AuthLayout title='Welcome back!'>
       <div className='mx-auto w-full max-w-sm lg:w-96'>
-        <h2 className='text-3xl font-bold text-white tracking-tight'>
+        <span className='aurora-eyebrow block mb-2'>WELCOME BACK</span>
+        <h2 className='aurora-display text-3xl tracking-tight' style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
           Sign in
         </h2>
-        <p className='mt-2 text-sm text-[#888]'>Welcome back to Dr. Self Tape</p>
+        <p className='mt-2 text-sm' style={{ color: 'var(--aurora-sub)' }}>Pick up where you left off</p>
 
         <div className='mt-8'>
           <form onSubmit={handleSubmit}>
             <div className='space-y-8'>
-              <CustomInput dark
+              <CustomInput
                 label='Email'
                 name='email'
                 type='text'
@@ -127,7 +128,7 @@ export const Login = () => {
                 errorMsg={errors.email}
               />
 
-              <CustomInput dark
+              <CustomInput
                 label='Password'
                 name='password'
                 type='password'
@@ -139,52 +140,54 @@ export const Login = () => {
               />
             </div>
 
-            <div className='text-end'>
+            <div className='text-end mt-3'>
               <button
                 type='button'
                 onClick={() => navigate('/forgot-password')}
-                className='text-sm text-primary cursor-pointer hover:underline'
+                className='aurora-mono cursor-pointer hover:underline'
+                style={{
+                  color: 'var(--aurora-accent-deep)',
+                  fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
+                }}
               >
                 Forgot password?
               </button>
             </div>
 
-            {/* <div className="flex items-center mt-6 cursor-pointer">
-              <input
-                id="rememberMe"
-                name="rememberMe"
-                type="checkbox"
-                className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                checked={formData.rememberMe || false}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    rememberMe: e.target.checked,
-                  }))
-                }
-              />
-              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900 cursor-pointer">
-                Remember me
-              </label>
-            </div> */}
-
-            <div className='flex flex-col gap-2 w-full mt-8'>
+            <div className='flex flex-col gap-3 w-full mt-8'>
               <CustomButton
                 disabled={isEmpty(formData)}
                 type='submit'
                 loading={loading}
                 sx={{
                   width: '100%',
+                  height: '48px',
+                  borderRadius: '14px',
+                  background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                  color: '#fff',
+                  fontWeight: 700,
+                  letterSpacing: '0.02em',
+                  boxShadow: '0 8px 22px rgba(212,168,95,0.30)',
+                  '&:hover': {
+                    background: 'linear-gradient(135deg, #C09850, #6A4D14)',
+                    boxShadow: '0 10px 26px rgba(212,168,95,0.40)',
+                  },
+                  '&:disabled': {
+                    background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                    color: '#fff',
+                    opacity: 0.5,
+                  },
                 }}
               >
                 Log in
               </CustomButton>
 
-              <p className='text-sm text-center text-[#666]'>
+              <p className='text-sm text-center' style={{ color: 'var(--aurora-sub)' }}>
                 Don't have an account?{' '}
                 <button
                   type='button'
-                  className='text-[#FF8280] cursor-pointer font-semibold hover:text-[#A040C8] transition-colors'
+                  className='cursor-pointer font-semibold transition-colors'
+                  style={{ color: 'var(--aurora-accent-deep)' }}
                   onClick={(e) => {
                     e.preventDefault();
                     navigate('/signup');

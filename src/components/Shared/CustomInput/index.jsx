@@ -42,13 +42,13 @@ export const CustomInput = ({
   };
 
   const bgClass   = dark ? 'bg-[#111318]' : (disabled ? 'bg-input-disabled cursor-not-allowed text-input-placeholder' : 'bg-white');
-  const textClass = dark ? 'text-white placeholder-[#555]' : 'text-black';
+  const textClass = dark ? 'text-white placeholder-[#555]' : 'text-[#0A0A0A] placeholder-[rgba(10,10,10,0.40)]';
   const borderBase = dark
-    ? 'border-[#2a2d35] hover:border-[#FF8280]/60 focus:border-[#FF8280]'
-    : 'border-input hover:border-input-hover focus:border-input-active';
+    ? 'border-[#2a2d35] hover:border-[#D4A85F]/60 focus:border-[#D4A85F]'
+    : 'border-[rgba(10,10,10,0.08)] hover:border-[rgba(10,10,10,0.20)] focus:border-[#D4A85F]';
   const borderErr = 'border-danger focus:border-danger';
   const labelBg   = dark ? 'bg-[#111318]' : 'bg-white';
-  const labelColor = dark ? (error ? 'text-danger' : 'text-[#888]') : (error ? 'text-danger' : 'text-input-title');
+  const labelColor = dark ? (error ? 'text-danger' : 'text-[#888]') : (error ? 'text-danger' : 'text-[rgba(10,10,10,0.62)]');
 
   return (
     <div className="relative w-full">
@@ -84,7 +84,7 @@ export const CustomInput = ({
           ref={ref}
           autoComplete="off"
           onKeyDown={type === 'number' ? handleKeyDown : undefined}
-          className={`w-full px-3 py-2 min-w-[180px] h-[36px] sm:h-[40px] border text-input-size rounded transition-all
+          className={`w-full px-4 py-2 min-w-[180px] h-[44px] sm:h-[48px] border text-input-size rounded-xl transition-all
             ${bgClass} ${textClass}
             ${error ? borderErr : borderBase}
             ${type === 'number' ? 'no-spinner' : ''}

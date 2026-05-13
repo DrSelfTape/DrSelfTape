@@ -132,15 +132,16 @@ export const Signup = () => {
   return (
     <AuthLayout>
       <div className='mx-auto w-full max-w-sm lg:w-96'>
-        <h2 className='text-3xl font-bold text-white tracking-tight'>
+        <span className='aurora-eyebrow block mb-2'>JOIN DR SELF TAPE</span>
+        <h2 className='aurora-display text-3xl tracking-tight' style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
           Create account
         </h2>
-        <p className='mt-2 text-sm text-[#888]'>Start practicing in under 60 seconds</p>
+        <p className='mt-2 text-sm' style={{ color: 'var(--aurora-sub)' }}>Start practicing in under 60 seconds</p>
 
         <div className='mt-8'>
           <form onSubmit={handleSubmit} className=''>
             <div className='space-y-6'>
-              <CustomInput dark
+              <CustomInput
                 label='Full Name'
                 name='firstName'
                 type='text'
@@ -151,7 +152,7 @@ export const Signup = () => {
                 required
               />
 
-              <CustomInput dark
+              <CustomInput
                 label='Email'
                 name='email'
                 type='text'
@@ -165,7 +166,7 @@ export const Signup = () => {
               />
 
               <div className='flex flex-col gap-1 relative'>
-                <CustomInput dark
+                <CustomInput
                   label='Password'
                   name='password'
                   type='password'
@@ -184,7 +185,7 @@ export const Signup = () => {
                 )}
               </div>
 
-              <CustomInput dark
+              <CustomInput
                 label='Confirm Password'
                 name='confirmPassword'
                 type='password'
@@ -207,7 +208,7 @@ export const Signup = () => {
                 className='mt-[3px] accent-primary w-4 h-4'
               />
 
-              <div className='flex flex-col gap-2'>
+              <div className='flex flex-col gap-3'>
                 <CustomButton
                   disabled={
                     !formData.firstName ||
@@ -221,17 +222,33 @@ export const Signup = () => {
                   loading={loading}
                   sx={{
                     width: '100%',
+                    height: '48px',
+                    borderRadius: '14px',
+                    background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                    color: '#fff',
+                    fontWeight: 700,
+                    boxShadow: '0 8px 22px rgba(212,168,95,0.30)',
+                    '&:hover': {
+                      background: 'linear-gradient(135deg, #C09850, #6A4D14)',
+                      boxShadow: '0 10px 26px rgba(212,168,95,0.40)',
+                    },
+                    '&:disabled': {
+                      background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                      color: '#fff',
+                      opacity: 0.5,
+                    },
                   }}
                 >
                   Get Started
                 </CustomButton>
 
-                <p className='text-sm text-center'>
+                <p className='text-sm text-center' style={{ color: 'var(--aurora-sub)' }}>
                   Already have an account?{' '}
                   <button
                     type='button'
                     onClick={() => navigate('/login')}
-                    className='text-primary font-medium hover:underline cursor-pointer'
+                    className='font-semibold hover:underline cursor-pointer'
+                    style={{ color: 'var(--aurora-accent-deep)' }}
                   >
                     Log in
                   </button>
