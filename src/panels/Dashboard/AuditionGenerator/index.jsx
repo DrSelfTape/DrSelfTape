@@ -22,9 +22,9 @@ const MINT        = '#A7ECDA';
 const MINT_BG     = 'rgba(167,236,218,0.10)';
 const MINT_BD     = 'rgba(167,236,218,0.30)';
 
-/* Button gradient: gold → coral → magenta, matching the screenshot */
-const BTN_GRADIENT = 'linear-gradient(90deg, #F5D76E 0%, #FFB49A 50%, #FF8280 100%)';
-const BTN_TEXT     = '#0d0d0d';
+/* Button gradient: antique gold spectrum, Aurora light theme */
+const BTN_GRADIENT = 'linear-gradient(135deg, #F0D097 0%, #D4A85F 60%, #7A5A18 100%)';
+const BTN_TEXT     = '#FFFFFF';
 
 /* ═══════════════════════════════════════════════════
    DATA

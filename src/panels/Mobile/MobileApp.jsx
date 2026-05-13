@@ -1757,8 +1757,11 @@ function MoreScreen({ setCurrentPanel }) {
 /* ═══════════════════════════════════════════════════
    PANEL SCREEN — Wraps a dashboard panel for mobile
    ═══════════════════════════════════════════════════ */
-// Panels that already use dark brand styling (inline dark bg/colors)
-const DARK_PANELS = new Set(["cd-sim", "generator", "find-a-reader", "green-room", "who-wants-to-read", "favorites", "jericho"]);
+// Panels that render full-bleed (no aurora-card wrapper) — Find a Reader
+// is the swipe deck (full-screen card), Green Room/WhoWantsToRead manage
+// their own page layout, Jericho is a complex growth panel deferred for
+// later Aurora reskin.
+const DARK_PANELS = new Set(["find-a-reader", "green-room", "who-wants-to-read", "jericho"]);
 
 // Wrapper to inject matchId into GreenRoomChat without React Router params
 function GreenRoomChatWrapper({ matchId }) {
@@ -1827,23 +1830,32 @@ function PanelScreen({ panelId, onBack }) {
   }
 
   return (
-    <div style={{ padding: "0 0 24px" }}>
+    <div className="aurora-orbs" style={{ padding: "0 0 24px", minHeight: '100%' }}>
       <div style={{
-        display: "flex", alignItems: "center", gap: 12, padding: "16px 16px",
-        borderBottom: `1px solid ${BORDER}`,
+        display: "flex", alignItems: "center", gap: 12, padding: "16px 16px 12px",
       }}>
-        <button onClick={onBack} style={{
-          width: 38, height: 38, borderRadius: 10, background: BG_ELEVATED,
-          border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center",
-          cursor: "pointer",
-        }}>
-          <Icon name="back" size={18} color={TEXT_SECONDARY} />
+        <button
+          onClick={onBack}
+          className="aurora-tab-btn"
+          style={{
+            width: 38, height: 38, borderRadius: 12,
+            background: 'var(--aurora-glass)',
+            border: '1px solid var(--aurora-glass-border)',
+            backdropFilter: 'blur(12px)',
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer",
+            transition: 'transform 0.15s ease',
+          }}
+        >
+          <Icon name="back" size={16} color="var(--aurora-text)" />
         </button>
-        <span style={{ fontSize: 17, fontWeight: 600, color: TEXT_PRIMARY }}>{feature?.label || "Feature"}</span>
+        <span className="aurora-display" style={{
+          fontSize: 20, color: 'var(--aurora-text)', letterSpacing: '-0.3px',
+        }}>{feature?.label || "Feature"}</span>
       </div>
       <Suspense fallback={
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-          <div style={{ fontSize: 13, color: TEXT_SECONDARY }}>Loading...</div>
+          <div style={{ fontSize: 13, color: 'var(--aurora-sub)' }}>Loading...</div>
         </div>
       }>
         {isDark ? (
@@ -1852,10 +1864,14 @@ function PanelScreen({ panelId, onBack }) {
             onMatchNavigate={panelId === 'who-wants-to-read' ? (matchId) => setSubPanel({ id: 'its-a-scene', matchId }) : undefined}
           />
         ) : (
-          <div style={{
-            background: BG_CARD, borderRadius: 16, margin: "12px 8px 0",
-            padding: 12, minHeight: 200,
-          }}>
+          <div
+            className="aurora-card"
+            style={{
+              margin: "0 12px",
+              padding: 20,
+              minHeight: 200,
+            }}
+          >
             <PanelComponent
               onSelectMatch={panelId === 'green-room' ? (matchId) => setSubPanel({ id: 'green-room-chat', matchId }) : undefined}
               onMatchNavigate={panelId === 'who-wants-to-read' ? (matchId) => setSubPanel({ id: 'its-a-scene', matchId }) : undefined}

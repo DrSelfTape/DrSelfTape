@@ -108,18 +108,18 @@ export default function Membership() {
     <div className="max-w-4xl mx-auto px-4 py-6">
       {/* Header */}
       <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
+        <h1 className="text-3xl font-bold text-[#0A0A0A] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
           Choose Your Plan
         </h1>
-        <p className="text-[#8a9a96] text-sm">
+        <p className="text-[rgba(10,10,10,0.5)] text-sm">
           One token = one AI session. No surprises.
         </p>
 
         {/* Token balance badge */}
         {!loading && (
-          <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-[#1a1c26] border border-[rgba(167,236,218,0.15)] text-sm">
+          <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-[#F4F4EE] border border-[rgba(167,236,218,0.15)] text-sm">
             <span className="text-[#A7ECDA] font-bold">{tokenBalance}</span>
-            <span className="text-[#8a9a96]">tokens remaining</span>
+            <span className="text-[rgba(10,10,10,0.5)]">tokens remaining</span>
           </div>
         )}
       </div>
@@ -130,8 +130,8 @@ export default function Membership() {
           onClick={() => setBilling('monthly')}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
             billing === 'monthly'
-              ? 'bg-[#FF8280] text-white'
-              : 'bg-[#1a1c26] text-[#8a9a96] border border-[rgba(167,236,218,0.1)]'
+              ? 'bg-[#FF8280] text-[#0A0A0A]'
+              : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.5)] border border-[rgba(167,236,218,0.1)]'
           }`}
         >
           Monthly
@@ -140,8 +140,8 @@ export default function Membership() {
           onClick={() => setBilling('yearly')}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
             billing === 'yearly'
-              ? 'bg-[#FF8280] text-white'
-              : 'bg-[#1a1c26] text-[#8a9a96] border border-[rgba(167,236,218,0.1)]'
+              ? 'bg-[#FF8280] text-[#0A0A0A]'
+              : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.5)] border border-[rgba(167,236,218,0.1)]'
           }`}
         >
           Yearly
@@ -161,18 +161,20 @@ export default function Membership() {
               key={plan.id}
               className="relative rounded-2xl p-6 flex flex-col"
               style={{
-                background: plan.popular ? 'linear-gradient(145deg, #1a0d24, #120a1c)' : '#13151d',
+                background: plan.popular ? 'linear-gradient(145deg, #FFFFFF, #F4F4EE)' : '#FFFFFF',
                 border: isCurrent
                   ? `2px solid ${plan.color}`
                   : plan.popular
-                  ? `1px solid rgba(255, 130, 128,0.4)`
-                  : '1px solid rgba(167,236,218,0.06)',
-                boxShadow: plan.popular ? '0 0 40px rgba(255, 130, 128,0.1)' : 'none',
+                  ? `1px solid rgba(212,168,95,0.4)`
+                  : '1px solid rgba(10,10,10,0.06)',
+                boxShadow: plan.popular
+                  ? '0 12px 30px rgba(212,168,95,0.18), 0 1px 2px rgba(10,10,10,0.04)'
+                  : '0 1px 2px rgba(10,10,10,0.04), 0 8px 24px rgba(10,10,10,0.05)',
               }}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg, #FF8280, #9333ea)' }}>
+                  style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', boxShadow: '0 6px 14px rgba(212,168,95,0.30)' }}>
                   Most Popular
                 </div>
               )}
@@ -185,10 +187,10 @@ export default function Membership() {
 
               {/* Plan name + price */}
               <div className="mb-5">
-                <h2 className="text-xl font-bold text-white mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>{plan.name}</h2>
+                <h2 className="text-xl font-bold text-[#0A0A0A] mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>{plan.name}</h2>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-bold text-white">${price}</span>
-                  <span className="text-[#8a9a96] text-sm">/{billing === 'monthly' ? 'mo' : 'yr'}</span>
+                  <span className="text-3xl font-bold text-[#0A0A0A]">${price}</span>
+                  <span className="text-[rgba(10,10,10,0.5)] text-sm">/{billing === 'monthly' ? 'mo' : 'yr'}</span>
                 </div>
                 {billing === 'yearly' && (
                   <p className="text-xs mt-1" style={{ color: plan.color }}>Save ${((plan.monthly * 12) - plan.yearly).toFixed(2)}/year</p>
@@ -200,7 +202,7 @@ export default function Membership() {
                 style={{ background: `${plan.color}12`, border: `1px solid ${plan.color}25` }}>
                 <span className="text-2xl font-bold" style={{ color: plan.color }}>{plan.tokens}</span>
                 <div>
-                  <p className="text-white text-xs font-semibold">tokens / month</p>
+                  <p className="text-[#0A0A0A] text-xs font-semibold">tokens / month</p>
                   {plan.rollover && <p className="text-[10px]" style={{ color: plan.color }}>+ rollover up to 2 months</p>}
                 </div>
               </div>
@@ -208,7 +210,7 @@ export default function Membership() {
               {/* Features */}
               <ul className="space-y-2.5 flex-1 mb-6">
                 {plan.features.map(f => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-[#8a9a96]">
+                  <li key={f} className="flex items-start gap-2 text-sm text-[rgba(10,10,10,0.5)]">
                     <span className="mt-0.5 text-xs" style={{ color: plan.color }}>✓</span>
                     {f}
                   </li>
@@ -231,10 +233,11 @@ export default function Membership() {
                   className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
                   style={{
                     background: plan.popular
-                      ? 'linear-gradient(135deg, #FF8280, #9333ea)'
-                      : `${plan.color}20`,
+                      ? 'linear-gradient(135deg, #D4A85F, #7A5A18)'
+                      : `${plan.color}1A`,
                     color: plan.popular ? 'white' : plan.color,
                     border: plan.popular ? 'none' : `1px solid ${plan.color}40`,
+                    boxShadow: plan.popular ? '0 8px 22px rgba(212,168,95,0.30)' : 'none',
                   }}
                 >
                   {checkoutLoading === plan.id ? 'Loading...' : `Get ${plan.name}`}

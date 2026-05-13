@@ -2,8 +2,8 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white">Pick Your Role</h2>
-        <p className="text-[#999999] text-sm mt-1">
+        <h2 className="text-2xl font-bold text-[#0A0A0A]">Pick Your Role</h2>
+        <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
           Select the character you'll be reading for — the AI will play all other roles as your Casting Director.
         </p>
       </div>
@@ -25,12 +25,12 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                   className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                     isSelected
                       ? 'border-[#FF8280] bg-[#FF8280]/5 text-[#FF8280] shadow-sm'
-                      : 'border-[#3A3A3A] bg-[#1E1E1E] text-[#999999] hover:border-[#FF8280]'
+                      : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] text-[rgba(10,10,10,0.62)] hover:border-[#FF8280]'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <svg
-                      className={`w-5 h-5 ${isSelected ? 'text-[#FF8280]' : 'text-[#666666]'}`}
+                      className={`w-5 h-5 ${isSelected ? 'text-[#FF8280]' : 'text-[rgba(10,10,10,0.4)]'}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -53,8 +53,8 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
           </div>
 
           {selectedRole && (
-            <div className="mt-6 bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] p-4 text-sm text-[#999999]">
-              <span className="font-semibold text-white">
+            <div className="mt-6 bg-[#1E1E1E] rounded-xl border border-[rgba(10,10,10,0.08)] p-4 text-sm text-[rgba(10,10,10,0.62)]">
+              <span className="font-semibold text-[#0A0A0A]">
                 I will be reading all other roles as your Casting Director today.
               </span>{' '}
               When you're ready, hit Begin Session and we'll start from the top.
@@ -66,14 +66,14 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
       <div className="flex gap-3 mt-6">
         <button
           onClick={onBack}
-          className="flex-1 px-4 py-3 text-sm font-semibold text-[#999999] bg-[#2A2A2A] hover:bg-[#3A3A3A] rounded-lg transition-colors cursor-pointer"
+          className="flex-1 px-4 py-3 text-sm font-semibold text-[rgba(10,10,10,0.62)] bg-[#F4F4EE] hover:bg-[#3A3A3A] rounded-lg transition-colors cursor-pointer"
         >
           Back
         </button>
         <button
           onClick={onStart}
           disabled={!selectedRole}
-          className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Begin Session
         </button>

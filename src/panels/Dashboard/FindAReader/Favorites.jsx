@@ -32,11 +32,11 @@ const Favorites = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-[#0f0f1a] px-4 py-8">
+    <div className="min-h-[calc(100vh-80px)] bg-transparent px-4 py-8">
       <div className="mx-auto max-w-2xl">
         <div className="flex items-center gap-2 mb-6">
           <Star size={18} className="text-[#FCE072] fill-[#FCE072]" />
-          <h1 className="text-xl font-bold text-white">Favorites</h1>
+          <h1 className="text-xl font-bold text-[#0A0A0A]">Favorites</h1>
         </div>
         <p className="text-xs text-[#666] mb-6">Actors you've saved for future readings. Slate them when you're ready to go.</p>
 
@@ -49,7 +49,7 @@ const Favorites = () => {
         {!favoritesLoading && favorites.length === 0 && (
           <div className="flex h-60 flex-col items-center justify-center text-center">
             <Star className="mb-3 h-10 w-10 text-[#444]" />
-            <p className="text-sm font-semibold text-white">No favorites yet</p>
+            <p className="text-sm font-semibold text-[#0A0A0A]">No favorites yet</p>
             <p className="mt-1 text-xs text-[#666]">
               Star an actor on Find a Reader to save them here.
             </p>
