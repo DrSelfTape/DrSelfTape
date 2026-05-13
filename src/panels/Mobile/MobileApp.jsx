@@ -2159,7 +2159,9 @@ export default function DrSelfTapeApp() {
             )}
           </div>
 
-          {/* Bottom Tab Bar — floating glass pill, Aurora style */}
+          {/* Bottom Tab Bar — floating glass pill w/ active-pill highlight.
+           * Active tab = solid black pill containing icon + horizontal label.
+           * Inactive tabs = just the icon (no label). */}
           <div style={{
             position: "fixed",
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
@@ -2169,37 +2171,46 @@ export default function DrSelfTapeApp() {
             backdropFilter: "blur(28px) saturate(1.6)",
             WebkitBackdropFilter: "blur(28px) saturate(1.6)",
             border: '1px solid rgba(255, 255, 255, 0.55)',
-            borderRadius: 100,
+            borderRadius: 28,
             boxShadow: "0 12px 40px rgba(10,10,10,0.10), inset 0 1px 0 rgba(255,255,255,0.7)",
             transition: "background 0.3s, transform 0.2s",
-            display: "flex", justifyContent: "space-around", alignItems: "center",
-            padding: '6px 4px',
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+            padding: '8px 10px',
             height: 64,
           }}>
             {TABS.map(t => {
               const a = tab === t.id && !currentPanel;
-              const activeColor = 'var(--aurora-accent)';
-              const mutedColor = 'var(--aurora-dim)';
               return (
                 <button
                   key={t.id}
                   onClick={() => handleSetTab(t.id)}
+                  className="aurora-tab-btn"
                   style={{
-                    background: a ? 'color-mix(in oklch, var(--aurora-accent) 14%, transparent)' : "transparent",
+                    flex: a ? '0 0 auto' : '0 0 44px',
+                    background: a ? 'var(--aurora-text)' : 'transparent',
                     border: "none", cursor: "pointer",
-                    display: "flex", flexDirection: "column", alignItems: "center",
-                    gap: 2,
-                    padding: '8px 14px',
+                    display: "flex", flexDirection: "row",
+                    alignItems: "center", justifyContent: 'center',
+                    gap: a ? 8 : 0,
+                    padding: a ? '10px 16px' : '10px 8px',
                     borderRadius: 100,
-                    transition: 'background 0.2s, transform 0.15s ease',
+                    transition: 'all 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
+                    minHeight: 44,
                   }}
                 >
-                  <Icon name={t.icon} size={20} color={a ? activeColor : mutedColor} />
-                  <span style={{
-                    fontSize: 10, fontWeight: a ? 700 : 500,
-                    color: a ? activeColor : mutedColor,
-                    letterSpacing: '0.02em',
-                  }}>{t.label}</span>
+                  <Icon
+                    name={t.icon}
+                    size={20}
+                    color={a ? 'var(--aurora-bg)' : 'var(--aurora-dim)'}
+                  />
+                  {a && (
+                    <span style={{
+                      fontSize: 13, fontWeight: 600,
+                      color: 'var(--aurora-bg)',
+                      letterSpacing: '-0.01em',
+                      whiteSpace: 'nowrap',
+                    }}>{t.label}</span>
+                  )}
                 </button>
               );
             })}

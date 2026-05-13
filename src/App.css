@@ -227,6 +227,11 @@
   letter-spacing: -0.02em;
 }
 
+/* Tactile press feedback for the floating tab pill buttons */
+.aurora-tab-btn:active {
+  transform: scale(0.94);
+}
+
 html,
 body {
   margin: 0;
