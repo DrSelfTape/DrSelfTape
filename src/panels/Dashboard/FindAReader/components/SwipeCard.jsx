@@ -301,11 +301,11 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               onClick={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
               style={{
                 width: 64, height: 64, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #FF8280, #C05957)',
+                background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
                 border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 24, cursor: 'pointer',
-                boxShadow: '0 8px 22px rgba(255,130,128,0.45)',
+                boxShadow: '0 8px 22px rgba(212,168,95,0.45)',
               }}
             >🎬</button>
           </div>

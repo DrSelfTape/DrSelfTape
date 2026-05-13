@@ -282,13 +282,15 @@ const FindAReader = () => {
         )}
       </div>}
 
-      {/* Swipe action buttons */}
+      {/* Swipe action buttons — desktop only; mobile shows them inside the card */}
       {hasPhoto && !readersLoading && currentActor && (
-        <SwipeActions
-          onPass={() => handleSwipe('left')}
-          onStar={() => handleSwipe('star')}
-          onMatch={() => handleSwipe('right')}
-        />
+        <div className="hidden md:block">
+          <SwipeActions
+            onPass={() => handleSwipe('left')}
+            onStar={() => handleSwipe('star')}
+            onMatch={() => handleSwipe('right')}
+          />
+        </div>
       )}
 
       {/* Filters drawer — ReaderFilters handles its own fixed backdrop */}

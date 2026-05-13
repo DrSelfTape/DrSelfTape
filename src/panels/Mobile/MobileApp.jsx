@@ -2187,7 +2187,7 @@ export default function DrSelfTapeApp() {
                   className="aurora-tab-btn"
                   style={{
                     flex: a ? '0 0 auto' : '0 0 44px',
-                    background: a ? 'var(--aurora-text)' : 'transparent',
+                    background: a ? 'var(--aurora-accent-light)' : 'transparent',
                     border: "none", cursor: "pointer",
                     display: "flex", flexDirection: "row",
                     alignItems: "center", justifyContent: 'center',
@@ -2201,12 +2201,12 @@ export default function DrSelfTapeApp() {
                   <Icon
                     name={t.icon}
                     size={20}
-                    color={a ? 'var(--aurora-bg)' : 'var(--aurora-dim)'}
+                    color={a ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)'}
                   />
                   {a && (
                     <span style={{
-                      fontSize: 13, fontWeight: 600,
-                      color: 'var(--aurora-bg)',
+                      fontSize: 13, fontWeight: 700,
+                      color: 'var(--aurora-accent-deep)',
                       letterSpacing: '-0.01em',
                       whiteSpace: 'nowrap',
                     }}>{t.label}</span>

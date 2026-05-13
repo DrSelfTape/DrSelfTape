@@ -41,8 +41,8 @@ const SwipeActions = ({ onPass, onStar, onMatch, disabled }) => (
       disabled={disabled}
       className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
       style={{
-        background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
-        boxShadow: 'var(--aurora-shadow-coral)',
+        background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+        boxShadow: '0 8px 22px rgba(212,168,95,0.45)',
       }}
       title="Want to Read"
     >
