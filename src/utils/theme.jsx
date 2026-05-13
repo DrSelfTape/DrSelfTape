@@ -3,10 +3,19 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext(null);
 
 const STORAGE_KEY = 'drst-theme';
+const MIGRATION_KEY = 'drst-aurora-migrated';
 
 export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY) || 'dark';
+    // One-time migration: existing users on the old dark theme get bumped
+    // to Aurora light when the redesign ships. They can still toggle back
+    // to dark via ThemeToggle — the migration only runs once per device.
+    if (!localStorage.getItem(MIGRATION_KEY)) {
+      localStorage.setItem(STORAGE_KEY, 'light');
+      localStorage.setItem(MIGRATION_KEY, '1');
+      return 'light';
+    }
+    return localStorage.getItem(STORAGE_KEY) || 'light';
   });
 
   useEffect(() => {

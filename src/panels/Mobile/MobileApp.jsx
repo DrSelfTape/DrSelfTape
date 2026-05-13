@@ -2033,7 +2033,7 @@ export default function DrSelfTapeApp() {
   };
 
   return (
-    <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: "'Poppins', sans-serif", color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
+    <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: '-apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif', color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
       {/* No tokens modal */}
       {showNoTokens && (
@@ -2188,13 +2188,15 @@ export default function DrSelfTapeApp() {
           }}>
             {TABS.map(t => {
               const a = tab === t.id && !currentPanel;
+              const activeColor = 'var(--aurora-accent)';
+              const mutedColor = 'var(--aurora-dim)';
               return (
                 <button key={t.id} onClick={() => handleSetTab(t.id)} style={{
                   background: "none", border: "none", cursor: "pointer",
                   display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "6px 14px",
                 }}>
-                  <Icon name={t.icon} size={24} color={a ? TEXT_PRIMARY : TEXT_MUTED} />
-                  <span style={{ fontSize: 11, fontWeight: a ? 700 : 500, color: a ? TEXT_PRIMARY : TEXT_MUTED }}>{t.label}</span>
+                  <Icon name={t.icon} size={22} color={a ? activeColor : mutedColor} />
+                  <span style={{ fontSize: 10, fontWeight: a ? 700 : 500, color: a ? activeColor : mutedColor, letterSpacing: '0.02em' }}>{t.label}</span>
                 </button>
               );
             })}
