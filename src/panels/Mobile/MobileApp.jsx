@@ -269,10 +269,12 @@ function AuroraHeroRing({ stats }) {
   const booked  = Math.max(stats?.total_booked   || 0, 0);
   const cbRate  = total > 0 ? Math.round((cbCount / total) * 100) : 0;
 
+  // Use antique gold for the primary CB ring (matches the Aurora design ref).
+  // Sky for SUB, mint for BK — pastels per the reference.
   const METRICS = [
-    { id: 'cb',  label: 'CB',  color: 'var(--aurora-accent)',         value: cbRate,    suffix: '%', subline: 'callback rate' },
-    { id: 'sub', label: 'SUB', color: 'var(--aurora-sky)',            value: total,     suffix: '',  subline: 'submissions'  },
-    { id: 'bk',  label: 'BK',  color: 'var(--aurora-mint)',           value: booked,    suffix: '',  subline: 'booked'       },
+    { id: 'cb',  label: 'CB',  color: 'var(--aurora-heritage-gold)', shadow: 'rgba(212,168,95,0.30)',  value: cbRate, suffix: '%', subline: 'callback rate' },
+    { id: 'sub', label: 'SUB', color: 'var(--aurora-sky)',           shadow: 'rgba(167,214,255,0.30)', value: total,  suffix: '',  subline: 'submissions'  },
+    { id: 'bk',  label: 'BK',  color: 'var(--aurora-mint)',          shadow: 'rgba(159,230,180,0.30)', value: booked, suffix: '',  subline: 'booked'       },
   ];
 
   const [active, setActive] = useState('cb');
@@ -292,10 +294,17 @@ function AuroraHeroRing({ stats }) {
   const dotY = cy + r * Math.sin(angle);
 
   return (
-    <div className="aurora-glass" style={{ padding: 20, marginBottom: 18 }}>
+    <div className="aurora-card" style={{ padding: 20, marginBottom: 18 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <span className="aurora-eyebrow">{active === 'cb' ? 'CALLBACK RATE' : active === 'sub' ? 'SUBMISSIONS' : 'BOOKINGS'}</span>
-        <span className="aurora-micro" style={{ color: 'var(--aurora-sub)' }}>ALL TIME</span>
+        <span className="aurora-mono" style={{
+          fontSize: 11, padding: '3px 10px', borderRadius: 100,
+          background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
+          color: 'color-mix(in oklch, var(--aurora-mint) 70%, var(--aurora-text))',
+          letterSpacing: '0.05em',
+        }}>
+          ↑ ALL TIME
+        </span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 14 }}>
@@ -307,9 +316,9 @@ function AuroraHeroRing({ stats }) {
             style={{
               padding: '8px 0', borderRadius: 100, border: 'none', cursor: 'pointer',
               fontSize: 11, letterSpacing: '0.1em',
-              background: active === x.id ? x.color : 'var(--aurora-line)',
-              color: active === x.id ? '#0A0A0A' : 'var(--aurora-sub)',
-              boxShadow: active === x.id ? `0 4px 12px ${x.color === 'var(--aurora-accent)' ? 'rgba(255,130,128,0.3)' : x.color === 'var(--aurora-sky)' ? 'rgba(167,214,255,0.3)' : 'rgba(159,230,180,0.3)'}` : 'none',
+              background: active === x.id ? x.color : 'var(--aurora-line-soft)',
+              color: active === x.id ? '#0E0D0A' : 'var(--aurora-sub)',
+              boxShadow: active === x.id ? `0 4px 12px ${x.shadow}` : 'none',
               transition: 'all 0.2s ease',
             }}
           >
@@ -329,7 +338,7 @@ function AuroraHeroRing({ stats }) {
             style={{ transition: 'stroke-dashoffset 0.65s cubic-bezier(.5,.1,.2,1)' }}
           />
           {m.value > 0 && (
-            <circle cx={dotX} cy={dotY} r={6} fill={m.color} stroke="var(--aurora-bg)" strokeWidth={2.5}
+            <circle cx={dotX} cy={dotY} r={6} fill={m.color} stroke="var(--aurora-surface-solid)" strokeWidth={2.5}
               style={{ transition: 'cx 0.65s cubic-bezier(.5,.1,.2,1), cy 0.65s cubic-bezier(.5,.1,.2,1)' }}
             />
           )}
@@ -365,11 +374,11 @@ function AuroraPracticeStrip({ scripts }) {
   const max = Math.max(...counts, 1);
 
   return (
-    <div className="aurora-glass" style={{ padding: 16, marginBottom: 14 }}>
+    <div className="aurora-card" style={{ padding: 16, marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <span className="aurora-eyebrow">PRACTICE · 7-DAY</span>
-        <span className="aurora-micro" style={{ color: 'var(--aurora-sub)' }}>
-          {counts.reduce((a, b) => a + b, 0)} / 7
+        <span className="aurora-mono" style={{ color: 'var(--aurora-text)', fontSize: 12 }}>
+          {counts.reduce((a, b) => a + b, 0)} <span style={{ color: 'var(--aurora-dim)' }}>/ 7 min</span>
         </span>
       </div>
       <div style={{ display: 'flex', gap: 6, height: 56, alignItems: 'flex-end' }}>
@@ -381,7 +390,7 @@ function AuroraPracticeStrip({ scripts }) {
               <div style={{
                 width: '100%',
                 height: c > 0 ? `${Math.max(h, 12)}%` : 4,
-                background: isToday ? 'var(--aurora-accent)' : c > 0 ? 'var(--aurora-sky)' : 'var(--aurora-line)',
+                background: isToday ? 'var(--aurora-heritage-gold)' : c > 0 ? 'var(--aurora-sky)' : 'var(--aurora-line)',
                 borderRadius: 4,
                 transition: 'height 0.4s ease',
               }} />
@@ -406,13 +415,13 @@ function AuroraPipeline({ stats, auditions, setTab }) {
     bk:  stats?.total_booked || auditions.filter(a => a.status === 'booked').length,
   };
   const blocks = [
-    { id: 'sub', label: 'SUB', val: counts.sub, color: 'var(--aurora-sky)',    shadow: 'rgba(167,214,255,0.35)' },
-    { id: 'rev', label: 'REV', val: counts.rev, color: 'var(--aurora-purple)', shadow: 'rgba(216,197,242,0.35)' },
-    { id: 'cb',  label: 'CB',  val: counts.cb,  color: 'var(--aurora-accent)', shadow: 'rgba(255,130,128,0.35)' },
-    { id: 'bk',  label: 'BK',  val: counts.bk,  color: 'var(--aurora-mint)',   shadow: 'rgba(159,230,180,0.35)' },
+    { id: 'sub', label: 'SUB', val: counts.sub, color: 'var(--aurora-sky)',           shadow: 'rgba(167,214,255,0.35)' },
+    { id: 'rev', label: 'REV', val: counts.rev, color: 'var(--aurora-purple)',        shadow: 'rgba(216,197,242,0.35)' },
+    { id: 'cb',  label: 'CB',  val: counts.cb,  color: 'var(--aurora-heritage-gold)', shadow: 'rgba(212,168,95,0.35)' },
+    { id: 'bk',  label: 'BK',  val: counts.bk,  color: 'var(--aurora-mint)',          shadow: 'rgba(159,230,180,0.35)' },
   ];
   return (
-    <div className="aurora-glass" style={{ padding: 16, marginBottom: 14 }}>
+    <div className="aurora-card" style={{ padding: 16, marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <span className="aurora-eyebrow">PIPELINE</span>
         <button onClick={() => setTab('auditions')} className="aurora-micro" style={{
@@ -620,18 +629,19 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           fontSize: 30, color: 'var(--aurora-text)', margin: 0,
           letterSpacing: '-0.7px', lineHeight: 1.15,
         }}>
-          {greeting} <span style={{ color: 'var(--aurora-accent)' }}>✦</span>
+          {greeting} <span style={{ color: 'var(--aurora-heritage-gold)' }}>✦</span>
         </h1>
       </div>
 
       {/* ── Smart Next Step CTA ── */}
       <button
         onClick={handleNextStep}
-        className="aurora-glass"
+        className="aurora-card"
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 14,
           padding: "16px 18px", cursor: "pointer", textAlign: "left",
           marginBottom: 18, color: 'var(--aurora-text)',
+          border: 'none',
         }}
       >
         <div style={{
@@ -701,7 +711,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
       {/* ── Empty state when no stats ── */}
       {!hasStats && (
-        <div className="aurora-glass" style={{ padding: '24px 20px', marginBottom: 14, textAlign: 'center' }}>
+        <div className="aurora-card" style={{ padding: '24px 20px', marginBottom: 14, textAlign: 'center' }}>
           <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
           <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: "0 0 4px" }}>Your stats will appear here</p>
           <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: 0, lineHeight: 1.4 }}>
@@ -731,11 +741,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
         <button
           onClick={() => !availabilityToggling && dispatch(toggleAvailability(!isAvailable))}
-          className="aurora-glass"
+          className="aurora-card"
           style={{
             flex: 1, display: "flex", alignItems: "center", gap: 8,
             padding: "12px 16px", cursor: "pointer", border: 'none',
-            background: isAvailable ? 'color-mix(in oklch, var(--aurora-mint) 16%, var(--aurora-glass))' : 'var(--aurora-glass)',
+            background: isAvailable ? 'color-mix(in oklch, var(--aurora-mint) 16%, var(--aurora-surface-solid))' : 'var(--aurora-surface-solid)',
             color: 'var(--aurora-text)',
           }}
         >
@@ -752,7 +762,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         {(matchingStats?.pending_likes_count || 0) > 0 && (
           <button
             onClick={() => setTab("find-a-reader")}
-            className="aurora-glass"
+            className="aurora-card"
             style={{
               display: "flex", alignItems: "center", gap: 8,
               padding: "12px 16px", cursor: "pointer", border: 'none',
@@ -769,7 +779,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
       {/* ── Token balance ── */}
       {balance !== null && (
-        <div className="aurora-glass" style={{
+        <div className="aurora-card" style={{
           display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '12px 16px',
         }}>
           <span style={{ fontSize: 16 }}>🎟️</span>
@@ -801,7 +811,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             <div
               key={sc.id}
               onClick={() => setTab("scenes")}
-              className="aurora-glass"
+              className="aurora-card"
               style={{
                 padding: "14px 16px", marginBottom: 10,
                 display: "flex", alignItems: "center", gap: 14, cursor: "pointer",

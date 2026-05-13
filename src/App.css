@@ -146,6 +146,26 @@
   -webkit-backdrop-filter: blur(28px) saturate(1.5);
 }
 
+/* Aurora floating card — solid white surface with subtle shadow.
+ * Matches the design reference better than .aurora-glass for content
+ * cards that should "lift off" the cream page background. */
+.aurora-card {
+  background: var(--aurora-surface-solid);
+  border: 1px solid var(--aurora-line);
+  border-radius: 24px;
+  box-shadow:
+    0 1px 2px rgba(10,10,10,0.04),
+    0 8px 24px rgba(10,10,10,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+}
+[data-theme="dark"] .aurora-card {
+  background: var(--aurora-surface-solid);
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.4),
+    0 8px 24px rgba(0,0,0,0.35),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+}
+
 /* Aurora orb background — apply to a full-page wrapper; uses fixed
  * pseudo-element so orbs stay stationary while content scrolls. */
 .aurora-orbs {
@@ -159,10 +179,10 @@
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(70% 50% at 85% 10%, rgba(255,130,128,0.18) 0%, transparent 55%),
-    radial-gradient(60% 45% at -5% 32%, rgba(167,214,255,0.40) 0%, transparent 55%),
-    radial-gradient(55% 40% at 50% 92%, rgba(159,230,180,0.40) 0%, transparent 55%),
-    radial-gradient(40% 30% at 105% 78%, rgba(255,179,193,0.40) 0%, transparent 55%);
+    radial-gradient(70% 50% at 85% 8%, rgba(212,168,95,0.40) 0%, transparent 55%),
+    radial-gradient(60% 45% at -5% 30%, rgba(167,214,255,0.55) 0%, transparent 55%),
+    radial-gradient(55% 40% at 50% 92%, rgba(159,230,180,0.55) 0%, transparent 55%),
+    radial-gradient(40% 30% at 105% 78%, rgba(255,179,193,0.55) 0%, transparent 55%);
 }
 [data-theme="dark"] .aurora-orbs::before {
   background:
