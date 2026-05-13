@@ -101,7 +101,7 @@ const FindAReader = () => {
 
   return (
     <div
-      className="flex min-h-screen flex-col items-center px-4 py-6"
+      className="flex min-h-screen flex-col items-center px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))]"
       style={{ background: 'var(--bg-deep)' }}
     >
       {/* Nav bar */}

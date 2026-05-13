@@ -184,7 +184,7 @@ export default function SceneStudy() {
             </div>
             <button
               onClick={() => setStep('live')}
-              className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer flex items-center gap-2 text-sm"
+              className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
