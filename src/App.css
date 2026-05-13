@@ -4,9 +4,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 @import 'tailwindcss';
 
-/* Theme Variables */
+/* ── Theme Variables ─────────────────────────────────────────────────
+ * Layered design:
+ *   1. LEGACY tokens (--bg-deep, --text-primary, etc.) — existing panels
+ *      depend on these. Aurora-aware values below.
+ *   2. AURORA tokens (--aurora-*) — new tokens for Aurora reskins.
+ *
+ * Brand reconciliation (per Dr Self Tape Brand Guideline):
+ *   - PRIMARY CTA = coral #FF8280 (not Aurora's antique gold)
+ *   - Bright gold #FCE072 = secondary accent
+ *   - Antique gold #D4A85F exposed only as --aurora-heritage-gold
+ * ─────────────────────────────────────────────────────────────────── */
+
 :root,
 [data-theme="dark"] {
+  /* Legacy tokens */
   --bg-deepest: #080a0f;
   --bg-deep: #0D0D0D;
   --bg-card: #13151d;
@@ -22,24 +34,168 @@
   --sidebar-bg: #0D0D0D;
   --topbar-bg: #0D0D0Dee;
   --card-shadow: rgba(0,0,0,0.3);
+
+  /* Aurora — dark variant */
+  --aurora-bg: #0c0e14;
+  --aurora-page: #080a0f;
+  --aurora-surface-solid: #13151d;
+  --aurora-glass: rgba(255,255,255,0.04);
+  --aurora-glass-strong: rgba(255,255,255,0.07);
+  --aurora-glass-border: rgba(255,255,255,0.08);
+  --aurora-text: #f2f0ed;
+  --aurora-sub: rgba(242,240,237,0.62);
+  --aurora-dim: rgba(242,240,237,0.40);
+  --aurora-line: rgba(255,255,255,0.06);
+  --aurora-line-soft: rgba(255,255,255,0.04);
+
+  --aurora-accent: #FF8280;
+  --aurora-accent-deep: #C05957;
+  --aurora-accent-light: #FFB49A;
+
+  --aurora-gold: #FCE072;
+  --aurora-gold-deep: #B89A2E;
+  --aurora-gold-light: #FFF0B2;
+
+  --aurora-heritage-gold: #D4A85F;
+  --aurora-heritage-gold-deep: #7A5A18;
+  --aurora-heritage-gold-light: #F0D097;
+
+  --aurora-mint:   #9FE6B4;
+  --aurora-sky:    #A7D6FF;
+  --aurora-peach:  #FFC9A3;
+  --aurora-rose:   #FFB3C1;
+  --aurora-purple: #D8C5F2;
+
+  --aurora-shadow-card:  0 4px 20px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.04);
+  --aurora-shadow-modal: 0 24px 60px rgba(0,0,0,0.50);
+  --aurora-shadow-dock:  0 10px 30px rgba(0,0,0,0.40);
+  --aurora-shadow-coral: 0 12px 30px rgba(255,130,128,0.30);
+  --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.25);
 }
 
 [data-theme="light"] {
-  --bg-deepest: #f5f5f7;
-  --bg-deep: #ffffff;
-  --bg-card: #ffffff;
-  --bg-elevated: #f0f0f5;
-  --bg-surface: #f8f8fa;
-  --bg-input: #ffffff;
-  --border-default: #e0e0e5;
-  --border-active: #d0d0d8;
-  --text-primary: #1a1a2e;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --text-dim: #b0b0b8;
-  --sidebar-bg: #ffffff;
-  --topbar-bg: #ffffffee;
-  --card-shadow: rgba(0,0,0,0.08);
+  /* Legacy tokens — Aurora-light values */
+  --bg-deepest: #FAFAF7;
+  --bg-deep: #FAFAF7;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F4F4EE;
+  --bg-surface: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-default: rgba(10,10,10,0.08);
+  --border-active: rgba(10,10,10,0.14);
+  --text-primary: #0A0A0A;
+  --text-secondary: rgba(10,10,10,0.62);
+  --text-muted: rgba(10,10,10,0.40);
+  --text-dim: rgba(10,10,10,0.28);
+  --sidebar-bg: #FFFFFF;
+  --topbar-bg: #FFFFFFee;
+  --card-shadow: rgba(10,10,10,0.06);
+
+  /* Aurora — light variant */
+  --aurora-bg: #FAFAF7;
+  --aurora-page: #FAFAF7;
+  --aurora-surface-solid: #FFFFFF;
+  --aurora-glass: rgba(255,255,255,0.62);
+  --aurora-glass-strong: rgba(255,255,255,0.78);
+  --aurora-glass-border: rgba(255,255,255,0.55);
+  --aurora-text: #0A0A0A;
+  --aurora-sub: rgba(10,10,10,0.62);
+  --aurora-dim: rgba(10,10,10,0.40);
+  --aurora-line: rgba(10,10,10,0.06);
+  --aurora-line-soft: rgba(10,10,10,0.04);
+
+  --aurora-accent: #FF8280;
+  --aurora-accent-deep: #C05957;
+  --aurora-accent-light: #FFB49A;
+
+  --aurora-gold: #FCE072;
+  --aurora-gold-deep: #8A6D14;
+  --aurora-gold-light: #FFF0B2;
+
+  --aurora-heritage-gold: #D4A85F;
+  --aurora-heritage-gold-deep: #7A5A18;
+  --aurora-heritage-gold-light: #F0D097;
+
+  --aurora-mint:   #9FE6B4;
+  --aurora-sky:    #A7D6FF;
+  --aurora-peach:  #FFC9A3;
+  --aurora-rose:   #FFB3C1;
+  --aurora-purple: #D8C5F2;
+
+  --aurora-shadow-card:  0 4px 20px rgba(10,10,10,0.04), inset 0 1px 0 rgba(255,255,255,0.70);
+  --aurora-shadow-modal: 0 24px 60px rgba(10,10,10,0.18);
+  --aurora-shadow-dock:  0 10px 30px rgba(10,10,10,0.06);
+  --aurora-shadow-coral: 0 12px 30px rgba(255,130,128,0.30);
+  --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.30);
+}
+
+/* ── Aurora utility classes ─────────────────────────────────────────── */
+
+.aurora-glass {
+  background: var(--aurora-glass);
+  border: 1px solid var(--aurora-glass-border);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+  box-shadow: var(--aurora-shadow-card);
+  border-radius: 24px;
+}
+.aurora-glass-strong {
+  background: var(--aurora-glass-strong);
+  border: 1px solid var(--aurora-glass-border);
+  backdrop-filter: blur(28px) saturate(1.5);
+  -webkit-backdrop-filter: blur(28px) saturate(1.5);
+}
+
+/* Aurora orb background — apply to a full-page wrapper; uses fixed
+ * pseudo-element so orbs stay stationary while content scrolls. */
+.aurora-orbs {
+  position: relative;
+  isolation: isolate;
+}
+.aurora-orbs::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70% 50% at 85% 10%, rgba(255,130,128,0.18) 0%, transparent 55%),
+    radial-gradient(60% 45% at -5% 32%, rgba(167,214,255,0.40) 0%, transparent 55%),
+    radial-gradient(55% 40% at 50% 92%, rgba(159,230,180,0.40) 0%, transparent 55%),
+    radial-gradient(40% 30% at 105% 78%, rgba(255,179,193,0.40) 0%, transparent 55%);
+}
+[data-theme="dark"] .aurora-orbs::before {
+  background:
+    radial-gradient(70% 50% at 85% 10%, rgba(255,130,128,0.12) 0%, transparent 55%),
+    radial-gradient(60% 45% at -5% 32%, rgba(167,214,255,0.10) 0%, transparent 55%),
+    radial-gradient(55% 40% at 50% 92%, rgba(159,230,180,0.10) 0%, transparent 55%),
+    radial-gradient(40% 30% at 105% 78%, rgba(255,179,193,0.10) 0%, transparent 55%);
+}
+
+/* Mono / typography helpers */
+.aurora-eyebrow {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--aurora-dim);
+}
+.aurora-micro {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+}
+.aurora-mono {
+  font-family: "JetBrains Mono", monospace;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.aurora-display {
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 html,
@@ -48,7 +204,7 @@ body {
   padding: 0;
   background: var(--bg-deep);
   color: var(--text-primary);
-  font-family: 'Poppins', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif;
   transition: background 0.3s, color 0.3s;
 }
 
