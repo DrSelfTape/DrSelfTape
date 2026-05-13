@@ -48,7 +48,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
         <div>
           <h2 className="text-xl font-bold text-white leading-tight">Practice Mode</h2>
           <p className="text-[#666666] text-xs mt-0.5">
-            Your lines are highlighted in <span className="text-[#FF8280]">purple</span>
+            Your lines are highlighted in <span className="text-[#FF8280]">coral</span>
           </p>
         </div>
         <div className="flex items-center gap-2 ml-3 shrink-0">
