@@ -917,10 +917,21 @@ function AuditionsScreen() {
   ];
 
   return (
-    <div style={{ padding: "0 16px 24px" }}>
-      <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Auditions</h1>
-        <button onClick={() => setShowAddForm(true)} style={{ width: 38, height: 38, borderRadius: 12, background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+    <div className="aurora-orbs" style={{ padding: "0 16px 24px", minHeight: '100%' }}>
+      <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div>
+          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>AUDITION TRACKER</span>
+          <h1 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>
+            <span className="aurora-mono" style={{ fontSize: 26 }}>{auditions.length}</span>{' '}
+            <span style={{ fontSize: 20, color: 'var(--aurora-sub)', fontWeight: 500 }}>submissions</span>
+          </h1>
+        </div>
+        <button onClick={() => setShowAddForm(true)} style={{
+          width: 42, height: 42, borderRadius: 14,
+          background: `linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))`,
+          border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+          boxShadow: 'var(--aurora-shadow-coral)',
+        }}>
           <Icon name="plus" size={18} color="#fff" />
         </button>
       </div>
@@ -1021,13 +1032,14 @@ function AuditionsScreen() {
       )}
 
       {/* Tab row */}
-      <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: `1px solid ${BORDER}`, paddingBottom: 14 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 20, borderBottom: `1px solid var(--aurora-line)`, paddingBottom: 12 }}>
         {[{ key: "tracker", label: "Tracker" }, { key: "submissions", label: "Submissions" }].map(sec => (
-          <button key={sec.key} onClick={() => setViewSection(sec.key)} style={{
-            padding: "6px 16px", borderRadius: 20, border: "none", cursor: "pointer",
-            fontSize: 13, fontWeight: 600,
-            background: viewSection === sec.key ? CORAL : "transparent",
-            color: viewSection === sec.key ? "#fff" : TEXT_MUTED,
+          <button key={sec.key} onClick={() => setViewSection(sec.key)} className="aurora-mono" style={{
+            padding: "6px 16px", borderRadius: 100, border: "none", cursor: "pointer",
+            fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+            background: viewSection === sec.key ? 'var(--aurora-text)' : "transparent",
+            color: viewSection === sec.key ? 'var(--aurora-bg)' : 'var(--aurora-dim)',
+            transition: 'all 0.2s',
           }}>
             {sec.label}
           </button>
@@ -1074,30 +1086,31 @@ function AuditionsScreen() {
       {viewSection === "submissions" ? (
         <div>
           {submissions.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", color: TEXT_MUTED, fontSize: 13, letterSpacing: "0.2px" }}>No submissions yet — start tracking your work.</div>
+            <div style={{ textAlign: "center", padding: "48px 0", color: 'var(--aurora-dim)', fontSize: 13 }}>No submissions yet — start tracking your work.</div>
           ) : submissions.map(sub => {
-            const statusColor = { sent: BLUE, viewed: "#b89aff", callback: GOLD, booked: GREEN }[sub.status] || TEXT_MUTED;
+            const auroraColor = { sent: 'var(--aurora-sky)', viewed: 'var(--aurora-purple)', callback: 'var(--aurora-heritage-gold)', booked: 'var(--aurora-mint)' }[sub.status] || 'var(--aurora-dim)';
             return (
-              <div key={sub.id} style={{
-                background: BG_CARD, borderRadius: 14, padding: "16px", marginBottom: 12,
-                border: `1px solid ${BORDER}`,
-              }}>
+              <div key={sub.id} className="aurora-glass" style={{ padding: "16px", marginBottom: 12 }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{sub.project_name || "Untitled"}</p>
-                  <span style={{
-                    fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 10, marginLeft: 8,
-                    background: `${statusColor}18`, color: statusColor, textTransform: "capitalize", whiteSpace: "nowrap",
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{sub.project_name || "Untitled"}</p>
+                  <span className="aurora-mono" style={{
+                    fontSize: 10, padding: "3px 10px", borderRadius: 100, marginLeft: 8,
+                    background: auroraColor, color: '#0A0A0A',
+                    textTransform: "uppercase", whiteSpace: "nowrap", letterSpacing: '0.08em',
                   }}>{sub.status || "sent"}</span>
                 </div>
-                <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "0 0 8px" }}>
+                <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "0 0 10px" }}>
                   {sub.role || ""}{sub.casting_director ? ` · ${sub.casting_director}` : ""}
                 </p>
-                <button onClick={() => dispatch(promoteToAuditionThunk({ id: sub.id }))} style={{
-                  background: GOLD_DIM, border: `1px solid ${GOLD}30`, borderRadius: 10,
-                  padding: "8px 14px", cursor: "pointer", fontSize: 12, fontWeight: 600, color: GOLD,
-                  width: "100%", transition: "all 0.15s",
+                <button onClick={() => dispatch(promoteToAuditionThunk({ id: sub.id }))} className="aurora-mono" style={{
+                  background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)',
+                  border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 35%, transparent)',
+                  borderRadius: 100,
+                  padding: "8px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600,
+                  color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.1em',
+                  textTransform: 'uppercase', width: "100%",
                 }}>
-                  🎬  I Got an Audition
+                  🎬  I GOT AN AUDITION
                 </button>
               </div>
             );
@@ -1105,18 +1118,20 @@ function AuditionsScreen() {
         </div>
       ) : (
         <>
-      {/* Filter Pills — Coral active, Mint tint on hover */}
+      {/* Filter Pills */}
       <div style={{ display: "flex", gap: 8, marginBottom: 16, overflowX: "auto", paddingBottom: 4 }}>
         {types.map(t => {
           const count = t.key === "all" ? auditions.length : auditions.filter(a => a.type === t.key).length;
           const active = filter === t.key;
           return (
-            <button key={t.key} onClick={() => setFilter(t.key)} style={{
-              padding: "8px 14px", borderRadius: 20, border: "none", cursor: "pointer", whiteSpace: "nowrap",
-              fontSize: 13, fontWeight: 600,
-              background: active ? CORAL : BG_ELEVATED,
-              color: active ? "#fff" : TEXT_SECONDARY,
-              transition: "all 0.15s",
+            <button key={t.key} onClick={() => setFilter(t.key)} className="aurora-mono" style={{
+              padding: "7px 14px", borderRadius: 100, border: "none", cursor: "pointer", whiteSpace: "nowrap",
+              fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+              background: active ? 'var(--aurora-text)' : 'var(--aurora-glass)',
+              color: active ? 'var(--aurora-bg)' : 'var(--aurora-sub)',
+              border: active ? 'none' : '1px solid var(--aurora-glass-border)',
+              backdropFilter: active ? 'none' : 'blur(12px)',
+              transition: "all 0.2s",
             }}>
               {t.label} <span style={{ opacity: 0.6, marginLeft: 3 }}>{count}</span>
             </button>
@@ -1135,35 +1150,46 @@ function AuditionsScreen() {
             const cb = callbackBadge(a.callbackDate);
             const statusColor = STATUS_COLORS[a.status] || TEXT_MUTED;
             const statusLabel = columns.find(c => c.id === a.status)?.label || a.status;
+            const isCallback = a.status === 'callback' || a.status === 'audition';
             return (
-              <div key={a.id} onClick={() => setSelected(a)} style={{
-                background: BG_CARD, borderRadius: 14, padding: "14px 16px", cursor: "pointer",
-                border: cb?.urgent ? `1px solid ${CORAL}30` : `1px solid ${BORDER}`,
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
-                {/* Status dot */}
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: statusColor, flexShrink: 0 }} />
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a.project}</p>
-                  <p style={{ fontSize: 11, color: TEXT_SECONDARY, margin: "2px 0 0" }}>
-                    {a.character ? `as ${a.character}` : ''}{a.cd ? ` · ${a.cd}` : ''}
-                  </p>
-                </div>
-                {/* Status + callback */}
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                  <span style={{
-                    fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 8,
-                    background: `${statusColor}18`, color: statusColor,
+              <div
+                key={a.id}
+                onClick={() => setSelected(a)}
+                className="aurora-glass"
+                style={{
+                  padding: "14px 16px", cursor: "pointer",
+                  border: cb?.urgent
+                    ? `1px solid color-mix(in oklch, var(--aurora-accent) 40%, transparent)`
+                    : `1px solid var(--aurora-glass-border)`,
+                  boxShadow: cb?.urgent ? 'var(--aurora-shadow-coral)' : 'var(--aurora-shadow-card)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{a.project}</p>
+                  <span className="aurora-mono" style={{
+                    fontSize: 10, padding: "3px 10px", borderRadius: 100,
+                    background: statusColor, color: '#0A0A0A', textTransform: 'uppercase',
+                    letterSpacing: '0.08em', marginLeft: 8, whiteSpace: 'nowrap', flexShrink: 0,
                   }}>{statusLabel}</span>
-                  {cb && (
-                    <span style={{
-                      fontSize: 9, fontWeight: 600, padding: "2px 6px", borderRadius: 6,
-                      background: cb.urgent ? CORAL_DIM : GOLD_DIM,
-                      color: cb.urgent ? CORAL : GOLD,
-                    }}>{cb.text}</span>
-                  )}
                 </div>
+                {a.character && (
+                  <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "0 0 4px" }}>{a.character}</p>
+                )}
+                <div className="aurora-micro" style={{ color: 'var(--aurora-dim)' }}>
+                  {[a.cd, a.type?.toUpperCase()].filter(Boolean).join(' · ')}
+                </div>
+                {cb && isCallback && (
+                  <div style={{
+                    marginTop: 10, padding: "6px 12px", borderRadius: 10,
+                    background: 'color-mix(in oklch, var(--aurora-heritage-gold) 20%, transparent)',
+                    border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 30%, transparent)',
+                    display: 'inline-block',
+                  }}>
+                    <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>
+                      CALLBACK · {cb.text.toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
             );
           })}
@@ -1174,58 +1200,99 @@ function AuditionsScreen() {
       {selected && (
         <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
           {/* Backdrop */}
-          <div onClick={() => setSelected(null)} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 0 }} />
+          <div onClick={() => setSelected(null)} style={{
+            position: "absolute", inset: 0,
+            background: "rgba(10,10,10,0.5)",
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 0,
+          }} />
           {/* Sheet */}
           <div style={{
             position: "relative", zIndex: 1, maxHeight: "85vh",
-            background: BG_DEEP, borderRadius: "20px 20px 0 0",
-            padding: "12px 20px calc(80px + env(safe-area-inset-bottom, 0px))",
+            background: 'var(--aurora-glass-strong)',
+            backdropFilter: 'blur(40px) saturate(1.5)',
+            WebkitBackdropFilter: 'blur(40px) saturate(1.5)',
+            border: '1px solid var(--aurora-glass-border)',
+            borderRadius: "28px 28px 0 0",
+            padding: "12px 22px calc(80px + env(safe-area-inset-bottom, 0px))",
             overflowY: "scroll", WebkitOverflowScrolling: "touch",
+            boxShadow: 'var(--aurora-shadow-modal)',
           }}>
-            {/* Handle + Close */}
+            {/* Handle */}
             <div style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
-              <div style={{ width: 36, height: 4, borderRadius: 2, background: "rgba(167,236,218,0.2)" }} />
+              <div style={{ width: 40, height: 4, borderRadius: 2, background: "var(--aurora-line)" }} />
             </div>
             <button onClick={() => setSelected(null)} style={{
-              position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 10,
-              background: BG_ELEVATED, border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-              color: TEXT_SECONDARY, fontSize: 18, lineHeight: 1,
-            }}>&times;</button>
+              position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 100,
+              background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)',
+              display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+              color: 'var(--aurora-sub)', fontSize: 18, lineHeight: 1,
+              backdropFilter: 'blur(12px)',
+            }}>×</button>
 
             {/* Header */}
-            <div style={{ marginBottom: 20, paddingRight: 40 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>{selected.project}</h2>
-              <p style={{ fontSize: 14, color: TEXT_SECONDARY, margin: "4px 0 0" }}>as {selected.character}</p>
-              <span style={{
-                display: "inline-block", marginTop: 8,
-                fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20,
-                background: `${STATUS_COLORS[selected.status]}18`, color: STATUS_COLORS[selected.status],
-                textTransform: "capitalize",
+            <div style={{ marginBottom: 22, paddingRight: 40 }}>
+              <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 6 }}>
+                {(selected.type || 'AUDITION').toUpperCase()}
+                {selected.agency ? ` · ${selected.agency.toUpperCase()}` : ''}
+              </span>
+              <h2 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>
+                {selected.project}
+              </h2>
+              <p style={{ fontSize: 15, color: 'var(--aurora-sub)', margin: "4px 0 0" }}>
+                as {selected.character || '—'}
+              </p>
+              <span className="aurora-mono" style={{
+                display: "inline-block", marginTop: 10,
+                fontSize: 11, padding: "4px 12px", borderRadius: 100,
+                background: STATUS_COLORS[selected.status] || 'var(--aurora-line)',
+                color: '#0A0A0A', textTransform: "uppercase", letterSpacing: '0.1em',
               }}>{(selected.status || "").replace("_", " ")}</span>
             </div>
 
+            {/* Callback gold card if scheduled */}
+            {selected.callbackDate && (
+              <div style={{
+                background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-heritage-gold-light))',
+                borderRadius: 18, padding: '16px 18px', marginBottom: 20,
+                position: 'relative', overflow: 'hidden',
+                boxShadow: '0 12px 30px rgba(212,168,95,0.30)',
+              }}>
+                <div style={{
+                  position: 'absolute', top: -30, right: -30, width: 140, height: 140,
+                  background: 'radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%)',
+                }} />
+                <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)', display: 'block' }}>
+                  CALLBACK CONFIRMED
+                </span>
+                <p className="aurora-display" style={{ fontSize: 18, color: '#0E0D0A', margin: '4px 0 0' }}>
+                  {selected.callbackDate}
+                </p>
+              </div>
+            )}
+
             {/* Details grid */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 22 }}>
               {[
-                { label: "Casting Director", value: selected.cd || "—" },
-                { label: "Agency", value: selected.agency || "—" },
-                { label: "Type", value: selected.type || "—" },
-                { label: "Callback", value: selected.callbackDate || "—" },
+                { label: "CASTING", value: selected.cd || "—" },
+                { label: "AGENCY", value: selected.agency || "—" },
+                { label: "TYPE", value: selected.type || "—" },
+                { label: "CALLBACK", value: selected.callbackDate || "—" },
               ].map(f => (
-                <div key={f.label} style={{ background: BG_CARD, borderRadius: 12, padding: "12px 14px" }}>
-                  <p style={{ fontSize: 10, color: TEXT_MUTED, margin: 0, textTransform: "uppercase", letterSpacing: "0.5px", fontWeight: 600 }}>{f.label}</p>
-                  <p style={{ fontSize: 14, color: TEXT_PRIMARY, margin: "4px 0 0", fontWeight: 500 }}>{f.value}</p>
+                <div key={f.label} className="aurora-glass" style={{ padding: "12px 14px", borderRadius: 14 }}>
+                  <p className="aurora-micro" style={{ color: 'var(--aurora-dim)', margin: 0 }}>{f.label}</p>
+                  <p style={{ fontSize: 14, color: 'var(--aurora-text)', margin: "4px 0 0", fontWeight: 500 }}>{f.value}</p>
                 </div>
               ))}
             </div>
 
             {/* Change Status */}
             <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 10 }}>Update Status</p>
+              <p className="aurora-eyebrow" style={{ marginBottom: 12 }}>UPDATE STATUS</p>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 {columns.map(col => {
                   const isActive = selected.status === col.id;
-                  const color = STATUS_COLORS[col.id] || TEXT_MUTED;
+                  const color = STATUS_COLORS[col.id] || 'var(--aurora-dim)';
                   return (
                     <button
                       key={col.id}
@@ -1237,12 +1304,15 @@ function AuditionsScreen() {
                           setSelected({ ...selected, status: col.id });
                         } catch {}
                       }}
+                      className="aurora-mono"
                       style={{
-                        padding: "8px 14px", borderRadius: 10, cursor: "pointer",
-                        fontSize: 12, fontWeight: 600, transition: "all 0.15s",
-                        background: isActive ? `${color}25` : BG_CARD,
-                        color: isActive ? color : TEXT_SECONDARY,
-                        border: isActive ? `2px solid ${color}` : `1px solid ${BORDER}`,
+                        padding: "8px 14px", borderRadius: 100, cursor: "pointer",
+                        fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
+                        background: isActive ? color : 'var(--aurora-glass)',
+                        color: isActive ? '#0A0A0A' : 'var(--aurora-sub)',
+                        border: isActive ? 'none' : '1px solid var(--aurora-glass-border)',
+                        backdropFilter: isActive ? 'none' : 'blur(12px)',
+                        transition: 'all 0.2s',
                       }}
                     >
                       {col.label}
@@ -1254,8 +1324,8 @@ function AuditionsScreen() {
 
             {/* Close */}
             <button onClick={() => setSelected(null)} style={{
-              width: "100%", padding: "14px", borderRadius: 12, border: "none",
-              background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
+              width: "100%", padding: "14px", borderRadius: 14, border: "none",
+              background: 'var(--aurora-text)', color: 'var(--aurora-bg)',
               fontSize: 14, fontWeight: 600, cursor: "pointer",
             }}>Done</button>
           </div>
