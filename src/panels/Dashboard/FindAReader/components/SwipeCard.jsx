@@ -71,23 +71,24 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   };
 
   const cardStyle = isMobile ? {
-    // Mobile: fit between the MobileApp top bar (50px + safe-area-top) and
-    // the bottom tab bar (60px + safe-area-bottom). Stops the action buttons
-    // from being clipped by the tab bar.
+    // Mobile: fit between the top bar (54px + safe-area-top) and the
+    // floating tab pill (64px + 10px gap + safe-area-bottom). The card
+    // keeps a margin from each edge so it visibly "floats" between the
+    // top bar and the tab pill.
     position: 'fixed',
-    top: 'calc(50px + env(safe-area-inset-top, 0px) + 8px)',
-    bottom: 'calc(60px + env(safe-area-inset-bottom, 0px) + 8px)',
-    left: 8,
-    right: 8,
+    top: 'calc(54px + env(safe-area-inset-top, 0px) + 8px)',
+    bottom: 'calc(84px + env(safe-area-inset-bottom, 0px) + 6px)',
+    left: 12,
+    right: 12,
     zIndex: 40,
-    borderRadius: 24,
+    borderRadius: 28,
     overflow: 'hidden',
     transform,
     transition: dragState.current.isDragging ? 'none' : 'transform 0.3s ease',
     cursor: isTop ? 'grab' : 'default',
     background: '#0a0a0f',
     touchAction: 'none',
-    boxShadow: '0 20px 60px rgba(10,10,10,0.18)',
+    boxShadow: '0 16px 50px rgba(10,10,10,0.18)',
   } : {
     // Desktop card style
     position: 'relative',

@@ -591,37 +591,8 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
 
-      {/* ── Aurora header — wordmark + bell ── */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '14px 0 8px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 32, height: 32, borderRadius: 10,
-            background: `url(${logo}) center/cover`,
-            boxShadow: '0 0 0 1px var(--aurora-line)',
-            flexShrink: 0,
-          }} />
-          <span className="aurora-micro" style={{ color: 'var(--aurora-dim)' }}>DR · SELF · TAPE</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {(s.current_streak || 0) > 0 && (
-            <span className="aurora-mono" style={{
-              fontSize: 11, padding: '4px 10px', borderRadius: 100,
-              background: 'color-mix(in oklch, var(--aurora-mint) 18%, transparent)',
-              color: 'var(--aurora-mint)', display: 'inline-flex', alignItems: 'center', gap: 4,
-              border: '1px solid color-mix(in oklch, var(--aurora-mint) 30%, transparent)',
-            }}>
-              🔥 {s.current_streak}D
-            </span>
-          )}
-          <NotificationBell />
-        </div>
-      </div>
-
       {/* ── Greeting block ── */}
-      <div style={{ padding: '18px 0 22px' }}>
+      <div style={{ padding: '24px 0 22px' }}>
         <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 6 }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()}
         </span>
@@ -2128,31 +2099,33 @@ export default function DrSelfTapeApp() {
 
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
-          {/* Top Bar */}
+          {/* Top Bar — Aurora style: logo badge + mono wordmark, streak + bell + avatar */}
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-            background: "var(--topbar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-            padding: "env(safe-area-inset-top, 0px) 16px 0",
+            background: "transparent",
+            padding: "calc(env(safe-area-inset-top, 0px) + 4px) 16px 0",
             display: "flex", alignItems: "center", justifyContent: "space-between",
-            height: "calc(50px + env(safe-area-inset-top, 0px))",
-            boxShadow: "0 1px 12px rgba(0,0,0,0.08)",
-            transition: "background 0.3s",
+            height: "calc(54px + env(safe-area-inset-top, 0px))",
             flexShrink: 0,
+            pointerEvents: 'none',
           }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              {/* Logo */}
-              <img src={logo} alt="Dr Self Tape" style={{ width: 30, height: 30, objectFit: "contain" }} />
-              <span style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, letterSpacing: "-0.3px" }}>Dr Self Tape</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, pointerEvents: 'auto' }}>
+              <img src={logo} alt="Dr Self Tape" style={{
+                width: 32, height: 32, objectFit: "contain",
+                borderRadius: 10,
+                boxShadow: '0 0 0 1px var(--aurora-line), 0 4px 12px rgba(10,10,10,0.06)',
+                background: 'var(--aurora-surface-solid)',
+                padding: 2,
+              }} />
+              <span className="aurora-micro" style={{ color: 'var(--aurora-dim)', fontSize: 10 }}>
+                DR · SELF · TAPE
+              </span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: 'auto' }}>
               <NotificationBell onNavigate={({ panel, tab }) => {
                 if (panel) setCurrentPanel(panel);
                 if (tab) { setCurrentPanel(null); setTab(tab); }
               }} />
-              {/* Profile avatar — opens ProfileScreen with Edit Profile / Membership /
-                  Reports / Log Out menu. Discoverable entry point so users can edit
-                  their profile after first login (the only other path was buried in
-                  the More-tab grid). */}
               <TopBarAvatar
                 active={tab === "profile" && !currentPanel}
                 onClick={() => { setCurrentPanel(null); setTab("profile"); }}
@@ -2168,14 +2141,14 @@ export default function DrSelfTapeApp() {
             <img src={logo} alt="" style={{ width: 300, height: "auto", userSelect: "none" }} draggable={false} />
           </div>
 
-          {/* Scrollable Content Area — sits between fixed top and bottom bars */}
+          {/* Scrollable Content Area — sits between fixed top bar and floating tab pill */}
           <div style={{
             flex: 1,
             minHeight: 0,
             overflowY: "auto",
             overflowX: "hidden",
-            paddingTop: "calc(50px + env(safe-area-inset-top, 0px))",
-            paddingBottom: "calc(60px + env(safe-area-inset-bottom, 0px))",
+            paddingTop: "calc(54px + env(safe-area-inset-top, 0px))",
+            paddingBottom: "calc(84px + env(safe-area-inset-bottom, 0px))",
             WebkitOverflowScrolling: "touch",
             position: "relative", zIndex: 1,
           }}>
@@ -2186,27 +2159,47 @@ export default function DrSelfTapeApp() {
             )}
           </div>
 
-          {/* Bottom Tab Bar */}
+          {/* Bottom Tab Bar — floating glass pill, Aurora style */}
           <div style={{
-            position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 50,
-            background: "var(--topbar-bg)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-            boxShadow: "0 -4px 24px rgba(0,0,0,0.15)",
-            transition: "background 0.3s",
+            position: "fixed",
+            bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
+            left: 12, right: 12,
+            zIndex: 50,
+            background: 'rgba(255, 255, 255, 0.78)',
+            backdropFilter: "blur(28px) saturate(1.6)",
+            WebkitBackdropFilter: "blur(28px) saturate(1.6)",
+            border: '1px solid rgba(255, 255, 255, 0.55)',
+            borderRadius: 100,
+            boxShadow: "0 12px 40px rgba(10,10,10,0.10), inset 0 1px 0 rgba(255,255,255,0.7)",
+            transition: "background 0.3s, transform 0.2s",
             display: "flex", justifyContent: "space-around", alignItems: "center",
-            paddingBottom: "env(safe-area-inset-bottom, 8px)", paddingTop: 10,
-            height: "calc(60px + env(safe-area-inset-bottom, 0px))",
+            padding: '6px 4px',
+            height: 64,
           }}>
             {TABS.map(t => {
               const a = tab === t.id && !currentPanel;
               const activeColor = 'var(--aurora-accent)';
               const mutedColor = 'var(--aurora-dim)';
               return (
-                <button key={t.id} onClick={() => handleSetTab(t.id)} style={{
-                  background: "none", border: "none", cursor: "pointer",
-                  display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "6px 14px",
-                }}>
-                  <Icon name={t.icon} size={22} color={a ? activeColor : mutedColor} />
-                  <span style={{ fontSize: 10, fontWeight: a ? 700 : 500, color: a ? activeColor : mutedColor, letterSpacing: '0.02em' }}>{t.label}</span>
+                <button
+                  key={t.id}
+                  onClick={() => handleSetTab(t.id)}
+                  style={{
+                    background: a ? 'color-mix(in oklch, var(--aurora-accent) 14%, transparent)' : "transparent",
+                    border: "none", cursor: "pointer",
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    gap: 2,
+                    padding: '8px 14px',
+                    borderRadius: 100,
+                    transition: 'background 0.2s, transform 0.15s ease',
+                  }}
+                >
+                  <Icon name={t.icon} size={20} color={a ? activeColor : mutedColor} />
+                  <span style={{
+                    fontSize: 10, fontWeight: a ? 700 : 500,
+                    color: a ? activeColor : mutedColor,
+                    letterSpacing: '0.02em',
+                  }}>{t.label}</span>
                 </button>
               );
             })}
