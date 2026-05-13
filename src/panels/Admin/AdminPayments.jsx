@@ -118,7 +118,7 @@ export default function AdminPayments() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
         >
           {statusOptions.map((s) => (
             <option key={s} value={s}>
@@ -130,7 +130,7 @@ export default function AdminPayments() {
         <select
           value={planFilter}
           onChange={(e) => setPlanFilter(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
         >
           {planOptions.map((p) => (
             <option key={p} value={p}>
@@ -143,20 +143,20 @@ export default function AdminPayments() {
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
         />
         <input
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
         />
 
         <div className="flex-1" />
 
         <button
           onClick={handleExportCSV}
-          className="flex items-center gap-2 px-4 py-2.5 bg-[#C855F0] text-white rounded-xl text-sm font-medium hover:bg-[#C855F0]/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2.5 bg-[#FF8280] text-white rounded-xl text-sm font-medium hover:bg-[#FF8280]/90 transition-colors"
         >
           <Download className="w-4 h-4" />
           Export to CSV
@@ -166,7 +166,7 @@ export default function AdminPayments() {
       {/* Loading */}
       {paymentsLoading && (
         <div className="flex items-center justify-center h-32">
-          <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 

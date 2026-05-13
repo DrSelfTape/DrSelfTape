@@ -5,12 +5,12 @@ export default function AdminStatCard({ icon: Icon, label, value, trend, trendLa
 
   return (
     <div className="bg-[#1A1A1A] rounded-2xl border border-[#2A2A2A] p-6 flex items-start gap-4">
-      <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-[#C855F0]/10 flex items-center justify-center">
-        {Icon && <Icon className="w-6 h-6 text-[#C855F0]" />}
+      <div className="flex-shrink-0 w-12 h-12 rounded-lg bg-[#FF8280]/10 flex items-center justify-center">
+        {Icon && <Icon className="w-6 h-6 text-[#FF8280]" />}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm text-[#666666] font-medium truncate">{label}</p>
-        <p className="text-3xl font-bold text-[#C855F0] mt-1">{value ?? '—'}</p>
+        <p className="text-3xl font-bold text-[#FF8280] mt-1">{value ?? '—'}</p>
         {trend !== undefined && trend !== null && (
           <div className={`flex items-center gap-1 mt-2 text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-500'}`}>
             {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}

@@ -15,7 +15,7 @@ import {
 const STATUS_COLOR = {
   callback: '#FCE072',
   self_tape: '#A7ECDA',
-  audition: '#C855F0',
+  audition: '#FF8280',
   submitted: '#8a9a96',
 };
 
@@ -172,11 +172,11 @@ export default function TalentReportImporter({ onClose, onImported }) {
               }}
             >
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,130,128,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                <Upload size={24} color="#C855F0" />
+                <Upload size={24} color="#FF8280" />
               </div>
               <p style={{ color: '#f2f0ed', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Drop your talent report PDF here</p>
               <p style={{ color: '#8a9a96', fontSize: 13, margin: '0 0 16px' }}>Eco Cast, agency submission reports — any standard format</p>
-              <div style={{ display: 'inline-block', background: 'rgba(255,130,128,0.12)', border: '1px solid rgba(255,130,128,0.25)', borderRadius: 20, padding: '6px 18px', fontSize: 12, color: '#C855F0', fontWeight: 600 }}>
+              <div style={{ display: 'inline-block', background: 'rgba(255,130,128,0.12)', border: '1px solid rgba(255,130,128,0.25)', borderRadius: 20, padding: '6px 18px', fontSize: 12, color: '#FF8280', fontWeight: 600 }}>
                 Choose PDF
               </div>
               <input ref={fileInputRef} type="file" accept=".pdf" style={{ display: 'none' }} onChange={e => handleFile(e.target.files?.[0])} />
@@ -197,8 +197,8 @@ export default function TalentReportImporter({ onClose, onImported }) {
           {/* Error */}
           {error && !parsedReport && (
             <div style={{ background: 'rgba(255,100,100,0.08)', border: '1px solid rgba(255,100,100,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <AlertCircle size={18} color="#C855F0" />
-              <p style={{ color: '#C855F0', fontSize: 13, margin: 0 }}>{error}</p>
+              <AlertCircle size={18} color="#FF8280" />
+              <p style={{ color: '#FF8280', fontSize: 13, margin: 0 }}>{error}</p>
             </div>
           )}
 
@@ -209,7 +209,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
               <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
                 {[
                   { label: 'Submissions', value: parsedReport.summary?.total_submissions || subs.length, color: '#A7ECDA' },
-                  { label: 'Auditions', value: parsedReport.summary?.total_auditions || 0, color: '#C855F0' },
+                  { label: 'Auditions', value: parsedReport.summary?.total_auditions || 0, color: '#FF8280' },
                   { label: 'Callbacks', value: parsedReport.summary?.total_callbacks || 0, color: '#FCE072' },
                   { label: 'Self Tapes', value: parsedReport.summary?.total_self_tapes || 0, color: '#7eb8ec' },
                 ].map(s => (
@@ -265,7 +265,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
               onClick={handleImport}
               disabled={selectedIds.size === 0 || importLoading}
               style={{
-                background: selectedIds.size > 0 ? 'linear-gradient(135deg, #C855F0, #e06e6c)' : 'rgba(255,255,255,0.05)',
+                background: selectedIds.size > 0 ? 'linear-gradient(135deg, #FF8280, #e06e6c)' : 'rgba(255,255,255,0.05)',
                 color: selectedIds.size > 0 ? '#fff' : '#4a5a56',
                 border: 'none', borderRadius: 12, padding: '10px 24px', fontSize: 14, fontWeight: 600,
                 cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s',

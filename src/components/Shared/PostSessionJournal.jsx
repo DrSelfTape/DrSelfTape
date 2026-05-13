@@ -77,8 +77,8 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
         <div className="rounded-2xl p-8 text-center w-full max-w-sm mx-4" style={{ background: 'var(--bg-surface, #1E1E1E)' }}>
-          <div className="w-16 h-16 rounded-full bg-[#C855F0]/10 flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-[#C855F0]" />
+          <div className="w-16 h-16 rounded-full bg-[#FF8280]/10 flex items-center justify-center mx-auto mb-4">
+            <Check className="w-8 h-8 text-[#FF8280]" />
           </div>
           <p className="text-white font-bold text-lg">Journal saved</p>
           <p className="text-[#999] text-sm mt-1">Tracking your progress builds awareness.</p>
@@ -93,7 +93,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-[#C855F0]" />
+            <BookOpen className="w-5 h-5 text-[#FF8280]" />
             <h2 className="text-lg font-bold text-white">How'd that go?</h2>
           </div>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-[#2A2A2A] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
@@ -113,12 +113,12 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
               onClick={() => setMood(mood?.label === m.label ? null : m)}
               className="flex flex-col items-center gap-1.5 rounded-xl py-3 px-2 flex-1 transition-all"
               style={{
-                background: mood?.label === m.label ? 'rgba(200,85,240,0.12)' : 'var(--bg-input, #2A2A2A)',
-                border: mood?.label === m.label ? '1.5px solid #C855F0' : '1px solid transparent',
+                background: mood?.label === m.label ? 'rgba(255, 130, 128,0.12)' : 'var(--bg-input, #2A2A2A)',
+                border: mood?.label === m.label ? '1.5px solid #FF8280' : '1px solid transparent',
               }}
             >
               <span className="text-2xl">{m.emoji}</span>
-              <span className="text-[10px] font-medium" style={{ color: mood?.label === m.label ? '#C855F0' : 'var(--text-muted, #666)' }}>
+              <span className="text-[10px] font-medium" style={{ color: mood?.label === m.label ? '#FF8280' : 'var(--text-muted, #666)' }}>
                 {m.label}
               </span>
             </button>
@@ -156,7 +156,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
           placeholder="What would you do differently next time? Any breakthroughs?"
           maxLength={500}
           rows={3}
-          className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#C855F0]"
+          className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#FF8280]"
           style={{
             background: 'var(--bg-input, #2A2A2A)',
             border: '1px solid var(--border-active, #3A3A3A)',
@@ -179,7 +179,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
             onClick={handleSave}
             disabled={saving}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-white transition-all disabled:opacity-50"
-            style={{ background: '#C855F0' }}
+            style={{ background: '#FF8280' }}
           >
             {saving ? 'Saving...' : 'Save'}
           </button>

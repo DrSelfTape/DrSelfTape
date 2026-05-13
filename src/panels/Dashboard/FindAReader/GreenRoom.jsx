@@ -29,14 +29,14 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
 
         {matchesLoading && (
           <div className="flex h-60 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#C855F0]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#FF8280]" />
           </div>
         )}
 
         {!matchesLoading && matches.length === 0 && (
           <div className="flex flex-col items-center justify-center text-center py-8">
-            <div className="w-16 h-16 rounded-full bg-[#C855F0]/10 flex items-center justify-center mb-4">
-              <Users2 className="h-8 w-8 text-[#C855F0]" />
+            <div className="w-16 h-16 rounded-full bg-[#FF8280]/10 flex items-center justify-center mb-4">
+              <Users2 className="h-8 w-8 text-[#FF8280]" />
             </div>
             <p className="text-lg font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Your Green Room is empty</p>
             <p className="text-sm mb-6 max-w-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -54,7 +54,7 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
 
             <button
               onClick={() => navigate('/dashboard/find-a-reader')}
-              className="bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm"
+              className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-8 py-3 rounded-xl transition-all text-sm"
             >
               Start Swiping
             </button>

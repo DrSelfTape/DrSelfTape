@@ -24,13 +24,13 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                   onClick={() => onSelectRole(name)}
                   className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-[#C855F0] bg-[#C855F0]/5 text-[#C855F0] shadow-sm'
-                      : 'border-[#3A3A3A] bg-[#1E1E1E] text-[#999999] hover:border-[#C855F0]'
+                      ? 'border-[#FF8280] bg-[#FF8280]/5 text-[#FF8280] shadow-sm'
+                      : 'border-[#3A3A3A] bg-[#1E1E1E] text-[#999999] hover:border-[#FF8280]'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <svg
-                      className={`w-5 h-5 ${isSelected ? 'text-[#C855F0]' : 'text-[#666666]'}`}
+                      className={`w-5 h-5 ${isSelected ? 'text-[#FF8280]' : 'text-[#666666]'}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -45,7 +45,7 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                     {name}
                   </div>
                   {isSelected && (
-                    <p className="text-[10px] mt-1 text-[#C855F0] font-normal">Your role</p>
+                    <p className="text-[10px] mt-1 text-[#FF8280] font-normal">Your role</p>
                   )}
                 </button>
               );
@@ -73,7 +73,7 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
         <button
           onClick={onStart}
           disabled={!selectedRole}
-          className="flex-1 bg-[#C855F0] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Begin Session
         </button>

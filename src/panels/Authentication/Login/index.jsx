@@ -184,7 +184,7 @@ export const Login = () => {
                 Don't have an account?{' '}
                 <button
                   type='button'
-                  className='text-[#C855F0] cursor-pointer font-semibold hover:text-[#A040C8] transition-colors'
+                  className='text-[#FF8280] cursor-pointer font-semibold hover:text-[#A040C8] transition-colors'
                   onClick={(e) => {
                     e.preventDefault();
                     navigate('/signup');

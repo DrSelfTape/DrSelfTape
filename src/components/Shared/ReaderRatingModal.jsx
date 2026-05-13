@@ -96,7 +96,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
             placeholder={`Any notes about working with ${firstName}? (optional)`}
             maxLength={300}
             rows={3}
-            className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#C855F0]"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#FF8280]"
             style={{
               background: 'var(--bg-input, #2A2A2A)',
               border: '1px solid var(--border-active, #3A3A3A)',
@@ -120,7 +120,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
             onClick={handleSubmit}
             disabled={rating === 0 || submitting}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-white transition-all disabled:opacity-40"
-            style={{ background: rating > 0 ? '#C855F0' : '#3A3A3A' }}
+            style={{ background: rating > 0 ? '#FF8280' : '#3A3A3A' }}
           >
             {submitting ? 'Submitting...' : 'Submit Rating'}
           </button>

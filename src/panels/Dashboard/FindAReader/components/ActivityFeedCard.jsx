@@ -2,7 +2,7 @@ import { Users2, HeartHandshake, Clapperboard } from 'lucide-react';
 
 const ICONS = {
   available: { Icon: Users2, color: '#A7ECDA', bg: 'rgba(167,236,218,0.1)' },
-  matches: { Icon: HeartHandshake, color: '#C855F0', bg: 'rgba(200,85,240,0.1)' },
+  matches: { Icon: HeartHandshake, color: '#FF8280', bg: 'rgba(255, 130, 128,0.1)' },
   sessions: { Icon: Clapperboard, color: '#eab308', bg: 'rgba(234,179,8,0.1)' },
 };
 

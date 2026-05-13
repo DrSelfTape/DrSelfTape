@@ -51,7 +51,7 @@ export const ScriptAnalysisAnalysisTab = ({
         </CustomAccordion>
         <CustomAccordion
           header='Emotional Beats'
-          icon={<HeartIcon className='h-4 w-4 text-[#C855F0]' />}
+          icon={<HeartIcon className='h-4 w-4 text-[#FF8280]' />}
         >
           <ul className='list-disc list-inside pl-5 text-[#999999] text-sm flex flex-col gap-1'>
             {sceneAnalysisData?.emotionalBeats?.length > 0 ? (

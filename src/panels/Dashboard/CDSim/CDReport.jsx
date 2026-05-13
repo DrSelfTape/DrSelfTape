@@ -47,7 +47,7 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
           onClick={() => onPlayToggle(label, data)}
           disabled={isLoading}
           className="flex items-center gap-1.5 text-sm font-medium shrink-0 ml-4 transition-colors disabled:opacity-50"
-          style={{ color: isPlaying ? '#E88BF5' : '#C855F0' }}
+          style={{ color: isPlaying ? '#E88BF5' : '#FF8280' }}
         >
           {isLoading ? (
             <Loader2 size={16} className="animate-spin" />
@@ -66,8 +66,8 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
             if (!value) return null;
             const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
             return (
-              <div key={key} className="border-l-2 border-[#C855F0]/30 pl-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#C855F0]/70 mb-1">
+              <div key={key} className="border-l-2 border-[#FF8280]/30 pl-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#FF8280]/70 mb-1">
                   {fieldLabel}
                 </p>
                 <p className="text-[#CCCCCC] text-sm leading-relaxed">{value}</p>
@@ -228,9 +228,9 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-50"
             style={{
               background: isAllPlaying
-                ? 'linear-gradient(135deg,#9B30FF,#C855F0)'
-                : 'linear-gradient(135deg,#C855F0,#E88BF5)',
-              boxShadow: '0 4px 15px rgba(200,85,240,0.35)',
+                ? 'linear-gradient(135deg,#9B30FF,#FF8280)'
+                : 'linear-gradient(135deg,#FF8280,#E88BF5)',
+              boxShadow: '0 4px 15px rgba(255, 130, 128,0.35)',
             }}
           >
             {isAllLoading ? (

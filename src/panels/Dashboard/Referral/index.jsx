@@ -79,13 +79,13 @@ export default function Referral() {
       <div
         className="rounded-2xl p-6 border relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(200,85,240,0.12), rgba(167,236,218,0.08))',
+          background: 'linear-gradient(135deg, rgba(255, 130, 128,0.12), rgba(167,236,218,0.08))',
           borderColor: 'var(--border-default)',
         }}
       >
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#C855F0]/20 flex items-center justify-center shrink-0">
-            <Gift className="w-6 h-6 text-[#C855F0]" />
+          <div className="w-12 h-12 rounded-xl bg-[#FF8280]/20 flex items-center justify-center shrink-0">
+            <Gift className="w-6 h-6 text-[#FF8280]" />
           </div>
           <div>
             <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -154,7 +154,7 @@ export default function Referral() {
             onClick={() => copyToClipboard(referralCode, 'code')}
             className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
             style={{
-              background: copied === 'code' ? '#22c55e' : '#C855F0',
+              background: copied === 'code' ? '#22c55e' : '#FF8280',
             }}
           >
             {copied === 'code' ? (
@@ -203,7 +203,7 @@ export default function Referral() {
 
         <button
           onClick={handleShare}
-          className="mt-4 w-full bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+          className="mt-4 w-full bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
         >
           <Share2 className="w-5 h-5" />
           Share with Friends
@@ -231,8 +231,8 @@ export default function Referral() {
                 style={{ background: 'var(--bg-surface)' }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#C855F0]/20 flex items-center justify-center">
-                    <span className="text-sm font-bold text-[#C855F0]">
+                  <div className="w-9 h-9 rounded-full bg-[#FF8280]/20 flex items-center justify-center">
+                    <span className="text-sm font-bold text-[#FF8280]">
                       {(ref.name || 'U')[0].toUpperCase()}
                     </span>
                   </div>

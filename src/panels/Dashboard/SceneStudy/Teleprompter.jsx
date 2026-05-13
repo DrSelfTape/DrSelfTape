@@ -48,7 +48,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
         <div>
           <h2 className="text-xl font-bold text-white leading-tight">Practice Mode</h2>
           <p className="text-[#666666] text-xs mt-0.5">
-            Your lines are highlighted in <span className="text-[#C855F0]">purple</span>
+            Your lines are highlighted in <span className="text-[#FF8280]">purple</span>
           </p>
         </div>
         <div className="flex items-center gap-2 ml-3 shrink-0">
@@ -56,7 +56,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
           {onSelfTape && (
             <button
               onClick={onSelfTape}
-              className="flex items-center gap-1.5 bg-[#C855F0] text-white px-3 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 bg-[#FF8280] text-white px-3 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
             >
               <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>
@@ -74,7 +74,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
           onClick={() => setAutoScroll(!autoScroll)}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all cursor-pointer ${
             autoScroll
-              ? 'bg-[#C855F0] border-[#C855F0] text-white'
+              ? 'bg-[#FF8280] border-[#FF8280] text-white'
               : 'bg-[#1E1E1E] border-[#2A2A2A] text-[#999999]'
           }`}
         >
@@ -93,7 +93,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
                 onClick={() => setSpeed(s)}
                 className={`text-xs px-2.5 py-1.5 rounded-full font-medium transition-colors cursor-pointer capitalize ${
                   speed === s
-                    ? 'bg-[#C855F0] text-white'
+                    ? 'bg-[#FF8280] text-white'
                     : 'bg-[#2A2A2A] text-[#666666]'
                 }`}
               >
@@ -113,7 +113,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
       {/* ── Progress Bar ── */}
       <div className="w-full h-1 bg-[#1E1E1E] rounded-full mb-2 overflow-hidden">
         <div
-          className="h-full bg-gradient-to-r from-[#C855F0] to-[#9333ea] rounded-full transition-all duration-200"
+          className="h-full bg-gradient-to-r from-[#FF8280] to-[#9333ea] rounded-full transition-all duration-200"
           style={{ width: `${scrollProgress}%` }}
         />
       </div>
@@ -132,13 +132,13 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
               key={i}
               className={`rounded-xl px-3 py-2.5 transition-colors ${
                 isUser
-                  ? 'bg-[#C855F0]/10 border-l-[3px] border-[#C855F0]'
+                  ? 'bg-[#FF8280]/10 border-l-[3px] border-[#FF8280]'
                   : 'bg-transparent border-l-[3px] border-[#2A2A2A]'
               }`}
             >
               <span
                 className={`text-[10px] font-bold uppercase tracking-widest block mb-1 ${
-                  isUser ? 'text-[#C855F0]' : 'text-[#444444]'
+                  isUser ? 'text-[#FF8280]' : 'text-[#444444]'
                 }`}
               >
                 {line.character}

@@ -20,7 +20,7 @@ const statusIcon = {
 };
 
 const statusColor = {
-  unread: 'text-[#C855F0]',
+  unread: 'text-[#FF8280]',
   read: 'text-[#666666]',
   resolved: 'text-green-500',
 };
@@ -57,7 +57,7 @@ export default function AdminMessages() {
   if (messagesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -86,12 +86,12 @@ export default function AdminMessages() {
                   onClick={() => handleSelectMessage(msg)}
                   className={`flex items-start gap-3 px-4 py-3 cursor-pointer border-b border-[#1E1E1E] transition-colors ${
                     isSelected
-                      ? 'bg-[#C855F0]/5 border-l-2 border-l-[#C855F0]'
+                      ? 'bg-[#FF8280]/5 border-l-2 border-l-[#FF8280]'
                       : 'hover:bg-[#1E1E1E] border-l-2 border-l-transparent'
                   }`}
                 >
                   {/* Avatar */}
-                  <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[#C855F0]/10 text-[#C855F0] flex items-center justify-center text-xs font-bold mt-0.5">
+                  <div className="flex-shrink-0 w-9 h-9 rounded-full bg-[#FF8280]/10 text-[#FF8280] flex items-center justify-center text-xs font-bold mt-0.5">
                     {getInitials(msg.user_name)}
                   </div>
 

@@ -172,9 +172,9 @@ export const SocketProvider = ({ children }) => {
           onClick={handleLikeToastTap}
           style={{ animation: 'slideDown 0.4s ease-out forwards' }}
         >
-          <div className="bg-[#1A1A2E] border border-[#C855F0]/30 rounded-2xl px-5 py-4 flex items-center gap-4 shadow-2xl">
-            <div className="w-11 h-11 rounded-full bg-[#C855F0]/20 flex items-center justify-center shrink-0">
-              <HeartHandshake className="w-5 h-5 text-[#C855F0]" />
+          <div className="bg-[#1A1A2E] border border-[#FF8280]/30 rounded-2xl px-5 py-4 flex items-center gap-4 shadow-2xl">
+            <div className="w-11 h-11 rounded-full bg-[#FF8280]/20 flex items-center justify-center shrink-0">
+              <HeartHandshake className="w-5 h-5 text-[#FF8280]" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-semibold">
@@ -201,19 +201,19 @@ export const SocketProvider = ({ children }) => {
       {/* ── Incoming Call Modal ───────────────────────────────────────── */}
       {incomingCall && (
         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#1A1A2E] border border-[#C855F0]/40 rounded-2xl px-8 py-8 flex flex-col items-center gap-5 shadow-2xl max-w-sm w-full mx-4"
+          <div className="bg-[#1A1A2E] border border-[#FF8280]/40 rounded-2xl px-8 py-8 flex flex-col items-center gap-5 shadow-2xl max-w-sm w-full mx-4"
             style={{ animation: 'badgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
           >
             {/* Pulsing avatar */}
             <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#C855F0] to-[#7B2FBE] flex items-center justify-center">
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF8280] to-[#7B2FBE] flex items-center justify-center">
                 <span className="text-2xl">🎬</span>
               </div>
-              <div className="absolute inset-0 rounded-full bg-[#C855F0]/30 animate-ping" />
+              <div className="absolute inset-0 rounded-full bg-[#FF8280]/30 animate-ping" />
             </div>
 
             <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#C855F0] mb-1">Incoming Scene Request</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#FF8280] mb-1">Incoming Scene Request</p>
               <h2 className="text-xl font-bold text-white">{incomingCall.partnerName}</h2>
               <p className="text-sm text-[#999] mt-1">is inviting you to a live read</p>
             </div>
@@ -227,7 +227,7 @@ export const SocketProvider = ({ children }) => {
               </button>
               <button
                 onClick={acceptCall}
-                className="flex-1 py-2.5 rounded-xl bg-[#C855F0] text-white text-sm font-semibold hover:bg-[#A040C8] transition-colors"
+                className="flex-1 py-2.5 rounded-xl bg-[#FF8280] text-white text-sm font-semibold hover:bg-[#A040C8] transition-colors"
               >
                 Join Scene 🎬
               </button>

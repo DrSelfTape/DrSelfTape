@@ -26,7 +26,7 @@ const PLANS = [
     monthly: 14.99,
     yearly: 149.99,
     yearlySaving: '2 months free',
-    color: '#C855F0',
+    color: '#FF8280',
     popular: true,
     features: [
       '20 AI tokens per month',
@@ -130,7 +130,7 @@ export default function Membership() {
           onClick={() => setBilling('monthly')}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
             billing === 'monthly'
-              ? 'bg-[#C855F0] text-white'
+              ? 'bg-[#FF8280] text-white'
               : 'bg-[#1a1c26] text-[#8a9a96] border border-[rgba(167,236,218,0.1)]'
           }`}
         >
@@ -140,7 +140,7 @@ export default function Membership() {
           onClick={() => setBilling('yearly')}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
             billing === 'yearly'
-              ? 'bg-[#C855F0] text-white'
+              ? 'bg-[#FF8280] text-white'
               : 'bg-[#1a1c26] text-[#8a9a96] border border-[rgba(167,236,218,0.1)]'
           }`}
         >
@@ -165,14 +165,14 @@ export default function Membership() {
                 border: isCurrent
                   ? `2px solid ${plan.color}`
                   : plan.popular
-                  ? `1px solid rgba(200,85,240,0.4)`
+                  ? `1px solid rgba(255, 130, 128,0.4)`
                   : '1px solid rgba(167,236,218,0.06)',
-                boxShadow: plan.popular ? '0 0 40px rgba(200,85,240,0.1)' : 'none',
+                boxShadow: plan.popular ? '0 0 40px rgba(255, 130, 128,0.1)' : 'none',
               }}
             >
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg, #C855F0, #9333ea)' }}>
+                  style={{ background: 'linear-gradient(135deg, #FF8280, #9333ea)' }}>
                   Most Popular
                 </div>
               )}
@@ -231,7 +231,7 @@ export default function Membership() {
                   className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
                   style={{
                     background: plan.popular
-                      ? 'linear-gradient(135deg, #C855F0, #9333ea)'
+                      ? 'linear-gradient(135deg, #FF8280, #9333ea)'
                       : `${plan.color}20`,
                     color: plan.popular ? 'white' : plan.color,
                     border: plan.popular ? 'none' : `1px solid ${plan.color}40`,

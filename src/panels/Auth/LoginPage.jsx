@@ -4,10 +4,10 @@ import { loginUser } from "../../redux/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { getFirstRouteByRole } from "../../routes/routeHelpers";
 
-const MINT = "#C855F0";
+const MINT = "#FF8280";
 const GOLD = "#E88BF5";
 const CORAL_SOFT = "#E88BF5";
-const CORAL = "#C855F0";
+const CORAL = "#FF8280";
 const BG = "#0D0D0D";
 const BG_CARD = "#1A1A1A";
 const BG_INPUT = "#1E1E1E";
@@ -187,7 +187,7 @@ export default function LoginPage() {
               <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: TEXT2, marginBottom: 6 }}>Email</label>
               <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="demo@drselftape.com"
                 style={{ width: "100%", height: 52, background: BG_INPUT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "0 16px", color: TEXT, fontSize: 14, outline: "none", transition: "border-color 0.2s, box-shadow 0.2s" }}
-                onFocus={(e) => { e.target.style.borderColor = "#C855F0"; e.target.style.boxShadow = "0 0 0 3px rgba(200,85,240,0.2)"; }} onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }} />
+                onFocus={(e) => { e.target.style.borderColor = "#FF8280"; e.target.style.boxShadow = "0 0 0 3px rgba(255, 130, 128,0.2)"; }} onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }} />
             </div>
 
             <div style={{ marginBottom: 8 }}>
@@ -195,7 +195,7 @@ export default function LoginPage() {
               <div style={{ position: "relative" }}>
                 <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password"
                   style={{ width: "100%", height: 52, background: BG_INPUT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "0 16px", paddingRight: 48, color: TEXT, fontSize: 14, outline: "none", transition: "border-color 0.2s, box-shadow 0.2s" }}
-                  onFocus={(e) => { e.target.style.borderColor = "#C855F0"; e.target.style.boxShadow = "0 0 0 3px rgba(200,85,240,0.2)"; }} onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }} />
+                  onFocus={(e) => { e.target.style.borderColor = "#FF8280"; e.target.style.boxShadow = "0 0 0 3px rgba(255, 130, 128,0.2)"; }} onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }} />
                 <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
                   <EyeIcon open={showPw} />
                 </button>
@@ -210,10 +210,10 @@ export default function LoginPage() {
 
             <button type="submit" disabled={authLoading} style={{
               width: "100%", height: 52, padding: 0, borderRadius: 28, border: "none", cursor: "pointer",
-              background: authLoading ? `${CORAL}60` : `linear-gradient(135deg, #C855F0, #E88BF5)`,
+              background: authLoading ? `${CORAL}60` : `linear-gradient(135deg, #FF8280, #E88BF5)`,
               color: "#fff", fontSize: 15, fontWeight: 600, transition: "all 0.2s",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: "0 4px 15px rgba(200,85,240,0.35)",
+              boxShadow: "0 4px 15px rgba(255, 130, 128,0.35)",
             }}>
               {authLoading && <div style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />}
               {authLoading ? "Signing in..." : "Sign in"}
@@ -224,7 +224,7 @@ export default function LoginPage() {
         </div>
 
         <p style={{ marginTop: 24, fontSize: 13, color: TEXT2, position: "relative", zIndex: 1, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.7s" }}>
-          Don't have account?{" "}<a href="/signup" style={{ color: "#C855F0", textDecoration: "none", fontWeight: 600 }}>Sign Up</a>
+          Don't have account?{" "}<a href="/signup" style={{ color: "#FF8280", textDecoration: "none", fontWeight: 600 }}>Sign Up</a>
         </p>
 
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${MINT}, ${GOLD}, ${CORAL_SOFT}, ${CORAL})`, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.8s" }} />

@@ -40,17 +40,17 @@ export default function ProfilePhoto({
             onError={() => setImgFailed(true)}
           />
           {/* Brand gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-[#C855F0]/25 via-transparent to-[#A7ECDA]/20 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#FF8280]/25 via-transparent to-[#A7ECDA]/20 pointer-events-none" />
           {/* Subtle inner glow ring */}
           <div
             className={`absolute inset-0 ${shape}`}
-            style={{ boxShadow: 'inset 0 0 0 1.5px rgba(200,85,240,0.35)' }}
+            style={{ boxShadow: 'inset 0 0 0 1.5px rgba(255, 130, 128,0.35)' }}
           />
         </>
       ) : (
         /* Fallback avatar */
-        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#C855F0]/20 to-[#A7ECDA]/10">
-          <span className="text-[#C855F0] font-bold text-lg select-none">
+        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FF8280]/20 to-[#A7ECDA]/10">
+          <span className="text-[#FF8280] font-bold text-lg select-none">
             {initials || '?'}
           </span>
         </div>

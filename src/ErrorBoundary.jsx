@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component {
           <button
             onClick={() => { sessionStorage.removeItem('drst-chunk-reload'); window.location.reload(); }}
             style={{
-              background: '#C855F0', color: '#fff', border: 'none', padding: '12px 32px',
+              background: '#FF8280', color: '#fff', border: 'none', padding: '12px 32px',
               borderRadius: 12, fontSize: 14, fontWeight: 600, cursor: 'pointer',
             }}
           >

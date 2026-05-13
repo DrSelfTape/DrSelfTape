@@ -45,8 +45,8 @@ export default function AdminLayout() {
       <aside className="w-64 flex-shrink-0 flex flex-col" style={{ backgroundColor: '#0D0D0D' }}>
         {/* Logo */}
         <div className="px-6 py-6 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#C855F0]/10 flex items-center justify-center">
-            <Clapperboard className="w-6 h-6 text-[#C855F0]" />
+          <div className="w-10 h-10 rounded-xl bg-[#FF8280]/10 flex items-center justify-center">
+            <Clapperboard className="w-6 h-6 text-[#FF8280]" />
           </div>
           <div>
             <h1 className="text-white font-bold text-lg leading-tight">DrSelfTape</h1>
@@ -63,7 +63,7 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${
                   isActive
-                    ? 'bg-[#C855F0]/10 text-[#C855F0]'
+                    ? 'bg-[#FF8280]/10 text-[#FF8280]'
                     : 'text-[#999999] hover:text-white hover:bg-[#1E1E1E]'
                 }`
               }
@@ -77,7 +77,7 @@ export default function AdminLayout() {
         {/* User Footer */}
         <div className="px-4 py-4 border-t border-[#1E1E1E]">
           <div className="flex items-center gap-3 px-2">
-            <div className="w-9 h-9 rounded-full bg-[#C855F0]/20 text-[#C855F0] flex items-center justify-center text-xs font-bold">
+            <div className="w-9 h-9 rounded-full bg-[#FF8280]/20 text-[#FF8280] flex items-center justify-center text-xs font-bold">
               {getInitials(user?.name || user?.first_name || 'A')}
             </div>
             <div className="min-w-0">
@@ -102,7 +102,7 @@ export default function AdminLayout() {
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-64">
-                <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
               </div>
             }
           >

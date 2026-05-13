@@ -37,7 +37,7 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
               {actor?.name || 'Actor'}
             </h4>
             {unionLabel && (
-              <span className="shrink-0 rounded-full bg-[#C855F0]/15 px-2 py-0.5 text-[10px] font-semibold text-[#C855F0] border border-[#C855F0]/30">
+              <span className="shrink-0 rounded-full bg-[#FF8280]/15 px-2 py-0.5 text-[10px] font-semibold text-[#FF8280] border border-[#FF8280]/30">
                 {unionLabel}
               </span>
             )}
@@ -105,7 +105,7 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
         <button
           type="button"
           onClick={onSlate}
-          className="flex flex-col items-center gap-1 rounded-lg bg-[#C855F0] py-2.5 text-white hover:bg-[#A040C8] transition-all group"
+          className="flex flex-col items-center gap-1 rounded-lg bg-[#FF8280] py-2.5 text-white hover:bg-[#A040C8] transition-all group"
         >
           <Clapperboard size={16} />
           <span className="text-[10px] font-medium">Slate</span>

@@ -124,9 +124,14 @@ const GOLD = "#FCE072";
 const GOLD_DIM = "rgba(252,224,114,0.12)";
 const CORAL_SOFT = "#FFB49A";
 const CORAL_SOFT_DIM = "rgba(255,180,154,0.10)";
-const CORAL = "#C855F0";
+const CORAL = "#FF8280";
 const CORAL_DIM = "rgba(255,130,128,0.12)";
 const CORAL_GLOW = "rgba(255,130,128,0.25)";
+// Magenta is retained as a sub-accent (e.g., PRO badges, premium AI sparkles).
+// Apply selectively — do NOT use as a primary CTA color. Bright Coral is the
+// brand's primary action color per the brand guideline.
+const MAGENTA = "#C855F0";
+const MAGENTA_DIM = "rgba(200,85,240,0.12)";
 
 const BG_DEEPEST = "#080a0f";
 const BG_DEEP = "#0c0e14";
@@ -153,7 +158,7 @@ const CARD_SHADOW = "0 2px 16px rgba(0,0,0,0.12)";
 const STATUS_COLORS = {
   submitted: TEXT_MUTED,
   in_review: BLUE,
-  audition: "#C855F0",
+  audition: "#FF8280",
   callback: GOLD,
   booked: GREEN,
   passed: CORAL,
@@ -274,14 +279,14 @@ const TABS = [
 ];
 
 const MORE_FEATURES = [
-  { id: "jericho", label: "My Growth", desc: "Your evolving actor DNA and coaching insights", emoji: "🧠", color: "#C855F0" },
-  { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#C855F0" },
+  { id: "jericho", label: "My Growth", desc: "Your evolving actor DNA and coaching insights", emoji: "🧠", color: "#FF8280" },
+  { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#FF8280" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
   { id: "reports", label: "Reports", desc: "Your career at a glance", emoji: "📊", color: "#b89aff" },
-  { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#C855F0" },
+  { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#FF8280" },
   { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072" },
-  { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#C855F0" },
+  { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280" },
   { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072" },
   { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA" },
   { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA" },
@@ -409,15 +414,15 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         onClick={handleNextStep}
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 14,
-          background: `linear-gradient(135deg, rgba(200,85,240,0.15), rgba(200,85,240,0.05))`,
-          border: "1px solid rgba(200,85,240,0.2)",
+          background: `linear-gradient(135deg, rgba(255, 130, 128,0.15), rgba(255, 130, 128,0.05))`,
+          border: "1px solid rgba(255, 130, 128,0.2)",
           borderRadius: RADIUS_LG, padding: "18px 20px", cursor: "pointer",
           marginBottom: 18, textAlign: "left",
         }}
       >
         <div style={{
           width: 44, height: 44, borderRadius: 14,
-          background: "rgba(200,85,240,0.15)",
+          background: "rgba(255, 130, 128,0.15)",
           display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
         }}>
           <Icon name={nextStep.icon} size={22} color={CORAL} />
@@ -551,7 +556,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             <span style={{ fontSize: 12, color: '#8a9a96' }}> AI tokens remaining</span>
           </div>
           {balance === 0 && (
-            <span style={{ fontSize: 11, fontWeight: 700, color: '#C855F0', background: 'rgba(200,85,240,0.15)', padding: '3px 10px', borderRadius: 20 }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#FF8280', background: 'rgba(255, 130, 128,0.15)', padding: '3px 10px', borderRadius: 20 }}>
               Upgrade
             </span>
           )}
@@ -726,8 +731,8 @@ function AuditionsScreen() {
               disabled={scanLoading}
               style={{
                 width: "100%", padding: "14px", borderRadius: 14, cursor: "pointer",
-                background: "linear-gradient(135deg, rgba(200,85,240,0.12), rgba(167,236,218,0.08))",
-                border: `1.5px dashed rgba(200,85,240,0.4)`,
+                background: "linear-gradient(135deg, rgba(255, 130, 128,0.12), rgba(167,236,218,0.08))",
+                border: `1.5px dashed rgba(255, 130, 128,0.4)`,
                 display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                 marginBottom: 20, transition: "all 0.2s",
               }}
@@ -1276,7 +1281,7 @@ function LiveScreen() {
    ═══════════════════════════════════════════════════ */
 const PLAN_BADGES = {
   basic: { label: 'Basic', emoji: '🌿', color: '#A7ECDA', bg: 'rgba(167,236,218,0.12)' },
-  plus: { label: 'Plus', emoji: '⭐', color: '#C855F0', bg: 'rgba(200,85,240,0.12)' },
+  plus: { label: 'Plus', emoji: '⭐', color: '#FF8280', bg: 'rgba(255, 130, 128,0.12)' },
   premium: { label: 'Premium', emoji: '👑', color: '#FCE072', bg: 'rgba(252,224,114,0.12)' },
 };
 
@@ -1321,8 +1326,8 @@ function ProfileScreen({ setCurrentPanel }) {
           {headshot ? (
             <>
               <img src={headshot} alt="Headshot" onError={(e) => e.target.style.display = 'none'} style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top", display: "block" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(200,85,240,0.25) 0%, transparent 50%, rgba(167,236,218,0.18) 100%)", pointerEvents: "none" }} />
-              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "inset 0 0 0 1.5px rgba(200,85,240,0.4)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255, 130, 128,0.25) 0%, transparent 50%, rgba(167,236,218,0.18) 100%)", pointerEvents: "none" }} />
+              <div style={{ position: "absolute", inset: 0, borderRadius: "50%", boxShadow: "inset 0 0 0 1.5px rgba(255, 130, 128,0.4)", pointerEvents: "none" }} />
             </>
           ) : (
             <div style={{
@@ -1734,7 +1739,7 @@ export default function DrSelfTapeApp() {
               width: i % 3 === 0 ? 10 : 8,
               height: i % 3 === 0 ? 10 : 14,
               borderRadius: i % 2 === 0 ? '50%' : '2px',
-              background: ['#C855F0', '#A7ECDA', '#FCE072', '#FFB49A', '#5ee6b8', '#ffffff'][i % 6],
+              background: ['#FF8280', '#A7ECDA', '#FCE072', '#FFB49A', '#5ee6b8', '#ffffff'][i % 6],
               animation: `confettiFall ${1.5 + (i % 4) * 0.4}s ease-in ${(i % 8) * 0.15}s forwards`,
               transform: `rotate(${i * 15}deg)`,
             }} />
@@ -1743,10 +1748,10 @@ export default function DrSelfTapeApp() {
           <div style={{
             position: 'absolute', bottom: 80, left: 16, right: 16,
             background: 'linear-gradient(145deg, #1a0d24, #0f0f1a)',
-            border: '1px solid rgba(200,85,240,0.5)',
+            border: '1px solid rgba(255, 130, 128,0.5)',
             borderRadius: 24, padding: '28px 24px', textAlign: 'center',
             animation: 'celebrationPop 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards',
-            boxShadow: '0 0 60px rgba(200,85,240,0.3)',
+            boxShadow: '0 0 60px rgba(255, 130, 128,0.3)',
             pointerEvents: 'all',
           }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🎬</div>
@@ -1759,7 +1764,7 @@ export default function DrSelfTapeApp() {
             <button
               onClick={() => setShowCelebration(false)}
               style={{
-                background: 'linear-gradient(135deg, #C855F0, #9333ea)',
+                background: 'linear-gradient(135deg, #FF8280, #9333ea)',
                 border: 'none', borderRadius: 14, padding: '14px 32px',
                 fontSize: 15, fontWeight: 700, color: 'white', cursor: 'pointer',
                 width: '100%',

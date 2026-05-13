@@ -226,7 +226,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-[#C855F0]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#FF8280]" />
       </div>
     );
   }
@@ -265,7 +265,7 @@ export default function Profile() {
             </div>
             <button
               onClick={() => setValidationPopup(null)}
-              className="w-full py-3 rounded-xl bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold text-sm transition-colors"
+              className="w-full py-3 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold text-sm transition-colors"
             >
               Got It
             </button>
@@ -318,7 +318,7 @@ export default function Profile() {
                 localStorage.setItem('drst-marketplace-tutorial-seen', 'true');
               }}
               className="w-full py-3 rounded-xl text-white font-bold text-sm transition-colors"
-              style={{ background: 'linear-gradient(135deg, #FCE072, #C855F0)' }}
+              style={{ background: 'linear-gradient(135deg, #FCE072, #FF8280)' }}
             >
               Let's Set Up My Rates
             </button>
@@ -350,10 +350,10 @@ export default function Profile() {
                 <img
                   src={avatarPreview}
                   alt="Avatar"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-[#C855F0]/20"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-[#FF8280]/20"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-[#C855F0] flex items-center justify-center border-4 border-[#C855F0]/20">
+                <div className="w-32 h-32 rounded-full bg-[#FF8280] flex items-center justify-center border-4 border-[#FF8280]/20">
                   <span className="text-white text-3xl font-bold">
                     {getInitials(profile)}
                   </span>
@@ -362,7 +362,7 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute bottom-1 right-1 w-9 h-9 bg-[#C855F0] rounded-full flex items-center justify-center text-white shadow-md hover:bg-[#A040C8] transition-colors"
+                className="absolute bottom-1 right-1 w-9 h-9 bg-[#FF8280] rounded-full flex items-center justify-center text-white shadow-md hover:bg-[#A040C8] transition-colors"
               >
                 <Camera className="w-4 h-4" />
               </button>
@@ -380,7 +380,7 @@ export default function Profile() {
             <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
               {profile?.first_name || 'First'} {profile?.last_name || 'Last'}
             </h2>
-            <span className="inline-block mt-1 px-3 py-0.5 text-xs font-medium rounded-full bg-[#C855F0]/10 text-[#C855F0] capitalize">
+            <span className="inline-block mt-1 px-3 py-0.5 text-xs font-medium rounded-full bg-[#FF8280]/10 text-[#FF8280] capitalize">
               {profile?.role || 'actor'}
             </span>
 
@@ -392,7 +392,7 @@ export default function Profile() {
               </div>
               <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-default)' }}>
                 <div
-                  className="h-full bg-[#C855F0] rounded-full transition-all duration-500"
+                  className="h-full bg-[#FF8280] rounded-full transition-all duration-500"
                   style={{ width: `${completion}%` }}
                 />
               </div>
@@ -402,18 +402,18 @@ export default function Profile() {
           {/* Referral Card */}
           {referral.code && (
             <div className="rounded-xl shadow-sm p-5 mt-6" style={{
-              background: 'linear-gradient(135deg, rgba(200,85,240,0.08), var(--bg-surface))',
-              border: '1px solid rgba(200,85,240,0.2)',
+              background: 'linear-gradient(135deg, rgba(255, 130, 128,0.08), var(--bg-surface))',
+              border: '1px solid rgba(255, 130, 128,0.2)',
             }}>
               <div className="flex items-center gap-2 mb-3">
-                <Gift className="w-4 h-4 text-[#C855F0]" />
+                <Gift className="w-4 h-4 text-[#FF8280]" />
                 <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Your Referral Code</h3>
               </div>
 
               {/* Code */}
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex-1 px-3 py-2.5 rounded-lg text-center font-mono text-lg font-bold tracking-widest" style={{
-                  background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: '#C855F0',
+                  background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: '#FF8280',
                 }}>
                   {referral.code}
                 </div>
@@ -441,7 +441,7 @@ export default function Profile() {
                     url: referral.share_url || `https://drselftape.app/signup?ref=${referral.code}`,
                   }).catch(() => {})}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold mb-3 transition-colors"
-                  style={{ background: 'rgba(200,85,240,0.1)', border: '1px solid rgba(200,85,240,0.3)', color: '#C855F0' }}
+                  style={{ background: 'rgba(255, 130, 128,0.1)', border: '1px solid rgba(255, 130, 128,0.3)', color: '#FF8280' }}
                 >
                   <Share2 className="w-4 h-4" /> Share Invite Link
                 </button>
@@ -463,21 +463,21 @@ export default function Profile() {
               <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Personal Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>First Name <span className="text-[#C855F0]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>First Name <span className="text-[#FF8280]">*</span></label>
                   <input
                     name="first_name"
                     value={form.first_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Last Name <span className="text-[#C855F0]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Last Name <span className="text-[#FF8280]">*</span></label>
                   <input
                     name="last_name"
                     value={form.last_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div>
@@ -494,7 +494,7 @@ export default function Profile() {
                     name="phone_no"
                     value={form.phone_no}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
               </div>
@@ -512,7 +512,7 @@ export default function Profile() {
                     value={form.bio}
                     onChange={handleChange}
                     placeholder="Tell casting directors about yourself..."
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors resize-none" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors resize-none" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -523,7 +523,7 @@ export default function Profile() {
                       value={form.reel_url}
                       onChange={handleChange}
                       placeholder="https://youtube.com/..."
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     />
                   </div>
                   <div>
@@ -533,16 +533,16 @@ export default function Profile() {
                       value={form.based_in}
                       onChange={handleChange}
                       placeholder="Los Angeles, CA"
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Union Status <span className="text-[#C855F0]">*</span></label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Union Status <span className="text-[#FF8280]">*</span></label>
                     <select
                       name="union"
                       value={form.union}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     >
                       <option value="">Select union status</option>
                       <option value="sag-aftra">SAG-AFTRA</option>
@@ -561,7 +561,7 @@ export default function Profile() {
                       value={form.years_experience}
                       onChange={handleChange}
                       placeholder="e.g. 5"
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#C855F0]/50 focus:border-[#C855F0] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#FF8280]/50 focus:border-[#FF8280] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
                     />
                   </div>
                 </div>
@@ -582,8 +582,8 @@ export default function Profile() {
                         }}
                         className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                           form.genres.includes(g)
-                            ? 'bg-[#C855F0] border-[#C855F0] text-white'
-                            : 'bg-transparent hover:border-[#C855F0]/50'
+                            ? 'bg-[#FF8280] border-[#FF8280] text-white'
+                            : 'bg-transparent hover:border-[#FF8280]/50'
                         }`}
                         style={!form.genres.includes(g) ? { borderColor: 'var(--border-active)', color: 'var(--text-secondary)' } : {}}
                       >
@@ -624,7 +624,7 @@ export default function Profile() {
                     }
                   }}
                   className="relative w-12 h-7 rounded-full transition-colors"
-                  style={{ background: readerForm.is_paid_reader ? '#C855F0' : 'var(--border-default)' }}
+                  style={{ background: readerForm.is_paid_reader ? '#FF8280' : 'var(--border-default)' }}
                 >
                   <div className="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-transform" style={{
                     transform: readerForm.is_paid_reader ? 'translateX(20px)' : 'translateX(0)',
@@ -815,10 +815,10 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Headshot */}
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Headshot <span className="text-[#C855F0]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Headshot <span className="text-[#FF8280]">*</span></label>
                   <div
                     onClick={() => headshotInputRef.current?.click()}
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors" style={{ borderColor: 'var(--border-active)' }}
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#FF8280] transition-colors" style={{ borderColor: 'var(--border-active)' }}
                   >
                     {headshotPreview ? (
                       <img
@@ -850,7 +850,7 @@ export default function Profile() {
                   <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Resume (PDF)</label>
                   <div
                     onClick={() => resumeInputRef.current?.click()}
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#C855F0] transition-colors" style={{ borderColor: 'var(--border-active)' }}
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#FF8280] transition-colors" style={{ borderColor: 'var(--border-active)' }}
                   >
                     {resumeFile ? (
                       <div className="py-4">
@@ -861,7 +861,7 @@ export default function Profile() {
                       <div className="py-4">
                         <Check className="w-8 h-8 mx-auto text-green-500 mb-2" />
                         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Resume uploaded</p>
-                        <p className="text-xs text-[#C855F0] mt-1">Click to replace</p>
+                        <p className="text-xs text-[#FF8280] mt-1">Click to replace</p>
                       </div>
                     ) : (
                       <div className="py-4">
@@ -887,7 +887,7 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={updateLoading}
-                className="px-6 py-2.5 bg-[#C855F0] text-white font-medium rounded-lg hover:bg-[#A040C8] transition-colors disabled:opacity-60 flex items-center gap-2"
+                className="px-6 py-2.5 bg-[#FF8280] text-white font-medium rounded-lg hover:bg-[#A040C8] transition-colors disabled:opacity-60 flex items-center gap-2"
               >
                 {updateLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 Save Changes
@@ -906,7 +906,7 @@ export default function Profile() {
           </div>
           {auditionStats && (
             <div className="text-right">
-              <p className="text-2xl font-bold text-[#C855F0]">
+              <p className="text-2xl font-bold text-[#FF8280]">
                 {BADGES.filter(b => b.check(auditionStats)).length}
                 <span className="text-base font-normal" style={{ color: 'var(--text-muted)' }}>/{BADGES.length}</span>
               </p>

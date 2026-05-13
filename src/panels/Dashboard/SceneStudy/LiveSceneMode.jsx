@@ -36,7 +36,7 @@ function VoicePicker({ characters, userRole, onSelect, onCancel }) {
               onClick={() => setSelected(v.id)}
               className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer ${
                 selected === v.id
-                  ? 'border-[#C855F0] bg-[#C855F0]/10'
+                  ? 'border-[#FF8280] bg-[#FF8280]/10'
                   : 'border-[#2a2a4a] hover:border-[#3a3a5a] bg-[#1a1a2e]'
               }`}
             >
@@ -57,7 +57,7 @@ function VoicePicker({ characters, userRole, onSelect, onCancel }) {
           </button>
           <button
             onClick={() => onSelect(selected)}
-            className="flex-1 px-5 py-3 rounded-xl bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold transition-colors cursor-pointer"
+            className="flex-1 px-5 py-3 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold transition-colors cursor-pointer"
           >
             Start Scene
           </button>
@@ -72,8 +72,8 @@ function VoicePicker({ characters, userRole, onSelect, onCancel }) {
  */
 function StatusIndicator({ status, compact = false }) {
   const colors = {
-    listening: '#C855F0',
-    thinking: '#C855F0',
+    listening: '#FF8280',
+    thinking: '#FF8280',
     playing: '#ffffff',
     idle: '#4b5563',
     error: '#ef4444',
@@ -111,9 +111,9 @@ function StatusIndicator({ status, compact = false }) {
           )}
           {status === 'thinking' && (
             <div className="flex gap-1">
-              <div className="w-2 h-2 rounded-full bg-[#C855F0] animate-bounce" style={{ animationDelay: '0ms' }} />
-              <div className="w-2 h-2 rounded-full bg-[#C855F0] animate-bounce" style={{ animationDelay: '150ms' }} />
-              <div className="w-2 h-2 rounded-full bg-[#C855F0] animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="w-2 h-2 rounded-full bg-[#FF8280] animate-bounce" style={{ animationDelay: '0ms' }} />
+              <div className="w-2 h-2 rounded-full bg-[#FF8280] animate-bounce" style={{ animationDelay: '150ms' }} />
+              <div className="w-2 h-2 rounded-full bg-[#FF8280] animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
           )}
           {status === 'playing' && (
@@ -700,7 +700,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           </p>
           <button
             onClick={onExit}
-            className="bg-[#C855F0] hover:bg-[#A040C8] text-white px-6 py-3 rounded-xl font-semibold cursor-pointer transition-colors"
+            className="bg-[#FF8280] hover:bg-[#A040C8] text-white px-6 py-3 rounded-xl font-semibold cursor-pointer transition-colors"
           >
             Go Back
           </button>
@@ -739,10 +739,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       {/* Top Bar */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-[#C855F0] animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-[#FF8280] animate-pulse" />
             <span className="text-white font-semibold text-sm">Live Study Mode</span>
           {readerMode === 'pretimed' && (
-            <span className="text-xs bg-[#C855F0]/20 text-[#C855F0] border border-[#C855F0]/30 px-2 py-0.5 rounded-full font-semibold ml-2">
+            <span className="text-xs bg-[#FF8280]/20 text-[#FF8280] border border-[#FF8280]/30 px-2 py-0.5 rounded-full font-semibold ml-2">
               ⏱ Pre-Timed
             </span>
           )}
@@ -758,8 +758,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               onClick={isPaused ? resumeScene : pauseScene}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                 isPaused
-                  ? 'bg-[#C855F0] text-white hover:bg-[#A040C8]'
-                  : 'border border-[#C855F0]/40 text-[#C855F0] hover:bg-[#C855F0]/10'
+                  ? 'bg-[#FF8280] text-white hover:bg-[#A040C8]'
+                  : 'border border-[#FF8280]/40 text-[#FF8280] hover:bg-[#FF8280]/10'
               }`}
             >
               {isPaused ? '▶ Resume' : '⏸ Pause'}
@@ -777,8 +777,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
         {/* Mobile "your turn" indicator — only shows on mobile when it's actor's line */}
         {status === 'listening' && lines[currentLineIdx]?.character === userRole && (
-          <div className="lg:hidden flex items-center justify-center gap-2 py-1.5 bg-[#C855F0]/20 border-b border-[#C855F0]/30 text-[#C855F0] text-xs font-bold uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C855F0] animate-pulse" />
+          <div className="lg:hidden flex items-center justify-center gap-2 py-1.5 bg-[#FF8280]/20 border-b border-[#FF8280]/30 text-[#FF8280] text-xs font-bold uppercase tracking-wider">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#FF8280] animate-pulse" />
             Your line
           </div>
         )}
@@ -801,14 +801,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   className={`rounded-lg p-1.5 lg:p-2.5 transition-all duration-300 ${
                     isCurrent
                       ? isUser
-                        ? 'bg-[#C855F0]/15 border-l-2 border-[#C855F0]'
+                        ? 'bg-[#FF8280]/15 border-l-2 border-[#FF8280]'
                         : 'bg-white/5 border-l-2 border-white/40'
                       : 'opacity-40'
                   }`}
                 >
                   <span
                     className={`text-[10px] font-bold uppercase tracking-wider block mb-0.5 ${
-                      isUser ? 'text-[#C855F0]' : 'text-[#999999]'
+                      isUser ? 'text-[#FF8280]' : 'text-[#999999]'
                     }`}
                   >
                     {line.character}
@@ -828,35 +828,35 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           {/* START SCREEN — shown before scene begins */}
           {status === 'idle' && !sceneStarted && (
             <div className="text-center max-w-md w-full">
-              <div className="w-20 h-20 rounded-full bg-[#C855F0]/10 border border-[#C855F0]/30 flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-[#C855F0]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-20 h-20 rounded-full bg-[#FF8280]/10 border border-[#FF8280]/30 flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-[#FF8280]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
                 </svg>
               </div>
               <h2 className="text-white text-2xl font-bold mb-2">Ready to Study?</h2>
               <p className="text-[#666666] text-sm mb-2">
-                Playing <span className="text-[#C855F0] font-semibold">{userRole}</span> opposite <span className="text-white font-semibold">{partnerName}</span>
+                Playing <span className="text-[#FF8280] font-semibold">{userRole}</span> opposite <span className="text-white font-semibold">{partnerName}</span>
               </p>
               <p className="text-[#999999] text-xs mb-8">
                 Speak your lines naturally. The AI will respond automatically after a short pause.
               </p>
               <div className="bg-white/5 rounded-xl p-4 mb-8 text-left space-y-2">
                 <div className="flex items-center gap-2 text-xs text-[#666666]">
-                  <span className="text-[#C855F0]">🎙️</span> Speak your line — pause when done
+                  <span className="text-[#FF8280]">🎙️</span> Speak your line — pause when done
                 </div>
                 <div className="flex items-center gap-2 text-xs text-[#666666]">
-                  <span className="text-[#C855F0]">🤖</span> AI responds as {partnerName}
+                  <span className="text-[#FF8280]">🤖</span> AI responds as {partnerName}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-[#666666]">
-                  <span className="text-[#C855F0]">🔊</span> ElevenLabs voice reads it aloud
+                  <span className="text-[#FF8280]">🔊</span> ElevenLabs voice reads it aloud
                 </div>
                 <div className="flex items-center gap-2 text-xs text-[#666666]">
-                  <span className="text-[#C855F0]">🔁</span> Scene flows hands-free
+                  <span className="text-[#FF8280]">🔁</span> Scene flows hands-free
                 </div>
               </div>
               <button
                 onClick={() => setShowMicPermission(true)}
-                className="w-full bg-[#C855F0] hover:bg-[#A040C8] text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer flex items-center justify-center gap-3"
+                className="w-full bg-[#FF8280] hover:bg-[#A040C8] text-white px-8 py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer flex items-center justify-center gap-3"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
@@ -875,7 +875,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               <div className="flex gap-3">
                 <button
                   onClick={resumeScene}
-                  className="bg-[#C855F0] hover:bg-[#A040C8] text-white px-8 py-3 rounded-xl font-semibold transition-colors cursor-pointer flex items-center gap-2"
+                  className="bg-[#FF8280] hover:bg-[#A040C8] text-white px-8 py-3 rounded-xl font-semibold transition-colors cursor-pointer flex items-center gap-2"
                 >
                   <span>▶</span> Resume Scene
                 </button>
@@ -894,7 +894,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           <div className="text-center max-w-2xl w-full mb-2 lg:mb-4">
             {status === 'playing' || aiCurrentLine ? (
               <>
-                <span className="text-[#C855F0] text-xs font-bold uppercase tracking-widest block mb-3">
+                <span className="text-[#FF8280] text-xs font-bold uppercase tracking-widest block mb-3">
                   {partnerName}
                 </span>
                 <p className="text-white text-2xl md:text-3xl font-light leading-relaxed">
@@ -918,9 +918,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             <span
               className={`text-sm font-medium px-4 py-1.5 rounded-full ${
                 status === 'listening'
-                  ? 'bg-[#C855F0]/10 text-[#C855F0]'
+                  ? 'bg-[#FF8280]/10 text-[#FF8280]'
                   : status === 'thinking'
-                  ? 'bg-[#C855F0]/10 text-[#C855F0]'
+                  ? 'bg-[#FF8280]/10 text-[#FF8280]'
                   : status === 'playing'
                   ? 'bg-white/5 text-gray-300'
                   : status === 'error'
@@ -954,7 +954,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   key={i}
                   className={`text-xs px-3 py-2 rounded-lg ${
                     turn.role === 'actor'
-                      ? 'bg-[#C855F0]/10 text-[#C855F0]/70 text-right'
+                      ? 'bg-[#FF8280]/10 text-[#FF8280]/70 text-right'
                       : 'bg-white/5 text-[#999999] text-left'
                   }`}
                 >
@@ -986,8 +986,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 onClick={isPaused ? resumeScene : pauseScene}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   isPaused
-                    ? 'bg-[#C855F0] text-white'
-                    : 'border border-[#C855F0]/40 text-[#C855F0]'
+                    ? 'bg-[#FF8280] text-white'
+                    : 'border border-[#FF8280]/40 text-[#FF8280]'
                 }`}
               >
                 {isPaused ? '▶' : '⏸'}

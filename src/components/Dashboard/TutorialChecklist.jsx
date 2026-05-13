@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, Check, ArrowRight, Trophy, Zap,
 } from 'lucide-react';
 
-const STEP_COLORS = ['#C855F0', '#A7ECDA', '#FFB49A', '#3b82f6', '#22c55e', '#FCE072', '#ef4444'];
+const STEP_COLORS = ['#FF8280', '#A7ECDA', '#FFB49A', '#3b82f6', '#22c55e', '#FCE072', '#ef4444'];
 
 const STEPS = [
   { id: 'headshot', label: 'Upload a Headshot', desc: 'So scene partners can see you', icon: Camera, route: '/dashboard/profile', mobilePanel: 'dash-profile' },
@@ -88,7 +88,7 @@ export default function TutorialChecklist({ onNavigate }) {
     <div style={{
       borderRadius: 22,
       overflow: 'hidden',
-      border: '1px solid rgba(200,85,240,0.12)',
+      border: '1px solid rgba(255, 130, 128,0.12)',
       background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-input) 40%, var(--bg-deepest) 100%)',
       boxShadow: '0 2px 16px rgba(0,0,0,0.12)',
       position: 'relative',
@@ -108,7 +108,7 @@ export default function TutorialChecklist({ onNavigate }) {
             <svg width="44" height="44" viewBox="0 0 44 44" style={{ transform: 'rotate(-90deg)' }}>
               <circle cx="22" cy="22" r="18" fill="none" stroke="var(--border-default)" strokeWidth="3" />
               <circle cx="22" cy="22" r="18" fill="none"
-                stroke={allComplete ? '#22c55e' : '#C855F0'}
+                stroke={allComplete ? '#22c55e' : '#FF8280'}
                 strokeWidth="3" strokeLinecap="round"
                 strokeDasharray={`${percent * 1.13} 113`}
                 style={{ transition: 'stroke-dasharray 0.7s ease' }}
@@ -151,18 +151,18 @@ export default function TutorialChecklist({ onNavigate }) {
                 style={{
                   display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px',
                   borderRadius: 14, marginBottom: 6,
-                  background: isNext ? 'rgba(200,85,240,0.06)' : 'transparent',
-                  border: isNext ? '1px solid rgba(200,85,240,0.15)' : '1px solid transparent',
+                  background: isNext ? 'rgba(255, 130, 128,0.06)' : 'transparent',
+                  border: isNext ? '1px solid rgba(255, 130, 128,0.15)' : '1px solid transparent',
                 }}
               >
                 {/* Icon */}
                 <div style={{
                   width: 36, height: 36, borderRadius: 10, flexShrink: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: isNext ? 'rgba(200,85,240,0.12)' : 'var(--bg-surface, rgba(255,255,255,0.04))',
-                  border: isNext ? '1px solid rgba(200,85,240,0.25)' : '1px solid var(--border-default, rgba(255,255,255,0.06))',
+                  background: isNext ? 'rgba(255, 130, 128,0.12)' : 'var(--bg-surface, rgba(255,255,255,0.04))',
+                  border: isNext ? '1px solid rgba(255, 130, 128,0.25)' : '1px solid var(--border-default, rgba(255,255,255,0.06))',
                 }}>
-                  <Icon size={16} color={isNext ? '#C855F0' : 'var(--text-muted)'} />
+                  <Icon size={16} color={isNext ? '#FF8280' : 'var(--text-muted)'} />
                 </div>
 
                 {/* Text */}
@@ -178,9 +178,9 @@ export default function TutorialChecklist({ onNavigate }) {
                     flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4,
                     padding: isNext ? '8px 16px' : '8px 12px', borderRadius: 10,
                     fontSize: 12, fontWeight: 700, cursor: 'pointer', border: 'none',
-                    background: isNext ? '#C855F0' : 'var(--bg-surface, rgba(255,255,255,0.04))',
+                    background: isNext ? '#FF8280' : 'var(--bg-surface, rgba(255,255,255,0.04))',
                     color: isNext ? '#fff' : 'var(--text-secondary)',
-                    boxShadow: isNext ? '0 2px 8px rgba(200,85,240,0.25)' : 'none',
+                    boxShadow: isNext ? '0 2px 8px rgba(255, 130, 128,0.25)' : 'none',
                   }}
                 >
                   {isNext ? 'Start' : 'Go'} <ArrowRight size={12} />
@@ -214,8 +214,8 @@ export default function TutorialChecklist({ onNavigate }) {
               style={{
                 width: '100%', marginTop: 8, padding: '14px', borderRadius: 14,
                 color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer',
-                background: 'linear-gradient(135deg, #C855F0, #22c55e)',
-                boxShadow: '0 4px 16px rgba(200,85,240,0.25)',
+                background: 'linear-gradient(135deg, #FF8280, #22c55e)',
+                boxShadow: '0 4px 16px rgba(255, 130, 128,0.25)',
               }}
             >
               Claim Achievement

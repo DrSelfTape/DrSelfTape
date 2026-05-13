@@ -49,7 +49,7 @@ import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 const COLUMNS = [
   { id: 'submitted',  label: 'Submitted',  color: '#6b7280' },
   { id: 'in_review',  label: 'In Review',  color: '#3b82f6' },
-  { id: 'audition',   label: 'Audition',   color: '#C855F0' },
+  { id: 'audition',   label: 'Audition',   color: '#FF8280' },
   { id: 'callback',   label: 'Callback',   color: '#f59e0b' },
   { id: 'booked',     label: 'Booked',     color: '#22c55e' },
   { id: 'passed',     label: 'Passed',     color: '#ef4444' },
@@ -140,7 +140,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
         group relative bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] shadow-sm
         transition-all duration-200 cursor-pointer
         ${isDragging ? 'shadow-xl opacity-90 rotate-1 scale-105 z-50' : 'hover:border-[#3A3A3A]'}
-        ${cb?.urgent ? 'ring-2 ring-[#C855F0]/40 animate-[pulse-glow_2s_ease-in-out_infinite]' : ''}
+        ${cb?.urgent ? 'ring-2 ring-[#FF8280]/40 animate-[pulse-glow_2s_ease-in-out_infinite]' : ''}
       `}
       onClick={() => onClick(audition)}
     >
@@ -261,7 +261,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
         className={`
           flex-1 flex flex-col gap-2 p-2 rounded-xl min-h-[200px]
           transition-colors duration-200
-          ${isOver ? 'bg-[#C855F0]/5 ring-2 ring-[#C855F0]/20' : 'bg-[#0D0D0D]/60'}
+          ${isOver ? 'bg-[#FF8280]/5 ring-2 ring-[#FF8280]/20' : 'bg-[#0D0D0D]/60'}
         `}
       >
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
@@ -332,7 +332,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
           <select
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all"
+            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280] outline-none transition-all"
           >
             {options.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -343,14 +343,14 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
             rows={3}
-            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all resize-none"
+            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280] outline-none transition-all resize-none"
           />
         ) : (
           <input
             type={type}
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all"
+            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280] outline-none transition-all"
           />
         )
       ) : (
@@ -380,7 +380,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             {editing ? (
               <button
                 onClick={handleSave}
-                className="p-2 rounded-lg bg-[#C855F0] text-white hover:bg-[#A040C8] transition-colors"
+                className="p-2 rounded-lg bg-[#FF8280] text-white hover:bg-[#A040C8] transition-colors"
               >
                 <Save size={16} />
               </button>
@@ -416,7 +416,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             <select
               value={audition._column}
               onChange={(e) => onStatusChange(audition.id, e.target.value)}
-              className="w-full text-sm font-medium border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none"
+              className="w-full text-sm font-medium border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280] outline-none"
             >
               {COLUMNS.map((col) => (
                 <option key={col.id} value={col.id}>{col.label}</option>
@@ -497,7 +497,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
 
   if (!open) return null;
 
-  const inputCls = 'w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none transition-all';
+  const inputCls = 'w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280] outline-none transition-all';
 
   const resetForm = () => {
     setForm({ project: '', role: '', casting_director: '', agency: '', project_type: 'film', callback_date: '', notes: '' });
@@ -621,7 +621,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                 onClick={() => { setMode(tab.id); setParseError(''); }}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   mode === tab.id
-                    ? 'bg-[#C855F0] text-white'
+                    ? 'bg-[#FF8280] text-white'
                     : 'text-[#666] hover:text-white hover:bg-[#2A2A2A]'
                 }`}
               >
@@ -640,13 +640,13 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                   onChange={(e) => setPasteText(e.target.value)}
                   placeholder="Paste breakdown here...&#10;&#10;e.g. SEEKING: MALE/FEMALE, 25-35&#10;Project: UNTITLED DRAMA PILOT&#10;Network: HBO&#10;Casting: Randi Hiller CSA&#10;Role: DETECTIVE WALSH — A seasoned cop hiding a dark secret..."
                   rows={10}
-                  className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#C855F0]/30 focus:border-[#C855F0] outline-none resize-none"
+                  className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280] outline-none resize-none"
                 />
                 {parseError && <p className="text-xs text-red-400">{parseError}</p>}
                 <button
                   onClick={() => parseWithAI(pasteText)}
                   disabled={parsing || !pasteText.trim()}
-                  className="w-full bg-[#C855F0] hover:bg-[#A040C8] disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full bg-[#FF8280] hover:bg-[#A040C8] disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
                 >
                   {parsing ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/><span>Extracting...</span></> : '✨ Extract with AI'}
                 </button>
@@ -659,11 +659,11 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                 <p className="text-xs text-[#888]">Upload a screenshot of your audition breakdown — AI will read it and fill in the details.</p>
                 <div
                   onClick={() => screenshotInputRef.current?.click()}
-                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#C855F0] rounded-xl p-8 text-center cursor-pointer transition-colors"
+                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#FF8280] rounded-xl p-8 text-center cursor-pointer transition-colors"
                 >
                   {parsing ? (
                     <div className="flex flex-col items-center gap-2">
-                      <span className="w-8 h-8 border-2 border-[#C855F0]/30 border-t-[#C855F0] rounded-full animate-spin" />
+                      <span className="w-8 h-8 border-2 border-[#FF8280]/30 border-t-[#FF8280] rounded-full animate-spin" />
                       <p className="text-sm text-white">Scanning screenshot with AI...</p>
                     </div>
                   ) : (
@@ -689,11 +689,11 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                 <p className="text-xs text-[#888]">Upload the breakdown PDF — the AI will pull out all the key details.</p>
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#C855F0] rounded-xl p-8 text-center cursor-pointer transition-colors"
+                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#FF8280] rounded-xl p-8 text-center cursor-pointer transition-colors"
                 >
                   {parsing ? (
                     <div className="flex flex-col items-center gap-2">
-                      <span className="w-8 h-8 border-2 border-[#C855F0]/30 border-t-[#C855F0] rounded-full animate-spin" />
+                      <span className="w-8 h-8 border-2 border-[#FF8280]/30 border-t-[#FF8280] rounded-full animate-spin" />
                       <p className="text-sm text-white">Reading PDF...</p>
                     </div>
                   ) : (
@@ -736,7 +736,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                   <input type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} />
                 </div>
                 <textarea placeholder="Notes (character description, rate, union status, shoot dates...)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className={`${inputCls} resize-none`} />
-                <button type="submit" className="w-full bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold py-2.5 rounded-xl transition-colors">
+                <button type="submit" className="w-full bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold py-2.5 rounded-xl transition-colors">
                   Add Audition
                 </button>
               </form>
@@ -913,7 +913,7 @@ export default function DashboardAuditions() {
   if (loading && allAuditions.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-3 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-3 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -925,7 +925,7 @@ export default function DashboardAuditions() {
         <h1 className="text-2xl font-bold text-white">Audition Tracker</h1>
         <button
           onClick={() => setShowNewForm(true)}
-          className="flex items-center gap-2 bg-[#C855F0] hover:bg-[#A040C8] text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm"
+          className="flex items-center gap-2 bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm"
         >
           <Plus size={16} />
           New Audition
@@ -945,8 +945,8 @@ export default function DashboardAuditions() {
                 flex items-center gap-1.5 text-sm font-medium px-3.5 py-1.5 rounded-full
                 transition-all duration-150
                 ${active
-                  ? 'bg-[#C855F0] text-white shadow-sm'
-                  : 'bg-[#1E1E1E] text-[#999999] border border-[#3A3A3A] hover:border-[#C855F0] hover:bg-[#2A2A2A]'
+                  ? 'bg-[#FF8280] text-white shadow-sm'
+                  : 'bg-[#1E1E1E] text-[#999999] border border-[#3A3A3A] hover:border-[#FF8280] hover:bg-[#2A2A2A]'
                 }
               `}
             >
@@ -1015,8 +1015,8 @@ export default function DashboardAuditions() {
           to { transform: scale(1); opacity: 1; }
         }
         @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(200, 85, 240, 0); }
-          50% { box-shadow: 0 0 0 4px rgba(200, 85, 240, 0.15); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255, 130, 128, 0); }
+          50% { box-shadow: 0 0 0 4px rgba(255, 130, 128, 0.15); }
         }
       `}</style>
     </div>

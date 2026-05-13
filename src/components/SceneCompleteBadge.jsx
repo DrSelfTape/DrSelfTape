@@ -24,7 +24,7 @@ export default function SceneCompleteBadge({ sceneName, sceneNumber, onDismiss }
 
   // ── Confetti ──────────────────────────────────────────────
   const fireConfetti = () => {
-    const colors = ['#C855F0', '#E88BF5', '#A7ECDA', '#FCE072', '#FFB49A', '#ffffff'];
+    const colors = ['#FF8280', '#E88BF5', '#A7ECDA', '#FCE072', '#FFB49A', '#ffffff'];
 
     // Left burst
     confetti({
@@ -190,7 +190,7 @@ export default function SceneCompleteBadge({ sceneName, sceneNumber, onDismiss }
           background: 'linear-gradient(135deg, #1a0a24 0%, #2d0d3e 50%, #1a0a24 100%)',
           border: '3px solid transparent',
           backgroundClip: 'padding-box',
-          boxShadow: '0 0 0 3px #C855F0, 0 0 60px rgba(200,85,240,0.5), 0 0 120px rgba(200,85,240,0.2)',
+          boxShadow: '0 0 0 3px #FF8280, 0 0 60px rgba(255, 130, 128,0.5), 0 0 120px rgba(255, 130, 128,0.2)',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -219,7 +219,7 @@ export default function SceneCompleteBadge({ sceneName, sceneNumber, onDismiss }
             />
           ))}
 
-          <Clapperboard size={48} style={{ color: '#C855F0' }} />
+          <Clapperboard size={48} style={{ color: '#FF8280' }} />
           <span style={{
             fontSize: 11,
             fontWeight: 700,
@@ -258,7 +258,7 @@ export default function SceneCompleteBadge({ sceneName, sceneNumber, onDismiss }
               width: i === 1 ? 24 : 8,
               height: 8,
               borderRadius: 4,
-              background: i === 1 ? '#C855F0' : 'rgba(255,255,255,0.15)',
+              background: i === 1 ? '#FF8280' : 'rgba(255,255,255,0.15)',
               transition: 'all 0.3s ease',
             }} />
           ))}

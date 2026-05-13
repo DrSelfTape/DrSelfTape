@@ -268,8 +268,8 @@ const GreenRoomChat = (props = {}) => {
         </button>
 
         {/* Partner avatar */}
-        <div className="w-9 h-9 rounded-full bg-[#C855F0]/20 border border-[#C855F0]/20 flex items-center justify-center shrink-0">
-          <span className="text-[#C855F0] text-xs font-bold">{partnerInitials}</span>
+        <div className="w-9 h-9 rounded-full bg-[#FF8280]/20 border border-[#FF8280]/20 flex items-center justify-center shrink-0">
+          <span className="text-[#FF8280] text-xs font-bold">{partnerInitials}</span>
         </div>
 
         <div className="flex-1 min-w-0">
@@ -286,8 +286,8 @@ const GreenRoomChat = (props = {}) => {
           disabled={startingRehearsal}
           className="flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold text-white transition-all disabled:opacity-50 shrink-0"
           style={{
-            background: 'linear-gradient(135deg, #C855F0, #E88BF5)',
-            boxShadow: '0 3px 12px rgba(200,85,240,0.35)',
+            background: 'linear-gradient(135deg, #FF8280, #E88BF5)',
+            boxShadow: '0 3px 12px rgba(255, 130, 128,0.35)',
           }}
         >
           {startingRehearsal ? <Loader2 size={13} className="animate-spin" /> : <Video size={13} />}
@@ -382,7 +382,7 @@ const GreenRoomChat = (props = {}) => {
         <button
           onClick={handleStartRehearsal}
           disabled={startingRehearsal}
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all border border-[#C855F0]/30 text-[#C855F0] hover:bg-[#C855F0]/10 disabled:opacity-50"
+          className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 text-xs font-semibold transition-all border border-[#FF8280]/30 text-[#FF8280] hover:bg-[#FF8280]/10 disabled:opacity-50"
         >
           <Users size={14} />
           {isPaidReader && !sessionBooked
@@ -404,14 +404,14 @@ const GreenRoomChat = (props = {}) => {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
         {messagesLoading && (
           <div className="flex h-full items-center justify-center">
-            <Loader2 size={24} className="animate-spin text-[#C855F0]" />
+            <Loader2 size={24} className="animate-spin text-[#FF8280]" />
           </div>
         )}
 
         {!messagesLoading && greenRoomMessages.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center text-center px-8 gap-3">
-            <div className="w-16 h-16 rounded-full bg-[#C855F0]/10 flex items-center justify-center">
-              <Video size={28} color="#C855F0" />
+            <div className="w-16 h-16 rounded-full bg-[#FF8280]/10 flex items-center justify-center">
+              <Video size={28} color="#FF8280" />
             </div>
             <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>You matched with {partnerName}!</p>
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
@@ -436,7 +436,7 @@ const GreenRoomChat = (props = {}) => {
         {/* Upload sides preview */}
         {sidesFile && (
           <div className="mb-2 flex items-center gap-2 rounded-xl px-3 py-2 text-xs" style={{ background: 'var(--border-default)', color: 'var(--text-secondary)' }}>
-            <FileText size={14} className="text-[#C855F0]" />
+            <FileText size={14} className="text-[#FF8280]" />
             <span className="flex-1 truncate">{sidesFile.name}</span>
             <button onClick={() => setSidesFile(null)}><X size={12} /></button>
           </div>
@@ -462,7 +462,7 @@ const GreenRoomChat = (props = {}) => {
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  <FileText size={16} className="text-[#C855F0]" />
+                  <FileText size={16} className="text-[#FF8280]" />
                   <div className="text-left">
                     <p className="font-medium">Share Sides</p>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>PDF or image of your sides</p>
@@ -476,7 +476,7 @@ const GreenRoomChat = (props = {}) => {
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors disabled:opacity-50"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  <Video size={16} className="text-[#C855F0]" />
+                  <Video size={16} className="text-[#FF8280]" />
                   <div className="text-left">
                     <p className="font-medium">Start Live Rehearsal</p>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Video call via Daily.co</p>
@@ -489,7 +489,7 @@ const GreenRoomChat = (props = {}) => {
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  <Bot size={16} className="text-[#C855F0]" />
+                  <Bot size={16} className="text-[#FF8280]" />
                   <div className="text-left">
                     <p className="font-medium">AI Scene Partner</p>
                     <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Practice lines with AI reader</p>
@@ -513,7 +513,7 @@ const GreenRoomChat = (props = {}) => {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Message ${partnerName.split(' ')[0]}...`}
-            className="flex-1 rounded-full px-4 py-2.5 text-sm outline-none transition-colors focus:border-[#C855F0]"
+            className="flex-1 rounded-full px-4 py-2.5 text-sm outline-none transition-colors focus:border-[#FF8280]"
             style={{ border: '1px solid var(--border-active)', background: 'var(--border-default)', color: 'var(--text-primary)', '--tw-placeholder-opacity': 1 }}
           />
 
@@ -521,7 +521,7 @@ const GreenRoomChat = (props = {}) => {
             type="submit"
             disabled={!input.trim() || sending}
             className="flex h-10 w-10 items-center justify-center rounded-full text-white transition-all disabled:opacity-40"
-            style={{ background: 'linear-gradient(135deg, #C855F0, #E88BF5)' }}
+            style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
           >
             {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
           </button>

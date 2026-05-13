@@ -20,7 +20,7 @@ import {
 // ─── Performance DNA Metrics ───────────────────────────────────────────
 
 const DNA_METRICS = [
-  { key: 'emotional_range', label: 'Emotional Range', icon: Heart, color: '#C855F0' },
+  { key: 'emotional_range', label: 'Emotional Range', icon: Heart, color: '#FF8280' },
   { key: 'cold_read', label: 'Cold Read', icon: Eye, color: '#3b82f6' },
   { key: 'comedy_timing', label: 'Comedy Timing', icon: Laugh, color: '#FCE072' },
   { key: 'dramatic_depth', label: 'Dramatic Depth', icon: Theater, color: '#ef4444' },
@@ -39,7 +39,7 @@ const INSIGHT_ICONS = {
   weakness: { icon: Target, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   pattern: { icon: BarChart3, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   breakthrough: { icon: Zap, color: '#FCE072', bg: 'rgba(252,224,114,0.1)' },
-  recommendation: { icon: Sparkles, color: '#C855F0', bg: 'rgba(200,85,240,0.1)' },
+  recommendation: { icon: Sparkles, color: '#FF8280', bg: 'rgba(255, 130, 128,0.1)' },
 };
 
 const SESSION_TYPE_LABELS = {
@@ -94,7 +94,7 @@ function DNARadar({ dna = {} }) {
         />
       ))}
       {/* Data shape */}
-      <path d={pathD} fill="rgba(200,85,240,0.15)" stroke="#C855F0" strokeWidth="2" />
+      <path d={pathD} fill="rgba(255, 130, 128,0.15)" stroke="#FF8280" strokeWidth="2" />
       {/* Data points */}
       {points.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r="4" fill={metrics[i].color} />
@@ -182,8 +182,8 @@ export default function JerichoDashboard() {
     return (
       <div className="min-h-screen px-4 py-6 sm:p-8" style={{ background: 'var(--bg-deep)' }}>
         <div className="max-w-2xl mx-auto text-center py-20">
-          <div className="w-24 h-24 rounded-full bg-[#C855F0]/10 border border-[#C855F0]/20 flex items-center justify-center mx-auto mb-6">
-            <Brain className="w-12 h-12 text-[#C855F0]" />
+          <div className="w-24 h-24 rounded-full bg-[#FF8280]/10 border border-[#FF8280]/20 flex items-center justify-center mx-auto mb-6">
+            <Brain className="w-12 h-12 text-[#FF8280]" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-3">Meet Jericho</h1>
           <p className="text-[#999] text-sm mb-2 max-w-md mx-auto leading-relaxed">
@@ -198,7 +198,7 @@ export default function JerichoDashboard() {
             <a
               href="/dashboard/cd-sim"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white transition-all hover:shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #C855F0, #E88BF5)' }}
+              style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
             >
               <Sparkles size={16} /> Start Coaching Session
             </a>
@@ -222,9 +222,9 @@ export default function JerichoDashboard() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Brain className="w-5 h-5 text-[#C855F0]" />
+              <Brain className="w-5 h-5 text-[#FF8280]" />
               <h1 className="text-xl font-bold text-white">Jericho</h1>
-              <span className="text-xs bg-[#C855F0]/15 text-[#C855F0] px-2 py-0.5 rounded-full font-semibold">AI Coach</span>
+              <span className="text-xs bg-[#FF8280]/15 text-[#FF8280] px-2 py-0.5 rounded-full font-semibold">AI Coach</span>
             </div>
             <p className="text-sm text-[#666]">
               {totalSessions > 0
@@ -256,7 +256,7 @@ export default function JerichoDashboard() {
                   }}
                   className={`flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
                     coachingStyle === s.id
-                      ? 'border-[#C855F0] bg-[#C855F0]/10'
+                      ? 'border-[#FF8280] bg-[#FF8280]/10'
                       : 'border-[#2A2A2A] hover:border-[#3A3A3A]'
                   }`}
                 >
@@ -284,7 +284,7 @@ export default function JerichoDashboard() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                   active
-                    ? 'bg-[#C855F0]/15 text-[#C855F0] border border-[#C855F0]/20'
+                    ? 'bg-[#FF8280]/15 text-[#FF8280] border border-[#FF8280]/20'
                     : 'text-[#666] hover:text-[#999]'
                 }`}
               >
@@ -297,7 +297,7 @@ export default function JerichoDashboard() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-[#C855F0]" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#FF8280]" />
           </div>
         ) : (
           <>
@@ -308,8 +308,8 @@ export default function JerichoDashboard() {
                 {memory?.summary && (
                   <div className="rounded-2xl border border-[#2A2A2A] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                     <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#C855F0]/10 flex items-center justify-center flex-shrink-0">
-                        <Brain size={18} className="text-[#C855F0]" />
+                      <div className="w-10 h-10 rounded-xl bg-[#FF8280]/10 flex items-center justify-center flex-shrink-0">
+                        <Brain size={18} className="text-[#FF8280]" />
                       </div>
                       <div>
                         <h3 className="text-sm font-bold text-white mb-1">Jericho&apos;s Assessment</h3>
@@ -322,7 +322,7 @@ export default function JerichoDashboard() {
                 {/* Performance DNA */}
                 <div className="rounded-2xl border border-[#2A2A2A] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                   <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2">
-                    <Zap size={16} className="text-[#C855F0]" /> Performance DNA
+                    <Zap size={16} className="text-[#FF8280]" /> Performance DNA
                   </h3>
                   {/* Radar on desktop, bars on mobile */}
                   <div className="hidden sm:block">
@@ -380,7 +380,7 @@ export default function JerichoDashboard() {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { label: 'Sessions', value: totalSessions, icon: Flame, color: '#C855F0' },
+                    { label: 'Sessions', value: totalSessions, icon: Flame, color: '#FF8280' },
                     { label: 'Insights', value: insights.length, icon: Sparkles, color: '#A7ECDA' },
                     { label: 'Streak', value: memory?.current_streak || 0, icon: TrendingUp, color: '#FCE072' },
                   ].map((stat) => {
@@ -429,7 +429,7 @@ export default function JerichoDashboard() {
               <div className="space-y-3">
                 {insightsLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#C855F0]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-[#FF8280]" />
                   </div>
                 ) : insights.length > 0 ? (
                   insights.map((insight, i) => {
@@ -489,7 +489,7 @@ export default function JerichoDashboard() {
               <div className="space-y-2">
                 {sessionsLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#C855F0]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-[#FF8280]" />
                   </div>
                 ) : recentSessions.length > 0 ? (
                   recentSessions.map((session, i) => {
@@ -506,7 +506,7 @@ export default function JerichoDashboard() {
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-white">{typeInfo.label}</span>
                             {session.role_played && (
-                              <span className="text-[10px] text-[#C855F0] font-medium">as {session.role_played}</span>
+                              <span className="text-[10px] text-[#FF8280] font-medium">as {session.role_played}</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">

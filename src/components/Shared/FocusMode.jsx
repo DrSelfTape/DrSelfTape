@@ -63,7 +63,7 @@ export default function FocusMode({ onComplete }) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80">
         <div className="text-center px-8 max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-[#C855F0]/10 border border-[#C855F0]/20 flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 rounded-full bg-[#FF8280]/10 border border-[#FF8280]/20 flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">🧘</span>
           </div>
           <h2 className="text-white font-bold text-xl mb-2">Focus Mode</h2>
@@ -72,8 +72,8 @@ export default function FocusMode({ onComplete }) {
           </p>
           <button
             onClick={start}
-            className="flex items-center justify-center gap-2 mx-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-[#C855F0]/30"
-            style={{ background: 'linear-gradient(135deg, #C855F0, #E88BF5)' }}
+            className="flex items-center justify-center gap-2 mx-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-[#FF8280]/30"
+            style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
           >
             <Play className="w-4 h-4" />
             Begin
@@ -107,7 +107,7 @@ export default function FocusMode({ onComplete }) {
           style={{
             width: 220,
             height: 220,
-            background: `radial-gradient(circle, rgba(200,85,240,${phase === 'hold' ? 0.2 : 0.1}) 0%, transparent 70%)`,
+            background: `radial-gradient(circle, rgba(255, 130, 128,${phase === 'hold' ? 0.2 : 0.1}) 0%, transparent 70%)`,
             transform: `scale(${getScale()})`,
             transition: 'transform 1s ease-in-out',
           }}
@@ -118,8 +118,8 @@ export default function FocusMode({ onComplete }) {
           style={{
             width: 160,
             height: 160,
-            background: 'rgba(200,85,240,0.08)',
-            border: '2px solid rgba(200,85,240,0.3)',
+            background: 'rgba(255, 130, 128,0.08)',
+            border: '2px solid rgba(255, 130, 128,0.3)',
             transform: `scale(${getScale()})`,
             transition: 'transform 1s ease-in-out',
           }}
@@ -134,7 +134,7 @@ export default function FocusMode({ onComplete }) {
       {/* Progress bar */}
       <div className="w-48 h-1 bg-[#2A2A2A] rounded-full mt-4 overflow-hidden">
         <div
-          className="h-full bg-[#C855F0] rounded-full transition-all"
+          className="h-full bg-[#FF8280] rounded-full transition-all"
           style={{ width: `${((TOTAL_SECONDS - secondsLeft) / TOTAL_SECONDS) * 100}%`, transition: 'width 1s linear' }}
         />
       </div>

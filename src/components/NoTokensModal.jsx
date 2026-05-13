@@ -5,8 +5,8 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
         className="w-full max-w-sm rounded-3xl p-6 text-center"
         style={{
           background: 'linear-gradient(145deg, #1a0d24, #0f0f1a)',
-          border: '1px solid rgba(200,85,240,0.4)',
-          boxShadow: '0 0 60px rgba(200,85,240,0.2)',
+          border: '1px solid rgba(255, 130, 128,0.4)',
+          boxShadow: '0 0 60px rgba(255, 130, 128,0.2)',
           animation: 'slideUp 0.3s ease',
         }}
       >
@@ -20,7 +20,7 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
         <button
           onClick={onUpgrade}
           className="w-full py-3.5 rounded-xl font-bold text-white text-sm mb-3"
-          style={{ background: 'linear-gradient(135deg, #C855F0, #9333ea)' }}
+          style={{ background: 'linear-gradient(135deg, #FF8280, #9333ea)' }}
         >
           Upgrade Plan 👑
         </button>

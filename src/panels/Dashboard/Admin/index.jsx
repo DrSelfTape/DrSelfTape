@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#C855F0] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -54,12 +54,12 @@ export default function AdminDashboard() {
   const a = metrics?.auditions || {};
 
   const statCards = [
-    { label: 'Total Users', value: u.total || 0, icon: Users, color: '#C855F0' },
+    { label: 'Total Users', value: u.total || 0, icon: Users, color: '#FF8280' },
     { label: 'Online Now', value: u.online_now || 0, icon: Activity, color: '#22c55e' },
     { label: 'Available', value: u.available_now || 0, icon: Shield, color: '#A7ECDA' },
     { label: 'With Headshot', value: u.with_headshot || 0, icon: Users, color: '#60A5FA' },
     { label: 'Total Swipes', value: m.total_swipes || 0, icon: TrendingUp, color: '#FCE072' },
-    { label: 'Matches', value: m.total_matches || 0, icon: MessageSquare, color: '#C855F0' },
+    { label: 'Matches', value: m.total_matches || 0, icon: MessageSquare, color: '#FF8280' },
     { label: 'Messages', value: msg.total || 0, icon: Send, color: '#A7ECDA' },
     { label: 'Auditions', value: a.total || 0, icon: Activity, color: '#FFB49A' },
   ];
@@ -80,9 +80,9 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Admin Dashboard</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Manage users and send notifications</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#C855F0]/10 border border-[#C855F0]/30">
-          <Shield className="w-4 h-4 text-[#C855F0]" />
-          <span className="text-xs font-semibold text-[#C855F0]">Admin</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#FF8280]/10 border border-[#FF8280]/30">
+          <Shield className="w-4 h-4 text-[#FF8280]" />
+          <span className="text-xs font-semibold text-[#FF8280]">Admin</span>
         </div>
       </div>
 
@@ -104,12 +104,12 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Broadcast Notification */}
         <div className="rounded-2xl p-6" style={{
-          background: 'linear-gradient(135deg, rgba(200,85,240,0.05), var(--bg-card))',
-          border: '1px solid rgba(200,85,240,0.2)',
+          background: 'linear-gradient(135deg, rgba(255, 130, 128,0.05), var(--bg-card))',
+          border: '1px solid rgba(255, 130, 128,0.2)',
         }}>
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(200,85,240,0.15)' }}>
-              <Bell className="w-5 h-5 text-[#C855F0]" />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255, 130, 128,0.15)' }}>
+              <Bell className="w-5 h-5 text-[#FF8280]" />
             </div>
             <div>
               <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Send Broadcast</h2>
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
               type="submit"
               disabled={sending || !broadcastTitle.trim() || !broadcastMessage.trim()}
               className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-40"
-              style={{ background: sent ? '#22c55e' : '#C855F0' }}
+              style={{ background: sent ? '#22c55e' : '#FF8280' }}
             >
               {sent ? '✓ Sent to all users!' : sending ? 'Sending...' : 'Send to All Users'}
             </button>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
               {recentSwipes.map((s, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--bg-surface)' }}>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                    s.direction === 'right' ? 'bg-[#C855F0]' : s.direction === 'star' ? 'bg-[#FCE072] text-black' : 'bg-gray-500'
+                    s.direction === 'right' ? 'bg-[#FF8280]' : s.direction === 'star' ? 'bg-[#FCE072] text-black' : 'bg-gray-500'
                   }`}>
                     {s.direction === 'right' ? '🎬' : s.direction === 'star' ? '⭐' : '✕'}
                   </div>
@@ -173,8 +173,8 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                   <span className="text-xs font-semibold px-2 py-1 rounded-full" style={{
-                    background: s.direction === 'right' ? 'rgba(200,85,240,0.15)' : 'var(--bg-input)',
-                    color: s.direction === 'right' ? '#C855F0' : 'var(--text-secondary)',
+                    background: s.direction === 'right' ? 'rgba(255, 130, 128,0.15)' : 'var(--bg-input)',
+                    color: s.direction === 'right' ? '#FF8280' : 'var(--text-secondary)',
                   }}>
                     {s.direction === 'right' ? 'Slate' : s.direction === 'star' ? 'Star' : 'Pass'}
                   </span>
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
                   </td>
                   <td className="py-3 px-3" style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
                   <td className="py-3 px-3">
-                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#C855F0]/10 text-[#C855F0] capitalize">
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#FF8280]/10 text-[#FF8280] capitalize">
                       {u.role}
                     </span>
                   </td>
@@ -250,7 +250,7 @@ export default function AdminDashboard() {
               return (
                 <div key={d.day} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{d.count}</span>
-                  <div className="w-full rounded-t-lg" style={{ height: `${Math.max(pct, 8)}%`, background: '#C855F0' }} />
+                  <div className="w-full rounded-t-lg" style={{ height: `${Math.max(pct, 8)}%`, background: '#FF8280' }} />
                   <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
                     {new Date(d.day).toLocaleDateString([], { weekday: 'short' })}
                   </span>

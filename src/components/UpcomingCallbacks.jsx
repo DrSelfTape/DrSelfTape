@@ -82,12 +82,12 @@ export default function UpcomingCallbacks() {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Calendar size={16} className="text-[#C855F0]" />
+            <Calendar size={16} className="text-[#FF8280]" />
             Upcoming Callbacks
           </CardTitle>
           <button
             onClick={() => navigate('/dashboard/auditions')}
-            className="text-xs text-[#C855F0] hover:text-[#A040C8] font-medium flex items-center gap-0.5 transition-colors"
+            className="text-xs text-[#FF8280] hover:text-[#A040C8] font-medium flex items-center gap-0.5 transition-colors"
           >
             View all <ChevronRight size={12} />
           </button>
@@ -103,7 +103,7 @@ export default function UpcomingCallbacks() {
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer
                 transition-all duration-150 hover:bg-[#1E1E1E]
-                ${dl.urgent ? 'bg-[#2A2A2A]/60 ring-1 ring-[#C855F0]/20' : 'bg-[#1E1E1E]'}
+                ${dl.urgent ? 'bg-[#2A2A2A]/60 ring-1 ring-[#FF8280]/20' : 'bg-[#1E1E1E]'}
               `}
             >
               {/* Type dot */}
@@ -124,7 +124,7 @@ export default function UpcomingCallbacks() {
                 className={`
                   shrink-0 flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full
                   ${dl.urgent
-                    ? 'bg-[#C855F0] text-white'
+                    ? 'bg-[#FF8280] text-white'
                     : 'bg-[#2A2A2A] text-[#999999]'
                   }
                 `}

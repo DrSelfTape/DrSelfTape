@@ -44,7 +44,7 @@ export default function DailyChallengeCard({ onNavigate }) {
     <div className="relative rounded-2xl overflow-hidden" style={{
       background: completed
         ? 'linear-gradient(135deg, rgba(34,197,94,0.08), var(--bg-card))'
-        : 'linear-gradient(135deg, rgba(200,85,240,0.08), var(--bg-card))',
+        : 'linear-gradient(135deg, rgba(255, 130, 128,0.08), var(--bg-card))',
       border: completed ? '1px solid rgba(34,197,94,0.2)' : '1px solid var(--border-default)',
     }}>
       <div className="px-5 py-4">
@@ -53,7 +53,7 @@ export default function DailyChallengeCard({ onNavigate }) {
           <div className="flex items-center gap-2">
             <span className="text-xl">{challenge.emoji}</span>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#C855F0]">Daily Challenge</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-[#FF8280]">Daily Challenge</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -92,7 +92,7 @@ export default function DailyChallengeCard({ onNavigate }) {
           <button
             onClick={handleComplete}
             disabled={completing}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#C855F0] hover:bg-[#A040C8] text-white text-sm font-bold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-white text-sm font-bold transition-all disabled:opacity-50"
           >
             {completing ? 'Completing...' : `Complete (+${challenge.xp_reward} XP)`}
             <ChevronRight className="w-4 h-4" />
