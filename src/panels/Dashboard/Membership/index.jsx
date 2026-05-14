@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../redux/http';
+import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 
 const PLANS = [
   {
@@ -57,6 +59,7 @@ const PLANS = [
 ];
 
 export default function Membership() {
+  const dispatch = useDispatch();
   const [billing, setBilling] = useState('monthly');
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -68,14 +71,29 @@ export default function Membership() {
       .catch(() => {})
       .finally(() => setLoading(false));
 
-    // Handle success/cancel redirect from Stripe
+    // Handle the redirect query params Stripe Checkout adds. Webhooks
+    // are the source of truth; we just refetch status and surface a
+    // toast so the user gets immediate feedback.
     const params = new URLSearchParams(window.location.search);
-    if (params.get('success')) {
+    if (params.get('subscribed') === 'true') {
+      dispatch(showSnackbar({
+        message: 'Subscription activated. Welcome aboard!',
+        variant: 'success',
+      }));
+      // Webhook usually lands within ~1s; refetch after a short delay.
       setTimeout(() => {
         axiosInstance.get('/v1/subscriptions/status/').then(res => setStatus(res.data.data));
-      }, 2000);
+      }, 1500);
+      // Drop the params so a refresh doesn't re-fire the toast.
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (params.get('canceled') === 'true') {
+      dispatch(showSnackbar({
+        message: 'Checkout canceled — no changes to your subscription.',
+        variant: 'info',
+      }));
+      window.history.replaceState({}, '', window.location.pathname);
     }
-  }, []);
+  }, [dispatch]);
 
   const handleSubscribe = async (planId) => {
     setCheckoutLoading(planId);
@@ -86,8 +104,8 @@ export default function Membership() {
       });
       window.location.href = res.data.data.checkout_url;
     } catch (err) {
-      alert('Something went wrong. Please try again.');
-    } finally {
+      const message = err?.response?.data?.error || 'Something went wrong starting checkout. Please try again.';
+      dispatch(showSnackbar({ message, variant: 'error' }));
       setCheckoutLoading(null);
     }
   };
@@ -96,8 +114,9 @@ export default function Membership() {
     try {
       const res = await axiosInstance.post('/v1/subscriptions/portal/');
       window.location.href = res.data.data.portal_url;
-    } catch {
-      alert('Could not open billing portal.');
+    } catch (err) {
+      const message = err?.response?.data?.error || "Couldn't open the billing portal. Please try again.";
+      dispatch(showSnackbar({ message, variant: 'error' }));
     }
   };
 
