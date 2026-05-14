@@ -10,6 +10,11 @@ import { persistor, store } from './redux/store.js'
 import { Toastbar } from './components/Shared/Toastbar/index.jsx';
 import { ErrorBoundary } from './ErrorBoundary.jsx';
 import { ThemeProvider } from './utils/theme.jsx';
+import { initSentry } from './utils/sentry.js';
+
+// Init Sentry before render so it captures errors from the very first
+// component mount. No-ops in dev (no DSN set).
+initSentry();
 
 // Library Imports
 

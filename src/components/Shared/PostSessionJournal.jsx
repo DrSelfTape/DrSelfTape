@@ -4,6 +4,7 @@ import { X, BookOpen, Check, Star } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import { updateSessionLog } from '../../redux/features/jericho/jerichoSlice';
+import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 
 const MOOD_OPTIONS = [
   { emoji: '🔥', label: 'Nailed it' },
@@ -55,19 +56,13 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
       setSaved(true);
       setTimeout(onClose, 1000);
     } catch {
-      // Save locally as fallback
-      const entries = JSON.parse(localStorage.getItem('drst-journal') || '[]');
-      entries.unshift({
-        session_type: sessionType,
-        script_title: scriptTitle || '',
-        mood: mood?.label || '',
-        rating: rating || undefined,
-        note: note.trim(),
-        created_at: new Date().toISOString(),
-      });
-      localStorage.setItem('drst-journal', JSON.stringify(entries.slice(0, 50)));
-      setSaved(true);
-      setTimeout(onClose, 1000);
+      // Nothing else reads `drst-journal`, so the previous localStorage
+      // fallback created data the user could never see. Surface a real
+      // error so they can retry.
+      dispatch(showSnackbar({
+        message: "Couldn't save your journal entry. Please try again.",
+        variant: 'error',
+      }));
     } finally {
       setSaving(false);
     }
