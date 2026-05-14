@@ -57,18 +57,20 @@ export const ForgotPassword = () => {
       const result = await dispatch(forgotPassword(forgotPasswordPayload));
 
       if (result?.meta?.requestStatus === 'fulfilled') {
-        toast.success('Reset email sent successfully. Please check your email.');
+        // Backend returns the same response whether or not the email exists
+        // (enumeration-safe). Message intentionally generic.
+        toast.success("If an account exists for that email, we've sent password reset instructions.");
         setLoading(false);
         setFormData({ email: '' });
         navigate('/login');
       } else {
         setLoading(false);
-        setErrors({ email: result.payload || 'Failed to send reset email' });
+        toast.error("Couldn't send reset email right now. Please try again in a minute.");
       }
     } catch (err) {
       console.log(err);
       setLoading(false);
-      setErrors({ email: 'Failed to send reset email' });
+      toast.error("Couldn't send reset email right now. Please try again in a minute.");
     }
   };
 

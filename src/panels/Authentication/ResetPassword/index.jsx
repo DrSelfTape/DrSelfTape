@@ -10,15 +10,18 @@ import {
 import PasswordRequirements from '../../../components/Shared/PasswordRequirments';
 import { AuthLayout } from '../../../components/Auth/AuthLayout';
 import { resetPassword } from '../../../redux/features/auth/authSlice';
+import { useSnackbar } from '../../../hooks/useSnackbar';
 
 export const ResetPassword = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { toast } = useSnackbar();
 
   // Get params from URL (for example, token or email)
   const searchParams = new URLSearchParams(window.location.search);
   const token = searchParams.get('token');
   const email = searchParams.get('email');
+  const linkIsValid = !!(token && email);
 
   const [formData, setFormData] = useState({
     newPassword: '',
@@ -85,16 +88,60 @@ export const ResetPassword = () => {
           newPassword: '',
           confirmPassword: '',
         });
-
+        toast.success('Password reset successfully. Please log in with your new password.');
         navigate('/login');
       } else {
         setLoading(false);
+        toast.error(result?.payload || 'Reset link is invalid or has expired. Please request a new one.');
       }
     } catch (err) {
       console.log(err);
       setLoading(false);
+      toast.error('Something went wrong. Please try again.');
     }
   };
+
+  if (!linkIsValid) {
+    return (
+      <AuthLayout title="Reset Password">
+        <div className="mx-auto w-full max-w-sm lg:w-96">
+          <span className='aurora-eyebrow block mb-2'>RESET LINK</span>
+          <h2 className="aurora-display text-3xl tracking-tight" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
+            Invalid reset link
+          </h2>
+          <p className="mt-2 text-sm" style={{ color: 'var(--aurora-sub)' }}>
+            This password reset link is missing required information or has expired. Please request a new one.
+          </p>
+          <div className="mt-8 flex flex-col gap-3">
+            <CustomButton
+              type="button"
+              onClick={() => navigate('/forgot-password')}
+              sx={{
+                width: '100%',
+                height: '48px',
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                color: '#fff',
+                fontWeight: 700,
+                boxShadow: '0 8px 22px rgba(212,168,95,0.30)',
+                '&:hover': { background: 'linear-gradient(135deg, #C09850, #6A4D14)' },
+              }}
+            >
+              Request New Link
+            </CustomButton>
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="text-sm cursor-pointer font-semibold hover:underline"
+              style={{ color: 'var(--aurora-accent-deep)' }}
+            >
+              Back to Login
+            </button>
+          </div>
+        </div>
+      </AuthLayout>
+    );
+  }
 
   return (
     <AuthLayout title="Reset Password">

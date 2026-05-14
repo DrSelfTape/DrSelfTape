@@ -17,6 +17,21 @@ export const setAuthToken = (token) => {
   }
 };
 
+// Endpoints that return 401 on bad credentials/missing data — a 401 here
+// means "wrong password" or "expired reset link," NOT "your session
+// expired." We must not log the user out on these.
+const PUBLIC_AUTH_PATHS = [
+  '/v1/users/login/',
+  '/v1/users/personal-info-registration/',
+  '/v1/users/forgotpassword/',
+  '/v1/users/reset-password/',
+];
+
+// Guard against the post-logout 401 cascade: once we kick a user out,
+// every in-flight request will also 401 and try to log them out again.
+// Only handle the first one per session.
+let sessionExpiredHandled = false;
+
 // Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -30,11 +45,32 @@ axiosInstance.interceptors.response.use(
     }
 
     if (error?.response?.status === 401) {
-      // Dynamic imports to avoid circular dependency
-      const { store, persistor } = await import('./store');
-      const { logoutUser } = await import('./features/auth/authSlice');
-      store.dispatch(logoutUser());
-      persistor.purge();
+      const requestUrl = error?.config?.url || '';
+      const hadAuthHeader = !!error?.config?.headers?.Authorization;
+      const isPublicAuth = PUBLIC_AUTH_PATHS.some((p) => requestUrl.includes(p));
+
+      // Only treat 401 as session-expired when the caller was actually
+      // authenticated AND wasn't hitting a public auth endpoint.
+      if (hadAuthHeader && !isPublicAuth && !sessionExpiredHandled) {
+        sessionExpiredHandled = true;
+        const [{ store, persistor }, { logoutUser }, { showSnackbar }] = await Promise.all([
+          import('./store'),
+          import('./features/auth/authSlice'),
+          import('./features/snackbarSlice/snackbarSlice'),
+        ]);
+        store.dispatch(logoutUser());
+        setAuthToken(null);
+        store.dispatch(showSnackbar({
+          message: 'Your session has expired. Please log in again.',
+          variant: 'error',
+        }));
+        await persistor.purge();
+        // Full reload to /login — clears any in-memory state from the
+        // previous user and avoids partially-rendered protected views.
+        if (!window.location.pathname.startsWith('/login')) {
+          window.location.href = '/login';
+        }
+      }
     }
 
     return Promise.reject(error);

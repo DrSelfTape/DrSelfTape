@@ -4,6 +4,7 @@ import { loginUser } from "../../redux/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { getFirstRouteByRole } from "../../routes/routeHelpers";
 import { loginLogo } from "../../assets/images";
+import { setAuthToken } from "../../redux/http";
 
 const MINT = "#D4A85F";
 const GOLD = "#F0D097";
@@ -61,6 +62,10 @@ export default function LoginPage() {
     setError("");
     const result = await dispatch(loginUser({ email, password }));
     if (loginUser.fulfilled.match(result)) {
+      // Set the axios bearer header immediately so any in-flight effects
+      // (e.g. fetchUserSettings) that fire on the new userId have auth.
+      const token = result.payload?.token?.access || result.payload?.token;
+      if (token) setAuthToken(token);
       const role = result.payload?.active_role || result.payload?.role || 'actor';
       navigate(getFirstRouteByRole(role));
     } else {
