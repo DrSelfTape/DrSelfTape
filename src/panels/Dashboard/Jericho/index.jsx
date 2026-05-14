@@ -20,7 +20,7 @@ import {
 // ─── Performance DNA Metrics ───────────────────────────────────────────
 
 const DNA_METRICS = [
-  { key: 'emotional_range', label: 'Emotional Range', icon: Heart, color: '#FF8280' },
+  { key: 'emotional_range', label: 'Emotional Range', icon: Heart, color: '#D4A85F' },
   { key: 'cold_read', label: 'Cold Read', icon: Eye, color: '#3b82f6' },
   { key: 'comedy_timing', label: 'Comedy Timing', icon: Laugh, color: '#FCE072' },
   { key: 'dramatic_depth', label: 'Dramatic Depth', icon: Theater, color: '#ef4444' },
@@ -39,7 +39,7 @@ const INSIGHT_ICONS = {
   weakness: { icon: Target, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
   pattern: { icon: BarChart3, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
   breakthrough: { icon: Zap, color: '#FCE072', bg: 'rgba(252,224,114,0.1)' },
-  recommendation: { icon: Sparkles, color: '#FF8280', bg: 'rgba(255, 130, 128,0.1)' },
+  recommendation: { icon: Sparkles, color: '#D4A85F', bg: 'rgba(212,168,95,0.1)' },
 };
 
 const SESSION_TYPE_LABELS = {
@@ -94,7 +94,7 @@ function DNARadar({ dna = {} }) {
         />
       ))}
       {/* Data shape */}
-      <path d={pathD} fill="rgba(255, 130, 128,0.15)" stroke="#FF8280" strokeWidth="2" />
+      <path d={pathD} fill="rgba(212,168,95,0.15)" stroke="#FF8280" strokeWidth="2" />
       {/* Data points */}
       {points.map((p, i) => (
         <circle key={i} cx={p.x} cy={p.y} r="4" fill={metrics[i].color} />
@@ -380,7 +380,7 @@ export default function JerichoDashboard() {
                 {/* Quick Stats */}
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { label: 'Sessions', value: totalSessions, icon: Flame, color: '#FF8280' },
+                    { label: 'Sessions', value: totalSessions, icon: Flame, color: '#D4A85F' },
                     { label: 'Insights', value: insights.length, icon: Sparkles, color: '#A7ECDA' },
                     { label: 'Streak', value: memory?.current_streak || 0, icon: TrendingUp, color: '#FCE072' },
                   ].map((stat) => {

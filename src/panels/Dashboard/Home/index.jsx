@@ -22,7 +22,7 @@ import TutorialAchievement from '../../../components/Dashboard/TutorialAchieveme
 import DailyChallengeCard from '../../../components/Dashboard/DailyChallengeCard';
 
 const TYPE_COLORS = {
-  film: '#FF8280',
+  film: '#D4A85F',
   commercial: '#3b82f6',
   theatrical: '#8b5cf6',
   industrial: '#6b7280',
@@ -141,7 +141,7 @@ export default function DashboardHome() {
   const typeData = Object.entries(s.by_type || {}).map(([key, count]) => ({
     name: TYPE_LABELS[key] || key,
     value: count,
-    color: TYPE_COLORS[key] || '#FF8280',
+    color: TYPE_COLORS[key] || '#D4A85F',
   }));
 
   // Funnel data
@@ -178,7 +178,7 @@ export default function DashboardHome() {
         onClick={() => navigate(nextStep.path)}
         className={`bg-gradient-to-r ${nextStep.gradient} rounded-2xl p-6 border border-[rgba(10,10,10,0.08)] cursor-pointer hover:shadow-xl hover:shadow-[#FF8280]/10 transition-all duration-300 group relative overflow-hidden`}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_rgba(255, 130, 128,0.1),_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_rgba(212,168,95,0.1),_transparent_60%)]" />
         <div className="relative flex items-center gap-5">
           <div className="w-14 h-14 rounded-2xl bg-[#D4A85F]/10 flex items-center justify-center shrink-0">
             <nextStep.icon className="w-7 h-7 text-[#7A5A18]" />
@@ -275,7 +275,7 @@ export default function DashboardHome() {
                         <YAxis type="category" dataKey="name" tick={{ fontSize: 13, fill: '#999999', fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
                         <Tooltip formatter={(value) => [value, 'Auditions']} contentStyle={{ borderRadius: '8px', border: '1px solid #3A3A3A', backgroundColor: '#1E1E1E', color: '#fff' }} />
                         <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                          {funnelData.map((_, i) => <Cell key={i} fill={`rgba(255, 130, 128, ${1 - i * 0.2})`} />)}
+                          {funnelData.map((_, i) => <Cell key={i} fill={`rgba(212,168,95, ${1 - i * 0.2})`} />)}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>

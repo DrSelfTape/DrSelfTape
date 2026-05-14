@@ -104,11 +104,11 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <form onSubmit={handleSubmit} className="bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <h2 className="text-lg font-bold text-white mb-4">Add Script</h2>
+      <form onSubmit={handleSubmit} className="bg-[#F4F4EE] rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
+        <h2 className="text-lg font-bold text-[#0A0A0A] mb-4">Add Script</h2>
 
         {/* Title */}
-        <label className="block text-sm font-medium text-[#999999] mb-1">Title</label>
+        <label className="block text-sm font-medium text-[rgba(10,10,10,0.62)] mb-1">Title</label>
         <input
           type="text"
           value={title}
@@ -121,7 +121,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
         <div className="flex gap-2 mb-4">
           {[{ key: 'upload', label: '📄 Upload File' }, { key: 'paste', label: '✏️ Paste Text' }].map(t => (
             <button key={t.key} type="button" onClick={() => setTab(t.key)}
-              className={`px-4 py-1.5 text-sm rounded-lg font-medium transition ${tab === t.key ? 'bg-[#D4A85F] text-white' : 'bg-[#2A2A2A] text-[#999999] hover:bg-[#3A3A3A]'}`}>
+              className={`px-4 py-1.5 text-sm rounded-lg font-medium transition ${tab === t.key ? 'bg-[#D4A85F] text-[#0A0A0A]' : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-[#3A3A3A]'}`}>
               {t.label}
             </button>
           ))}
@@ -134,7 +134,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
             onDragLeave={() => setDragActive(false)}
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors mb-4 ${
-              dragActive ? 'border-[#D4A85F] bg-[#D4A85F]/10' : 'border-[#3A3A3A] hover:border-[#D4A85F]'
+              dragActive ? 'border-[#D4A85F] bg-[#D4A85F]/10' : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F]'
             }`}
           >
             {pdfLoading ? (
@@ -143,20 +143,20 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
                   <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                 </svg>
-                <p className="text-sm text-[#999999]">Parsing PDF...</p>
+                <p className="text-sm text-[rgba(10,10,10,0.62)]">Parsing PDF...</p>
               </div>
             ) : fileName ? (
               <div className="flex flex-col items-center gap-2">
                 <span className="text-3xl">{fileName.endsWith('.pdf') ? '📄' : '📝'}</span>
-                <p className="text-sm font-semibold text-white">{fileName}</p>
+                <p className="text-sm font-semibold text-[#0A0A0A]">{fileName}</p>
                 <p className="text-xs text-green-600">✓ File loaded — {content.length.toLocaleString()} characters</p>
-                <p className="text-xs text-[#666666]">Click to replace</p>
+                <p className="text-xs text-[rgba(10,10,10,0.4)]">Click to replace</p>
               </div>
             ) : (
               <>
                 <div className="text-4xl mb-3">📄</div>
-                <p className="text-sm font-medium text-[#999999]">Drag & drop or click to upload</p>
-                <p className="text-xs text-[#666666] mt-1">Supports <strong>.pdf</strong> and .txt files</p>
+                <p className="text-sm font-medium text-[rgba(10,10,10,0.62)]">Drag & drop or click to upload</p>
+                <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">Supports <strong>.pdf</strong> and .txt files</p>
               </>
             )}
             <input ref={fileInputRef} type="file" accept=".pdf,.txt" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
@@ -175,11 +175,11 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
 
         {/* Actions */}
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[#999999] hover:text-white">Cancel</button>
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[rgba(10,10,10,0.62)] hover:text-[#0A0A0A]">Cancel</button>
           <button
             type="submit"
             disabled={!title.trim() || !content.trim() || loading || pdfLoading}
-            className="px-5 py-2 text-sm font-semibold rounded-lg bg-[#D4A85F] text-white hover:bg-[#C09850] disabled:opacity-50 transition"
+            className="px-5 py-2 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] disabled:opacity-50 transition"
           >
             {loading ? 'Saving...' : 'Save Script'}
           </button>
@@ -196,12 +196,12 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
   const lines = countLines(script.content);
 
   return (
-    <div className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[#2A2A2A] p-4 flex flex-col gap-3">
-      <h3 className="font-bold text-white text-base truncate">
+    <div className="bg-[#F4F4EE] rounded-xl shadow-sm border border-[rgba(10,10,10,0.08)] p-4 flex flex-col gap-3">
+      <h3 className="font-bold text-[#0A0A0A] text-base truncate">
         {script.title}
       </h3>
 
-      <div className="flex flex-wrap gap-3 text-xs text-[#999999]">
+      <div className="flex flex-wrap gap-3 text-xs text-[rgba(10,10,10,0.62)]">
         <span>{chars} character{chars !== 1 ? 's' : ''}</span>
         <span>{lines} line{lines !== 1 ? 's' : ''}</span>
         <span>{formatDate(script.created_at)}</span>
@@ -210,7 +210,7 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
       <div className="flex gap-2 mt-auto pt-2">
         <button
           onClick={onPractice}
-          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg bg-[#D4A85F] text-white hover:bg-[#C09850] transition"
+          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] transition"
         >
           Practice
         </button>
@@ -223,14 +223,14 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
         {confirmDelete ? (
           <button
             onClick={onDelete}
-            className="px-3 py-2 text-sm rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
+            className="px-3 py-2 text-sm rounded-lg bg-red-500 text-[#0A0A0A] hover:bg-red-600 transition"
           >
             Confirm
           </button>
         ) : (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="px-3 py-2 text-sm rounded-lg text-[#666666] hover:text-red-500 hover:bg-red-50 transition"
+            className="px-3 py-2 text-sm rounded-lg text-[rgba(10,10,10,0.4)] hover:text-red-500 hover:bg-red-50 transition"
             title="Delete"
           >
             <svg
@@ -274,13 +274,13 @@ function EmptyState({ onAdd }) {
           />
         </svg>
       </div>
-      <h3 className="text-lg font-bold text-white mb-1">No scripts yet</h3>
-      <p className="text-sm text-[#999999] mb-6">
+      <h3 className="text-lg font-bold text-[#0A0A0A] mb-1">No scripts yet</h3>
+      <p className="text-sm text-[rgba(10,10,10,0.62)] mb-6">
         Save your scripts here and launch them into practice mode with one click.
       </p>
       <button
         onClick={onAdd}
-        className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#D4A85F] text-white hover:bg-[#C09850] transition"
+        className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] transition"
       >
         Add your first script
       </button>
@@ -325,10 +325,10 @@ export default function Scripts() {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-white">My Scripts</h1>
+        <h1 className="text-2xl font-bold text-[#0A0A0A]">My Scripts</h1>
         <button
           onClick={() => setShowModal(true)}
-          className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#D4A85F] text-white hover:bg-[#C09850] transition"
+          className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] transition"
         >
           + Add Script
         </button>
@@ -353,14 +353,14 @@ export default function Scripts() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="animate-pulse bg-[#2A2A2A] rounded-xl h-48"
+              className="animate-pulse bg-[#F4F4EE] rounded-xl h-48"
             />
           ))}
         </div>
       ) : filtered.length === 0 && !search ? (
         <EmptyState onAdd={() => setShowModal(true)} />
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-[#999999] py-12 text-center">
+        <p className="text-sm text-[rgba(10,10,10,0.62)] py-12 text-center">
           No scripts match "{search}"
         </p>
       ) : (

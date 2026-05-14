@@ -47,7 +47,7 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
           onClick={() => onPlayToggle(label, data)}
           disabled={isLoading}
           className="flex items-center gap-1.5 text-sm font-medium shrink-0 ml-4 transition-colors disabled:opacity-50"
-          style={{ color: isPlaying ? '#E88BF5' : '#FF8280' }}
+          style={{ color: isPlaying ? '#7A5A18' : '#D4A85F' }}
         >
           {isLoading ? (
             <Loader2 size={16} className="animate-spin" />
@@ -230,7 +230,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
               background: isAllPlaying
                 ? 'linear-gradient(135deg, #7A5A18, #D4A85F)'
                 : 'linear-gradient(135deg, #D4A85F, #7A5A18)',
-              boxShadow: '0 4px 15px rgba(255, 130, 128,0.35)',
+              boxShadow: '0 4px 15px rgba(212,168,95,0.35)',
             }}
           >
             {isAllLoading ? (

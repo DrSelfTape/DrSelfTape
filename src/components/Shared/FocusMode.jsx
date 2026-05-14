@@ -72,7 +72,7 @@ export default function FocusMode({ onComplete }) {
           </p>
           <button
             onClick={start}
-            className="flex items-center justify-center gap-2 mx-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-[#FF8280]/30"
+            className="flex items-center justify-center gap-2 mx-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-[#D4A85F]/30"
             style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
           >
             <Play className="w-4 h-4" />
@@ -107,7 +107,7 @@ export default function FocusMode({ onComplete }) {
           style={{
             width: 220,
             height: 220,
-            background: `radial-gradient(circle, rgba(255, 130, 128,${phase === 'hold' ? 0.2 : 0.1}) 0%, transparent 70%)`,
+            background: `radial-gradient(circle, rgba(212,168,95,${phase === 'hold' ? 0.2 : 0.1}) 0%, transparent 70%)`,
             transform: `scale(${getScale()})`,
             transition: 'transform 1s ease-in-out',
           }}
@@ -118,8 +118,8 @@ export default function FocusMode({ onComplete }) {
           style={{
             width: 160,
             height: 160,
-            background: 'rgba(255, 130, 128,0.08)',
-            border: '2px solid rgba(255, 130, 128,0.3)',
+            background: 'rgba(212,168,95,0.08)',
+            border: '2px solid rgba(212,168,95,0.3)',
             transform: `scale(${getScale()})`,
             transition: 'transform 1s ease-in-out',
           }}

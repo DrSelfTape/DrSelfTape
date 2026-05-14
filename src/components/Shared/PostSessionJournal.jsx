@@ -113,12 +113,12 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
               onClick={() => setMood(mood?.label === m.label ? null : m)}
               className="flex flex-col items-center gap-1.5 rounded-xl py-3 px-2 flex-1 transition-all"
               style={{
-                background: mood?.label === m.label ? 'rgba(255, 130, 128,0.12)' : 'var(--bg-input, #2A2A2A)',
-                border: mood?.label === m.label ? '1.5px solid #FF8280' : '1px solid transparent',
+                background: mood?.label === m.label ? 'rgba(212,168,95,0.18)' : 'var(--bg-input, #2A2A2A)',
+                border: mood?.label === m.label ? '1.5px solid #D4A85F' : '1px solid transparent',
               }}
             >
               <span className="text-2xl">{m.emoji}</span>
-              <span className="text-[10px] font-medium" style={{ color: mood?.label === m.label ? '#FF8280' : 'var(--text-muted, #666)' }}>
+              <span className="text-[10px] font-medium" style={{ color: mood?.label === m.label ? '#7A5A18' : 'var(--text-muted, #666)' }}>
                 {m.label}
               </span>
             </button>
@@ -141,7 +141,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
                   className="transition-transform hover:scale-110 p-1"
                 >
                   <Star
-                    className={`w-7 h-7 transition-colors ${active ? 'text-amber-400 fill-amber-400' : 'text-[#3A3A3A]'}`}
+                    className={`w-7 h-7 transition-colors ${active ? 'text-amber-400 fill-amber-400' : 'text-[rgba(10,10,10,0.20)]'}`}
                   />
                 </button>
               );
@@ -179,7 +179,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
             onClick={handleSave}
             disabled={saving}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-[#0A0A0A] transition-all disabled:opacity-50"
-            style={{ background: '#FF8280' }}
+            style={{ background: '#7A5A18' }}
           >
             {saving ? 'Saving...' : 'Save'}
           </button>

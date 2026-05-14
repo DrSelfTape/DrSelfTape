@@ -34,7 +34,7 @@ const RANGE_OPTIONS = [
 ];
 
 const LoadingSkeleton = ({ className = 'h-28' }) => (
-  <div className={`animate-pulse bg-[#2A2A2A] rounded-xl ${className}`} />
+  <div className={`animate-pulse bg-[#F4F4EE] rounded-xl ${className}`} />
 );
 
 export default function Reports() {
@@ -66,18 +66,18 @@ export default function Reports() {
   if (!loading && error) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">Career Reports</h1>
+        <h1 className="text-2xl font-bold text-[#0A0A0A]">Career Reports</h1>
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4">
             <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-white mb-2">Could not load reports</h2>
-          <p className="text-[#999999] max-w-md mb-6">Please try again.</p>
+          <h2 className="text-xl font-semibold text-[#0A0A0A] mb-2">Could not load reports</h2>
+          <p className="text-[rgba(10,10,10,0.62)] max-w-md mb-6">Please try again.</p>
           <button
             onClick={() => dispatch(fetchReportsThunk())}
-            className="px-5 py-2.5 bg-[#D4A85F] hover:bg-[#C09850] text-white text-sm font-semibold rounded-lg transition-colors"
+            className="px-5 py-2.5 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] text-sm font-semibold rounded-lg transition-colors"
           >
             Retry
           </button>
@@ -89,11 +89,11 @@ export default function Reports() {
   if (!loading && !hasData) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-white">Career Reports</h1>
+        <h1 className="text-2xl font-bold text-[#0A0A0A]">Career Reports</h1>
         <div className="flex flex-col items-center justify-center py-24 text-center">
           <div className="text-5xl mb-4">📊</div>
-          <h2 className="text-xl font-semibold text-white mb-2">No data yet</h2>
-          <p className="text-[#999999] max-w-md">
+          <h2 className="text-xl font-semibold text-[#0A0A0A] mb-2">No data yet</h2>
+          <p className="text-[rgba(10,10,10,0.62)] max-w-md">
             Start tracking auditions to see your career insights here.
           </p>
         </div>
@@ -105,7 +105,7 @@ export default function Reports() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <h1 className="text-2xl font-bold text-white">Career Reports</h1>
+        <h1 className="text-2xl font-bold text-[#0A0A0A]">Career Reports</h1>
         <div className="flex gap-2">
           {RANGE_OPTIONS.map((opt) => (
             <button
@@ -113,8 +113,8 @@ export default function Reports() {
               onClick={() => setRange(opt.value)}
               className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                 range === opt.value
-                  ? 'bg-[#D4A85F] text-white'
-                  : 'bg-[#2A2A2A] text-[#999999] hover:bg-[#3A3A3A]'
+                  ? 'bg-[#D4A85F] text-[#0A0A0A]'
+                  : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-[#3A3A3A]'
               }`}
             >
               {opt.label}
@@ -230,12 +230,12 @@ export default function Reports() {
                       verticalAlign="bottom"
                       iconType="circle"
                       iconSize={8}
-                      formatter={(value) => <span className="text-xs text-[#999999]">{value}</span>}
+                      formatter={(value) => <span className="text-xs text-[rgba(10,10,10,0.62)]">{value}</span>}
                     />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-[#666666] text-center py-12">No type data yet</p>
+                <p className="text-sm text-[rgba(10,10,10,0.4)] text-center py-12">No type data yet</p>
               )}
             </CardContent>
           </Card>
@@ -284,20 +284,20 @@ export default function Reports() {
                     const maxCount = r.top_casting_offices[0]?.count || 1;
                     return (
                       <div key={i} className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-[#999999] w-40 truncate">{office.name}</span>
-                        <div className="flex-1 bg-[#2A2A2A] rounded-full h-3 overflow-hidden">
+                        <span className="text-sm font-medium text-[rgba(10,10,10,0.62)] w-40 truncate">{office.name}</span>
+                        <div className="flex-1 bg-[#F4F4EE] rounded-full h-3 overflow-hidden">
                           <div
                             className="bg-[#D4A85F] h-full rounded-full transition-all"
                             style={{ width: `${(office.count / maxCount) * 100}%` }}
                           />
                         </div>
-                        <span className="text-sm font-semibold text-[#999999] w-8 text-right">{office.count}</span>
+                        <span className="text-sm font-semibold text-[rgba(10,10,10,0.62)] w-8 text-right">{office.count}</span>
                       </div>
                     );
                   })}
                 </div>
               ) : (
-                <p className="text-sm text-[#666666] text-center py-8">No casting office data yet</p>
+                <p className="text-sm text-[rgba(10,10,10,0.4)] text-center py-8">No casting office data yet</p>
               )}
             </CardContent>
           </Card>
@@ -311,10 +311,10 @@ export default function Reports() {
               {r.busiest_month ? (
                 <>
                   <div className="text-4xl font-bold text-[#7A5A18] mb-2">{r.busiest_month}</div>
-                  <p className="text-sm text-[#999999]">Your most active month for auditions</p>
+                  <p className="text-sm text-[rgba(10,10,10,0.62)]">Your most active month for auditions</p>
                 </>
               ) : (
-                <p className="text-sm text-[#666666]">Not enough data yet</p>
+                <p className="text-sm text-[rgba(10,10,10,0.4)]">Not enough data yet</p>
               )}
             </CardContent>
           </Card>

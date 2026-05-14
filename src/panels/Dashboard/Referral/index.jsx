@@ -79,7 +79,7 @@ export default function Referral() {
       <div
         className="rounded-2xl p-6 border relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(255, 130, 128,0.12), rgba(167,236,218,0.08))',
+          background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(167,236,218,0.08))',
           borderColor: 'var(--border-default)',
         }}
       >
@@ -154,7 +154,7 @@ export default function Referral() {
             onClick={() => copyToClipboard(referralCode, 'code')}
             className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
             style={{
-              background: copied === 'code' ? '#22c55e' : '#FF8280',
+              background: copied === 'code' ? '#22c55e' : '#D4A85F',
             }}
           >
             {copied === 'code' ? (
