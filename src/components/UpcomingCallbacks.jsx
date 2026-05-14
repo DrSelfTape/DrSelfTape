@@ -102,8 +102,8 @@ export default function UpcomingCallbacks() {
               onClick={() => navigate('/dashboard/auditions')}
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer
-                transition-all duration-150 hover:bg-[#1E1E1E]
-                ${dl.urgent ? 'bg-[#2A2A2A]/60 ring-1 ring-[#FF8280]/20' : 'bg-[#1E1E1E]'}
+                transition-all duration-150 hover:bg-[#F4F4EE]
+                ${dl.urgent ? 'bg-[#F4F4EE]/60 ring-1 ring-[#FF8280]/20' : 'bg-[#F4F4EE]'}
               `}
             >
               {/* Type dot */}
@@ -111,11 +111,11 @@ export default function UpcomingCallbacks() {
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">
+                <p className="text-sm font-medium text-[#0A0A0A] truncate">
                   {item.project_title}
                 </p>
                 {item.character && (
-                  <p className="text-xs text-[#999999] truncate">as {item.character}</p>
+                  <p className="text-xs text-[rgba(10,10,10,0.62)] truncate">as {item.character}</p>
                 )}
               </div>
 
@@ -124,8 +124,8 @@ export default function UpcomingCallbacks() {
                 className={`
                   shrink-0 flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full
                   ${dl.urgent
-                    ? 'bg-[#D4A85F] text-white'
-                    : 'bg-[#2A2A2A] text-[#999999]'
+                    ? 'bg-[#D4A85F] text-[#0A0A0A]'
+                    : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)]'
                   }
                 `}
               >

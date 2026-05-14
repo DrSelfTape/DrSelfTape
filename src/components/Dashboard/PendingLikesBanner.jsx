@@ -30,7 +30,7 @@ export default function PendingLikesBanner({ onNavigate }) {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(255, 130, 128,0.1),_transparent_60%)]" />
       <button
         onClick={(e) => { e.stopPropagation(); setDismissed(true); }}
-        className="absolute top-3 right-3 z-10 hover:text-white transition-colors"
+        className="absolute top-3 right-3 z-10 hover:text-[#0A0A0A] transition-colors"
         style={{ color: 'var(--text-muted)' }}
       >
         <X className="w-4 h-4" />
@@ -45,7 +45,7 @@ export default function PendingLikesBanner({ onNavigate }) {
           </p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>Tap to see who</p>
         </div>
-        <button className="bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold px-4 py-2 rounded-xl transition-all text-xs whitespace-nowrap">
+        <button className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] font-semibold px-4 py-2 rounded-xl transition-all text-xs whitespace-nowrap">
           See Who
         </button>
       </div>

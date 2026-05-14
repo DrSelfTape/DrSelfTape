@@ -121,7 +121,7 @@ export default function PostCallScreen({ partnerName, onClose }) {
             <button
               onClick={handleSendTip}
               disabled={sending || (!tipAmount && !customTip)}
-              className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-40"
+              className="w-full py-3 rounded-xl text-[#0A0A0A] font-bold text-sm transition-all disabled:opacity-40"
               style={{ background: '#FF8280' }}
             >
               {sending ? 'Processing...' : `Send $${tipAmount || customTip || '0'} Tip`}

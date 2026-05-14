@@ -80,8 +80,8 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
           <div className="w-16 h-16 rounded-full bg-[#D4A85F]/10 flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-[#7A5A18]" />
           </div>
-          <p className="text-white font-bold text-lg">Journal saved</p>
-          <p className="text-[#999] text-sm mt-1">Tracking your progress builds awareness.</p>
+          <p className="text-[#0A0A0A] font-bold text-lg">Journal saved</p>
+          <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">Tracking your progress builds awareness.</p>
         </div>
       </div>
     );
@@ -94,9 +94,9 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#7A5A18]" />
-            <h2 className="text-lg font-bold text-white">How'd that go?</h2>
+            <h2 className="text-lg font-bold text-[#0A0A0A]">How'd that go?</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#2A2A2A] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#F4F4EE] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -178,7 +178,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-white transition-all disabled:opacity-50"
+            className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-[#0A0A0A] transition-all disabled:opacity-50"
             style={{ background: '#FF8280' }}
           >
             {saving ? 'Saving...' : 'Save'}

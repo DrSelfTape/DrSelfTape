@@ -39,8 +39,8 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
           <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
             <Star className="w-8 h-8 text-emerald-400 fill-emerald-400" />
           </div>
-          <p className="text-white font-bold text-lg">Thanks for your feedback!</p>
-          <p className="text-[#999] text-sm mt-1">This helps the community find great readers.</p>
+          <p className="text-[#0A0A0A] font-bold text-lg">Thanks for your feedback!</p>
+          <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">This helps the community find great readers.</p>
         </div>
       </div>
     );
@@ -51,8 +51,8 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
       <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 mx-0 sm:mx-4" style={{ background: 'var(--bg-surface, #1E1E1E)', border: '1px solid var(--border-active, #3A3A3A)' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-white">How was {firstName}?</h2>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#2A2A2A] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
+          <h2 className="text-lg font-bold text-[#0A0A0A]">How was {firstName}?</h2>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#F4F4EE] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -119,7 +119,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
             type="button"
             onClick={handleSubmit}
             disabled={rating === 0 || submitting}
-            className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-white transition-all disabled:opacity-40"
+            className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-[#0A0A0A] transition-all disabled:opacity-40"
             style={{ background: rating > 0 ? '#FF8280' : '#3A3A3A' }}
           >
             {submitting ? 'Submitting...' : 'Submit Rating'}

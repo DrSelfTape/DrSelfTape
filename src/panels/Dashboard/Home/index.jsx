@@ -162,7 +162,7 @@ export default function DashboardHome() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '-0.5px' }}>{greeting}</h1>
+          <h1 className="text-2xl font-bold text-[#0A0A0A]" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '-0.5px' }}>{greeting}</h1>
         </div>
         <div className="flex items-center gap-3">
           <AvailabilityToggle />
@@ -176,7 +176,7 @@ export default function DashboardHome() {
       {/* ── Smart Next Step — ONE primary CTA ── */}
       <div
         onClick={() => navigate(nextStep.path)}
-        className={`bg-gradient-to-r ${nextStep.gradient} rounded-2xl p-6 border border-[#2a2a4a] cursor-pointer hover:shadow-xl hover:shadow-[#FF8280]/10 transition-all duration-300 group relative overflow-hidden`}
+        className={`bg-gradient-to-r ${nextStep.gradient} rounded-2xl p-6 border border-[rgba(10,10,10,0.08)] cursor-pointer hover:shadow-xl hover:shadow-[#FF8280]/10 transition-all duration-300 group relative overflow-hidden`}
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_rgba(255, 130, 128,0.1),_transparent_60%)]" />
         <div className="relative flex items-center gap-5">
@@ -184,10 +184,10 @@ export default function DashboardHome() {
             <nextStep.icon className="w-7 h-7 text-[#7A5A18]" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-white text-xl font-bold">{nextStep.title}</h2>
+            <h2 className="text-[#0A0A0A] text-xl font-bold">{nextStep.title}</h2>
             <p className="text-gray-400 text-sm mt-1">{nextStep.description}</p>
           </div>
-          <button className="bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer text-sm shrink-0">
+          <button className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer text-sm shrink-0">
             {nextStep.cta} &rarr;
           </button>
         </div>
@@ -203,11 +203,11 @@ export default function DashboardHome() {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className="bg-[#13151d] border border-[#2a2a4a] rounded-2xl p-4 text-center hover:border-[#D4A85F]/30 hover:bg-[#1a1c26] transition-all cursor-pointer group"
+            className="bg-white border border-[rgba(10,10,10,0.08)] rounded-2xl p-4 text-center hover:border-[#D4A85F]/30 hover:bg-[#F4F4EE] transition-all cursor-pointer group"
           >
             <span className="text-2xl block mb-2">{item.icon}</span>
-            <p className="text-white text-sm font-semibold">{item.label}</p>
-            <p className="text-[#666] text-xs mt-0.5">{item.desc}</p>
+            <p className="text-[#0A0A0A] text-sm font-semibold">{item.label}</p>
+            <p className="text-[rgba(10,10,10,0.4)] text-xs mt-0.5">{item.desc}</p>
           </button>
         ))}
       </div>
@@ -251,7 +251,7 @@ export default function DashboardHome() {
                             {typeData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                           </Pie>
                           <Tooltip formatter={(value, name) => [value, name]} />
-                          <Legend verticalAlign="bottom" iconType="circle" iconSize={8} formatter={(value) => <span className="text-xs text-[#999999]">{value}</span>} />
+                          <Legend verticalAlign="bottom" iconType="circle" iconSize={8} formatter={(value) => <span className="text-xs text-[rgba(10,10,10,0.62)]">{value}</span>} />
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
@@ -287,11 +287,11 @@ export default function DashboardHome() {
         </>
       ) : (
         /* ── Empty State for New Users ── */
-        <div className="bg-[#13151d] border border-[#2a2a4a] rounded-2xl p-8 text-center">
+        <div className="bg-white border border-[rgba(10,10,10,0.08)] rounded-2xl p-8 text-center">
           <div className="w-12 h-12 mx-auto rounded-full bg-[#D4A85F]/10 flex items-center justify-center mb-4">
             <Target className="w-6 h-6 text-[#7A5A18]" />
           </div>
-          <h3 className="text-white font-semibold text-lg">Your stats will appear here</h3>
+          <h3 className="text-[#0A0A0A] font-semibold text-lg">Your stats will appear here</h3>
           <p className="text-[#888] text-sm mt-2 max-w-md mx-auto">
             Once you start tracking auditions and submitting self-tapes, you'll see your callbacks, booking rate, and pipeline analytics right here.
           </p>
@@ -318,7 +318,7 @@ export default function DashboardHome() {
               {recentSubs.map((sub) => (
                 <div key={sub.id} className="flex items-center justify-between py-2.5">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-white truncate">{sub.project_name}</p>
+                    <p className="text-sm font-semibold text-[#0A0A0A] truncate">{sub.project_name}</p>
                     <p className="text-xs text-[#AAAAAA] truncate">{sub.role} {sub.casting_director ? `· ${sub.casting_director}` : ''}</p>
                   </div>
                   <div className="flex items-center gap-3 ml-4 shrink-0">

@@ -87,7 +87,7 @@ function SidebarGroup({ group, pendingLikes, expanded, onToggle }) {
       <button
         onClick={onToggle}
         className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-colors cursor-pointer ${
-          isGroupActive ? 'text-[#7A5A18]' : 'text-[#666] hover:text-[#999]'
+          isGroupActive ? 'text-[#7A5A18]' : 'text-[rgba(10,10,10,0.4)] hover:text-[rgba(10,10,10,0.62)]'
         }`}
       >
         <group.icon className="w-3.5 h-3.5 shrink-0" />
@@ -132,7 +132,7 @@ function SidebarItem({ item, pendingLikes }) {
       {badge && (
         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
           /^\d+$/.test(badge)
-            ? 'bg-[#D4A85F] text-white min-w-[20px] text-center'
+            ? 'bg-[#D4A85F] text-[#0A0A0A] min-w-[20px] text-center'
             : badge === 'ADMIN'
               ? 'bg-amber-500/10 text-amber-400'
               : 'bg-emerald-500/10 text-emerald-400'
@@ -230,7 +230,7 @@ export default function Sidebar() {
       <div className="p-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
         <button
           onClick={() => navigate('/dashboard/profile')}
-          className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#1E1E1E] transition-colors group"
+          className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#F4F4EE] transition-colors group"
         >
           {/* Avatar */}
           <ProfilePhoto
@@ -240,17 +240,17 @@ export default function Sidebar() {
             className="w-9 h-9 shrink-0"
           />
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-sm font-medium text-white truncate group-hover:text-[#7A5A18] transition-colors">
+            <p className="text-sm font-medium text-[#0A0A0A] truncate group-hover:text-[#7A5A18] transition-colors">
               {displayName}
             </p>
-            <p className="text-xs text-[#666666] truncate">{email}</p>
+            <p className="text-xs text-[rgba(10,10,10,0.4)] truncate">{email}</p>
           </div>
         </button>
 
         {/* Log Out */}
         <button
           onClick={() => dispatch(logoutUser())}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[#999999] hover:text-red-400 hover:bg-red-500/10 transition-colors mt-1"
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[rgba(10,10,10,0.62)] hover:text-red-400 hover:bg-red-500/10 transition-colors mt-1"
         >
           <LogOut className="w-4 h-4 shrink-0" />
           <span>Log Out</span>

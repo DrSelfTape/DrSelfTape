@@ -75,14 +75,14 @@ export default function PermissionsModal({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+      <div className="bg-[#F4F4EE] rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
         {/* Header */}
-        <div className="bg-gradient-to-br from-[#FF8280] to-[#A040C8] p-6 text-white">
+        <div className="bg-gradient-to-br from-[#FF8280] to-[#A040C8] p-6 text-[#0A0A0A]">
           <div className="flex items-center gap-3 mb-2">
             <Shield className="w-6 h-6" />
             <span className="font-semibold text-lg">Permissions Required</span>
           </div>
-          <p className="text-white/80 text-sm">
+          <p className="text-[#0A0A0A]/80 text-sm">
             Dr. Self Tape needs access to use {context}.
           </p>
         </div>
@@ -90,26 +90,26 @@ export default function PermissionsModal({
         {/* Permissions List */}
         <div className="p-6 space-y-4">
           {requireMic && (
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-[#2A2A2A] border border-[#3A3A3A]">
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-[#F4F4EE] border border-[rgba(10,10,10,0.14)]">
               <div className="w-10 h-10 rounded-full bg-[#D4A85F]/10 flex items-center justify-center flex-shrink-0">
                 <Mic className="w-5 h-5 text-[#7A5A18]" />
               </div>
               <div>
-                <div className="font-semibold text-white">Microphone</div>
-                <div className="text-sm text-[#999999] mt-0.5">
+                <div className="font-semibold text-[#0A0A0A]">Microphone</div>
+                <div className="text-sm text-[rgba(10,10,10,0.62)] mt-0.5">
                   To hear your lines and detect when you finish speaking.
                 </div>
               </div>
             </div>
           )}
           {requireCamera && (
-            <div className="flex items-start gap-4 p-4 rounded-xl bg-[#2A2A2A] border border-[#3A3A3A]">
+            <div className="flex items-start gap-4 p-4 rounded-xl bg-[#F4F4EE] border border-[rgba(10,10,10,0.14)]">
               <div className="w-10 h-10 rounded-full bg-[#D4A85F]/10 flex items-center justify-center flex-shrink-0">
                 <Video className="w-5 h-5 text-[#7A5A18]" />
               </div>
               <div>
-                <div className="font-semibold text-white">Camera</div>
-                <div className="text-sm text-[#999999] mt-0.5">
+                <div className="font-semibold text-[#0A0A0A]">Camera</div>
+                <div className="text-sm text-[rgba(10,10,10,0.62)] mt-0.5">
                   To record your performance and self-tape sessions.
                 </div>
               </div>
@@ -117,7 +117,7 @@ export default function PermissionsModal({
           )}
 
           {/* Privacy note */}
-          <div className="flex items-center gap-2 text-xs text-[#666666] pt-1">
+          <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)] pt-1">
             <Shield className="w-3.5 h-3.5 flex-shrink-0" />
             <span>Your recordings stay on your device. We never store or share your video.</span>
           </div>
@@ -136,7 +136,7 @@ export default function PermissionsModal({
                   </p>
                   <button
                     onClick={() => window.location.reload()}
-                    className="text-xs font-semibold text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors"
+                    className="text-xs font-semibold text-[#0A0A0A] bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors"
                   >
                     🔄 Refresh Page
                   </button>
@@ -150,14 +150,14 @@ export default function PermissionsModal({
         <div className="px-6 pb-6 flex gap-3">
           <button
             onClick={handleDeny}
-            className="flex-1 px-4 py-3 rounded-xl border border-[#3A3A3A] text-[#999999] font-medium hover:bg-[#1E1E1E] transition-colors text-sm"
+            className="flex-1 px-4 py-3 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] font-medium hover:bg-[#F4F4EE] transition-colors text-sm"
           >
             Not Now
           </button>
           <button
             onClick={handleAllow}
             disabled={status === 'requesting'}
-            className="flex-1 px-4 py-3 rounded-xl bg-[#D4A85F] text-white font-semibold hover:bg-[#C09850] disabled:opacity-60 disabled:cursor-not-allowed transition-colors text-sm flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 rounded-xl bg-[#D4A85F] text-[#0A0A0A] font-semibold hover:bg-[#C09850] disabled:opacity-60 disabled:cursor-not-allowed transition-colors text-sm flex items-center justify-center gap-2"
           >
             {status === 'requesting' ? (
               <>
