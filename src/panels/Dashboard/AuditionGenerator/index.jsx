@@ -4,23 +4,23 @@ import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 
 /* ═══════════════════════════════════════════════════
-   DESIGN TOKENS — matches screenshot exactly
+   DESIGN TOKENS — Aurora light
    ═══════════════════════════════════════════════════ */
-const BG          = '#0d0d0d';
-const BG_CARD     = '#13151d';
-const BG_CHIP     = '#1e1e2e';
-const BG_ELEVATED = '#1a1c26';
-const BORDER      = 'rgba(255,255,255,0.06)';
-const BORDER_ACT  = 'rgba(255,255,255,0.15)';
-const TEXT        = '#f2f0ed';
-const TEXT2       = '#8a9a96';
-const LABEL_COLOR = '#9b9b5a';   // olive/yellow-green — matches screenshot section labels
-const SELECTED    = '#ddd040';   // yellow-gold — selected chip text/border
-const SELECTED_BG = 'rgba(221,208,64,0.10)';
-const SELECTED_BD = 'rgba(221,208,64,0.30)';
-const MINT        = '#A7ECDA';
-const MINT_BG     = 'rgba(167,236,218,0.10)';
-const MINT_BD     = 'rgba(167,236,218,0.30)';
+const BG          = 'transparent';
+const BG_CARD     = '#FFFFFF';
+const BG_CHIP     = '#F4F4EE';
+const BG_ELEVATED = '#FFFFFF';
+const BORDER      = 'rgba(10,10,10,0.06)';
+const BORDER_ACT  = 'rgba(10,10,10,0.14)';
+const TEXT        = '#0A0A0A';
+const TEXT2       = 'rgba(10,10,10,0.62)';
+const LABEL_COLOR = '#7A5A18';   // deep gold — section labels
+const SELECTED    = '#7A5A18';   // deep gold — selected chip text/border
+const SELECTED_BG = 'rgba(212,168,95,0.18)';
+const SELECTED_BD = 'rgba(212,168,95,0.45)';
+const MINT        = '#9FE6B4';
+const MINT_BG     = 'rgba(159,230,180,0.18)';
+const MINT_BD     = 'rgba(159,230,180,0.45)';
 
 /* Button gradient: antique gold spectrum, Aurora light theme */
 const BTN_GRADIENT = 'linear-gradient(135deg, #F0D097 0%, #D4A85F 60%, #7A5A18 100%)';
@@ -218,16 +218,10 @@ export default function AuditionGenerator() {
         @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
 
-      <div style={{ padding: '0 20px 48px' }}>
+      <div style={{ padding: '0 4px 48px' }}>
 
-        {/* ── Title ── */}
-        <div style={{ padding: '28px 0 24px' }}>
-          <h2 style={{
-            fontSize: 28, fontWeight: 700, color: TEXT, margin: '0 0 6px',
-            fontFamily: "'Playfair Display', serif",
-          }}>
-            Scene generator
-          </h2>
+        {/* ── Subtitle (panel header is shown by PanelScreen wrapper) ── */}
+        <div style={{ padding: '4px 0 24px' }}>
           <p style={{ fontSize: 14, color: TEXT2, margin: 0 }}>
             Generate a custom practice scene with AI
           </p>

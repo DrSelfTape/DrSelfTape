@@ -185,7 +185,7 @@ export default function SidesUpload({ onSubmit }) {
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-4 ${
           dragActive
             ? 'border-[#D4A85F] bg-[#D4A85F]/5'
-            : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-[#1E1E1E]'
+            : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-[#F4F4EE]'
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -239,7 +239,7 @@ export default function SidesUpload({ onSubmit }) {
 
       {/* Clean stats */}
       {rawCharCount > 0 && scriptText && !pdfLoading && (
-        <div className="mb-4 bg-[#1A2A1A] border border-green-500/20 rounded-lg px-4 py-3 flex items-center gap-3">
+        <div className="mb-4 bg-[rgba(159,230,180,0.18)] border border-green-500/20 rounded-lg px-4 py-3 flex items-center gap-3">
           <span className="text-green-400 text-lg">✓</span>
           <div>
             <p className="text-xs font-semibold text-green-400">PDF cleaned successfully</p>
@@ -252,16 +252,16 @@ export default function SidesUpload({ onSubmit }) {
       )}
 
       {qualityWarning && (
-        <div className="mb-4 bg-[#2A2000] border border-[#FCE072]/20 rounded-lg px-4 py-3 flex items-center gap-3">
+        <div className="mb-4 bg-[rgba(252,224,114,0.18)] border border-[#FCE072]/20 rounded-lg px-4 py-3 flex items-center gap-3">
           <span className="text-[#FCE072] text-lg">⚠</span>
           <p className="text-xs text-[#FCE072]">{qualityWarning}</p>
         </div>
       )}
 
       <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 h-px bg-[#3A3A3A]" />
+        <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
         <span className="text-xs text-[rgba(10,10,10,0.4)] font-medium">OR PASTE BELOW</span>
-        <div className="flex-1 h-px bg-[#3A3A3A]" />
+        <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
       </div>
 
       {/* Textarea */}
@@ -272,12 +272,12 @@ export default function SidesUpload({ onSubmit }) {
           if (fileName) setFileName('');
         }}
         placeholder={`Paste your sides here...\n\nFormat example:\nJOHN: Hey, how's it going?\nSARAH: Not bad, just got back from the audition.\nJOHN: How did it go?`}
-        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[#1E1E1E] text-[#0A0A0A]"
+        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[#F4F4EE] text-[#0A0A0A]"
       />
 
       {/* Preview */}
       {canContinue && (
-        <div className="mt-4 bg-[#1E1E1E] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
+        <div className="mt-4 bg-[#F4F4EE] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
           <p className="text-xs font-semibold text-[rgba(10,10,10,0.4)] mb-2 uppercase tracking-wide">
             Sides Preview
           </p>

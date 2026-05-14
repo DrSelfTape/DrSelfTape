@@ -233,40 +233,41 @@ export default function Submissions() {
         />
       )}
 
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#0A0A0A]">Submissions</h1>
-        <div className="flex items-center gap-3">
+      {/* Header — stacks on mobile so the buttons don't crash into the title */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <h1 className="text-2xl font-bold text-[#0A0A0A]" style={{ fontFamily: '"Space Grotesk", sans-serif', letterSpacing: '-0.5px' }}>Submissions</h1>
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Import Agency Report button */}
           <button
             onClick={() => setShowImporter(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-semibold text-sm transition-all cursor-pointer border-2"
-            style={{ borderColor: '#FF8280', color: '#FF8280', background: 'rgba(255, 130, 128,0.06)' }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full font-semibold text-xs transition-all cursor-pointer border whitespace-nowrap"
+            style={{ borderColor: 'rgba(212,168,95,0.45)', color: '#7A5A18', background: 'rgba(212,168,95,0.10)' }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
             Import Report
           </button>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-[#0A0A0A] font-semibold text-sm transition-colors cursor-pointer"
-          style={{ backgroundColor: '#FF8280' }}
-        >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+          <button
+            onClick={openCreate}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-white font-semibold text-xs transition-colors cursor-pointer whitespace-nowrap"
+            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', boxShadow: '0 4px 14px rgba(212,168,95,0.30)' }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 4v16m8-8H4"
-            />
-          </svg>
-          Log Submission
-        </button>
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Log Submission
+          </button>
         </div>
       </div>
 
@@ -278,9 +279,9 @@ export default function Submissions() {
         <StatsCard title="This Week" value={String(thisWeek)} />
       </div>
 
-      {/* Filter Tabs + Sort */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-6 border-b border-[rgba(10,10,10,0.08)]">
+      {/* Filter Tabs + Sort — stack on mobile, row on desktop */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex gap-5 sm:gap-6 border-b border-[rgba(10,10,10,0.08)] overflow-x-auto -mx-1 px-1" style={{ scrollbarWidth: 'none' }}>
           {STATUS_TABS.map((tab) => {
             const count =
               tab === 'all'
@@ -290,12 +291,12 @@ export default function Submissions() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`pb-2.5 text-sm font-medium capitalize transition ${
+                className={`pb-2.5 text-sm font-medium capitalize transition whitespace-nowrap ${
                   activeTab === tab
                     ? 'border-b-2 text-[#0A0A0A]'
                     : 'text-[rgba(10,10,10,0.4)] hover:text-[rgba(10,10,10,0.62)]'
                 }`}
-                style={activeTab === tab ? { borderColor: '#FF8280' } : undefined}
+                style={activeTab === tab ? { borderColor: '#D4A85F' } : undefined}
               >
                 {tab} ({count})
               </button>
@@ -306,7 +307,7 @@ export default function Submissions() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="text-sm border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-3 py-1.5 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none"
+          className="self-start sm:self-auto text-sm border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-3 py-1.5 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -342,7 +343,7 @@ export default function Submissions() {
           <button
             onClick={openCreate}
             className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-[#0A0A0A] font-medium text-sm"
-            style={{ backgroundColor: '#FF8280' }}
+            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', boxShadow: '0 4px 14px rgba(212,168,95,0.30)' }}
           >
             Log Your First Submission
           </button>
@@ -430,7 +431,7 @@ export default function Submissions() {
                     onClick={() => handlePromote(sub.id)}
                     disabled={promotingId === sub.id}
                     className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50"
-                    style={{ background: 'rgba(255, 130, 128,0.1)', color: '#FF8280', border: '1px solid rgba(255, 130, 128,0.2)' }}
+                    style={{ background: 'rgba(212,168,95,0.18)', color: '#7A5A18', border: '1px solid rgba(212,168,95,0.35)' }}
                   >
                     {promotingId === sub.id ? (
                       <>
