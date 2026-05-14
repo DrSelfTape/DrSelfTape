@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS — Aurora light
@@ -158,7 +159,7 @@ export default function AuditionGenerator() {
     }
   };
 
-  const isMobile = window.innerWidth < 768;
+  const isMobile = useIsMobile();
 
   const launchCDSim = () => {
     if (!scene) return;

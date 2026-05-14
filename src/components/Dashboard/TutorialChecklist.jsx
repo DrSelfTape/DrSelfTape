@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { store } from '../../redux/store';
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const STEP_COLORS = ['#FF8280', '#A7ECDA', '#FFB49A', '#3b82f6', '#22c55e', '#FCE072', '#ef4444'];
 
@@ -46,7 +47,7 @@ export default function TutorialChecklist({ onNavigate }) {
   const dismissed = useSelector((s) => !!s.userSettings?.data?.tutorial_complete);
   const settingsLoaded = useSelector((s) => !!s.userSettings?.loaded);
   const [expanded, setExpanded] = useState(true);
-  const isMobile = window.innerWidth < 768;
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!settingsLoaded) return;

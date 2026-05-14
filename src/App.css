@@ -242,6 +242,27 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
+/* iOS Safari auto-zooms the viewport when a form field with font-size
+ * < 16px gets focus. The visible difference is a jarring scale-up that
+ * doesn't reset until the user pinches out. Force at least 16px on
+ * touchscreen widths so the keyboard appears without the zoom. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
+/* Better touch behavior — disable tap highlight artifact and long-
+ * press callout. Doesn't affect mouse/keyboard. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, [role="button"] {
+  -webkit-touch-callout: none;
+}
+
 @theme {
 /* Base Colors */
 --color-black: #000000;

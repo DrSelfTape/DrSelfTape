@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bell, HeartHandshake, Clapperboard, MessageSquare, X, Megaphone, CheckCheck } from 'lucide-react';
 import { getNotifications, markNotificationRead } from '../../redux/features/notifications/notificationsSlice';
 import useNotificationActions from '../../hooks/useNotificationActions';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const NOTIF_ICONS = {
   scene_partner_like: HeartHandshake,
@@ -40,7 +41,7 @@ export default function NotificationBell({ onNavigate }) {
   const [open, setOpen] = useState(false);
   const [markingAll, setMarkingAll] = useState(false);
   const panelRef = useRef(null);
-  const isMobile = window.innerWidth < 768;
+  const isMobile = useIsMobile();
   const { markAllAsRead } = useNotificationActions();
 
   useEffect(() => { dispatch(getNotifications()); }, [dispatch]);
