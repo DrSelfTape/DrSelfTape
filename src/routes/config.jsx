@@ -18,6 +18,8 @@ const Login = lazy(() => import('../panels/Authentication/Login').then((m) => ({
 const Signup = lazy(() => import('../panels/Authentication/SignUp').then((m) => ({ default: m.Signup })));
 const ForgotPassword = lazy(() => import('../panels/Authentication/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('../panels/Authentication/ResetPassword').then((m) => ({ default: m.ResetPassword })));
+const TermsOfService = lazy(() => import('../panels/Legal/TermsOfService'));
+const PrivacyPolicy = lazy(() => import('../panels/Legal/PrivacyPolicy'));
 
 // Lazy-loaded UserPanel imports
 const Dashboard = lazy(() => import('../panels/UserPanel/Dashboard'));
@@ -352,9 +354,20 @@ export const authRoutes = [
     element: <JoinPage />,
   },
   {
+    path: '/terms',
+    moduleName: 'Terms of Service',
+    element: <TermsOfService />,
+  },
+  {
+    path: '/privacy',
+    moduleName: 'Privacy Policy',
+    element: <PrivacyPolicy />,
+  },
+  // Backwards-compat: old placeholder route now redirects to /terms
+  {
     path: '/term-and-conditions',
     moduleName: 'Term and conditions',
-    element: <ComingSoon />,
+    element: <Navigate to='/terms' replace />,
   },
   {
     path: '*',

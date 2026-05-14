@@ -202,7 +202,30 @@ export const Signup = () => {
               <CustomCheckbox
                 type='checkbox'
                 required={true}
-                label={'I agree to the Terms and Conditions'}
+                label={
+                  <>
+                    I agree to the{' '}
+                    <a
+                      href='/terms'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ color: 'var(--aurora-accent-deep)', textDecoration: 'underline', fontWeight: 600 }}
+                    >
+                      Terms of Service
+                    </a>
+                    {' '}and{' '}
+                    <a
+                      href='/privacy'
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ color: 'var(--aurora-accent-deep)', textDecoration: 'underline', fontWeight: 600 }}
+                    >
+                      Privacy Policy
+                    </a>
+                  </>
+                }
                 checked={agreeTerms}
                 onChange={(e) => setAgreeTerms(e.target.checked)}
                 className='mt-[3px] accent-primary w-4 h-4'

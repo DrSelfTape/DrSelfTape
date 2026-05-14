@@ -233,6 +233,12 @@ export default function LoginPage() {
           Don't have account?{" "}<a href="/signup" style={{ color: "#7A5A18", textDecoration: "none", fontWeight: 700 }}>Sign Up</a>
         </p>
 
+        <p style={{ marginTop: 16, fontSize: 11, color: TEXT3, position: "relative", zIndex: 1, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.9s" }}>
+          <a href="/terms" style={{ color: TEXT3, textDecoration: "underline" }}>Terms</a>
+          {" · "}
+          <a href="/privacy" style={{ color: TEXT3, textDecoration: "underline" }}>Privacy</a>
+        </p>
+
         <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${MINT}, ${GOLD}, ${CORAL_SOFT}, ${CORAL})`, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.8s" }} />
       </div>
 
