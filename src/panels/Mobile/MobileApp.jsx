@@ -263,10 +263,20 @@ function ProgressRing({ pct, size = 36, stroke = 3 }) {
  * Animated arc + 12 trend dots + center number.
  * Tap a dot to scrub; tap a metric pill to switch.
  */
-function AuroraHeroRing({ stats }) {
-  const total   = Math.max(stats?.total_auditions || 0, 0);
-  const cbCount = Math.max(stats?.callbacks      || 0, 0);
-  const booked  = Math.max(stats?.total_booked   || 0, 0);
+function AuroraHeroRing({ stats, auditions }) {
+  // Prefer the local audition list (always fresh after a status change)
+  // over the cached stats endpoint. Falls back to stats if auditions is
+  // not yet loaded (initial render).
+  const hasLocal = Array.isArray(auditions) && auditions.length > 0;
+  const total   = hasLocal
+    ? auditions.length
+    : Math.max(stats?.total_auditions || 0, 0);
+  const cbCount = hasLocal
+    ? auditions.filter(a => a.status === 'callback' || a.status === 'audition').length
+    : Math.max(stats?.callbacks || 0, 0);
+  const booked  = hasLocal
+    ? auditions.filter(a => a.status === 'booked').length
+    : Math.max(stats?.total_booked || 0, 0);
   const cbRate  = total > 0 ? Math.round((cbCount / total) * 100) : 0;
 
   // Use antique gold for the primary CB ring (matches the Aurora design ref).
@@ -637,7 +647,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       </button>
 
       {/* ── Hero metric ring ── */}
-      <AuroraHeroRing stats={s} />
+      <AuroraHeroRing stats={s} auditions={auditions} />
 
       {/* ── Callback card (Aurora gold gradient) ── */}
       {firstCallback && (
@@ -869,6 +879,7 @@ function AuditionsScreen() {
 
       await dispatch(createAuditionThunk(payload)).unwrap();
       dispatch(fetchAuditionsThunk());
+      dispatch(fetchAuditionStatsThunk());
       // Mark tutorial step
       markStep('track_audition');
       setAddForm({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
@@ -1090,7 +1101,13 @@ function AuditionsScreen() {
                 <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "0 0 10px" }}>
                   {sub.role || ""}{sub.casting_director ? ` · ${sub.casting_director}` : ""}
                 </p>
-                <button onClick={() => dispatch(promoteToAuditionThunk({ id: sub.id }))} className="aurora-mono" style={{
+                <button onClick={async () => {
+                  try {
+                    await dispatch(promoteToAuditionThunk({ id: sub.id })).unwrap();
+                    dispatch(fetchAuditionsThunk());
+                    dispatch(fetchAuditionStatsThunk());
+                  } catch {}
+                }} className="aurora-mono" style={{
                   background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)',
                   border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 35%, transparent)',
                   borderRadius: 100,
@@ -1288,7 +1305,11 @@ function AuditionsScreen() {
                         if (isActive) return;
                         try {
                           await dispatch(updateAuditionThunk({ id: selected.id, data: { status: col.id } })).unwrap();
+                          // Refresh both the audition list AND stats so the
+                          // Home hero ring (callback rate / bookings) stays
+                          // in sync immediately.
                           dispatch(fetchAuditionsThunk());
+                          dispatch(fetchAuditionStatsThunk());
                           setSelected({ ...selected, status: col.id });
                         } catch {}
                       }}
