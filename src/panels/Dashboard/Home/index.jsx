@@ -117,12 +117,17 @@ export default function DashboardHome() {
     dispatch(fetchSubmissionsThunk());
     dispatch(fetchMatchingStats());
 
-    // Show onboarding for first-time users
-    if (!localStorage.getItem('reader_onboarding_seen')) {
+  }, [dispatch]);
+
+  // Server-synced onboarding flag — see notes in Mobile HomeScreen.
+  const onboardingSeen = useSelector((state) => state.userSettings?.data?.reader_onboarding_seen);
+  const settingsLoaded = useSelector((state) => state.userSettings?.loaded);
+  useEffect(() => {
+    if (settingsLoaded && !onboardingSeen) {
       const timer = setTimeout(() => setShowOnboarding(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [dispatch]);
+  }, [settingsLoaded, onboardingSeen]);
 
   const recentSubs = Array.isArray(submissions) ? submissions.slice(0, 4) : [];
 

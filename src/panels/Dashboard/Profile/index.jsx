@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
 import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift, RefreshCw } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
+import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -39,6 +40,7 @@ export default function Profile() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { profile, loading, updateLoading } = useSelector((s) => s.profile);
   const auditionStats = useSelector((s) => s.auditionTracker?.stats?.data || s.auditions?.stats?.data || null);
+  const marketplaceTutorialSeen = useSelector((s) => s.userSettings?.data?.marketplace_tutorial_seen);
   const avatarInputRef = useRef(null);
   const headshotInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -315,7 +317,7 @@ export default function Profile() {
             <button
               onClick={() => {
                 setShowMarketplaceTutorial(false);
-                localStorage.setItem('drst-marketplace-tutorial-seen', 'true');
+                dispatch(patchUserSettings({ marketplace_tutorial_seen: true }));
               }}
               className="w-full py-3 rounded-xl text-white font-bold text-sm transition-colors"
               style={{ background: 'linear-gradient(135deg, #F0D097, #D4A85F)' }}
@@ -619,7 +621,7 @@ export default function Profile() {
                   onClick={() => {
                     const wasOff = !readerForm.is_paid_reader;
                     setReaderForm(prev => ({ ...prev, is_paid_reader: !prev.is_paid_reader }));
-                    if (wasOff && !localStorage.getItem('drst-marketplace-tutorial-seen')) {
+                    if (wasOff && !marketplaceTutorialSeen) {
                       setShowMarketplaceTutorial(true);
                     }
                   }}

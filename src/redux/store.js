@@ -34,6 +34,9 @@ import jerichoSlice from './features/jericho/jerichoSlice';
 // Admin panel slice
 import adminSlice from './features/admin/adminSlice';
 
+// User settings (cross-device sync)
+import userSettingsSlice from './features/userSettings/userSettingsSlice';
+
 // Define the persist configuration
 const persistConfig = {
   key: 'root',
@@ -65,6 +68,8 @@ const rootReducer = combineReducers({
   jericho: jerichoSlice,
   // Admin panel reducer
   admin: adminSlice,
+  // User settings (theme, tutorial, filters — synced across devices)
+  userSettings: userSettingsSlice,
 });
 
 // Create a persisted reducer

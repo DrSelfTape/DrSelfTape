@@ -559,17 +559,25 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     return () => window.removeEventListener('drst-tutorial-complete', handler);
   }, []);
 
+  // Server-synced onboarding flag — follows the user across devices.
+  const onboardingSeen = useSelector((state) => state.userSettings?.data?.reader_onboarding_seen);
+  const settingsLoaded = useSelector((state) => state.userSettings?.loaded);
+
   useEffect(() => {
     dispatch(fetchAuditionStatsThunk());
     dispatch(getScripts());
     dispatch(fetchSubmissionsThunk());
     dispatch(fetchMatchingStats());
+  }, [dispatch]);
 
-    if (!localStorage.getItem('reader_onboarding_seen')) {
+  useEffect(() => {
+    // Wait until server settings have loaded before deciding whether to
+    // show onboarding — otherwise a returning user might see it briefly.
+    if (settingsLoaded && !onboardingSeen) {
       const timer = setTimeout(() => setShowOnboarding(true), 2000);
       return () => clearTimeout(timer);
     }
-  }, [dispatch]);
+  }, [settingsLoaded, onboardingSeen]);
 
   const hasStats = (s.total_auditions || 0) > 0 || (s.total_booked || 0) > 0;
   const callbacks = auditions.filter(a => callbackBadge(a.callbackDate));

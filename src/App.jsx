@@ -1,15 +1,18 @@
 // Library imports
 import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 // Local imports
 import './App.css';
 import { SocketProvider } from './socket/socket';
 import { Router } from './routes/index';
 import { initAnalytics, identifyUser } from './utils/analytics';
+import { fetchUserSettings, resetSettings } from './redux/features/userSettings/userSettingsSlice';
 
 function App() {
+  const dispatch = useDispatch();
   const user = useSelector((s) => s.auth?.user);
+  const userId = user?.id;
 
   useEffect(() => {
     initAnalytics();
@@ -18,6 +21,18 @@ function App() {
   useEffect(() => {
     if (user) identifyUser(user);
   }, [user]);
+
+  // Hydrate per-user settings (theme, tutorial state, reader filters, etc.)
+  // from the server whenever the user identity changes — login, signup, or
+  // app boot after a redux-persist rehydrate. Reset on logout so prefs from
+  // the previous user don't leak into an anonymous browsing session.
+  useEffect(() => {
+    if (userId) {
+      dispatch(fetchUserSettings());
+    } else {
+      dispatch(resetSettings());
+    }
+  }, [userId, dispatch]);
 
   return (
     <SocketProvider>

@@ -1,11 +1,16 @@
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { Users2, HeartHandshake, Clapperboard } from 'lucide-react';
+import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 
 export default function ReaderOnboardingModal({ onClose }) {
+  const dispatch = useDispatch();
   const [visible, setVisible] = useState(true);
 
   const handleDismiss = () => {
-    localStorage.setItem('reader_onboarding_seen', 'true');
+    // Persist server-side so the user doesn't see the intro again on
+    // another device or after a cache clear.
+    dispatch(patchUserSettings({ reader_onboarding_seen: true }));
     setVisible(false);
     if (onClose) onClose();
   };
