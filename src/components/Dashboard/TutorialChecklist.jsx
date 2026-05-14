@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import {
   Camera, Sparkles, Mic, Users2, Radio, MessageSquare, Target,
   ChevronDown, ChevronUp, Check, ArrowRight, Trophy, Zap,
 } from 'lucide-react';
+import { store } from '../../redux/store';
+import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 
 const STEP_COLORS = ['#FF8280', '#A7ECDA', '#FFB49A', '#3b82f6', '#22c55e', '#FCE072', '#ef4444'];
 
@@ -18,50 +20,45 @@ const STEPS = [
   { id: 'track_audition', label: 'Track an Audition', desc: 'Log your first audition', icon: Target, route: '/dashboard/auditions', mobileTab: 'auditions' },
 ];
 
-const STORAGE_KEY = 'drst-tutorial';
-const COMPLETE_KEY = 'drst-tutorial-complete';
-
+// Progress is now persisted server-side via UserSettings. We read the
+// current snapshot from the Redux store so markStep can be called from
+// anywhere (event handlers, async flows) without component plumbing.
 function getProgress() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-  } catch { return {}; }
+  return store.getState()?.userSettings?.data?.tutorial_progress || {};
 }
 
 function markStep(stepId) {
-  const progress = getProgress();
-  if (!progress[stepId]) {
-    progress[stepId] = true;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(progress));
-    window.dispatchEvent(new CustomEvent('drst-tutorial-update'));
-  }
+  const current = getProgress();
+  if (current[stepId]) return;
+  const next = { ...current, [stepId]: true };
+  store.dispatch(patchUserSettings({ tutorial_progress: next }));
 }
 
 export { markStep };
 
 export default function TutorialChecklist({ onNavigate }) {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const profile = useSelector((s) => s.profile?.profile);
   const auditions = useSelector((s) => s.auditions?.data || []);
   const isAvailable = useSelector((s) => s.readersMatch?.isAvailable);
-  const [progress, setProgress] = useState(getProgress());
+  const progress = useSelector((s) => s.userSettings?.data?.tutorial_progress || {});
+  const dismissed = useSelector((s) => !!s.userSettings?.data?.tutorial_complete);
+  const settingsLoaded = useSelector((s) => !!s.userSettings?.loaded);
   const [expanded, setExpanded] = useState(true);
-  const [dismissed, setDismissed] = useState(!!localStorage.getItem(COMPLETE_KEY));
   const isMobile = window.innerWidth < 768;
 
   useEffect(() => {
-    const handler = () => setProgress(getProgress());
-    window.addEventListener('drst-tutorial-update', handler);
-    return () => window.removeEventListener('drst-tutorial-update', handler);
-  }, []);
-
-  useEffect(() => {
-    const p = getProgress();
-    let changed = false;
-    if (!p.headshot && (profile?.actor_profile?.headshot || profile?.user_image)) { p.headshot = true; changed = true; }
-    if (!p.track_audition && auditions.length > 0) { p.track_audition = true; changed = true; }
-    if (!p.go_available && isAvailable) { p.go_available = true; changed = true; }
-    if (changed) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); setProgress({ ...p }); }
-  }, [profile, auditions, isAvailable]);
+    if (!settingsLoaded) return;
+    const p = progress;
+    const patch = {};
+    if (!p.headshot && (profile?.actor_profile?.headshot || profile?.user_image)) patch.headshot = true;
+    if (!p.track_audition && auditions.length > 0) patch.track_audition = true;
+    if (!p.go_available && isAvailable) patch.go_available = true;
+    if (Object.keys(patch).length) {
+      dispatch(patchUserSettings({ tutorial_progress: { ...p, ...patch } }));
+    }
+  }, [profile, auditions, isAvailable, progress, settingsLoaded, dispatch]);
 
   const completedCount = STEPS.filter((s) => progress[s.id]).length;
   const totalSteps = STEPS.length;
@@ -207,8 +204,7 @@ export default function TutorialChecklist({ onNavigate }) {
           {allComplete && (
             <button
               onClick={() => {
-                localStorage.setItem(COMPLETE_KEY, 'true');
-                setDismissed(true);
+                dispatch(patchUserSettings({ tutorial_complete: true }));
                 window.dispatchEvent(new CustomEvent('drst-tutorial-complete'));
               }}
               style={{

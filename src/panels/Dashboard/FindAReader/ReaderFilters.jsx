@@ -7,6 +7,7 @@ import {
   fetchAvailableReaders,
   setFiltersLocal,
 } from '../../../redux/features/readers/readersMatchSlice';
+import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
 
 const GENRES = [
   'Drama',
@@ -85,7 +86,7 @@ const ReaderFilters = ({ onClose }) => {
     };
 
     dispatch(setFiltersLocal(filters));
-    localStorage.setItem('drst-reader-filters', JSON.stringify(filters));
+    dispatch(patchUserSettings({ reader_filters: filters }));
 
     try {
       await dispatch(updateReaderFilters(filters)).unwrap();
@@ -105,7 +106,7 @@ const ReaderFilters = ({ onClose }) => {
     setGender('Any');
     setAccent('');
     setAgeRange('Any');
-    localStorage.removeItem('drst-reader-filters');
+    dispatch(patchUserSettings({ reader_filters: {} }));
   };
 
   return createPortal(

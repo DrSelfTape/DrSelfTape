@@ -8,6 +8,7 @@ import ReaderFilters from './ReaderFilters';
 import {
   fetchAvailableReaders,
   swipeOnReader,
+  setFiltersLocal,
 } from '../../../redux/features/readers/readersMatchSlice';
 import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice';
 import axios from '../../../redux/http';
@@ -23,6 +24,8 @@ const FindAReader = () => {
   );
   const profile = useSelector((state) => state.profile?.profile);
   const hasPhoto = !!(profile?.actor_profile?.headshot || profile?.user_image);
+  const savedFilters = useSelector((s) => s.userSettings?.data?.reader_filters);
+  const settingsLoaded = useSelector((s) => !!s.userSettings?.loaded);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
@@ -32,20 +35,18 @@ const FindAReader = () => {
   useEffect(() => {
     dispatch(fetchProfileThunk());
     markStep('find_reader');
-    // Restore saved filters and pass to API
-    try {
-      const saved = JSON.parse(localStorage.getItem('drst-reader-filters') || '{}');
-      if (Object.keys(saved).length > 0) {
-        const { setFiltersLocal } = require('../../../redux/features/readers/readersMatchSlice');
-        dispatch(setFiltersLocal(saved));
-        dispatch(fetchAvailableReaders(saved));
-      } else {
-        dispatch(fetchAvailableReaders());
-      }
-    } catch {
+  }, [dispatch]);
+
+  // Hydrate saved filters from userSettings once it has loaded, then fetch.
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    if (savedFilters && typeof savedFilters === 'object' && Object.keys(savedFilters).length > 0) {
+      dispatch(setFiltersLocal(savedFilters));
+      dispatch(fetchAvailableReaders(savedFilters));
+    } else {
       dispatch(fetchAvailableReaders());
     }
-  }, [dispatch]);
+  }, [settingsLoaded, savedFilters, dispatch]);
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
