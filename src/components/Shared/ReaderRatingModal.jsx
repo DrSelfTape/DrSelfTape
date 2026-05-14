@@ -96,7 +96,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
             placeholder={`Any notes about working with ${firstName}? (optional)`}
             maxLength={300}
             rows={3}
-            className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#FF8280]"
+            className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#D4A85F]"
             style={{
               background: 'var(--bg-input, #2A2A2A)',
               border: '1px solid var(--border-active, #3A3A3A)',

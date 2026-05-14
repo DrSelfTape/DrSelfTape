@@ -40,9 +40,9 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
   const isPlaying = isPlayingKey === label && playingSection === 'playing';
 
   return (
-    <div className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] p-6">
+    <div className="bg-white rounded-xl border border-[rgba(10,10,10,0.08)] p-6">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="font-serif text-xl font-bold text-white">{label}</h3>
+        <h3 className="font-serif text-xl font-bold text-[#0A0A0A]">{label}</h3>
         <button
           onClick={() => onPlayToggle(label, data)}
           disabled={isLoading}
@@ -66,8 +66,8 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
             if (!value) return null;
             const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
             return (
-              <div key={key} className="border-l-2 border-[#FF8280]/30 pl-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#FF8280]/70 mb-1">
+              <div key={key} className="border-l-2 border-[#D4A85F]/30 pl-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#7A5A18]/70 mb-1">
                   {fieldLabel}
                 </p>
                 <p className="text-[#CCCCCC] text-sm leading-relaxed">{value}</p>
@@ -213,10 +213,10 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div>
-          <h2 className="font-serif text-2xl font-bold text-white">
+          <h2 className="font-serif text-2xl font-bold text-[#0A0A0A]">
             Your Coach's Notes
           </h2>
-          <p className="text-[#999999] mt-1 text-sm">
+          <p className="text-[rgba(10,10,10,0.62)] mt-1 text-sm">
             AI-generated direction based on your scene and role.
           </p>
         </div>
@@ -225,11 +225,11 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
           <button
             onClick={handleListenAll}
             disabled={isAllLoading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[#0A0A0A] text-sm font-semibold transition-all disabled:opacity-50"
             style={{
               background: isAllPlaying
-                ? 'linear-gradient(135deg,#9B30FF,#FF8280)'
-                : 'linear-gradient(135deg,#FF8280,#E88BF5)',
+                ? 'linear-gradient(135deg, #7A5A18, #D4A85F)'
+                : 'linear-gradient(135deg, #D4A85F, #7A5A18)',
               boxShadow: '0 4px 15px rgba(255, 130, 128,0.35)',
             }}
           >
@@ -245,7 +245,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
 
           <button
             onClick={onRunAgain}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[#3A3A3A] text-[#999999] hover:bg-[#1E1E1E] font-medium text-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-[#1E1E1E] font-medium text-sm transition-colors"
           >
             <RotateCcw size={16} />
             Run Again

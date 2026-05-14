@@ -86,7 +86,7 @@ export default function AdminUsers() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or email..."
-            className="w-full pl-10 pr-4 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+            className="w-full pl-10 pr-4 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
           />
         </div>
 
@@ -94,7 +94,7 @@ export default function AdminUsers() {
         <select
           value={roleFilter}
           onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
         >
           {roleOptions.map((r) => (
             <option key={r} value={r}>
@@ -107,7 +107,7 @@ export default function AdminUsers() {
         <select
           value={planFilter}
           onChange={(e) => setPlanFilter(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
         >
           {planOptions.map((p) => (
             <option key={p} value={p}>
@@ -120,7 +120,7 @@ export default function AdminUsers() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
         >
           {statusOptions.map((s) => (
             <option key={s} value={s}>
@@ -134,14 +134,14 @@ export default function AdminUsers() {
           type="date"
           value={dateFrom}
           onChange={(e) => setDateFrom(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
           placeholder="From"
         />
         <input
           type="date"
           value={dateTo}
           onChange={(e) => setDateTo(e.target.value)}
-          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+          className="px-3 py-2.5 bg-[#1E1E1E] border border-[#3A3A3A] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
           placeholder="To"
         />
       </div>
@@ -149,7 +149,7 @@ export default function AdminUsers() {
       {/* Loading */}
       {usersLoading && (
         <div className="flex items-center justify-center h-32">
-          <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 

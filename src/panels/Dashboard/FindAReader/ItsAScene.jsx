@@ -16,49 +16,62 @@ const ItsAScene = (props = {}) => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
+      className="aurora-orbs min-h-screen flex flex-col items-center justify-center px-6 py-12"
       style={{
-        background: 'linear-gradient(160deg, #FF8280 0%, #9B30FF 50%, #1A1A1A 100%)',
+        background: 'linear-gradient(160deg, #F0D097 0%, #D4A85F 50%, #7A5A18 100%)',
       }}
     >
       {/* Headshots */}
       <div className="flex items-center justify-center mb-8" style={{ marginRight: '-16px' }}>
         <div
           className="w-32 h-32 rounded-full border-4 border-white shadow-2xl flex items-center justify-center z-10"
-          style={{ background: '#2A2A2A' }}
+          style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)' }}
         >
           <span className="text-3xl font-bold text-white">{myInitials}</span>
         </div>
         <div
           className="w-32 h-32 rounded-full border-4 border-white shadow-2xl flex items-center justify-center -ml-6"
-          style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
+          style={{ background: 'linear-gradient(135deg, #7A5A18, #4A3A10)' }}
         >
           <span className="text-3xl font-bold text-white">{theirInitials}</span>
         </div>
       </div>
 
       {/* Clapperboard */}
-      <div className="mb-6 flex items-center justify-center w-16 h-16 rounded-full bg-white/20 backdrop-blur">
-        <Clapperboard size={36} color="white" />
+      <div className="mb-6 flex items-center justify-center w-16 h-16 rounded-full" style={{
+        background: 'rgba(255,255,255,0.25)',
+        backdropFilter: 'blur(12px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(12px) saturate(1.4)',
+        border: '1px solid rgba(255,255,255,0.40)',
+      }}>
+        <Clapperboard size={32} color="white" />
       </div>
 
       {/* Heading */}
+      <span className="aurora-mono text-white/80 mb-2" style={{ fontSize: 11, letterSpacing: '0.2em' }}>
+        IT'S A MATCH
+      </span>
       <h1
-        className="text-4xl font-bold text-white text-center mb-3"
-        style={{ fontFamily: 'Georgia, serif', textShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+        className="aurora-display text-4xl text-white text-center mb-3"
+        style={{ letterSpacing: '-0.6px', textShadow: '0 2px 12px rgba(10,10,10,0.18)' }}
       >
         It&apos;s a Scene!
       </h1>
 
-      <p className="text-white/80 text-center text-base mb-10 max-w-xs leading-relaxed">
-        {myName} and <strong className="text-white">{theirName}</strong> both want to read together!
+      <p className="text-white/85 text-center text-base mb-10 max-w-xs leading-relaxed">
+        {myName} and <strong className="text-white font-semibold">{theirName}</strong> both want to read together!
       </p>
 
       {/* CTA */}
       <button
         onClick={() => props.onGoToGreenRoom ? props.onGoToGreenRoom(matchId) : navigate(`/dashboard/green-room/${matchId}`)}
-        className="font-bold px-10 py-3.5 rounded-full shadow-xl text-lg transition-transform active:scale-95"
-        style={{ color: '#FF8280', background: 'white' }}
+        className="aurora-mono font-bold px-10 py-3.5 rounded-full shadow-xl transition-transform active:scale-95"
+        style={{
+          color: '#7A5A18',
+          background: 'white',
+          fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase',
+          boxShadow: '0 14px 30px rgba(10,10,10,0.18)',
+        }}
       >
         Go to Green Room
       </button>
@@ -66,7 +79,8 @@ const ItsAScene = (props = {}) => {
       {/* Keep browsing */}
       <button
         onClick={() => props.onKeepBrowsing ? props.onKeepBrowsing() : navigate('/dashboard/find-a-reader')}
-        className="mt-4 text-white/70 text-sm hover:text-white transition-colors"
+        className="aurora-mono mt-5 text-white/75 hover:text-white transition-colors"
+        style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
       >
         Keep browsing readers
       </button>

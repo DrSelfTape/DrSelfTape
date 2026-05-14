@@ -184,8 +184,8 @@ export default function SidesUpload({ onSubmit }) {
       <div
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-4 ${
           dragActive
-            ? 'border-[#FF8280] bg-[#FF8280]/5'
-            : 'border-[rgba(10,10,10,0.14)] hover:border-[#FF8280] bg-[#1E1E1E]'
+            ? 'border-[#D4A85F] bg-[#D4A85F]/5'
+            : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-[#1E1E1E]'
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -194,12 +194,12 @@ export default function SidesUpload({ onSubmit }) {
       >
         {pdfLoading ? (
           <div className="flex flex-col items-center gap-2">
-            <svg className="w-10 h-10 text-[#FF8280] animate-spin" viewBox="0 0 24 24" fill="none">
+            <svg className="w-10 h-10 text-[#7A5A18] animate-spin" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
               <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
             </svg>
             <p className="text-sm font-medium text-[#0A0A0A]">{pdfStatus || 'Processing...'}</p>
-            <p className="text-xs text-[#666] mt-1">This may take a few seconds</p>
+            <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">This may take a few seconds</p>
           </div>
         ) : (
           <>
@@ -243,7 +243,7 @@ export default function SidesUpload({ onSubmit }) {
           <span className="text-green-400 text-lg">✓</span>
           <div>
             <p className="text-xs font-semibold text-green-400">PDF cleaned successfully</p>
-            <p className="text-xs text-[#666] mt-0.5">
+            <p className="text-xs text-[rgba(10,10,10,0.4)] mt-0.5">
               Removed {Math.max(0, rawCharCount - scriptText.length).toLocaleString()} characters of noise
               (timestamps, watermarks, page numbers)
             </p>
@@ -272,7 +272,7 @@ export default function SidesUpload({ onSubmit }) {
           if (fileName) setFileName('');
         }}
         placeholder={`Paste your sides here...\n\nFormat example:\nJOHN: Hey, how's it going?\nSARAH: Not bad, just got back from the audition.\nJOHN: How did it go?`}
-        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none resize-none bg-[#1E1E1E] text-[#0A0A0A]"
+        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[#1E1E1E] text-[#0A0A0A]"
       />
 
       {/* Preview */}
@@ -291,7 +291,7 @@ export default function SidesUpload({ onSubmit }) {
       <button
         onClick={() => onSubmit(scriptText)}
         disabled={!canContinue}
-        className="mt-6 w-full bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="mt-6 w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Start Session
       </button>

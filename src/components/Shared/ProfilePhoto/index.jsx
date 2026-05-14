@@ -50,7 +50,7 @@ export default function ProfilePhoto({
       ) : (
         /* Fallback avatar */
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#FF8280]/20 to-[#A7ECDA]/10">
-          <span className="text-[#FF8280] font-bold text-lg select-none">
+          <span className="text-[#7A5A18] font-bold text-lg select-none">
             {initials || '?'}
           </span>
         </div>

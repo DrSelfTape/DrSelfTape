@@ -38,8 +38,8 @@ export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinu
             onClick={() => onSelect(v.key)}
             className={`p-6 rounded-2xl border-2 text-left transition-all ${
               selectedVoice === v.key
-                ? 'border-[#FF8280] bg-[#FF8280]/5 shadow-md'
-                : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] hover:border-[#FF8280]'
+                ? 'border-[#D4A85F] bg-[#D4A85F]/5 shadow-md'
+                : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] hover:border-[#D4A85F]'
             }`}
           >
             <div className="font-bold text-lg text-[#0A0A0A]">{v.name}</div>
@@ -58,7 +58,7 @@ export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinu
         <button
           onClick={onContinue}
           disabled={!selectedVoice}
-          className="flex-1 px-6 py-3 rounded-xl bg-[#FF8280] text-[#0A0A0A] font-semibold hover:bg-[#A040C8] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 px-6 py-3 rounded-xl bg-[#D4A85F] text-[#0A0A0A] font-semibold hover:bg-[#C09850] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           Continue
         </button>

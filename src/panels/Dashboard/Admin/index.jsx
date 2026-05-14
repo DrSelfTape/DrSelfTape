@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -80,9 +80,9 @@ export default function AdminDashboard() {
           <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Admin Dashboard</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>Manage users and send notifications</p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#FF8280]/10 border border-[#FF8280]/30">
-          <Shield className="w-4 h-4 text-[#FF8280]" />
-          <span className="text-xs font-semibold text-[#FF8280]">Admin</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#D4A85F]/10 border border-[#D4A85F]/30">
+          <Shield className="w-4 h-4 text-[#7A5A18]" />
+          <span className="text-xs font-semibold text-[#7A5A18]">Admin</span>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ export default function AdminDashboard() {
         }}>
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(255, 130, 128,0.15)' }}>
-              <Bell className="w-5 h-5 text-[#FF8280]" />
+              <Bell className="w-5 h-5 text-[#7A5A18]" />
             </div>
             <div>
               <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Send Broadcast</h2>
@@ -160,7 +160,7 @@ export default function AdminDashboard() {
               {recentSwipes.map((s, i) => (
                 <div key={i} className="flex items-center gap-3 p-3 rounded-lg" style={{ background: 'var(--bg-surface)' }}>
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold ${
-                    s.direction === 'right' ? 'bg-[#FF8280]' : s.direction === 'star' ? 'bg-[#FCE072] text-black' : 'bg-gray-500'
+                    s.direction === 'right' ? 'bg-[#D4A85F]' : s.direction === 'star' ? 'bg-[#FCE072] text-black' : 'bg-gray-500'
                   }`}>
                     {s.direction === 'right' ? '🎬' : s.direction === 'star' ? '⭐' : '✕'}
                   </div>
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
                   </td>
                   <td className="py-3 px-3" style={{ color: 'var(--text-secondary)' }}>{u.email}</td>
                   <td className="py-3 px-3">
-                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#FF8280]/10 text-[#FF8280] capitalize">
+                    <span className="text-xs font-semibold px-2 py-1 rounded-full bg-[#D4A85F]/10 text-[#7A5A18] capitalize">
                       {u.role}
                     </span>
                   </td>

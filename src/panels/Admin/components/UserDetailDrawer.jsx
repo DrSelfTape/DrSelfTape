@@ -106,7 +106,7 @@ export default function UserDetailDrawer({ user, onClose }) {
         <div className="flex-1 overflow-y-auto p-6">
           {/* Avatar + Name */}
           <div className="flex items-center gap-4 mb-6">
-            <div className="w-16 h-16 rounded-full bg-[#FF8280]/10 text-[#FF8280] flex items-center justify-center text-xl font-bold">
+            <div className="w-16 h-16 rounded-full bg-[#D4A85F]/10 text-[#7A5A18] flex items-center justify-center text-xl font-bold">
               {getInitials(user.name)}
             </div>
             <div>
@@ -189,7 +189,7 @@ export default function UserDetailDrawer({ user, onClose }) {
                       value={banReason}
                       onChange={(e) => setBanReason(e.target.value)}
                       placeholder="Reason for ban..."
-                      className="w-full px-3 py-2 border border-[#3A3A3A] rounded-lg text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+                      className="w-full px-3 py-2 border border-[#3A3A3A] rounded-lg text-sm resize-none h-20 focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
                     />
                     <button
                       onClick={handleBan}
@@ -222,7 +222,7 @@ export default function UserDetailDrawer({ user, onClose }) {
                   value={selectedRole}
                   onChange={(e) => handleRoleChange(e.target.value)}
                   disabled={actionLoading}
-                  className="w-full px-2 py-1.5 border border-[#3A3A3A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280] disabled:opacity-50"
+                  className="w-full px-2 py-1.5 border border-[#3A3A3A] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F] disabled:opacity-50"
                 >
                   {roles.map((r) => (
                     <option key={r} value={r}>

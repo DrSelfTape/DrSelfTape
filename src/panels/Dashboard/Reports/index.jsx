@@ -77,7 +77,7 @@ export default function Reports() {
           <p className="text-[#999999] max-w-md mb-6">Please try again.</p>
           <button
             onClick={() => dispatch(fetchReportsThunk())}
-            className="px-5 py-2.5 bg-[#FF8280] hover:bg-[#A040C8] text-white text-sm font-semibold rounded-lg transition-colors"
+            className="px-5 py-2.5 bg-[#D4A85F] hover:bg-[#C09850] text-white text-sm font-semibold rounded-lg transition-colors"
           >
             Retry
           </button>
@@ -113,7 +113,7 @@ export default function Reports() {
               onClick={() => setRange(opt.value)}
               className={`px-3 py-1.5 text-sm rounded-lg font-medium transition-colors ${
                 range === opt.value
-                  ? 'bg-[#FF8280] text-white'
+                  ? 'bg-[#D4A85F] text-white'
                   : 'bg-[#2A2A2A] text-[#999999] hover:bg-[#3A3A3A]'
               }`}
             >
@@ -287,7 +287,7 @@ export default function Reports() {
                         <span className="text-sm font-medium text-[#999999] w-40 truncate">{office.name}</span>
                         <div className="flex-1 bg-[#2A2A2A] rounded-full h-3 overflow-hidden">
                           <div
-                            className="bg-[#FF8280] h-full rounded-full transition-all"
+                            className="bg-[#D4A85F] h-full rounded-full transition-all"
                             style={{ width: `${(office.count / maxCount) * 100}%` }}
                           />
                         </div>
@@ -310,7 +310,7 @@ export default function Reports() {
             <CardContent className="flex flex-col items-center justify-center py-8">
               {r.busiest_month ? (
                 <>
-                  <div className="text-4xl font-bold text-[#FF8280] mb-2">{r.busiest_month}</div>
+                  <div className="text-4xl font-bold text-[#7A5A18] mb-2">{r.busiest_month}</div>
                   <p className="text-sm text-[#999999]">Your most active month for auditions</p>
                 </>
               ) : (

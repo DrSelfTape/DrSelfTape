@@ -47,9 +47,9 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
       {!hideHeader && (
         <div className="flex items-start justify-between mb-3 px-1">
           <div>
-            <h2 className="text-xl font-bold text-white leading-tight">Practice Mode</h2>
-            <p className="text-[#666666] text-xs mt-0.5">
-              Your lines are highlighted in <span className="text-[#FF8280]">coral</span>
+            <h2 className="aurora-display text-xl leading-tight" style={{ color: 'var(--aurora-text)' }}>Practice Mode</h2>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-sub)' }}>
+              Your lines are highlighted in <span style={{ color: 'var(--aurora-accent-deep)', fontWeight: 600 }}>gold</span>
             </p>
           </div>
           <div className="flex items-center gap-2 ml-3 shrink-0">
@@ -57,7 +57,13 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
             {onSelfTape && (
               <button
                 onClick={onSelfTape}
-                className="flex items-center gap-1.5 bg-[#FF8280] text-white px-3 py-2 rounded-lg font-semibold text-xs transition-colors cursor-pointer"
+                className="aurora-mono flex items-center gap-1.5 px-3 py-2 rounded-full transition-colors cursor-pointer"
+                style={{
+                  background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                  color: '#fff',
+                  fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+                  boxShadow: '0 4px 14px rgba(212,168,95,0.30)',
+                }}
               >
                 <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 4v-11l-4 4z"/>

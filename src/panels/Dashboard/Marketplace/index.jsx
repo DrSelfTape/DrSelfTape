@@ -47,7 +47,7 @@ function ReaderCard({ reader, onBook }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-5xl font-bold text-[#FF8280]/40">
+            <span className="text-5xl font-bold text-[#7A5A18]/40">
               {(reader.name || 'R')[0].toUpperCase()}
             </span>
           </div>
@@ -97,7 +97,7 @@ function ReaderCard({ reader, onBook }) {
                 onClick={() => setDuration(d.value)}
                 className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
                   duration === d.value
-                    ? 'bg-[#FF8280] text-[#0A0A0A]'
+                    ? 'bg-[#D4A85F] text-[#0A0A0A]'
                     : ''
                 }`}
                 style={
@@ -121,7 +121,7 @@ function ReaderCard({ reader, onBook }) {
             </span>
             <button
               onClick={() => onBook(reader, duration)}
-              className="bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
             >
               Book Session
             </button>
@@ -186,7 +186,7 @@ function ConfirmModal({ reader, duration, onConfirm, onClose, booking }) {
           <button
             onClick={onConfirm}
             disabled={booking}
-            className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
           >
             {booking ? 'Booking...' : 'Confirm'}
           </button>

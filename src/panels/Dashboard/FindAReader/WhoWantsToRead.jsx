@@ -69,7 +69,7 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
 
         {likesLoading && (
           <div className="flex h-60 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-[#FF8280]" />
+            <Loader2 className="h-8 w-8 animate-spin text-[#7A5A18]" />
           </div>
         )}
 

@@ -41,7 +41,7 @@ export default function DashboardLayout() {
           <img src="/logo.png" alt="" className="w-[500px] h-auto select-none" draggable={false} />
         </div>
         <div className="relative z-[1]">
-          <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" /></div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" /></div>}>
             <Outlet />
           </Suspense>
         </div>

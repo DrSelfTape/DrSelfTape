@@ -53,7 +53,7 @@ export default function DailyChallengeCard({ onNavigate }) {
           <div className="flex items-center gap-2">
             <span className="text-xl">{challenge.emoji}</span>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#FF8280]">Daily Challenge</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-[#7A5A18]">Daily Challenge</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -92,7 +92,7 @@ export default function DailyChallengeCard({ onNavigate }) {
           <button
             onClick={handleComplete}
             disabled={completing}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] text-sm font-bold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] text-sm font-bold transition-all disabled:opacity-50"
           >
             {completing ? 'Completing...' : `Complete (+${challenge.xp_reward} XP)`}
             <ChevronRight className="w-4 h-4" />

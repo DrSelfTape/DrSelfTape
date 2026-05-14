@@ -214,7 +214,7 @@ export default function TutorialChecklist({ onNavigate }) {
               style={{
                 width: '100%', marginTop: 8, padding: '14px', borderRadius: 14,
                 color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer',
-                background: 'linear-gradient(135deg, #FF8280, #22c55e)',
+                background: 'linear-gradient(135deg, #D4A85F, #9FE6B4)',
                 boxShadow: '0 4px 16px rgba(255, 130, 128,0.25)',
               }}
             >

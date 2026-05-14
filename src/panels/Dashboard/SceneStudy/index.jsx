@@ -179,7 +179,7 @@ export default function SceneStudy() {
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="bg-[#FF8280] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>
+                <span className="bg-[#D4A85F] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>
                 <h3 className="text-white font-bold text-base">Live Study Mode</h3>
               </div>
               <p className="text-gray-400 text-sm">
@@ -188,7 +188,7 @@ export default function SceneStudy() {
             </div>
             <button
               onClick={() => setStep('live')}
-              className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+              className="bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
@@ -207,7 +207,7 @@ export default function SceneStudy() {
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                 i <= currentStepIdx
-                  ? 'bg-[#FF8280] text-white'
+                  ? 'bg-[#D4A85F] text-white'
                   : 'bg-[#2A2A2A] text-[#666666]'
               }`}
             >
@@ -223,7 +223,7 @@ export default function SceneStudy() {
             {i < STEPS.length - 1 && (
               <div
                 className={`w-8 h-0.5 ${
-                  i < currentStepIdx ? 'bg-[#FF8280]' : 'bg-[#2A2A2A]'
+                  i < currentStepIdx ? 'bg-[#D4A85F]' : 'bg-[#2A2A2A]'
                 }`}
               />
             )}

@@ -187,7 +187,7 @@ export default function VideoTrimmer({ videoUrl, videoBlob, onSave, onCancel }) 
 
         {/* Start handle */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-8 rounded-sm bg-[#FF8280] cursor-ew-resize flex items-center justify-center"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-8 rounded-sm bg-[#D4A85F] cursor-ew-resize flex items-center justify-center"
           style={{ left: `calc(${startPct}% - 8px)`, zIndex: 10, touchAction: 'none' }}
           onMouseDown={handleMouseDown('start')}
           onTouchStart={handleMouseDown('start')}
@@ -198,7 +198,7 @@ export default function VideoTrimmer({ videoUrl, videoBlob, onSave, onCancel }) 
 
         {/* End handle */}
         <div
-          className="absolute top-1/2 -translate-y-1/2 w-4 h-8 rounded-sm bg-[#FF8280] cursor-ew-resize flex items-center justify-center"
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-8 rounded-sm bg-[#D4A85F] cursor-ew-resize flex items-center justify-center"
           style={{ left: `calc(${endPct}% - 8px)`, zIndex: 10, touchAction: 'none' }}
           onMouseDown={handleMouseDown('end')}
           onTouchStart={handleMouseDown('end')}
@@ -225,7 +225,7 @@ export default function VideoTrimmer({ videoUrl, videoBlob, onSave, onCancel }) 
         <button
           onClick={handleTrim}
           disabled={trimming}
-          className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
+          className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] disabled:opacity-50 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
         >
           {trimming ? (
             <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Trimming...</>

@@ -265,7 +265,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
               onClick={handleImport}
               disabled={selectedIds.size === 0 || importLoading}
               style={{
-                background: selectedIds.size > 0 ? 'linear-gradient(135deg, #FF8280, #e06e6c)' : 'rgba(255,255,255,0.05)',
+                background: selectedIds.size > 0 ? 'linear-gradient(135deg, #D4A85F, #7A5A18)' : 'rgba(255,255,255,0.05)',
                 color: selectedIds.size > 0 ? '#fff' : '#4a5a56',
                 border: 'none', borderRadius: 12, padding: '10px 24px', fontSize: 14, fontWeight: 600,
                 cursor: selectedIds.size > 0 ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s',

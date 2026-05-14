@@ -20,7 +20,7 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
         <button
           onClick={onUpgrade}
           className="w-full py-3.5 rounded-xl font-bold text-white text-sm mb-3"
-          style={{ background: 'linear-gradient(135deg, #FF8280, #9333ea)' }}
+          style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
         >
           Upgrade Plan 👑
         </button>

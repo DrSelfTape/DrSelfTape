@@ -41,7 +41,7 @@ export default function PostCallScreen({ partnerName, onClose }) {
       <div className="max-w-md w-full px-6">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 rounded-full bg-[#FF8280]/15 flex items-center justify-center mx-auto mb-4">
+          <div className="w-20 h-20 rounded-full bg-[#D4A85F]/15 flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">🎬</span>
           </div>
           <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)', fontFamily: "'Playfair Display', serif" }}>

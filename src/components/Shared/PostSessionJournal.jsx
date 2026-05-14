@@ -77,8 +77,8 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
         <div className="rounded-2xl p-8 text-center w-full max-w-sm mx-4" style={{ background: 'var(--bg-surface, #1E1E1E)' }}>
-          <div className="w-16 h-16 rounded-full bg-[#FF8280]/10 flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-[#FF8280]" />
+          <div className="w-16 h-16 rounded-full bg-[#D4A85F]/10 flex items-center justify-center mx-auto mb-4">
+            <Check className="w-8 h-8 text-[#7A5A18]" />
           </div>
           <p className="text-white font-bold text-lg">Journal saved</p>
           <p className="text-[#999] text-sm mt-1">Tracking your progress builds awareness.</p>
@@ -93,7 +93,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-[#FF8280]" />
+            <BookOpen className="w-5 h-5 text-[#7A5A18]" />
             <h2 className="text-lg font-bold text-white">How'd that go?</h2>
           </div>
           <button onClick={onClose} className="p-1 rounded-full hover:bg-[#2A2A2A] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
@@ -156,7 +156,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
           placeholder="What would you do differently next time? Any breakthroughs?"
           maxLength={500}
           rows={3}
-          className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#FF8280]"
+          className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#D4A85F]"
           style={{
             background: 'var(--bg-input, #2A2A2A)',
             border: '1px solid var(--border-active, #3A3A3A)',

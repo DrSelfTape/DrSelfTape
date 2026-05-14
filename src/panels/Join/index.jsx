@@ -55,7 +55,7 @@ export default function JoinPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0c0e14] flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-[#FF8280] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -81,7 +81,7 @@ export default function JoinPage() {
       {/* Logo / Brand */}
       <div className="mb-8 text-center">
         <h1 className="text-2xl font-bold text-white tracking-tight">
-          Dr <span className="text-[#FF8280]">Self Tape</span>
+          Dr <span className="text-[#7A5A18]">Self Tape</span>
         </h1>
         <p className="text-sm text-[#999999] mt-1">Rehearse together, anywhere</p>
       </div>
@@ -89,8 +89,8 @@ export default function JoinPage() {
       {/* Room Card */}
       <div className="w-full max-w-sm bg-[#13151d] rounded-2xl border border-white/[0.06] p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#FF8280]/10 flex items-center justify-center">
-            <TypeIcon size={20} className="text-[#FF8280]" />
+          <div className="w-10 h-10 rounded-xl bg-[#D4A85F]/10 flex items-center justify-center">
+            <TypeIcon size={20} className="text-[#7A5A18]" />
           </div>
           <div className="min-w-0">
             <h2 className="text-lg font-bold text-white truncate">{room.title}</h2>
@@ -102,7 +102,7 @@ export default function JoinPage() {
 
         {/* Badges */}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase bg-[#FF8280]/15 text-[#FF8280]">
+          <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase bg-[#D4A85F]/15 text-[#7A5A18]">
             {TYPE_LABELS[room.project_type] || room.project_type}
           </span>
           <span className="text-[10px] font-bold px-2.5 py-1 rounded-full uppercase bg-[#A7ECDA]/15 text-[#A7ECDA]">
@@ -120,7 +120,7 @@ export default function JoinPage() {
         <div className="space-y-2.5 pt-2">
           <button
             onClick={() => { window.location.href = '/login?redirect=/join/' + id; }}
-            className="w-full bg-[#FF8280] hover:bg-[#e06e6c] text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+            className="w-full bg-[#D4A85F] hover:bg-[#e06e6c] text-white font-semibold py-3 rounded-xl transition-colors text-sm"
           >
             Join with Account
           </button>

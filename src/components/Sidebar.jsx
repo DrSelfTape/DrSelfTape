@@ -87,7 +87,7 @@ function SidebarGroup({ group, pendingLikes, expanded, onToggle }) {
       <button
         onClick={onToggle}
         className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-colors cursor-pointer ${
-          isGroupActive ? 'text-[#FF8280]' : 'text-[#666] hover:text-[#999]'
+          isGroupActive ? 'text-[#7A5A18]' : 'text-[#666] hover:text-[#999]'
         }`}
       >
         <group.icon className="w-3.5 h-3.5 shrink-0" />
@@ -121,8 +121,8 @@ function SidebarItem({ item, pendingLikes }) {
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
           isActive
-            ? 'bg-[#FF8280]/10 text-[#FF8280]'
-            : 'hover:bg-[#FF8280]/5'
+            ? 'bg-[#D4A85F]/10 text-[#7A5A18]'
+            : 'hover:bg-[#D4A85F]/5'
         }`
       }
       style={({ isActive }) => isActive ? {} : { color: 'var(--text-secondary)' }}
@@ -132,7 +132,7 @@ function SidebarItem({ item, pendingLikes }) {
       {badge && (
         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
           /^\d+$/.test(badge)
-            ? 'bg-[#FF8280] text-white min-w-[20px] text-center'
+            ? 'bg-[#D4A85F] text-white min-w-[20px] text-center'
             : badge === 'ADMIN'
               ? 'bg-amber-500/10 text-amber-400'
               : 'bg-emerald-500/10 text-emerald-400'
@@ -202,8 +202,8 @@ export default function Sidebar() {
     <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r flex flex-col transition-colors duration-300" style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border-default)' }}>
       {/* Logo */}
       <div className="h-16 flex items-center px-6 border-b gap-3" style={{ borderColor: 'var(--border-default)' }}>
-        <div className="w-8 h-8 bg-[#FF8280]/10 rounded-lg flex items-center justify-center">
-          <Clapperboard className="w-4 h-4 text-[#FF8280]" />
+        <div className="w-8 h-8 bg-[#D4A85F]/10 rounded-lg flex items-center justify-center">
+          <Clapperboard className="w-4 h-4 text-[#7A5A18]" />
         </div>
         <span className="text-base font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Dr. Self Tape</span>
       </div>
@@ -240,7 +240,7 @@ export default function Sidebar() {
             className="w-9 h-9 shrink-0"
           />
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-sm font-medium text-white truncate group-hover:text-[#FF8280] transition-colors">
+            <p className="text-sm font-medium text-white truncate group-hover:text-[#7A5A18] transition-colors">
               {displayName}
             </p>
             <p className="text-xs text-[#666666] truncate">{email}</p>

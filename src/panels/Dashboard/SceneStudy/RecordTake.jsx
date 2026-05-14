@@ -206,7 +206,7 @@ export default function RecordTake({ onBack }) {
             <button
               onClick={startRecording}
               disabled={!!cameraError}
-              className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="6" />
@@ -239,7 +239,7 @@ export default function RecordTake({ onBack }) {
             {/* Save to Phone — primary CTA */}
             <button
               onClick={() => handleSaveToPhone()}
-              className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
@@ -250,7 +250,7 @@ export default function RecordTake({ onBack }) {
             {/* Trim */}
             <button
               onClick={() => setStatus('trimming')}
-              className="flex-1 bg-[#1E1E1E] border border-[rgba(10,10,10,0.14)] hover:border-[#FF8280]/50 text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 bg-[#1E1E1E] border border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F]/50 text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               ✂️ Trim
             </button>

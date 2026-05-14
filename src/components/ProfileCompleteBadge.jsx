@@ -47,7 +47,7 @@ export default function ProfileCompleteBadge({ show, onClose }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
       <div
-        className="pointer-events-auto relative bg-[#1A1A2E] border border-[#FF8280]/40 rounded-2xl px-10 py-8 flex flex-col items-center gap-4 shadow-2xl animate-bounce-in"
+        className="pointer-events-auto relative bg-[#1A1A2E] border border-[#D4A85F]/40 rounded-2xl px-10 py-8 flex flex-col items-center gap-4 shadow-2xl animate-bounce-in"
         style={{ animation: 'badgePop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
       >
         {/* Close */}
@@ -64,11 +64,11 @@ export default function ProfileCompleteBadge({ show, onClose }) {
             <CheckCircle className="w-12 h-12 text-white" strokeWidth={1.5} />
           </div>
           {/* Glow ring */}
-          <div className="absolute inset-0 rounded-full bg-[#FF8280]/20 animate-ping" />
+          <div className="absolute inset-0 rounded-full bg-[#D4A85F]/20 animate-ping" />
         </div>
 
         <div className="text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#FF8280] mb-1">Achievement Unlocked</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#7A5A18] mb-1">Achievement Unlocked</p>
           <h2 className="text-2xl font-bold text-white">Profile Complete!</h2>
           <p className="text-sm text-[#999] mt-1">Your actor profile is live and ready for casting</p>
         </div>

@@ -79,10 +79,10 @@ export default function NotificationBell({ onNavigate }) {
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border-default)' }}>
         <div className="flex items-center gap-2">
-          <Bell className="w-4 h-4 text-[#FF8280]" />
+          <Bell className="w-4 h-4 text-[#7A5A18]" />
           <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
           {unread.length > 0 && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#FF8280]/15 text-[#FF8280]">{unread.length} new</span>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-[#D4A85F]/15 text-[#7A5A18]">{unread.length} new</span>
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ export default function NotificationBell({ onNavigate }) {
       <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <div className="w-6 h-6 border-2 border-[#FF8280]/30 border-t-[#FF8280] rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#D4A85F]/30 border-t-[#FF8280] rounded-full animate-spin" />
           </div>
         )}
         {!loading && sorted.length === 0 && (
@@ -142,7 +142,7 @@ export default function NotificationBell({ onNavigate }) {
                   <p className={`text-sm leading-snug ${isUnread ? 'font-semibold' : 'font-medium'}`} style={{ color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
                     {notif.title}
                   </p>
-                  {isUnread && <span className="w-2.5 h-2.5 rounded-full bg-[#FF8280] shrink-0 mt-1.5" />}
+                  {isUnread && <span className="w-2.5 h-2.5 rounded-full bg-[#D4A85F] shrink-0 mt-1.5" />}
                 </div>
                 {notif.message && <p className="text-xs mt-1 line-clamp-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{notif.message}</p>}
                 <p className="text-[11px] mt-1.5 font-medium" style={{ color: 'var(--text-dim)' }}>{timeAgo(notif.created_at)}</p>

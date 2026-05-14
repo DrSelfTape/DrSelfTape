@@ -130,7 +130,7 @@ export default function Membership() {
           onClick={() => setBilling('monthly')}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
             billing === 'monthly'
-              ? 'bg-[#FF8280] text-[#0A0A0A]'
+              ? 'bg-[#D4A85F] text-[#0A0A0A]'
               : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.5)] border border-[rgba(167,236,218,0.1)]'
           }`}
         >
@@ -140,7 +140,7 @@ export default function Membership() {
           onClick={() => setBilling('yearly')}
           className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
             billing === 'yearly'
-              ? 'bg-[#FF8280] text-[#0A0A0A]'
+              ? 'bg-[#D4A85F] text-[#0A0A0A]'
               : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.5)] border border-[rgba(167,236,218,0.1)]'
           }`}
         >

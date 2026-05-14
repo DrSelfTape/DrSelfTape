@@ -82,12 +82,12 @@ export default function UpcomingCallbacks() {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Calendar size={16} className="text-[#FF8280]" />
+            <Calendar size={16} className="text-[#7A5A18]" />
             Upcoming Callbacks
           </CardTitle>
           <button
             onClick={() => navigate('/dashboard/auditions')}
-            className="text-xs text-[#FF8280] hover:text-[#A040C8] font-medium flex items-center gap-0.5 transition-colors"
+            className="text-xs text-[#7A5A18] hover:text-[#A040C8] font-medium flex items-center gap-0.5 transition-colors"
           >
             View all <ChevronRight size={12} />
           </button>
@@ -124,7 +124,7 @@ export default function UpcomingCallbacks() {
                 className={`
                   shrink-0 flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full
                   ${dl.urgent
-                    ? 'bg-[#FF8280] text-white'
+                    ? 'bg-[#D4A85F] text-white'
                     : 'bg-[#2A2A2A] text-[#999999]'
                   }
                 `}

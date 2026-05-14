@@ -43,7 +43,7 @@ const ReaderListItem = ({ match, onClick }) => {
               {other?.name || 'Actor'}
             </h4>
             {unionLabel && (
-              <span className="shrink-0 rounded-full bg-[#FF8280]/15 px-2 py-0.5 text-[10px] font-semibold text-[#FF8280] border border-[#FF8280]/30">
+              <span className="shrink-0 rounded-full bg-[#D4A85F]/15 px-2 py-0.5 text-[10px] font-semibold text-[#7A5A18] border border-[#D4A85F]/30">
                 {unionLabel}
               </span>
             )}
@@ -111,7 +111,7 @@ const ReaderListItem = ({ match, onClick }) => {
       <button
         type="button"
         onClick={onClick}
-        className="mt-4 w-full rounded-lg bg-[#FF8280] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#A040C8] flex items-center justify-center gap-2"
+        className="mt-4 w-full rounded-lg bg-[#D4A85F] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#C09850] flex items-center justify-center gap-2"
       >
         <MessageCircle size={13} />
         Open Green Room

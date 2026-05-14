@@ -306,7 +306,7 @@ export default function Submissions() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="text-sm border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-3 py-1.5 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none"
+          className="text-sm border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-3 py-1.5 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none"
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -450,7 +450,7 @@ export default function Submissions() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => openEdit(sub)}
-                    className="text-xs text-[rgba(10,10,10,0.4)] hover:text-[#FF8280] transition-colors cursor-pointer"
+                    className="text-xs text-[rgba(10,10,10,0.4)] hover:text-[#7A5A18] transition-colors cursor-pointer"
                   >
                     Edit
                   </button>
@@ -509,7 +509,7 @@ export default function Submissions() {
                     setForm({ ...form, project_name: e.target.value })
                   }
                   placeholder="e.g. The Last Chapter"
-                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                 />
               </div>
 
@@ -523,7 +523,7 @@ export default function Submissions() {
                   value={form.role}
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
                   placeholder="e.g. Detective Monroe"
-                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                 />
               </div>
 
@@ -540,7 +540,7 @@ export default function Submissions() {
                       setForm({ ...form, casting_office: e.target.value })
                     }
                     placeholder="e.g. Telsey"
-                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                   />
                 </div>
                 <div>
@@ -554,7 +554,7 @@ export default function Submissions() {
                       setForm({ ...form, casting_director: e.target.value })
                     }
                     placeholder="e.g. Jane Smith"
-                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                   />
                 </div>
               </div>
@@ -569,7 +569,7 @@ export default function Submissions() {
                   onChange={(e) =>
                     setForm({ ...form, submitted_via: e.target.value })
                   }
-                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                 >
                   {Object.entries(VIA_LABELS).map(([val, label]) => (
                     <option key={val} value={val}>
@@ -591,7 +591,7 @@ export default function Submissions() {
                     onChange={(e) =>
                       setForm({ ...form, submitted_at: e.target.value })
                     }
-                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                   />
                 </div>
                 <div>
@@ -604,7 +604,7 @@ export default function Submissions() {
                     onChange={(e) =>
                       setForm({ ...form, deadline: e.target.value })
                     }
-                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                    className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                   />
                 </div>
               </div>
@@ -621,7 +621,7 @@ export default function Submissions() {
                     setForm({ ...form, video_url: e.target.value })
                   }
                   placeholder="https://..."
-                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                 />
               </div>
 
@@ -633,7 +633,7 @@ export default function Submissions() {
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                 >
                   {Object.entries(STATUS_LABELS).map(([val, label]) => (
                     <option key={val} value={val}>
@@ -653,7 +653,7 @@ export default function Submissions() {
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                   rows={3}
                   placeholder="Any notes about this submission..."
-                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm resize-none"
+                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm resize-none"
                 />
               </div>
 
@@ -668,7 +668,7 @@ export default function Submissions() {
                   onChange={(e) =>
                     setForm({ ...form, follow_up_date: e.target.value })
                   }
-                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#FF8280] focus:ring-2 focus:ring-[#FF8280]/20 outline-none text-sm"
+                  className="w-full border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-4 py-3 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none text-sm"
                 />
               </div>
 
@@ -684,7 +684,7 @@ export default function Submissions() {
                 <button
                   type="submit"
                   disabled={createLoading || !form.project_name.trim()}
-                  className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-4 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-4 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {createLoading
                     ? 'Saving...'

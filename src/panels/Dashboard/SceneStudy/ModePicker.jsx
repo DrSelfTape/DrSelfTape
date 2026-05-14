@@ -11,10 +11,10 @@ export default function ModePicker({ prePauseSeconds, setPrePauseSeconds, onPreT
           {/* Pre-Timed card */}
           <div
             onClick={onPreTimed}
-            className="w-full bg-white border-2 border-[#FF8280]/40 hover:border-[#FF8280] rounded-2xl p-6 cursor-pointer transition-all"
+            className="w-full bg-white border-2 border-[#D4A85F]/40 hover:border-[#D4A85F] rounded-2xl p-6 cursor-pointer transition-all"
           >
             <div className="flex items-start gap-4 mb-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#FF8280]/15 flex items-center justify-center text-3xl shrink-0">
+              <div className="w-14 h-14 rounded-2xl bg-[#D4A85F]/15 flex items-center justify-center text-3xl shrink-0">
                 ⏱️
               </div>
               <div className="flex-1">
@@ -25,14 +25,14 @@ export default function ModePicker({ prePauseSeconds, setPrePauseSeconds, onPreT
               </div>
             </div>
             <div className="flex items-center gap-3 flex-wrap mb-4">
-              <span className="text-xs text-[#FF8280] font-semibold">Pause after AI line:</span>
+              <span className="text-xs text-[#7A5A18] font-semibold">Pause after AI line:</span>
               {[2, 3, 5, 8].map((s) => (
                 <span
                   key={s}
                   onClick={(e) => { e.stopPropagation(); setPrePauseSeconds(s); }}
                   className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer transition-all ${
                     prePauseSeconds === s
-                      ? 'bg-[#FF8280] text-[#0A0A0A]'
+                      ? 'bg-[#D4A85F] text-[#0A0A0A]'
                       : 'bg-[#F4F4EE] text-[#666] hover:text-[#0A0A0A]'
                   }`}
                 >
@@ -41,9 +41,9 @@ export default function ModePicker({ prePauseSeconds, setPrePauseSeconds, onPreT
               ))}
             </div>
             <div className="flex gap-2 flex-wrap">
-              <span className="text-xs bg-[#FF8280]/10 text-[#FF8280] px-2 py-1 rounded-full">No mic required</span>
-              <span className="text-xs bg-[#FF8280]/10 text-[#FF8280] px-2 py-1 rounded-full">Auto-advances</span>
-              <span className="text-xs bg-[#FF8280]/10 text-[#FF8280] px-2 py-1 rounded-full">Best for memorization</span>
+              <span className="text-xs bg-[#D4A85F]/10 text-[#7A5A18] px-2 py-1 rounded-full">No mic required</span>
+              <span className="text-xs bg-[#D4A85F]/10 text-[#7A5A18] px-2 py-1 rounded-full">Auto-advances</span>
+              <span className="text-xs bg-[#D4A85F]/10 text-[#7A5A18] px-2 py-1 rounded-full">Best for memorization</span>
             </div>
           </div>
 

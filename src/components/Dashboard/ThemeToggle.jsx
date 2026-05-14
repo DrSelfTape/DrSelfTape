@@ -16,7 +16,7 @@ export default function ThemeToggle({ compact = false }) {
         }}
         title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       >
-        {isDark ? <Sun className="w-4 h-4 text-[#FCE072]" /> : <Moon className="w-4 h-4 text-[#FF8280]" />}
+        {isDark ? <Sun className="w-4 h-4 text-[#FCE072]" /> : <Moon className="w-4 h-4 text-[#7A5A18]" />}
       </button>
     );
   }
@@ -31,7 +31,7 @@ export default function ThemeToggle({ compact = false }) {
         color: 'var(--text-secondary)',
       }}
     >
-      {isDark ? <Sun className="w-3.5 h-3.5 text-[#FCE072]" /> : <Moon className="w-3.5 h-3.5 text-[#FF8280]" />}
+      {isDark ? <Sun className="w-3.5 h-3.5 text-[#FCE072]" /> : <Moon className="w-3.5 h-3.5 text-[#7A5A18]" />}
       {isDark ? 'Light' : 'Dark'}
     </button>
   );

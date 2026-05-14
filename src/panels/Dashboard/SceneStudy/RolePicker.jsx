@@ -44,13 +44,13 @@ export default function RolePicker({
                 onClick={() => onSelectRole(name)}
                 className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                   isSelected
-                    ? 'border-[#FF8280] bg-[#FF8280]/10 text-[#FF8280] shadow-sm'
+                    ? 'border-[#D4A85F] bg-[#D4A85F]/10 text-[#7A5A18] shadow-sm'
                     : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] text-[rgba(10,10,10,0.62)] hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <svg
-                    className={`w-5 h-5 ${isSelected ? 'text-[#FF8280]' : 'text-[rgba(10,10,10,0.4)]'}`}
+                    className={`w-5 h-5 ${isSelected ? 'text-[#7A5A18]' : 'text-[rgba(10,10,10,0.4)]'}`}
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -65,7 +65,7 @@ export default function RolePicker({
                   {name}
                 </div>
                 {isSelected && (
-                  <p className="text-[10px] mt-1 text-[#FF8280] font-normal">Your role</p>
+                  <p className="text-[10px] mt-1 text-[#7A5A18] font-normal">Your role</p>
                 )}
               </button>
             );
@@ -93,13 +93,13 @@ export default function RolePicker({
               onClick={() => onSelectVoice && onSelectVoice(v.id)}
               className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
                 isSelected
-                  ? 'border-[#FF8280] bg-[#FF8280]/10 shadow-sm'
+                  ? 'border-[#D4A85F] bg-[#D4A85F]/10 shadow-sm'
                   : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] hover:border-gray-300'
               }`}
             >
               <span className="text-2xl">{v.emoji}</span>
               <div className="flex-1 min-w-0">
-                <div className={`font-semibold text-sm ${isSelected ? 'text-[#FF8280]' : 'text-[#0A0A0A]'}`}>
+                <div className={`font-semibold text-sm ${isSelected ? 'text-[#7A5A18]' : 'text-[#0A0A0A]'}`}>
                   {v.label}
                 </div>
                 <div className="text-xs text-[rgba(10,10,10,0.62)] truncate">{v.desc}</div>
@@ -123,7 +123,7 @@ export default function RolePicker({
         <button
           onClick={onStart}
           disabled={!selectedRole}
-          className="flex-1 bg-[#FF8280] hover:bg-[#A040C8] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Start Practice
         </button>

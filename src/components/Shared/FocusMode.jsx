@@ -63,7 +63,7 @@ export default function FocusMode({ onComplete }) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80">
         <div className="text-center px-8 max-w-sm">
-          <div className="w-20 h-20 rounded-full bg-[#FF8280]/10 border border-[#FF8280]/20 flex items-center justify-center mx-auto mb-6">
+          <div className="w-20 h-20 rounded-full bg-[#D4A85F]/10 border border-[#D4A85F]/20 flex items-center justify-center mx-auto mb-6">
             <span className="text-4xl">🧘</span>
           </div>
           <h2 className="text-white font-bold text-xl mb-2">Focus Mode</h2>
@@ -73,7 +73,7 @@ export default function FocusMode({ onComplete }) {
           <button
             onClick={start}
             className="flex items-center justify-center gap-2 mx-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-[#FF8280]/30"
-            style={{ background: 'linear-gradient(135deg, #FF8280, #E88BF5)' }}
+            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
           >
             <Play className="w-4 h-4" />
             Begin
@@ -134,7 +134,7 @@ export default function FocusMode({ onComplete }) {
       {/* Progress bar */}
       <div className="w-48 h-1 bg-[#2A2A2A] rounded-full mt-4 overflow-hidden">
         <div
-          className="h-full bg-[#FF8280] rounded-full transition-all"
+          className="h-full bg-[#D4A85F] rounded-full transition-all"
           style={{ width: `${((TOTAL_SECONDS - secondsLeft) / TOTAL_SECONDS) * 100}%`, transition: 'width 1s linear' }}
         />
       </div>

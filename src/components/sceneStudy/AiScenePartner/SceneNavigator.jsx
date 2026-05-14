@@ -161,7 +161,7 @@ const SceneNavigator = ({
               width: `${sceneProgress}%`,
               background: sceneComplete
                 ? 'linear-gradient(90deg, #22C55E, #4ADE80)'
-                : 'linear-gradient(90deg, #FF8280, #E88BF5)',
+                : 'linear-gradient(135deg, #D4A85F, #7A5A18)',
             }}
           />
         </div>
@@ -240,7 +240,7 @@ const SceneNavigator = ({
             className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ml-auto disabled:opacity-40"
             style={{
               background: sceneComplete
-                ? 'linear-gradient(135deg, #FF8280, #E88BF5)'
+                ? 'linear-gradient(135deg, #D4A85F, #7A5A18)'
                 : '#1A1A1A',
               border: sceneComplete ? 'none' : '1px solid #2A2A2A',
               color: sceneComplete ? '#fff' : '#666666',

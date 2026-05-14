@@ -91,8 +91,8 @@ export default function PermissionsModal({
         <div className="p-6 space-y-4">
           {requireMic && (
             <div className="flex items-start gap-4 p-4 rounded-xl bg-[#2A2A2A] border border-[#3A3A3A]">
-              <div className="w-10 h-10 rounded-full bg-[#FF8280]/10 flex items-center justify-center flex-shrink-0">
-                <Mic className="w-5 h-5 text-[#FF8280]" />
+              <div className="w-10 h-10 rounded-full bg-[#D4A85F]/10 flex items-center justify-center flex-shrink-0">
+                <Mic className="w-5 h-5 text-[#7A5A18]" />
               </div>
               <div>
                 <div className="font-semibold text-white">Microphone</div>
@@ -104,8 +104,8 @@ export default function PermissionsModal({
           )}
           {requireCamera && (
             <div className="flex items-start gap-4 p-4 rounded-xl bg-[#2A2A2A] border border-[#3A3A3A]">
-              <div className="w-10 h-10 rounded-full bg-[#FF8280]/10 flex items-center justify-center flex-shrink-0">
-                <Video className="w-5 h-5 text-[#FF8280]" />
+              <div className="w-10 h-10 rounded-full bg-[#D4A85F]/10 flex items-center justify-center flex-shrink-0">
+                <Video className="w-5 h-5 text-[#7A5A18]" />
               </div>
               <div>
                 <div className="font-semibold text-white">Camera</div>
@@ -157,7 +157,7 @@ export default function PermissionsModal({
           <button
             onClick={handleAllow}
             disabled={status === 'requesting'}
-            className="flex-1 px-4 py-3 rounded-xl bg-[#FF8280] text-white font-semibold hover:bg-[#A040C8] disabled:opacity-60 disabled:cursor-not-allowed transition-colors text-sm flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 rounded-xl bg-[#D4A85F] text-white font-semibold hover:bg-[#C09850] disabled:opacity-60 disabled:cursor-not-allowed transition-colors text-sm flex items-center justify-center gap-2"
           >
             {status === 'requesting' ? (
               <>

@@ -98,7 +98,7 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
                       col.render(row)
                     ) : col.type === 'avatar' ? (
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-[#FF8280]/10 text-[#FF8280] flex items-center justify-center text-xs font-bold">
+                        <div className="w-8 h-8 rounded-full bg-[#D4A85F]/10 text-[#7A5A18] flex items-center justify-center text-xs font-bold">
                           {getInitials(row[col.nameKey || 'name'])}
                         </div>
                         <span className="font-medium text-white">{row[col.nameKey || 'name']}</span>
@@ -142,7 +142,7 @@ export default function AdminUserTable({ columns, data = [], onRowClick, emptyMe
               <button
                 key={i}
                 onClick={() => setPage(i)}
-                className={`w-8 h-8 rounded-lg text-sm font-medium ${page === i ? 'bg-[#FF8280] text-white' : 'hover:bg-[#2A2A2A] text-[#999999]'}`}
+                className={`w-8 h-8 rounded-lg text-sm font-medium ${page === i ? 'bg-[#D4A85F] text-white' : 'hover:bg-[#2A2A2A] text-[#999999]'}`}
               >
                 {i + 1}
               </button>

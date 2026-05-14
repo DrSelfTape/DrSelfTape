@@ -180,14 +180,14 @@ export default function DashboardHome() {
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_rgba(255, 130, 128,0.1),_transparent_60%)]" />
         <div className="relative flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-[#FF8280]/10 flex items-center justify-center shrink-0">
-            <nextStep.icon className="w-7 h-7 text-[#FF8280]" />
+          <div className="w-14 h-14 rounded-2xl bg-[#D4A85F]/10 flex items-center justify-center shrink-0">
+            <nextStep.icon className="w-7 h-7 text-[#7A5A18]" />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-white text-xl font-bold">{nextStep.title}</h2>
             <p className="text-gray-400 text-sm mt-1">{nextStep.description}</p>
           </div>
-          <button className="bg-[#FF8280] hover:bg-[#A040C8] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer text-sm shrink-0">
+          <button className="bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer text-sm shrink-0">
             {nextStep.cta} &rarr;
           </button>
         </div>
@@ -203,7 +203,7 @@ export default function DashboardHome() {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className="bg-[#13151d] border border-[#2a2a4a] rounded-2xl p-4 text-center hover:border-[#FF8280]/30 hover:bg-[#1a1c26] transition-all cursor-pointer group"
+            className="bg-[#13151d] border border-[#2a2a4a] rounded-2xl p-4 text-center hover:border-[#D4A85F]/30 hover:bg-[#1a1c26] transition-all cursor-pointer group"
           >
             <span className="text-2xl block mb-2">{item.icon}</span>
             <p className="text-white text-sm font-semibold">{item.label}</p>
@@ -228,7 +228,7 @@ export default function DashboardHome() {
           {/* Collapsible analytics */}
           <button
             onClick={() => setShowAnalytics(!showAnalytics)}
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest cursor-pointer hover:text-[#FF8280] transition-colors"
+            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest cursor-pointer hover:text-[#7A5A18] transition-colors"
             style={{ color: 'var(--text-secondary, #8a9a96)' }}
           >
             Analytics
@@ -288,8 +288,8 @@ export default function DashboardHome() {
       ) : (
         /* ── Empty State for New Users ── */
         <div className="bg-[#13151d] border border-[#2a2a4a] rounded-2xl p-8 text-center">
-          <div className="w-12 h-12 mx-auto rounded-full bg-[#FF8280]/10 flex items-center justify-center mb-4">
-            <Target className="w-6 h-6 text-[#FF8280]" />
+          <div className="w-12 h-12 mx-auto rounded-full bg-[#D4A85F]/10 flex items-center justify-center mb-4">
+            <Target className="w-6 h-6 text-[#7A5A18]" />
           </div>
           <h3 className="text-white font-semibold text-lg">Your stats will appear here</h3>
           <p className="text-[#888] text-sm mt-2 max-w-md mx-auto">
@@ -297,7 +297,7 @@ export default function DashboardHome() {
           </p>
           <button
             onClick={() => navigate('/dashboard/auditions')}
-            className="mt-4 text-[#FF8280] text-sm font-semibold hover:underline cursor-pointer"
+            className="mt-4 text-[#7A5A18] text-sm font-semibold hover:underline cursor-pointer"
           >
             Log your first audition &rarr;
           </button>
@@ -310,7 +310,7 @@ export default function DashboardHome() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold">Recent Submissions</CardTitle>
-              <button onClick={() => navigate('/dashboard/submissions')} className="text-xs text-[#FF8280] hover:underline font-medium">View all &rarr;</button>
+              <button onClick={() => navigate('/dashboard/submissions')} className="text-xs text-[#7A5A18] hover:underline font-medium">View all &rarr;</button>
             </div>
           </CardHeader>
           <CardContent>

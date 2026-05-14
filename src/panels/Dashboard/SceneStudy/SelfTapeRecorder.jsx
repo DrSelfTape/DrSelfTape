@@ -328,7 +328,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
                     borderLeft: isCurrent ? '3px solid #FF8280' : '3px solid transparent',
                     transition: 'all 0.3s',
                   }}>
-                    <span className={`text-xs font-bold uppercase tracking-[2px] ${isUser ? 'text-[#FF8280]' : 'text-[#A7ECDA]'}`}>
+                    <span className={`text-xs font-bold uppercase tracking-[2px] ${isUser ? 'text-[#7A5A18]' : 'text-[#A7ECDA]'}`}>
                       {line.character}
                       {!isUser && isCurrent && aiVoiceEnabled && <span className="ml-2 text-[10px] normal-case tracking-normal">🔊 speaking...</span>}
                     </span>
@@ -419,7 +419,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
             </button>
 
             <button onClick={handleSave} disabled={saving || saved} className="flex flex-col items-center gap-1.5">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${saved ? 'bg-emerald-500' : 'bg-[#FF8280]'}`}>
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${saved ? 'bg-emerald-500' : 'bg-[#D4A85F]'}`}>
                 {saved ? <Video className="w-6 h-6 text-white" /> : saving ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-6 h-6 text-white" />}
               </div>
               <span className="text-[11px] text-white/60 font-medium">{saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}</span>

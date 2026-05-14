@@ -94,7 +94,7 @@ export default function AdminMessageThread({ message }) {
             key={reply.id || idx}
             className={`rounded-xl p-4 ${
               reply.sender === 'admin'
-                ? 'bg-[#FF8280]/5 ml-8 border border-[#FF8280]/10'
+                ? 'bg-[#D4A85F]/5 ml-8 border border-[#D4A85F]/10'
                 : 'bg-[#1E1E1E] mr-8'
             }`}
           >
@@ -128,12 +128,12 @@ export default function AdminMessageThread({ message }) {
               onKeyDown={handleKeyDown}
               placeholder="Type your reply..."
               rows={2}
-              className="flex-1 px-4 py-2.5 border border-[#3A3A3A] rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#FF8280]/30 focus:border-[#FF8280]"
+              className="flex-1 px-4 py-2.5 border border-[#3A3A3A] rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F]"
             />
             <button
               onClick={handleSendReply}
               disabled={sending || !replyContent.trim()}
-              className="self-end px-4 py-2.5 bg-[#FF8280] text-white rounded-xl hover:bg-[#FF8280]/90 disabled:opacity-50 transition-colors flex items-center gap-2"
+              className="self-end px-4 py-2.5 bg-[#D4A85F] text-white rounded-xl hover:bg-[#D4A85F]/90 disabled:opacity-50 transition-colors flex items-center gap-2"
             >
               <Send className="w-4 h-4" />
               <span className="text-sm font-medium">Send</span>
