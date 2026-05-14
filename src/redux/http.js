@@ -53,18 +53,32 @@ axiosInstance.interceptors.response.use(
       // authenticated AND wasn't hitting a public auth endpoint.
       if (hadAuthHeader && !isPublicAuth && !sessionExpiredHandled) {
         sessionExpiredHandled = true;
-        const [{ store, persistor }, { logoutUser }, { showSnackbar }] = await Promise.all([
-          import('./store'),
-          import('./features/auth/authSlice'),
-          import('./features/snackbarSlice/snackbarSlice'),
-        ]);
-        store.dispatch(logoutUser());
-        setAuthToken(null);
-        store.dispatch(showSnackbar({
-          message: 'Your session has expired. Please log in again.',
-          variant: 'error',
-        }));
-        await persistor.purge();
+        // Sequential awaits, not Promise.all — the modules form a small
+        // circular dep graph (store ↔ http.js indirectly through the
+        // auth slice), and parallel evaluation can leave one module's
+        // exports as null on the first 401 of a session. Sequential
+        // calls let each module fully initialize before we read it.
+        try {
+          const storeMod = await import('./store');
+          const authMod = await import('./features/auth/authSlice');
+          const snackMod = await import('./features/snackbarSlice/snackbarSlice');
+          const store = storeMod?.store;
+          const persistor = storeMod?.persistor;
+          if (store && persistor) {
+            store.dispatch(authMod.logoutUser());
+            setAuthToken(null);
+            store.dispatch(snackMod.showSnackbar({
+              message: 'Your session has expired. Please log in again.',
+              variant: 'error',
+            }));
+            await persistor.purge();
+          }
+        } catch (e) {
+          // If the dynamic imports themselves fail (stale chunk after
+          // deploy, network hiccup), we still want to bounce the user
+          // to /login rather than crash the app.
+          console.warn('Session-expired handler failed:', e);
+        }
         // Full reload to /login — clears any in-memory state from the
         // previous user and avoids partially-rendered protected views.
         if (!window.location.pathname.startsWith('/login')) {
