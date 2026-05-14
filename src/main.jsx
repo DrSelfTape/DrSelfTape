@@ -20,18 +20,22 @@ initSentry();
 
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
-    <ThemeProvider>
-      <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
+    <Provider store={store}>
+      <PersistGate loading={null} persistor={persistor}>
+        {/* ThemeProvider must sit INSIDE Provider — it now uses
+            useSelector/useDispatch to sync theme with the server-
+            backed userSettings slice. Outside Provider, the Redux
+            context is null and its hooks crash on first render. */}
+        <ThemeProvider>
           <BrowserRouter>
             <ErrorBoundary>
               <App />
               <Toastbar />
             </ErrorBoundary>
           </BrowserRouter>
-        </PersistGate>
-      </Provider>
-    </ThemeProvider>
+        </ThemeProvider>
+      </PersistGate>
+    </Provider>
   </ErrorBoundary>
 )
 
