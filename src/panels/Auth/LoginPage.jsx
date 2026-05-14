@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../redux/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { getFirstRouteByRole } from "../../routes/routeHelpers";
-import { logo } from "../../assets/images";
+import { loginLogo } from "../../assets/images";
 
 const MINT = "#D4A85F";
 const GOLD = "#F0D097";
@@ -17,7 +17,7 @@ const TEXT = "#0A0A0A";
 const TEXT2 = "rgba(10,10,10,0.62)";
 const TEXT3 = "rgba(10,10,10,0.40)";
 
-const LOGO_SRC = logo;
+const LOGO_SRC = loginLogo;
 
 function EyeIcon({ open }) {
   return (
