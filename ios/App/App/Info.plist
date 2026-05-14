@@ -30,7 +30,7 @@
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
-		<string>armv7</string>
+		<string>arm64</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -53,6 +53,12 @@
 	<string>Dr Self Tape needs microphone access for live scene readings and voice rehearsals.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Dr Self Tape needs photo access to upload your headshot.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Dr Self Tape saves your self-tape recordings to your photo library.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Allow Dr Self Tape to use anonymous usage data so we can improve features you actually use.</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
