@@ -45,7 +45,7 @@ export default function RolePicker({
                 className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                   isSelected
                     ? 'border-[#D4A85F] bg-[#D4A85F]/10 text-[#7A5A18] shadow-sm'
-                    : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] text-[rgba(10,10,10,0.62)] hover:border-gray-300'
+                    : 'border-[rgba(10,10,10,0.14)] bg-white text-[rgba(10,10,10,0.62)] hover:border-gray-300'
                 }`}
               >
                 <div className="flex items-center justify-center gap-2">
@@ -94,7 +94,7 @@ export default function RolePicker({
               className={`flex items-center gap-3 p-3 rounded-xl border-2 text-left transition-all cursor-pointer ${
                 isSelected
                   ? 'border-[#D4A85F] bg-[#D4A85F]/10 shadow-sm'
-                  : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] hover:border-gray-300'
+                  : 'border-[rgba(10,10,10,0.14)] bg-white hover:border-gray-300'
               }`}
             >
               <span className="text-2xl">{v.emoji}</span>

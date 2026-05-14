@@ -137,7 +137,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
       ref={setNodeRef}
       style={style}
       className={`
-        group relative bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] shadow-sm
+        group relative bg-white rounded-xl border border-[#2A2A2A] shadow-sm
         transition-all duration-200 cursor-pointer
         ${isDragging ? 'shadow-xl opacity-90 rotate-1 scale-105 z-50' : 'hover:border-[#3A3A3A]'}
         ${cb?.urgent ? 'ring-2 ring-[#FF8280]/40 animate-[pulse-glow_2s_ease-in-out_infinite]' : ''}
@@ -218,7 +218,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
 function StaticCard({ audition }) {
   const badge = TYPE_BADGES[audition.project_type] || TYPE_BADGES.film;
   return (
-    <div className="bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] shadow-xl opacity-90 rotate-1 scale-105 w-64">
+    <div className="bg-white rounded-xl border border-[#2A2A2A] shadow-xl opacity-90 rotate-1 scale-105 w-64">
       <div className="px-4 py-3">
         <h4 className="text-sm font-semibold text-white">{audition.project_title}</h4>
         {audition.character && (
@@ -261,7 +261,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
         className={`
           flex-1 flex flex-col gap-2 p-2 rounded-xl min-h-[200px]
           transition-colors duration-200
-          ${isOver ? 'bg-[#D4A85F]/5 ring-2 ring-[#FF8280]/20' : 'bg-[#0D0D0D]/60'}
+          ${isOver ? 'bg-[#D4A85F]/5 ring-2 ring-[#FF8280]/20' : 'bg-[#FAFAF7]/60'}
         `}
       >
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
@@ -369,10 +369,10 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
       {/* Panel */}
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-96 bg-[#0D0D0D] z-50 shadow-2xl border-l border-[#2A2A2A] overflow-y-auto animate-[slide-in_0.25s_ease-out]"
+        className="fixed top-0 right-0 h-full w-96 bg-[#FAFAF7] z-50 shadow-2xl border-l border-[#2A2A2A] overflow-y-auto animate-[slide-in_0.25s_ease-out]"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-[#0D0D0D] border-b border-[#2A2A2A] px-5 py-4 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-[#FAFAF7] border-b border-[#2A2A2A] px-5 py-4 flex items-center justify-between z-10">
           <h2 className="text-base font-bold text-white line-clamp-1 pr-4">
             {audition.project_title}
           </h2>
@@ -387,14 +387,14 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             ) : (
               <button
                 onClick={() => setEditing(true)}
-                className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-[#1E1E1E] transition-colors"
+                className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-white transition-colors"
               >
                 <Edit3 size={16} />
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-[#1E1E1E] transition-colors"
+              className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-white transition-colors"
             >
               <X size={16} />
             </button>
@@ -404,7 +404,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
         <div className="p-5 space-y-5">
           {/* Callback Badge */}
           {cb && (
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${cb.urgent ? 'bg-orange-500/10 text-orange-400' : 'bg-[#1E1E1E] text-[#999999]'}`}>
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${cb.urgent ? 'bg-orange-500/10 text-orange-400' : 'bg-white text-[#999999]'}`}>
               <Calendar size={14} />
               Callback {cb.text}
             </div>
@@ -597,7 +597,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
       <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
         <div
-          className="bg-[#1E1E1E] rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-[scale-in_0.2s_ease-out]"
+          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-[scale-in_0.2s_ease-out]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -946,7 +946,7 @@ export default function DashboardAuditions() {
                 transition-all duration-150
                 ${active
                   ? 'bg-[#D4A85F] text-white shadow-sm'
-                  : 'bg-[#1E1E1E] text-[#999999] border border-[#3A3A3A] hover:border-[#D4A85F] hover:bg-[#2A2A2A]'
+                  : 'bg-white text-[#999999] border border-[#3A3A3A] hover:border-[#D4A85F] hover:bg-[#2A2A2A]'
                 }
               `}
             >

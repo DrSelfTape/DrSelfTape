@@ -155,7 +155,7 @@ export default function ScriptUpload({ onSubmit }) {
         className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-4 ${
           dragActive
             ? 'border-[#D4A85F] bg-[#D4A85F]/10'
-            : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-[#1E1E1E]'
+            : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-white'
         }`}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -221,12 +221,12 @@ export default function ScriptUpload({ onSubmit }) {
           if (fileName) setFileName('');
         }}
         placeholder={`Paste your script here...\n\nFormat example:\nJOHN: Hey, how's it going?\nSARAH: Not bad, just got back from the audition.\nJOHN: How did it go?`}
-        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[#1E1E1E]"
+        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-white"
       />
 
       {/* Preview */}
       {canContinue && (
-        <div className="mt-4 bg-[#1E1E1E] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
+        <div className="mt-4 bg-white rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
           <p className="text-xs font-semibold text-[rgba(10,10,10,0.62)] mb-2 uppercase tracking-wide">
             Script Preview
           </p>

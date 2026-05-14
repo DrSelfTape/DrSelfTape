@@ -25,7 +25,7 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                   className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                     isSelected
                       ? 'border-[#D4A85F] bg-[#D4A85F]/5 text-[#7A5A18] shadow-sm'
-                      : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] text-[rgba(10,10,10,0.62)] hover:border-[#D4A85F]'
+                      : 'border-[rgba(10,10,10,0.14)] bg-white text-[rgba(10,10,10,0.62)] hover:border-[#D4A85F]'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2">
@@ -53,7 +53,7 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
           </div>
 
           {selectedRole && (
-            <div className="mt-6 bg-[#1E1E1E] rounded-xl border border-[rgba(10,10,10,0.08)] p-4 text-sm text-[rgba(10,10,10,0.62)]">
+            <div className="mt-6 bg-white rounded-xl border border-[rgba(10,10,10,0.08)] p-4 text-sm text-[rgba(10,10,10,0.62)]">
               <span className="font-semibold text-[#0A0A0A]">
                 I will be reading all other roles as your Casting Director today.
               </span>{' '}

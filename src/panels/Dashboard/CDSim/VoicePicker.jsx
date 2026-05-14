@@ -39,7 +39,7 @@ export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinu
             className={`p-6 rounded-2xl border-2 text-left transition-all ${
               selectedVoice === v.key
                 ? 'border-[#D4A85F] bg-[#D4A85F]/5 shadow-md'
-                : 'border-[rgba(10,10,10,0.14)] bg-[#1E1E1E] hover:border-[#D4A85F]'
+                : 'border-[rgba(10,10,10,0.14)] bg-white hover:border-[#D4A85F]'
             }`}
           >
             <div className="font-bold text-lg text-[#0A0A0A]">{v.name}</div>
@@ -51,7 +51,7 @@ export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinu
       <div className="flex gap-3">
         <button
           onClick={onBack}
-          className="px-6 py-3 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-[#1E1E1E] font-medium"
+          className="px-6 py-3 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-white font-medium"
         >
           Back
         </button>

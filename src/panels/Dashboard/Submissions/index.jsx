@@ -103,7 +103,7 @@ function formatDateTime(iso) {
 // --- Skeleton ---
 
 const SkeletonCard = () => (
-  <div className="bg-[#1E1E1E] rounded-xl shadow-sm p-4 animate-pulse">
+  <div className="bg-white rounded-xl shadow-sm p-4 animate-pulse">
     <div className="flex justify-between mb-3">
       <div className="h-5 bg-[#F4F4EE] rounded w-1/3" />
       <div className="h-5 bg-[#F4F4EE] rounded w-16" />
@@ -353,7 +353,7 @@ export default function Submissions() {
           {sorted.map((sub) => (
             <div
               key={sub.id}
-              className="bg-[#1E1E1E] rounded-xl shadow-sm border border-[rgba(10,10,10,0.08)] p-4 hover:shadow-md transition-shadow"
+              className="bg-white rounded-xl shadow-sm border border-[rgba(10,10,10,0.08)] p-4 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
@@ -471,7 +471,7 @@ export default function Submissions() {
       {/* Log / Edit Submission Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1E1E1E] rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-[#0A0A0A]">
                 {editingId ? 'Edit Submission' : 'Log Submission'}

@@ -250,7 +250,7 @@ export default function RecordTake({ onBack }) {
             {/* Trim */}
             <button
               onClick={() => setStatus('trimming')}
-              className="flex-1 bg-[#1E1E1E] border border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F]/50 text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 bg-white border border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F]/50 text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
               ✂️ Trim
             </button>

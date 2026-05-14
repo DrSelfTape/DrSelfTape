@@ -136,7 +136,7 @@ export default function VideoTrimmer({ videoUrl, videoBlob, onSave, onCancel }) 
   const endPct = duration > 0 ? (endTime / duration) * 100 : 100;
 
   return (
-    <div className="bg-[#1E1E1E] rounded-xl border border-[#2A2A2A] p-4 space-y-4 w-full">
+    <div className="bg-white rounded-xl border border-[#2A2A2A] p-4 space-y-4 w-full">
       <div className="flex items-center justify-between">
         <h3 className="text-white font-semibold text-sm">✂️ Trim Video</h3>
         <span className="text-xs text-[#888]">

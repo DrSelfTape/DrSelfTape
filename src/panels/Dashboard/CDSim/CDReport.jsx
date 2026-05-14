@@ -245,7 +245,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
 
           <button
             onClick={onRunAgain}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-[#1E1E1E] font-medium text-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-white font-medium text-sm transition-colors"
           >
             <RotateCcw size={16} />
             Run Again
