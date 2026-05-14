@@ -413,7 +413,7 @@ export default function Profile() {
               {/* Code */}
               <div className="flex items-center gap-2 mb-3">
                 <div className="flex-1 px-3 py-2.5 rounded-lg text-center font-mono text-lg font-bold tracking-widest" style={{
-                  background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: '#FF8280',
+                  background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: '#7A5A18',
                 }}>
                   {referral.code}
                 </div>
@@ -441,7 +441,7 @@ export default function Profile() {
                     url: referral.share_url || `https://drselftape.app/signup?ref=${referral.code}`,
                   }).catch(() => {})}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold mb-3 transition-colors"
-                  style={{ background: 'rgba(255, 130, 128,0.1)', border: '1px solid rgba(255, 130, 128,0.3)', color: '#FF8280' }}
+                  style={{ background: 'rgba(212,168,95,0.12)', border: '1px solid rgba(212,168,95,0.35)', color: '#7A5A18' }}
                 >
                   <Share2 className="w-4 h-4" /> Share Invite Link
                 </button>

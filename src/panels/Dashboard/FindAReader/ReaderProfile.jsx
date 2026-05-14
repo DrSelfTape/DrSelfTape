@@ -41,7 +41,7 @@ const ReaderProfile = () => {
         </div>
 
         {/* Info card */}
-        <div className="rounded-xl border border-[rgba(10,10,10,0.08)] bg-[#1E1E1E] p-6 shadow-sm">
+        <div className="rounded-xl border border-[rgba(10,10,10,0.08)] bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-2xl font-bold text-[#0f0f1a]">
