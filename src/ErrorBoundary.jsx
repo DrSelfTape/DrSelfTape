@@ -7,20 +7,38 @@ export class ErrorBoundary extends Component {
     this.state = { error: null, info: null };
   }
   componentDidCatch(error, info) {
-    // Auto-reload on dynamic import failures (stale chunks after deploy)
+    // Auto-reload on dynamic-import failures (stale chunks after deploy).
+    // Browsers phrase this differently — match all of them, including
+    // Safari and Firefox variants we missed before.
     const msg = error?.message || '';
-    if (
+    const isChunkError =
       msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('error loading dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
       msg.includes('Loading chunk') ||
-      msg.includes('Loading CSS chunk')
-    ) {
+      msg.includes('Loading CSS chunk') ||
+      msg.includes('ChunkLoadError') ||
+      // Safari sometimes surfaces these as a network error on the import URL
+      /Unable to preload CSS for/.test(msg);
+
+    if (isChunkError) {
       const reloadKey = 'drst-chunk-reload';
       const lastReload = sessionStorage.getItem(reloadKey);
       const now = Date.now();
-      // Only auto-reload once per minute to prevent infinite loops
-      if (!lastReload || now - Number(lastReload) > 60000) {
-        sessionStorage.setItem(reloadKey, String(now));
-        window.location.reload();
+      // Allow up to 2 auto-reloads per minute (1 single retry on Safari
+      // wasn't enough — its WebView held a stale entry HTML even after
+      // the first reload). After that, show the manual-refresh screen
+      // with a cache-bust button so we don't loop forever.
+      const count = lastReload ? Number(lastReload.split(':')[1] || 0) : 0;
+      const firstTs = lastReload ? Number(lastReload.split(':')[0]) : 0;
+      const withinWindow = firstTs && now - firstTs < 60000;
+      if (!withinWindow || count < 2) {
+        const nextCount = withinWindow ? count + 1 : 1;
+        sessionStorage.setItem(reloadKey, `${withinWindow ? firstTs : now}:${nextCount}`);
+        // Cache-bust the URL so Safari's WebView fetches fresh HTML.
+        const u = new URL(window.location.href);
+        u.searchParams.set('_r', String(now));
+        window.location.replace(u.toString());
         return;
       }
     }
@@ -44,7 +62,14 @@ export class ErrorBoundary extends Component {
               : 'An unexpected error occurred. Please refresh to try again.'}
           </p>
           <button
-            onClick={() => { sessionStorage.removeItem('drst-chunk-reload'); window.location.reload(); }}
+            onClick={() => {
+              sessionStorage.removeItem('drst-chunk-reload');
+              // Force a cache-bypassing reload — Safari especially needs
+              // the query-string change to refetch the entry HTML.
+              const u = new URL(window.location.href);
+              u.searchParams.set('_r', String(Date.now()));
+              window.location.replace(u.toString());
+            }}
             style={{
               background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', color: '#fff', border: 'none', padding: '14px 32px',
               borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer',
