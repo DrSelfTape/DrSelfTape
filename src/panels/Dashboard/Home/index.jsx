@@ -48,6 +48,13 @@ function useNextStep({ profile, stats, submissions }) {
   const hasAuditions = (stats?.data?.total || 0) > 0;
   const hasSubs = Array.isArray(submissions) && submissions.length > 0;
 
+  // Soft cream-to-warm-white gradients so the banner reads on the
+  // Aurora light page. Each step uses a different gold-tinted accent
+  // for visual variety without going dark.
+  const GRADIENT_WELCOME = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(212,168,95,0.10)]';
+  const GRADIENT_PRACTICE = 'from-[#FFFFFF] via-[#FAFAF7] to-[rgba(255,130,128,0.08)]';
+  const GRADIENT_CONTINUE = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(159,230,180,0.10)]';
+
   if (!hasHeadshot) {
     return {
       title: 'Complete your profile',
@@ -55,7 +62,7 @@ function useNextStep({ profile, stats, submissions }) {
       cta: 'Add Headshot',
       path: '/dashboard/profile',
       icon: Users2,
-      gradient: 'from-[#1a1a2e] to-[#16213e]',
+      gradient: GRADIENT_WELCOME,
     };
   }
 
@@ -66,7 +73,7 @@ function useNextStep({ profile, stats, submissions }) {
       cta: 'Generate a Scene',
       path: '/dashboard/generator',
       icon: Sparkles,
-      gradient: 'from-[#1a1a2e] via-[#16213e] to-[#0f0f23]',
+      gradient: GRADIENT_PRACTICE,
     };
   }
 
@@ -77,7 +84,7 @@ function useNextStep({ profile, stats, submissions }) {
       cta: 'Start Practicing',
       path: '/dashboard/scene-study',
       icon: Mic,
-      gradient: 'from-[#0f0f23] via-[#16213e] to-[#1a1a2e]',
+      gradient: GRADIENT_PRACTICE,
     };
   }
 
@@ -88,7 +95,7 @@ function useNextStep({ profile, stats, submissions }) {
     cta: 'Continue Practicing',
     path: '/dashboard/scene-study',
     icon: BookOpen,
-    gradient: 'from-[#1a1a2e] to-[#0f0f23]',
+    gradient: GRADIENT_CONTINUE,
   };
 }
 
@@ -190,7 +197,7 @@ export default function DashboardHome() {
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-[#0A0A0A] text-xl font-bold">{nextStep.title}</h2>
-            <p className="text-gray-400 text-sm mt-1">{nextStep.description}</p>
+            <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">{nextStep.description}</p>
           </div>
           <button className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer text-sm shrink-0">
             {nextStep.cta} &rarr;
