@@ -4,15 +4,20 @@ import { Navigate } from 'react-router-dom';
 
 // Local import
 import { RoleBasedRedirect } from './routeHelpers';
-import { ComingSoon, Layout } from '../components/Shared/index.js';
+// Direct file imports (not via the barrel) so tree-shaking can't pull in
+// the rest of components/Shared — keeps the initial bundle lean.
+import { ComingSoon } from '../components/Shared/ComingSoon';
+import { Layout } from '../components/Shared/Layout';
 
-// Auth panels (keep static — small and needed immediately)
-import JoinPage from '../panels/Join';
-import { Login } from '../panels/Authentication/Login';
+// Login is the most common entry point — keep it eager so first paint is fast.
+// All other auth/marketing pages lazy-load to keep the initial bundle small.
 import LoginPageBranded from '../panels/Auth/LoginPage';
-import { Signup } from '../panels/Authentication/SignUp';
-import { ForgotPassword } from '../panels/Authentication/ForgotPassword';
-import { ResetPassword } from '../panels/Authentication/ResetPassword';
+
+const JoinPage = lazy(() => import('../panels/Join'));
+const Login = lazy(() => import('../panels/Authentication/Login').then((m) => ({ default: m.Login })));
+const Signup = lazy(() => import('../panels/Authentication/SignUp').then((m) => ({ default: m.Signup })));
+const ForgotPassword = lazy(() => import('../panels/Authentication/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('../panels/Authentication/ResetPassword').then((m) => ({ default: m.ResetPassword })));
 
 // Lazy-loaded UserPanel imports
 const Dashboard = lazy(() => import('../panels/UserPanel/Dashboard'));

@@ -1,13 +1,25 @@
-import posthog from 'posthog-js';
+// PostHog is loaded lazily — the SDK is ~175KB minified, and a placeholder
+// key means it's a no-op right now anyway. We also skip init entirely until
+// a real key is set, so the chunk never downloads on first paint.
 
-// Initialize PostHog (free tier: 1M events/month)
-const POSTHOG_KEY = 'phc_drselftape_placeholder';
-const POSTHOG_HOST = 'https://us.i.posthog.com';
+const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
+const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
 
+let posthogPromise = null;
 let initialized = false;
 
-export function initAnalytics() {
-  if (initialized) return;
+function loadPostHog() {
+  if (!POSTHOG_KEY) return null;
+  if (!posthogPromise) {
+    posthogPromise = import('posthog-js').then((m) => m.default).catch(() => null);
+  }
+  return posthogPromise;
+}
+
+export async function initAnalytics() {
+  if (initialized || !POSTHOG_KEY) return;
+  const posthog = await loadPostHog();
+  if (!posthog) return;
   try {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
@@ -22,8 +34,10 @@ export function initAnalytics() {
   }
 }
 
-export function identifyUser(user) {
-  if (!user?.id) return;
+export async function identifyUser(user) {
+  if (!user?.id || !POSTHOG_KEY) return;
+  const posthog = await loadPostHog();
+  if (!posthog) return;
   try {
     posthog.identify(String(user.id), {
       email: user.email,
@@ -34,8 +48,12 @@ export function identifyUser(user) {
 }
 
 export function trackEvent(event, properties = {}) {
-  // PostHog
-  try { posthog.capture(event, properties); } catch {}
+  // PostHog (lazy — only if a key is configured)
+  if (POSTHOG_KEY) {
+    loadPostHog()?.then((posthog) => {
+      try { posthog?.capture(event, properties); } catch {}
+    });
+  }
 
   // Also send to our backend for server-side logging
   try {
