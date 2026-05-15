@@ -480,7 +480,6 @@ const MORE_FEATURES = [
   { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#FF8280" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
-  { id: "reports", label: "Reports", desc: "Your career at a glance", emoji: "📊", color: "#b89aff" },
   { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#FF8280" },
   { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072" },
   { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280" },
@@ -1625,7 +1624,6 @@ function ProfileScreen({ setCurrentPanel }) {
   const menu = [
     { label: "Edit Profile", icon: "profile", action: () => setCurrentPanel("dash-profile") },
     { label: "Membership", icon: "star", action: () => setCurrentPanel("membership") },
-    { label: "Reports", icon: "auditions", action: () => setCurrentPanel("reports") },
     { label: "Log Out", icon: "logout", action: () => dispatch(logoutUser()), danger: true },
   ];
 
