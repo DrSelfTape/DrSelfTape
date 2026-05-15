@@ -9,6 +9,7 @@ import { Router } from './routes/index';
 import { initAnalytics, identifyUser } from './utils/analytics';
 import { fetchUserSettings, resetSettings } from './redux/features/userSettings/userSettingsSlice';
 import { initPurchases } from './utils/purchases';
+import { resumeQueue } from './utils/uploadQueue';
 
 function App() {
   const dispatch = useDispatch();
@@ -34,6 +35,10 @@ function App() {
       // RevenueCat's webhook can match the receipt to our user row.
       // No-ops on web or without VITE_REVENUECAT_IOS_KEY.
       initPurchases(userId);
+      // Resume any self-tape uploads that were pending when the tab
+      // closed. Reads persisted queue state from localStorage and
+      // restarts the pump. No-op if the queue is empty.
+      resumeQueue();
     } else {
       dispatch(resetSettings());
     }
