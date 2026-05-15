@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ArrowLeft, Clock, MessageCircle, Star, MapPin } from 'lucide-react';
@@ -6,7 +6,7 @@ import GenreTags from './components/GenreTags';
 import UnionBadge from './components/UnionBadge';
 import AvailabilityStatus from './components/AvailabilityStatus';
 import ProfilePhoto from '../../../components/Shared/ProfilePhoto';
-import { swipeOnReader, fetchFavorites } from '../../../redux/features/readers/readersMatchSlice';
+import { swipeOnReader, fetchFavorites, fetchReaderById } from '../../../redux/features/readers/readersMatchSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 
 // Look up a reader by id across every place we might already have them
@@ -17,6 +17,7 @@ function useReader(readerId) {
   const readers = useSelector((s) => s.readersMatch.readers || []);
   const matches = useSelector((s) => s.readersMatch.matches || []);
   const favorites = useSelector((s) => s.readersMatch.favorites || []);
+  const fetched = useSelector((s) => s.readersMatch.readerById?.[String(readerId)]?.data);
 
   return useMemo(() => {
     const idStr = String(readerId);
@@ -32,8 +33,10 @@ function useReader(readerId) {
     const fromFav = favorites.find((f) => String(f?.id ?? f?.other_actor?.id) === idStr);
     if (fromFav) return { ...(fromFav.other_actor || fromFav), source: 'favorite' };
 
+    if (fetched) return { ...fetched, source: 'fetch' };
+
     return null;
-  }, [readerId, readers, matches, favorites]);
+  }, [readerId, readers, matches, favorites, fetched]);
 }
 
 const ReaderProfile = () => {
@@ -41,6 +44,18 @@ const ReaderProfile = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const reader = useReader(readerId);
+  const fetchState = useSelector(
+    (s) => s.readersMatch.readerById?.[String(readerId)] || {},
+  );
+  // If the local caches don't have this reader, fall back to the direct
+  // endpoint. Guards against re-firing once we already have data, are
+  // mid-flight, or hit a 404.
+  useEffect(() => {
+    if (!readerId) return;
+    if (reader) return;
+    if (fetchState.loading || fetchState.data || fetchState.error) return;
+    dispatch(fetchReaderById(readerId));
+  }, [dispatch, readerId, reader, fetchState.loading, fetchState.data, fetchState.error]);
 
   // If they came in via a Green Room match we already have a matchId;
   // otherwise the "Chat" button takes them through the swipe flow.
@@ -94,6 +109,7 @@ const ReaderProfile = () => {
   };
 
   if (!reader) {
+    const isLoading = fetchState.loading || (!fetchState.error && !fetchState.data);
     return (
       <div className="min-h-[calc(100vh-80px)] bg-transparent px-4 py-8">
         <div className="mx-auto max-w-lg">
@@ -107,7 +123,9 @@ const ReaderProfile = () => {
           </button>
           <div className="rounded-xl border border-[rgba(10,10,10,0.08)] bg-white p-8 text-center shadow-sm">
             <p className="text-sm text-[rgba(10,10,10,0.62)]">
-              We couldn't find this profile in your recent activity. Try opening it from Find a Reader, Green Room, or Favorites.
+              {isLoading
+                ? 'Loading profile…'
+                : "We couldn't find this profile. It may have been removed."}
             </p>
           </div>
         </div>

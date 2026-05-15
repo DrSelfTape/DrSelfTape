@@ -121,6 +121,23 @@ export const fetchFavorites = createAsyncThunk(
   }
 );
 
+// Direct fetch fallback for the Reader Profile page. The page first checks
+// local redux caches (swipe stack / matches / favorites); if the actor isn't
+// there (page refresh, deep link, stale state) it falls back to this.
+export const fetchReaderById = createAsyncThunk(
+  'readersMatch/fetchReaderById',
+  async (readerId, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(`${baseURL}/v1/matching/readers/${readerId}/`);
+      return data?.data || null;
+    } catch (error) {
+      return rejectWithValue(
+        error?.response?.data?.message || error?.message || 'Failed to fetch reader'
+      );
+    }
+  }
+);
+
 export const updateReaderFilters = createAsyncThunk(
   'readersMatch/updateReaderFilters',
   async (filters, { rejectWithValue }) => {
@@ -338,6 +355,9 @@ const initialState = {
   isAvailable: false,
   availabilityToggling: false,
   activityFeed: null,
+  // Cache for one-off profile fetches keyed by readerId.
+  // Shape: { [id]: { data, loading, error } }
+  readerById: {},
 };
 
 const readersMatchSlice = createSlice({
@@ -453,6 +473,20 @@ const readersMatchSlice = createSlice({
         state.favorites = action.payload;
       })
       .addCase(fetchFavorites.rejected, (state) => { state.favoritesLoading = false; })
+
+      // fetchReaderById — direct profile fetch fallback
+      .addCase(fetchReaderById.pending, (state, action) => {
+        const id = String(action.meta.arg);
+        state.readerById[id] = { ...(state.readerById[id] || {}), loading: true, error: null };
+      })
+      .addCase(fetchReaderById.fulfilled, (state, action) => {
+        const id = String(action.meta.arg);
+        state.readerById[id] = { data: action.payload, loading: false, error: null };
+      })
+      .addCase(fetchReaderById.rejected, (state, action) => {
+        const id = String(action.meta.arg);
+        state.readerById[id] = { ...(state.readerById[id] || {}), loading: false, error: action.payload };
+      })
 
       // updateReaderProfile
       .addCase(updateReaderProfile.rejected, (state, action) => {
