@@ -1,8 +1,14 @@
 import { MapPin, Clock, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
 
 const ReaderListItem = ({ match, onClick }) => {
+  const navigate = useNavigate();
   const other = match?.other_actor || {};
+  const openProfile = (e) => {
+    e.stopPropagation();
+    if (other?.id) navigate(`/dashboard/reader-profile/${other.id}`);
+  };
 
   const initials = (other.name || 'A')
     .split(' ')
@@ -25,23 +31,33 @@ const ReaderListItem = ({ match, onClick }) => {
   return (
     <div className="rounded-xl p-5 shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
       <div className="flex items-start gap-4">
-        {/* Avatar */}
-        <div className="relative shrink-0">
+        {/* Avatar — tap to open this actor's profile (chat + favorite live there) */}
+        <button
+          type="button"
+          onClick={openProfile}
+          aria-label={`View ${other?.name || 'actor'}'s profile`}
+          className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/60"
+        >
           <ProfilePhoto
             src={other?.headshot || other?.user_image}
             alt={other?.name}
             initials={initials}
-            className="h-16 w-16"
+            className="h-16 w-16 cursor-pointer"
           />
           <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500" style={{ borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--bg-surface)' }} />
-        </div>
+        </button>
 
         <div className="min-w-0 flex-1 space-y-2">
-          {/* Name + Union */}
+          {/* Name + Union — name is also a tap target into the profile */}
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+            <button
+              type="button"
+              onClick={openProfile}
+              className="text-sm font-bold truncate cursor-pointer hover:underline"
+              style={{ color: 'var(--text-primary)', background: 'none', border: 'none', padding: 0 }}
+            >
               {other?.name || 'Actor'}
-            </h4>
+            </button>
             {unionLabel && (
               <span className="shrink-0 rounded-full bg-[#D4A85F]/15 px-2 py-0.5 text-[10px] font-semibold text-[#7A5A18] border border-[#D4A85F]/30">
                 {unionLabel}
