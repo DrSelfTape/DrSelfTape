@@ -205,7 +205,11 @@ export default function Marketplace() {
   useEffect(() => {
     axios
       .get(`${baseURL}/v1/growth/marketplace/readers/`)
-      .then((res) => setReaders(Array.isArray(res.data) ? res.data : res.data?.results || []))
+      .then((res) => {
+        // Backend wraps responses as { data, message, success } via api_response_parser.
+        const body = res.data?.data ?? res.data;
+        setReaders(Array.isArray(body) ? body : body?.results || []);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
