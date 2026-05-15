@@ -11,7 +11,7 @@ export default function Referral() {
   useEffect(() => {
     axios
       .get(`${baseURL}/v1/growth/referral/code/`)
-      .then((res) => setData(res.data))
+      .then((res) => setData(res.data?.data || null))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
