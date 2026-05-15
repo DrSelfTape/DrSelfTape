@@ -5,7 +5,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts';
-import { Sparkles, Mic, BookOpen, Users2, Target, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Mic, BookOpen, Users2, Target, ChevronDown, ChevronUp, Radio, MessageSquare, Gift, ShoppingBag, Camera } from 'lucide-react';
 import StatsCard from '../../../components/StatsCard.jsx';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card.jsx';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
@@ -42,61 +42,151 @@ const TYPE_LABELS = {
 const FUNNEL_STEPS = ['submitted', 'reviewed', 'callback', 'booked'];
 const FUNNEL_LABELS = { submitted: 'Submitted', reviewed: 'In Review', callback: 'Callback', booked: 'Booked' };
 
-/* ── Smart Next Step — figures out what the user should do next ── */
+/* ── Smart Next Step — figures out what the user should do next ──
+ *
+ * Reads from `tutorial_progress` (the same server-synced flags the
+ * Get Started checklist uses) so completing a step in either surface
+ * advances both. When the onboarding sequence is done, rotates through
+ * engagement CTAs based on the day-of-month so the banner doesn't get
+ * stale but also doesn't change on every render.
+ */
+
+// Soft cream-to-warm-white gradients so the banner reads on the Aurora
+// light page. Each step uses a different gold-tinted accent for visual
+// variety without going dark.
+const GRADIENT_WELCOME = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(212,168,95,0.10)]';
+const GRADIENT_PRACTICE = 'from-[#FFFFFF] via-[#FAFAF7] to-[rgba(255,130,128,0.08)]';
+const GRADIENT_CONNECT = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(159,230,180,0.10)]';
+const GRADIENT_TRACK = 'from-[#FFFFFF] via-[#FAFAF7] to-[rgba(96,165,250,0.10)]';
+
+// Ordered onboarding sequence — first incomplete step wins. Most map to
+// keys in tutorial_progress; "headshot" is mirrored there as well by
+// the TutorialChecklist's auto-detect effect.
+const ONBOARDING_STEPS = [
+  {
+    key: 'headshot',
+    title: 'Complete your profile',
+    description: 'Add a headshot so scene partners can find you.',
+    cta: 'Add Headshot',
+    path: '/dashboard/profile',
+    icon: Users2,
+    gradient: GRADIENT_WELCOME,
+  },
+  {
+    key: 'generate_scene',
+    title: 'Generate your first scene',
+    description: 'Pick a genre and tone — get custom audition sides in seconds.',
+    cta: 'Generate a Scene',
+    path: '/dashboard/generator',
+    icon: Sparkles,
+    gradient: GRADIENT_PRACTICE,
+  },
+  {
+    key: 'practice_ai',
+    title: 'Practice with AI',
+    description: 'Run your scene with an AI partner and record your take.',
+    cta: 'Start Practicing',
+    path: '/dashboard/scene-study',
+    icon: Mic,
+    gradient: GRADIENT_PRACTICE,
+  },
+  {
+    key: 'find_reader',
+    title: 'Find a reader',
+    description: 'Swipe through actors who are available to run lines with you.',
+    cta: 'Find a Reader',
+    path: '/dashboard/find-a-reader',
+    icon: Users2,
+    gradient: GRADIENT_CONNECT,
+  },
+  {
+    key: 'go_available',
+    title: 'Go available',
+    description: "Let other actors know you're ready to read right now.",
+    cta: 'Go Available',
+    path: '/dashboard/find-a-reader',
+    icon: Radio,
+    gradient: GRADIENT_CONNECT,
+  },
+  {
+    key: 'green_room',
+    title: 'Check the Green Room',
+    description: 'See who you matched with and start a conversation.',
+    cta: 'Open Green Room',
+    path: '/dashboard/green-room',
+    icon: MessageSquare,
+    gradient: GRADIENT_CONNECT,
+  },
+  {
+    key: 'track_audition',
+    title: 'Log an audition',
+    description: 'Track every callback, booking, and pass in one place.',
+    cta: 'Log Audition',
+    path: '/dashboard/auditions',
+    icon: Target,
+    gradient: GRADIENT_TRACK,
+  },
+];
+
+// Rotated post-onboarding suggestions. Pick deterministically by
+// day-of-month so it changes ~daily but is stable across renders.
+const ENGAGEMENT_ROTATION = [
+  {
+    title: 'Get coaching notes',
+    description: 'Run a scene by the AI Acting Coach and get specific feedback.',
+    cta: 'Try Acting Coach',
+    path: '/dashboard/cd-sim',
+    icon: BookOpen,
+    gradient: GRADIENT_PRACTICE,
+  },
+  {
+    title: 'Book a paid reader',
+    description: 'Browse pro readers in the Marketplace and book a session.',
+    cta: 'Open Marketplace',
+    path: '/dashboard/marketplace',
+    icon: ShoppingBag,
+    gradient: GRADIENT_CONNECT,
+  },
+  {
+    title: 'Invite a friend',
+    description: 'Earn tokens by sharing your invite code with another actor.',
+    cta: 'Invite Friends',
+    path: '/dashboard/referral',
+    icon: Gift,
+    gradient: GRADIENT_WELCOME,
+  },
+  {
+    title: 'Upload a self-tape',
+    description: 'Keep all your recorded takes organized in one library.',
+    cta: 'Open Self-Tapes',
+    path: '/dashboard/self-tapes',
+    icon: Camera,
+    gradient: GRADIENT_TRACK,
+  },
+];
+
 function useNextStep({ profile, stats, submissions }) {
-  const hasHeadshot = profile?.actor_profile?.headshot;
+  const tutorialProgress = useSelector((s) => s.userSettings?.data?.tutorial_progress || {});
+
+  // Cross-signal hints — if the data shows the action's been done but
+  // tutorial_progress hasn't caught up yet, treat it as done.
+  const hasHeadshot = !!(profile?.actor_profile?.headshot || profile?.user_image);
   const hasAuditions = (stats?.data?.total || 0) > 0;
   const hasSubs = Array.isArray(submissions) && submissions.length > 0;
-
-  // Soft cream-to-warm-white gradients so the banner reads on the
-  // Aurora light page. Each step uses a different gold-tinted accent
-  // for visual variety without going dark.
-  const GRADIENT_WELCOME = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(212,168,95,0.10)]';
-  const GRADIENT_PRACTICE = 'from-[#FFFFFF] via-[#FAFAF7] to-[rgba(255,130,128,0.08)]';
-  const GRADIENT_CONTINUE = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(159,230,180,0.10)]';
-
-  if (!hasHeadshot) {
-    return {
-      title: 'Complete your profile',
-      description: 'Add a headshot so scene partners can find you.',
-      cta: 'Add Headshot',
-      path: '/dashboard/profile',
-      icon: Users2,
-      gradient: GRADIENT_WELCOME,
-    };
-  }
-
-  if (!hasAuditions && !hasSubs) {
-    return {
-      title: 'Generate your first scene',
-      description: 'Pick a genre and tone — get custom audition sides in seconds.',
-      cta: 'Generate a Scene',
-      path: '/dashboard/generator',
-      icon: Sparkles,
-      gradient: GRADIENT_PRACTICE,
-    };
-  }
-
-  if (!hasSubs) {
-    return {
-      title: 'Practice with AI',
-      description: 'Run your scene with an AI partner and record your take.',
-      cta: 'Start Practicing',
-      path: '/dashboard/scene-study',
-      icon: Mic,
-      gradient: GRADIENT_PRACTICE,
-    };
-  }
-
-  // Returning user — suggest continuing their work
-  return {
-    title: 'Ready to work?',
-    description: 'Jump back into scene study or try the AI acting coach for notes.',
-    cta: 'Continue Practicing',
-    path: '/dashboard/scene-study',
-    icon: BookOpen,
-    gradient: GRADIENT_CONTINUE,
+  const effectiveProgress = {
+    ...tutorialProgress,
+    headshot: tutorialProgress.headshot || hasHeadshot,
+    track_audition: tutorialProgress.track_audition || hasAuditions || hasSubs,
   };
+
+  // First onboarding step not yet done.
+  const nextOnboarding = ONBOARDING_STEPS.find((s) => !effectiveProgress[s.key]);
+  if (nextOnboarding) return nextOnboarding;
+
+  // All onboarding done — rotate engagement CTAs by day-of-month so
+  // the banner stays fresh without being noisy.
+  const idx = new Date().getDate() % ENGAGEMENT_ROTATION.length;
+  return ENGAGEMENT_ROTATION[idx];
 }
 
 export default function DashboardHome() {
