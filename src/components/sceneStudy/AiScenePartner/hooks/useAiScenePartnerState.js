@@ -1,5 +1,6 @@
 // Library imports
 import { useMemo, useRef, useState, useEffect } from 'react';
+import { getUserItem, setUserItem, removeUserItem, getCurrentUserId } from '../../../../utils/userStorage';
 
 /**
  * Custom hook for AI Scene Partner state management
@@ -39,48 +40,39 @@ export const useAiScenePartnerState = (scriptId) => {
   const [recordings, setRecordings] = useState([]);
   const [completedLines, setCompletedLines] = useState(new Set());
   
-  // Initialize pending session (sessionId and versionId) from localStorage on mount
-  // Make it script-specific by including scriptId in the key
+  // Initialize pending session (sessionId and versionId) from localStorage on mount.
+  // Keys are namespaced by user id AND script id so a shared device can't surface
+  // user A's pending session to user B (was a real bug — these keys were global).
   const getPendingSessionFromStorage = (currentScriptId) => {
-    try {
-      if (!currentScriptId) {
-        return { sessionId: null, versionId: null };
-      }
-      const storedSessionId = localStorage.getItem(`aiScenePartner_pendingSessionId_${currentScriptId}`);
-      const storedVersionId = localStorage.getItem(`aiScenePartner_pendingVersionId_${currentScriptId}`);
-      return {
-        sessionId: storedSessionId ? parseInt(storedSessionId, 10) : null,
-        versionId: storedVersionId ? parseInt(storedVersionId, 10) : null,
-      };
-    } catch (e) {
-      return { sessionId: null, versionId: null };
-    }
+    if (!currentScriptId) return { sessionId: null, versionId: null };
+    const uid = getCurrentUserId();
+    const storedSessionId = getUserItem(uid, `aiScenePartner_pendingSessionId_${currentScriptId}`);
+    const storedVersionId = getUserItem(uid, `aiScenePartner_pendingVersionId_${currentScriptId}`);
+    return {
+      sessionId: storedSessionId ? parseInt(storedSessionId, 10) : null,
+      versionId: storedVersionId ? parseInt(storedVersionId, 10) : null,
+    };
   };
-  
+
   const [pendingSession, setPendingSessionState] = useState(() => getPendingSessionFromStorage(scriptId));
-  
+
   // Reload pending session when scriptId changes
   useEffect(() => {
     const storedSession = getPendingSessionFromStorage(scriptId);
     setPendingSessionState(storedSession);
   }, [scriptId]);
-  
-  // Wrapper to update both state and localStorage
-  // Now includes scriptId to make storage script-specific
+
+  // Wrapper to update both state and localStorage. Per-user namespaced.
   const setPendingSession = ({ sessionId, versionId }) => {
     setPendingSessionState({ sessionId, versionId });
-    try {
-      if (sessionId && versionId && scriptId) {
-        // Store with script-specific keys
-        localStorage.setItem(`aiScenePartner_pendingSessionId_${scriptId}`, String(sessionId));
-        localStorage.setItem(`aiScenePartner_pendingVersionId_${scriptId}`, String(versionId));
-      } else if (scriptId) {
-        // Clear script-specific storage
-        localStorage.removeItem(`aiScenePartner_pendingSessionId_${scriptId}`);
-        localStorage.removeItem(`aiScenePartner_pendingVersionId_${scriptId}`);
-      }
-    } catch (e) {
-      console.error('Error saving pending session to localStorage:', e);
+    if (!scriptId) return;
+    const uid = getCurrentUserId();
+    if (sessionId && versionId) {
+      setUserItem(uid, `aiScenePartner_pendingSessionId_${scriptId}`, String(sessionId));
+      setUserItem(uid, `aiScenePartner_pendingVersionId_${scriptId}`, String(versionId));
+    } else {
+      removeUserItem(uid, `aiScenePartner_pendingSessionId_${scriptId}`);
+      removeUserItem(uid, `aiScenePartner_pendingVersionId_${scriptId}`);
     }
   };
   

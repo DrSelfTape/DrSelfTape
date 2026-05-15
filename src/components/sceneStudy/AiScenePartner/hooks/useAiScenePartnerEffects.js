@@ -2,6 +2,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { getUserItem, removeUserItem, getCurrentUserId } from '../../../../utils/userStorage';
 
 // Redux
 import {
@@ -193,11 +194,13 @@ export const useAiScenePartnerEffects = ({
     dispatch(getScriptAnalysis(versionId));
     dispatch(getAudioComposition(versionId));
     
-    // Always check localStorage for stored session data for this script on page load
-    // If found, always call the complete API to get the last analysis
+    // Always check localStorage for stored session data for this script on page load.
+    // Per-user namespaced via getCurrentUserId so user-A's pending rehearsal can't
+    // leak onto user-B's session on a shared device.
     const storageKey = `rehearsal_session_${versionId}`;
+    const _uid = getCurrentUserId();
     try {
-      const storedData = localStorage.getItem(storageKey);
+      const storedData = getUserItem(_uid, storageKey);
       if (storedData) {
         const sessionData = JSON.parse(storedData);
         // Double-check: only load if versionId matches current script
@@ -243,7 +246,7 @@ export const useAiScenePartnerEffects = ({
               state.setLoadingPreviousAnalysis(false);
               // On error, clear the stored data if it's for a different script
               if (sessionData?.versionId !== versionId) {
-                localStorage.removeItem(storageKey);
+                removeUserItem(_uid, storageKey);
               }
               state.setPendingSession({ sessionId: null, versionId: null });
             });
@@ -253,14 +256,14 @@ export const useAiScenePartnerEffects = ({
             storedVersionId: sessionData.versionId,
             currentVersionId: versionId
           });
-          localStorage.removeItem(storageKey);
+          removeUserItem(_uid, storageKey);
         }
       }
     } catch (err) {
       console.warn('[useAiScenePartnerEffects] Error reading from localStorage:', err);
       // If error parsing, clear the stored data
       try {
-        localStorage.removeItem(storageKey);
+        removeUserItem(_uid, storageKey);
       } catch (clearErr) {
         console.warn('[useAiScenePartnerEffects] Error clearing localStorage:', clearErr);
       }

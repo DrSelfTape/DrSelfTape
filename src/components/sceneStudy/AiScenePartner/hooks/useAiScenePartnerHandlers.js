@@ -1,6 +1,7 @@
 // Library imports
 import { useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
+import { setUserItem, removeUserItem, getCurrentUserId } from '../../../../utils/userStorage';
 
 // Redux
 import {
@@ -129,15 +130,11 @@ export const useAiScenePartnerHandlers = ({
     state.setPerformanceAnalysisError(null);
     state.setLoadingPreviousAnalysis(false);
     
-    // Clear localStorage data for current script when starting new rehearsal
+    // Clear localStorage data for current script when starting new rehearsal.
+    // Per-user namespaced — see useAiScenePartnerEffects.js for the matching read.
     if (versionId) {
       const storageKey = `rehearsal_session_${versionId}`;
-      try {
-        localStorage.removeItem(storageKey);
-        console.log('[startRehearsalSessionAPI] Cleared localStorage for current script:', storageKey);
-      } catch (err) {
-        console.warn('[startRehearsalSessionAPI] Error clearing localStorage:', err);
-      }
+      removeUserItem(getCurrentUserId(), storageKey);
     }
 
     const sceneId =
@@ -356,12 +353,7 @@ export const useAiScenePartnerHandlers = ({
             versionId: versionId,
             timestamp: Date.now(),
           };
-          try {
-            localStorage.setItem(storageKey, JSON.stringify(sessionData));
-            console.log('[confirmEndSession] Stored session data in localStorage:', storageKey, sessionData);
-          } catch (err) {
-            console.warn('[confirmEndSession] Failed to store in localStorage:', err);
-          }
+          setUserItem(getCurrentUserId(), storageKey, JSON.stringify(sessionData));
         }
         
         if (status === 'running' && responseSessionId) {
