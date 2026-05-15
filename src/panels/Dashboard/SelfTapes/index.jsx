@@ -3,22 +3,46 @@ import { Play, Upload, Send, X, Film, Calendar, Clock } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 
-function UploadModal({ onClose, onUploaded }) {
+// Mirrors apps.growth.views.MAX_SELF_TAPE_SIZE_MB. Kept in sync via
+// the /quota/ endpoint at runtime so this constant is just a sensible
+// fallback before that loads.
+const DEFAULT_MAX_MB = 500;
+
+function UploadModal({ onClose, onUploaded, quota }) {
   const fileRef = useRef(null);
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
   const [projectName, setProjectName] = useState('');
   const [roleName, setRoleName] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
+
+  const maxMb = quota?.per_tape_max_mb ?? DEFAULT_MAX_MB;
+  const fileMb = file ? (file.size / (1024 * 1024)).toFixed(1) : null;
+  const fileTooBig = file && file.size > maxMb * 1024 * 1024;
+
+  const handleFileChange = (e) => {
+    const f = e.target.files?.[0] || null;
+    setFile(f);
+    if (f && f.size > maxMb * 1024 * 1024) {
+      const mb = (f.size / (1024 * 1024)).toFixed(1);
+      setError(`This file is ${mb} MB. The max per tape is ${maxMb} MB. Try compressing it first or recording at 1080p instead of 4K.`);
+    } else {
+      setError('');
+    }
+  };
 
   const handleSubmit = async () => {
     if (!file || !title.trim()) {
       setError('Please select a video and enter a title.');
       return;
     }
+    if (fileTooBig) return;  // Already showed the size error.
+
     setError('');
     setUploading(true);
+    setProgress(0);
     try {
       const formData = new FormData();
       formData.append('video', file);
@@ -28,13 +52,24 @@ function UploadModal({ onClose, onUploaded }) {
 
       await axios.post(`${baseURL}/v1/growth/self-tapes/upload/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (evt) => {
+          if (!evt.total) return;
+          setProgress(Math.round((evt.loaded * 100) / evt.total));
+        },
       });
       onUploaded();
       onClose();
-    } catch {
-      setError('Upload failed. Please try again.');
+    } catch (err) {
+      // Surface the backend's actual reason instead of "Upload failed."
+      // Common cases: 413 (too big), 402 (over plan quota), 502 (R2).
+      const msg = err?.response?.data?.message
+        || (err?.code === 'ERR_NETWORK'
+            ? 'Network dropped during upload. Check your connection and try again.'
+            : 'Upload failed. Please try again.');
+      setError(msg);
     } finally {
       setUploading(false);
+      setProgress(0);
     }
   };
 
@@ -63,7 +98,7 @@ function UploadModal({ onClose, onUploaded }) {
               ref={fileRef}
               type="file"
               accept="video/*"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={handleFileChange}
               className="hidden"
             />
             <button
@@ -75,8 +110,14 @@ function UploadModal({ onClose, onUploaded }) {
                 border: '1px solid var(--border-default)',
               }}
             >
-              {file ? file.name : 'Choose a video file...'}
+              {file ? `${file.name} (${fileMb} MB)` : 'Choose a video file...'}
             </button>
+            <p className="mt-1.5 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+              Max {maxMb} MB per tape
+              {quota?.tape_count_cap != null && (
+                <> · {quota.tape_count}/{quota.tape_count_cap} tapes used on the {quota.plan} plan</>
+              )}
+            </p>
           </div>
 
           {/* Title */}
@@ -137,6 +178,21 @@ function UploadModal({ onClose, onUploaded }) {
           </div>
 
           {error && <p className="text-sm text-red-400">{error}</p>}
+
+          {uploading && (
+            <div>
+              <div className="flex items-center justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
+                <span>Uploading…</span>
+                <span>{progress}%</span>
+              </div>
+              <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--bg-surface)' }}>
+                <div
+                  className="h-full transition-all"
+                  style={{ width: `${progress}%`, background: '#D4A85F' }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 mt-6">
@@ -153,10 +209,10 @@ function UploadModal({ onClose, onUploaded }) {
           </button>
           <button
             onClick={handleSubmit}
-            disabled={uploading}
+            disabled={uploading || fileTooBig || !file || !title.trim()}
             className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
           >
-            {uploading ? 'Uploading...' : 'Upload'}
+            {uploading ? `Uploading… ${progress}%` : 'Upload'}
           </button>
         </div>
       </div>
@@ -337,18 +393,30 @@ export default function SelfTapes() {
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
   const [submitTape, setSubmitTape] = useState(null);
+  const [quota, setQuota] = useState(null);
 
   const fetchTapes = () => {
     setLoading(true);
     axios
       .get(`${baseURL}/v1/growth/self-tapes/`)
-      .then((res) => setTapes(Array.isArray(res.data) ? res.data : res.data?.results || []))
+      .then((res) => {
+        const arr = res.data?.data ?? res.data?.results ?? res.data;
+        setTapes(Array.isArray(arr) ? arr : []);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
   };
 
+  const fetchQuota = () => {
+    axios
+      .get(`${baseURL}/v1/growth/self-tapes/quota/`)
+      .then((res) => setQuota(res.data?.data ?? null))
+      .catch(() => {});
+  };
+
   useEffect(() => {
     fetchTapes();
+    fetchQuota();
   }, []);
 
   const handlePlay = (tape) => {
@@ -361,9 +429,21 @@ export default function SelfTapes() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          My Self-Tapes
-        </h1>
+        <div>
+          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            My Self-Tapes
+          </h1>
+          {quota && (
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+              {quota.tape_count}
+              {quota.tape_count_cap != null && ` / ${quota.tape_count_cap}`}
+              {' tapes · '}
+              {quota.used_mb} MB
+              {quota.storage_cap_mb != null && ` / ${quota.storage_cap_mb} MB`}
+              {' used'}
+            </p>
+          )}
+        </div>
         <button
           onClick={() => setShowUpload(true)}
           className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
@@ -414,7 +494,11 @@ export default function SelfTapes() {
 
       {/* Upload Modal */}
       {showUpload && (
-        <UploadModal onClose={() => setShowUpload(false)} onUploaded={fetchTapes} />
+        <UploadModal
+          quota={quota}
+          onClose={() => setShowUpload(false)}
+          onUploaded={() => { fetchTapes(); fetchQuota(); }}
+        />
       )}
 
       {/* Submit Modal */}
