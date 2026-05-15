@@ -2,26 +2,22 @@
   "appId": "com.drselftape.app",
   "appName": "Dr Self Tape",
   "webDir": "dist",
-  "server": {
-    "url": "https://drselftape.app",
-    "cleartext": false
-  },
   "ios": {
     "contentInset": "automatic",
-    "backgroundColor": "#0D0D0D",
+    "backgroundColor": "#FAFAF7",
     "preferredContentMode": "mobile",
     "scheme": "Dr Self Tape"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
-      "backgroundColor": "#0D0D0D",
+      "backgroundColor": "#FAFAF7",
       "showSpinner": false,
       "launchAutoHide": true
     },
     "StatusBar": {
       "style": "DARK",
-      "backgroundColor": "#0D0D0D"
+      "backgroundColor": "#FAFAF7"
     },
     "Keyboard": {
       "resize": "body",
