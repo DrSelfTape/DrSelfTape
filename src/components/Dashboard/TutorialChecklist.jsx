@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Camera, Sparkles, Mic, Users2, Radio, MessageSquare, Target,
-  ChevronDown, ChevronUp, Check, ArrowRight, Trophy, Zap,
+  ChevronDown, ChevronUp, Check, ArrowRight, Trophy, Zap, X,
 } from 'lucide-react';
 import { store } from '../../redux/store';
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
@@ -80,7 +80,18 @@ export default function TutorialChecklist({ onNavigate }) {
     }
   }, [isMobile, onNavigate, navigate]);
 
+  // Don't render anything until userSettings has loaded from the server.
+  // Otherwise the checklist briefly flashes on every reload because the
+  // tutorial_complete flag reads as `false` during the loading window.
+  if (!settingsLoaded) return null;
   if (dismissed) return null;
+
+  const handleDismiss = () => {
+    // Persist the dismissal server-side so it sticks across devices and
+    // doesn't come back on next login.
+    dispatch(patchUserSettings({ tutorial_complete: true }));
+    window.dispatchEvent(new CustomEvent('drst-tutorial-complete'));
+  };
 
   return (
     <div style={{
@@ -91,12 +102,28 @@ export default function TutorialChecklist({ onNavigate }) {
       boxShadow: '0 2px 16px rgba(0,0,0,0.12)',
       position: 'relative',
     }}>
+      {/* Dismiss (X) — top-right of the card. Sits above the expand
+          button via z-index. Persists server-side so it stays dismissed. */}
+      <button
+        onClick={(e) => { e.stopPropagation(); handleDismiss(); }}
+        aria-label="Dismiss checklist"
+        title="Dismiss"
+        style={{
+          position: 'absolute', top: 8, right: 8, zIndex: 2,
+          width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: '50%', border: 'none', cursor: 'pointer',
+          background: 'rgba(10,10,10,0.04)', color: 'var(--text-secondary)',
+        }}
+      >
+        <X size={14} />
+      </button>
+
       {/* Header */}
       <button
         onClick={() => setExpanded(!expanded)}
         style={{
           position: 'relative', width: '100%', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', padding: '16px 20px', cursor: 'pointer',
+          justifyContent: 'space-between', padding: '16px 44px 16px 20px', cursor: 'pointer',
           background: 'none', border: 'none',
         }}
       >
@@ -204,10 +231,7 @@ export default function TutorialChecklist({ onNavigate }) {
           {/* Claim button */}
           {allComplete && (
             <button
-              onClick={() => {
-                dispatch(patchUserSettings({ tutorial_complete: true }));
-                window.dispatchEvent(new CustomEvent('drst-tutorial-complete'));
-              }}
+              onClick={handleDismiss}
               style={{
                 width: '100%', marginTop: 8, padding: '14px', borderRadius: 14,
                 color: '#fff', fontWeight: 700, fontSize: 14, border: 'none', cursor: 'pointer',
