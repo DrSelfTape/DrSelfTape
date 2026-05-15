@@ -695,25 +695,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {/* ── Practice strip ── */}
       <AuroraPracticeStrip scripts={rawScripts} />
 
-      {/* ── Pipeline blocks ── */}
+      {/* ── Pipeline blocks ── only render when there's data. The "log
+           your first audition" empty state used to live here but was
+           redundant — the Smart Next Step banner and the Get Started
+           tutorial checklist below already prompt the same action. */}
       {hasStats && <AuroraPipeline stats={s} auditions={auditions} setTab={setTab} />}
-
-      {/* ── Empty state when no stats ── */}
-      {!hasStats && (
-        <div className="aurora-card" style={{ padding: '24px 20px', marginBottom: 14, textAlign: 'center' }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>🎬</div>
-          <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: "0 0 4px" }}>Your stats will appear here</p>
-          <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: 0, lineHeight: 1.4 }}>
-            Start tracking auditions to see callbacks, bookings, and your pipeline.
-          </p>
-          <button
-            onClick={() => setTab("auditions")}
-            style={{ background: "none", border: "none", cursor: "pointer", color: CORAL, fontSize: 13, fontWeight: 600, marginTop: 12 }}
-          >
-            Log your first audition →
-          </button>
-        </div>
-      )}
 
       {/* ── Tutorial + daily challenge — kept; Aurora glass treatment via wrapper ── */}
       <div style={{ marginBottom: 14 }}>
@@ -938,12 +924,32 @@ function AuditionsScreen() {
 
       {/* Add Audition Modal */}
       {showAddForm && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(10,10,10,0.45)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", padding: 16 }}>
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 999,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(10,10,10,0.45)",
+            backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
+            // Leave room at the bottom for the tab bar + home indicator
+            // so the modal's submit button isn't hidden behind them.
+            padding: "16px 16px calc(96px + env(safe-area-inset-bottom, 0px)) 16px",
+          }}
+        >
           <div style={{
             background: 'var(--aurora-surface-solid)',
             borderRadius: 24,
             border: '1px solid var(--aurora-line)',
-            width: "100%", maxWidth: 400, maxHeight: "85vh", overflow: "auto", padding: 24,
+            // 100dvh tracks the live viewport on iOS (vh doesn't shrink
+            // when the URL bar is showing). Same calc as the wrapper
+            // so the modal never extends behind the bottom tab bar.
+            width: "100%", maxWidth: 400,
+            maxHeight: "calc(100dvh - 112px - env(safe-area-inset-bottom, 0px))",
+            overflow: "auto",
+            // Stop the modal's internal scroll from chaining to the
+            // body — that was causing the "snap back up" bounce on iOS.
+            overscrollBehavior: "contain",
+            WebkitOverflowScrolling: "touch",
+            padding: 24,
             boxShadow: 'var(--aurora-shadow-modal)',
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>

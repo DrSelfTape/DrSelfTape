@@ -297,24 +297,9 @@ export default function DashboardHome() {
             </div>
           )}
         </>
-      ) : (
-        /* ── Empty State for New Users ── */
-        <div className="bg-white border border-[rgba(10,10,10,0.08)] rounded-2xl p-8 text-center">
-          <div className="w-12 h-12 mx-auto rounded-full bg-[#D4A85F]/10 flex items-center justify-center mb-4">
-            <Target className="w-6 h-6 text-[#7A5A18]" />
-          </div>
-          <h3 className="text-[#0A0A0A] font-semibold text-lg">Your stats will appear here</h3>
-          <p className="text-[#888] text-sm mt-2 max-w-md mx-auto">
-            Once you start tracking auditions and submitting self-tapes, you'll see your callbacks, booking rate, and pipeline analytics right here.
-          </p>
-          <button
-            onClick={() => navigate('/dashboard/auditions')}
-            className="mt-4 text-[#7A5A18] text-sm font-semibold hover:underline cursor-pointer"
-          >
-            Log your first audition &rarr;
-          </button>
-        </div>
-      )}
+      ) : null /* Empty state removed — Smart Next Step banner + Get
+                   Started checklist already prompt this same action.
+                   Three CTAs for "log your first audition" was noisy. */}
 
       {/* Recent Submissions — only when data exists */}
       {recentSubs.length > 0 && (
