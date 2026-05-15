@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
+import { isNativeIOS, purchase as iapPurchase, restorePurchases, manageSubscriptions } from '../../../utils/purchases';
 
 const PLANS = [
   {
@@ -97,6 +98,34 @@ export default function Membership() {
 
   const handleSubscribe = async (planId) => {
     setCheckoutLoading(planId);
+
+    // iOS: route through Apple IAP via RevenueCat. App Store guideline
+    // 3.1.1 forbids using Stripe for in-app digital goods on iOS.
+    if (isNativeIOS()) {
+      const result = await iapPurchase(planId, billing);
+      setCheckoutLoading(null);
+
+      if (result.userCancelled) return; // Silent — Apple already showed UI.
+
+      if (!result.ok) {
+        const msg = result.reason === 'no_package'
+          ? 'This plan isn\'t available in the App Store right now. Please try again later.'
+          : 'Purchase failed. Please try again.';
+        dispatch(showSnackbar({ message: msg, variant: 'error' }));
+        return;
+      }
+
+      // Success — RevenueCat's webhook will update UserSubscription on
+      // the backend. Refetch status after a short delay so the UI shows
+      // the new plan.
+      dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+      setTimeout(() => {
+        axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
+      }, 2000);
+      return;
+    }
+
+    // Web: existing Stripe Checkout flow.
     try {
       const res = await axiosInstance.post('/v1/subscriptions/checkout/', {
         plan: planId,
@@ -111,12 +140,35 @@ export default function Membership() {
   };
 
   const handleManage = async () => {
+    // iOS: open Apple's native Settings → Subscriptions UI. Required by
+    // App Store guidelines — third-party billing portals aren't allowed.
+    if (isNativeIOS()) {
+      await manageSubscriptions();
+      return;
+    }
+
     try {
       const res = await axiosInstance.post('/v1/subscriptions/portal/');
       window.location.href = res.data.data.portal_url;
     } catch (err) {
       const message = err?.response?.data?.error || "Couldn't open the billing portal. Please try again.";
       dispatch(showSnackbar({ message, variant: 'error' }));
+    }
+  };
+
+  // Apple requires a user-visible "Restore Purchases" control. Surfaces
+  // any prior IAP receipts, useful when a user reinstalls or signs in
+  // on a new device. No-op on web.
+  const handleRestore = async () => {
+    if (!isNativeIOS()) return;
+    const result = await restorePurchases();
+    if (result.ok) {
+      dispatch(showSnackbar({ message: 'Purchases restored.', variant: 'success' }));
+      setTimeout(() => {
+        axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
+      }, 1500);
+    } else {
+      dispatch(showSnackbar({ message: 'No purchases to restore.', variant: 'info' }));
     }
   };
 
@@ -271,6 +323,19 @@ export default function Membership() {
       <p className="text-center text-xs text-[#4a5a56]">
         Rollover credits accumulate up to a maximum of 2 months' worth of unused tokens. Billed in USD.
       </p>
+
+      {/* iOS-only "Restore Purchases" — required by App Store guidelines. */}
+      {isNativeIOS() && (
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={handleRestore}
+            className="text-xs font-medium text-[rgba(10,10,10,0.62)] underline hover:text-[#0A0A0A]"
+          >
+            Restore Purchases
+          </button>
+        </div>
+      )}
     </div>
   );
 }

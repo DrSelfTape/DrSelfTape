@@ -8,6 +8,7 @@ import { SocketProvider } from './socket/socket';
 import { Router } from './routes/index';
 import { initAnalytics, identifyUser } from './utils/analytics';
 import { fetchUserSettings, resetSettings } from './redux/features/userSettings/userSettingsSlice';
+import { initPurchases } from './utils/purchases';
 
 function App() {
   const dispatch = useDispatch();
@@ -29,6 +30,10 @@ function App() {
   useEffect(() => {
     if (userId) {
       dispatch(fetchUserSettings());
+      // Tie native iOS purchases to the same backend user ID so
+      // RevenueCat's webhook can match the receipt to our user row.
+      // No-ops on web or without VITE_REVENUECAT_IOS_KEY.
+      initPurchases(userId);
     } else {
       dispatch(resetSettings());
     }

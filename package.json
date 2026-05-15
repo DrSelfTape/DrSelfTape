@@ -33,6 +33,7 @@
     "@mui/material": "^7.2.0",
     "@mui/x-date-pickers": "^8.9.0",
     "@reduxjs/toolkit": "^2.8.2",
+    "@revenuecat/purchases-capacitor": "^13.1.1",
     "@sentry/react": "^10.53.1",
     "@tailwindcss/postcss": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
