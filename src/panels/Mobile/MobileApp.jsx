@@ -1611,12 +1611,24 @@ function ProfileScreen({ setCurrentPanel }) {
   const user = useSelector((state) => state.auth?.user);
   const profileData = useSelector((state) => state.profile?.profile);
   const statsData = useSelector((state) => state.auditions.stats?.data);
-  const scripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
+  // Auditions list as a live fallback when the cached stats endpoint
+  // hasn't reported the latest write yet (mirrors the Home screen).
+  const auditionsList = useSelector((state) => state.auditions.data || []);
+  // Same dual-source pattern as the Practice tab — uploaded scripts
+  // land in `state.scripts.scripts`; the older sceneStudyScripts slice
+  // is just a fallback for legacy data.
+  const realScripts = useSelector((state) => state.scripts.scripts || []);
+  const fallbackScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
+  const scripts = realScripts.length > 0 ? realScripts : fallbackScripts;
   const userName = user ? `${user.first_name || ""} ${user.last_name || ""}`.trim() : "Actor";
   const userEmail = user?.email || "";
   const initials = userName ? userName.charAt(0).toUpperCase() : "A";
-  const auditionCount = statsData?.total_auditions || 0;
-  const bookedCount = statsData?.total_booked || 0;
+  const auditionCount = auditionsList.length > 0
+    ? auditionsList.length
+    : (statsData?.total_auditions || 0);
+  const bookedCount = auditionsList.length > 0
+    ? auditionsList.filter(a => a.status === 'booked').length
+    : (statsData?.total_booked || 0);
   const scriptsCount = scripts.length || 0;
 
   const headshot = profileData?.user_image || profileData?.headshot || null;
@@ -1628,7 +1640,12 @@ function ProfileScreen({ setCurrentPanel }) {
   const [subStatus, setSubStatus] = useState(null);
 
   useEffect(() => {
+    // Refresh everything the stat cards depend on, so the numbers reflect
+    // the latest state regardless of which tab the user visited last.
     dispatch(fetchProfileThunk());
+    dispatch(fetchAuditionsThunk());
+    dispatch(fetchAuditionStatsThunk());
+    dispatch(fetchScriptsThunk());
     axiosInstance.get('/v1/subscriptions/status/').then(res => setSubStatus(res.data.data)).catch(() => {});
   }, [dispatch]);
 
