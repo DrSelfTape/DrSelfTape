@@ -1895,7 +1895,10 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
 function PanelScreen({ panelId, onBack }) {
   const [subPanel, setSubPanel] = useState(null); // { id: 'green-room-chat', matchId: '123' }
   const PanelComponent = PANEL_COMPONENTS[panelId];
-  const feature = MORE_FEATURES.find(f => f.id === panelId);
+  // Top-level tabs (Find Reader, Green Room) also render through here when
+  // a user taps them, but MORE_FEATURES doesn't list them — fall back to
+  // TABS so the title bar reads "Green Room" instead of literal "Feature".
+  const feature = MORE_FEATURES.find(f => f.id === panelId) || TABS.find(t => t.id === panelId);
   if (!PanelComponent) return null;
 
   const isDark = DARK_PANELS.has(panelId);

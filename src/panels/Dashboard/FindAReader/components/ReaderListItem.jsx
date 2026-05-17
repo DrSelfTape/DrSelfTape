@@ -1,6 +1,8 @@
-import { MapPin, Clock, MessageCircle } from 'lucide-react';
+import { MapPin, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
+
+const MAX_GENRES = 3;
 
 const ReaderListItem = ({ match, onClick }) => {
   const navigate = useNavigate();
@@ -24,115 +26,127 @@ const ReaderListItem = ({ match, onClick }) => {
     'fi-core': 'Fi-Core',
   }[other?.union] || other?.union;
 
-  const time = match?.last_message_at
-    ? new Date(match.last_message_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
-    : '';
+  const genres = Array.isArray(other?.genres) ? other.genres : [];
+  const shownGenres = genres.slice(0, MAX_GENRES);
+  const extraGenres = genres.length - shownGenres.length;
 
   return (
-    <div className="rounded-xl p-5 shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-      <div className="flex items-start gap-4">
-        {/* Avatar — tap to open this actor's profile (chat + favorite live there) */}
-        <button
-          type="button"
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-full text-left rounded-2xl p-4 transition-all hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/40"
+      style={{
+        background: 'var(--aurora-surface-solid)',
+        border: '1px solid var(--aurora-line)',
+      }}
+    >
+      <div className="flex items-center gap-3">
+        {/* Avatar */}
+        <span
+          role="link"
+          tabIndex={0}
           onClick={openProfile}
+          onKeyDown={(e) => { if (e.key === 'Enter') openProfile(e); }}
           aria-label={`View ${other?.name || 'actor'}'s profile`}
-          className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/60"
+          className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/60 cursor-pointer"
         >
           <ProfilePhoto
             src={other?.headshot || other?.user_image}
             alt={other?.name}
             initials={initials}
-            className="h-16 w-16 cursor-pointer"
+            className="h-14 w-14"
           />
-          <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500" style={{ borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--bg-surface)' }} />
-        </button>
+          <span
+            className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500"
+            style={{ borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--aurora-surface-solid)' }}
+          />
+        </span>
 
-        <div className="min-w-0 flex-1 space-y-2">
-          {/* Name + Union — name is also a tap target into the profile */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              onClick={openProfile}
-              className="text-sm font-bold truncate cursor-pointer hover:underline"
-              style={{ color: 'var(--text-primary)', background: 'none', border: 'none', padding: 0 }}
+        {/* Main content */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 mb-0.5">
+            <span
+              className="truncate text-[15px] font-semibold"
+              style={{ color: 'var(--aurora-text)' }}
             >
               {other?.name || 'Actor'}
-            </button>
+            </span>
             {unionLabel && (
-              <span className="shrink-0 rounded-full bg-[#D4A85F]/15 px-2 py-0.5 text-[10px] font-semibold text-[#7A5A18] border border-[#D4A85F]/30">
+              <span
+                className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wider uppercase"
+                style={{
+                  background: 'rgba(212,168,95,0.15)',
+                  color: '#7A5A18',
+                  letterSpacing: '0.05em',
+                }}
+              >
                 {unionLabel}
               </span>
             )}
-            {time && (
-              <span className="ml-auto text-[10px]" style={{ color: 'var(--text-dim)' }}>{time}</span>
-            )}
           </div>
 
-          {/* Location + Experience */}
-          <div className="flex items-center gap-3 flex-wrap">
+          {/* Location · experience · rating — single muted line, no wrap */}
+          <div
+            className="flex items-center gap-2 text-[11px] truncate"
+            style={{ color: 'var(--aurora-sub)' }}
+          >
             {other?.based_in && (
-              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                <MapPin size={10} />{other.based_in}
+              <span className="flex items-center gap-0.5">
+                <MapPin size={10} />
+                {other.based_in}
               </span>
             )}
-            {other?.years_experience && (
-              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                <Clock size={10} />{other.years_experience}yr{other.years_experience !== 1 ? 's' : ''}
+            {other?.based_in && (other?.years_experience || other?.rating > 0) && (
+              <span aria-hidden style={{ color: 'var(--aurora-line)' }}>·</span>
+            )}
+            {other?.years_experience > 0 && (
+              <span>{other.years_experience}y exp</span>
+            )}
+            {other?.years_experience > 0 && other?.rating > 0 && (
+              <span aria-hidden style={{ color: 'var(--aurora-line)' }}>·</span>
+            )}
+            {other?.rating > 0 && (
+              <span style={{ color: '#C09850' }}>
+                ★ {other.rating.toFixed(1)}
               </span>
             )}
           </div>
 
-          {/* Reader metrics */}
-          {(other?.rating > 0 || other?.total_sessions > 0 || other?.response_rate > 0) && (
-            <div className="flex items-center gap-2 flex-wrap">
-              {other.rating > 0 && (
-                <span className="text-[11px] font-semibold" style={{ color: '#FCE072' }}>
-                  ⭐ {other.rating.toFixed(1)}{other.review_count > 0 ? ` (${other.review_count})` : ''}
-                </span>
-              )}
-              {other.response_rate > 0 && (
-                <span className="text-[11px] font-semibold" style={{ color: '#A7ECDA' }}>
-                  ⚡ {other.response_rate}%
-                </span>
-              )}
-              {other.total_sessions > 0 && (
-                <span className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
-                  {other.total_sessions} session{other.total_sessions !== 1 ? 's' : ''}
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Last message or bio */}
-          {match?.last_message ? (
-            <p className="truncate text-xs" style={{ color: 'var(--text-muted)' }}>{match.last_message}</p>
-          ) : other?.bio ? (
-            <p className="line-clamp-2 text-xs leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{other.bio}</p>
-          ) : null}
-
-          {/* Genres */}
-          {other?.genres?.length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {other.genres.map((g) => (
-                <span key={g} className="rounded-full px-2 py-0.5 text-[10px]" style={{ background: 'var(--border-default)', color: 'var(--text-secondary)' }}>
+          {/* Genres — capped, soft pills */}
+          {shownGenres.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {shownGenres.map((g) => (
+                <span
+                  key={g}
+                  className="rounded-full px-2 py-0.5 text-[10px]"
+                  style={{
+                    background: 'color-mix(in oklch, var(--aurora-line) 80%, transparent)',
+                    color: 'var(--aurora-sub)',
+                  }}
+                >
                   {g}
                 </span>
               ))}
+              {extraGenres > 0 && (
+                <span
+                  className="rounded-full px-2 py-0.5 text-[10px]"
+                  style={{ color: 'var(--aurora-dim)' }}
+                >
+                  +{extraGenres}
+                </span>
+              )}
             </div>
           )}
         </div>
-      </div>
 
-      {/* Action */}
-      <button
-        type="button"
-        onClick={onClick}
-        className="mt-4 w-full rounded-lg bg-[#D4A85F] px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-[#C09850] flex items-center justify-center gap-2"
-      >
-        <MessageCircle size={13} />
-        Open Green Room
-      </button>
-    </div>
+        {/* Chevron — affordance that the whole card is tappable */}
+        <ChevronRight
+          size={18}
+          className="shrink-0"
+          style={{ color: 'var(--aurora-dim)' }}
+        />
+      </div>
+    </button>
   );
 };
 

@@ -23,14 +23,11 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
   }, [dispatch]);
 
   return (
-    <div className="aurora-orbs min-h-[calc(100vh-80px)] px-4 py-8" style={{ background: 'var(--aurora-bg)' }}>
+    <div className="aurora-orbs min-h-[calc(100vh-80px)] px-4 py-2" style={{ background: 'var(--aurora-bg)' }}>
       <div className="mx-auto max-w-2xl">
-        <div className="mb-6">
-          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>GREEN ROOM</span>
-          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
-            Your matches
-          </h1>
-        </div>
+        <p className="aurora-eyebrow mb-4" style={{ color: 'var(--aurora-dim)' }}>
+          Your matches
+        </p>
 
         {matchesLoading && (
           <div className="flex h-60 items-center justify-center">
@@ -75,16 +72,42 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
 
         {!matchesLoading && matches.length > 0 && (
           <>
-            {/* Activity stats */}
+            {/* Activity stats — single-row inline pills, no wrapping labels */}
             {activityFeed && (
-              <div className="grid grid-cols-3 gap-2 mb-6">
-                <ActivityFeedCard type="available" count={activityFeed.available_now_count || 0} label="available" pulse />
-                <ActivityFeedCard type="matches" count={activityFeed.recent_matches_count || 0} label="matches today" />
-                <ActivityFeedCard type="sessions" count={activityFeed.active_sessions_count || 0} label="live now" pulse={activityFeed.active_sessions_count > 0} />
+              <div
+                className="aurora-glass mb-5 flex items-center justify-between gap-3 rounded-2xl px-4 py-3"
+                style={{ fontSize: 12 }}
+              >
+                <span style={{ color: 'var(--aurora-text)' }}>
+                  <span className="aurora-mono" style={{ fontSize: 15, fontWeight: 600 }}>
+                    {activityFeed.available_now_count || 0}
+                  </span>
+                  <span className="ml-1.5" style={{ color: 'var(--aurora-sub)' }}>available</span>
+                </span>
+                <span aria-hidden style={{ color: 'var(--aurora-line)' }}>·</span>
+                <span style={{ color: 'var(--aurora-text)' }}>
+                  <span className="aurora-mono" style={{ fontSize: 15, fontWeight: 600 }}>
+                    {activityFeed.recent_matches_count || 0}
+                  </span>
+                  <span className="ml-1.5" style={{ color: 'var(--aurora-sub)' }}>today</span>
+                </span>
+                <span aria-hidden style={{ color: 'var(--aurora-line)' }}>·</span>
+                <span style={{ color: 'var(--aurora-text)' }}>
+                  <span
+                    className="aurora-mono"
+                    style={{
+                      fontSize: 15, fontWeight: 600,
+                      color: activityFeed.active_sessions_count > 0 ? '#FF8280' : 'var(--aurora-text)',
+                    }}
+                  >
+                    {activityFeed.active_sessions_count || 0}
+                  </span>
+                  <span className="ml-1.5" style={{ color: 'var(--aurora-sub)' }}>live now</span>
+                </span>
               </div>
             )}
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-2">
               {matches.map((match) => (
                 <ReaderListItem
                   key={match.id}
