@@ -5,8 +5,7 @@
   "ios": {
     "contentInset": "automatic",
     "backgroundColor": "#FAFAF7",
-    "preferredContentMode": "mobile",
-    "scheme": "Dr Self Tape"
+    "preferredContentMode": "mobile"
   },
   "plugins": {
     "SplashScreen": {
