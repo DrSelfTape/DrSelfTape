@@ -372,49 +372,75 @@ function AuroraHeroRing({ stats, auditions }) {
   );
 }
 
-/* ── Aurora practice strip ── 7-day bar chart of practice intensity */
-function AuroraPracticeStrip({ scripts }) {
+/* ── Aurora practice strip ── 7-day chart of actual practice minutes
+   plus today / soft-goal headline. Logged by LiveSceneMode on session end. */
+function AuroraPracticeStrip() {
+  const [week, setWeek] = useState([]);  // [{ date, seconds }, ...] oldest → newest
+  const [goal, setGoal] = useState(600); // 10 min default
   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const todayIdx = ((new Date().getDay() + 6) % 7);
-  const counts = [0, 0, 0, 0, 0, 0, 0];
-  scripts.forEach(s => {
-    const dt = s.created_at || s.updated_at;
-    if (!dt) return;
-    const dayOfWeek = ((new Date(dt).getDay() + 6) % 7);
-    const daysAgo = Math.floor((Date.now() - new Date(dt).getTime()) / 86400000);
-    if (daysAgo >= 0 && daysAgo < 7) counts[dayOfWeek]++;
-  });
-  const max = Math.max(...counts, 1);
+
+  useEffect(() => {
+    axiosInstance.get('/v1/growth/practice/week/').then(res => {
+      const d = res?.data?.data;
+      if (d?.days) setWeek(d.days);
+      if (d?.daily_goal_seconds) setGoal(d.daily_goal_seconds);
+    }).catch(() => {});
+  }, []);
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const todaySeconds = (week.find(d => d.date === todayIso)?.seconds) || 0;
+  const goalMin = Math.round(goal / 60);
+  const todayMin = Math.floor(todaySeconds / 60);
+  const pctOfGoal = Math.min(Math.round((todaySeconds / Math.max(goal, 1)) * 100), 999);
+  const max = Math.max(...week.map(d => d.seconds), goal, 1);
 
   return (
     <div className="aurora-card" style={{ padding: 16, marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span className="aurora-eyebrow">PRACTICE · 7-DAY</span>
+        <span className="aurora-eyebrow">PRACTICE · TODAY</span>
         <span className="aurora-mono" style={{ color: 'var(--aurora-text)', fontSize: 12 }}>
-          {counts.reduce((a, b) => a + b, 0)} <span style={{ color: 'var(--aurora-dim)' }}>/ 7 min</span>
+          {todayMin} <span style={{ color: 'var(--aurora-dim)' }}>/ {goalMin} min</span>
+          {todaySeconds >= goal && (
+            <span style={{
+              marginLeft: 8, fontSize: 10, padding: '2px 8px', borderRadius: 100,
+              background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
+              color: 'color-mix(in oklch, var(--aurora-mint) 75%, var(--aurora-text))',
+              letterSpacing: '0.08em',
+            }}>GOAL ✓</span>
+          )}
         </span>
       </div>
       <div style={{ display: 'flex', gap: 6, height: 56, alignItems: 'flex-end' }}>
-        {counts.map((c, i) => {
-          const h = (c / max) * 100;
-          const isToday = i === todayIdx;
+        {week.map((d, i) => {
+          const h = (d.seconds / max) * 100;
+          const isToday = d.date === todayIso;
+          const dayOfWeek = ((new Date(d.date).getDay() + 6) % 7);
           return (
-            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+            <div key={d.date || i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
               <div style={{
                 width: '100%',
-                height: c > 0 ? `${Math.max(h, 12)}%` : 4,
-                background: isToday ? 'var(--aurora-heritage-gold)' : c > 0 ? 'var(--aurora-sky)' : 'var(--aurora-line)',
+                height: d.seconds > 0 ? `${Math.max(h, 12)}%` : 4,
+                background: isToday
+                  ? 'var(--aurora-heritage-gold)'
+                  : d.seconds > 0 ? 'var(--aurora-sky)' : 'var(--aurora-line)',
                 borderRadius: 4,
                 transition: 'height 0.4s ease',
               }} />
               <span className="aurora-micro" style={{
                 fontSize: 9, color: isToday ? 'var(--aurora-text)' : 'var(--aurora-dim)',
                 fontWeight: isToday ? 700 : 500,
-              }}>{days[i]}</span>
+              }}>{days[dayOfWeek]}</span>
             </div>
           );
         })}
       </div>
+      {todaySeconds >= goal && pctOfGoal > 120 && (
+        <p className="aurora-micro" style={{
+          color: 'var(--aurora-sub)', marginTop: 10, textAlign: 'center', fontStyle: 'italic',
+        }}>
+          You're past today's goal — feel free to keep going, or rest the voice.
+        </p>
+      )}
     </div>
   );
 }
@@ -696,7 +722,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       )}
 
       {/* ── Practice strip ── */}
-      <AuroraPracticeStrip scripts={rawScripts} />
+      <AuroraPracticeStrip />
 
       {/* ── Pipeline blocks ── only render when there's data. The "log
            your first audition" empty state used to live here but was

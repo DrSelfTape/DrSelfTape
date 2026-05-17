@@ -645,6 +645,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       ai_feedback: { conversation_history: conversationHistoryRef.current?.slice(-20) || [] },
       duration_seconds: duration,
     }));
+    // Log to the practice-time tracker so the home widget reflects this
+    // session. Skip if < 5s to avoid logging accidental Begin → Exit taps.
+    if (duration >= 5) {
+      axios.post('/v1/growth/practice/log/', { seconds: duration }).catch(() => {});
+      sceneStartTimeRef.current = null; // don't double-log on unmount
+    }
     onExit();
   }, [onExit, dispatch, lines, userRole]);
 
@@ -659,6 +665,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (audioRef.current) {
         try { audioRef.current.stop(); } catch(e) {}
         audioRef.current = null;
+      }
+      // If the user backed out without tapping End, the timer is still
+      // live — log whatever they got so home practice time isn't lost.
+      const startedAt = sceneStartTimeRef.current;
+      if (startedAt) {
+        const duration = Math.round((Date.now() - startedAt) / 1000);
+        if (duration >= 5) {
+          axios.post('/v1/growth/practice/log/', { seconds: duration }).catch(() => {});
+        }
+        sceneStartTimeRef.current = null;
       }
     };
   }, []);
