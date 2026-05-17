@@ -171,121 +171,130 @@ export default function SidesUpload({ onSubmit }) {
 
   const canContinue = scriptText.trim().length > 0;
 
+  const clearAll = () => {
+    setScriptText('');
+    setFileName('');
+    setRawCharCount(0);
+    setQualityWarning('');
+    setPdfError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#0A0A0A]">Upload Your Sides</h2>
         <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
-          Upload a .txt or .pdf file, or paste your sides below
+          {canContinue
+            ? 'Review your sides below, then start your session.'
+            : 'Upload a .txt or .pdf file, or paste your sides below'}
         </p>
       </div>
 
-      {/* Drag & Drop Zone */}
-      <div
-        className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-4 ${
-          dragActive
-            ? 'border-[#D4A85F] bg-[#D4A85F]/5'
-            : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-[#F4F4EE]'
-        }`}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={() => setDragActive(false)}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        {pdfLoading ? (
-          <div className="flex flex-col items-center gap-2">
-            <svg className="w-10 h-10 text-[#7A5A18] animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-              <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
-            </svg>
-            <p className="text-sm font-medium text-[#0A0A0A]">{pdfStatus || 'Processing...'}</p>
-            <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">This may take a few seconds</p>
+      {canContinue ? (
+        <>
+          <div className="bg-[#F4F4EE] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-semibold text-[rgba(10,10,10,0.4)] uppercase tracking-wide">
+                {fileName ? `Sides Preview — ${fileName}` : 'Sides Preview'}
+              </p>
+              <button
+                type="button"
+                onClick={clearAll}
+                className="text-xs font-medium text-[#7A5A18] hover:underline cursor-pointer"
+              >
+                Clear
+              </button>
+            </div>
+            <pre className="text-sm text-[rgba(10,10,10,0.7)] whitespace-pre-wrap max-h-72 overflow-y-auto font-sans leading-relaxed">
+              {scriptText.slice(0, 2000)}
+              {scriptText.length > 2000 && '\n…'}
+            </pre>
           </div>
-        ) : (
-          <>
-            <svg
-              className="w-10 h-10 mx-auto text-[rgba(10,10,10,0.4)] mb-3"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-              />
-            </svg>
-            <p className="text-sm font-medium text-[#0A0A0A]">
-              {fileName || 'Drag & drop your sides here'}
-            </p>
-            <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">Accepts .txt and .pdf files</p>
-          </>
-        )}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".txt,.pdf"
-          className="hidden"
-          onChange={(e) => handleFile(e.target.files?.[0])}
-        />
-      </div>
 
-      {pdfError && (
-        <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm">
-          {pdfError}
-        </div>
-      )}
-
-      {/* Clean stats */}
-      {rawCharCount > 0 && scriptText && !pdfLoading && (
-        <div className="mb-4 bg-[rgba(159,230,180,0.18)] border border-green-500/20 rounded-lg px-4 py-3 flex items-center gap-3">
-          <span className="text-green-400 text-lg">✓</span>
-          <div>
-            <p className="text-xs font-semibold text-green-400">PDF cleaned successfully</p>
-            <p className="text-xs text-[rgba(10,10,10,0.4)] mt-0.5">
-              Removed {Math.max(0, rawCharCount - scriptText.length).toLocaleString()} characters of noise
-              (timestamps, watermarks, page numbers)
-            </p>
+          {qualityWarning && (
+            <div className="mt-3 bg-[rgba(252,224,114,0.18)] border border-[#FCE072]/20 rounded-lg px-4 py-3 flex items-center gap-3">
+              <span className="text-[#FCE072] text-lg">⚠</span>
+              <p className="text-xs text-[#FCE072]">{qualityWarning}</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <>
+          {/* Drag & Drop Zone */}
+          <div
+            className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-4 ${
+              dragActive
+                ? 'border-[#D4A85F] bg-[#D4A85F]/5'
+                : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-[#F4F4EE]'
+            }`}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={() => setDragActive(false)}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {pdfLoading ? (
+              <div className="flex flex-col items-center gap-2">
+                <svg className="w-10 h-10 text-[#7A5A18] animate-spin" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+                  <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
+                </svg>
+                <p className="text-sm font-medium text-[#0A0A0A]">{pdfStatus || 'Processing...'}</p>
+                <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">This may take a few seconds</p>
+              </div>
+            ) : (
+              <>
+                <svg
+                  className="w-10 h-10 mx-auto text-[rgba(10,10,10,0.4)] mb-3"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={1.5}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                  />
+                </svg>
+                <p className="text-sm font-medium text-[#0A0A0A]">
+                  {fileName || 'Drag & drop your sides here'}
+                </p>
+                <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">Accepts .txt and .pdf files</p>
+              </>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".txt,.pdf"
+              className="hidden"
+              onChange={(e) => handleFile(e.target.files?.[0])}
+            />
           </div>
-        </div>
-      )}
 
-      {qualityWarning && (
-        <div className="mb-4 bg-[rgba(252,224,114,0.18)] border border-[#FCE072]/20 rounded-lg px-4 py-3 flex items-center gap-3">
-          <span className="text-[#FCE072] text-lg">⚠</span>
-          <p className="text-xs text-[#FCE072]">{qualityWarning}</p>
-        </div>
-      )}
+          {pdfError && (
+            <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm">
+              {pdfError}
+            </div>
+          )}
 
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
-        <span className="text-xs text-[rgba(10,10,10,0.4)] font-medium">OR PASTE BELOW</span>
-        <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
-      </div>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
+            <span className="text-xs text-[rgba(10,10,10,0.4)] font-medium">OR PASTE BELOW</span>
+            <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
+          </div>
 
-      {/* Textarea */}
-      <textarea
-        value={scriptText}
-        onChange={(e) => {
-          setScriptText(e.target.value);
-          if (fileName) setFileName('');
-        }}
-        placeholder={`Paste your sides here...\n\nFormat example:\nJOHN: Hey, how's it going?\nSARAH: Not bad, just got back from the audition.\nJOHN: How did it go?`}
-        className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[#F4F4EE] text-[#0A0A0A]"
-      />
-
-      {/* Preview */}
-      {canContinue && (
-        <div className="mt-4 bg-[#F4F4EE] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
-          <p className="text-xs font-semibold text-[rgba(10,10,10,0.4)] mb-2 uppercase tracking-wide">
-            Sides Preview
-          </p>
-          <pre className="text-sm text-[rgba(10,10,10,0.62)] whitespace-pre-wrap max-h-40 overflow-y-auto font-sans leading-relaxed">
-            {scriptText.slice(0, 1000)}
-            {scriptText.length > 1000 && '...'}
-          </pre>
-        </div>
+          {/* Textarea */}
+          <textarea
+            value={scriptText}
+            onChange={(e) => {
+              setScriptText(e.target.value);
+              if (fileName) setFileName('');
+            }}
+            placeholder={`Paste your sides here...\n\nFormat example:\nJOHN: Hey, how's it going?\nSARAH: Not bad, just got back from the audition.\nJOHN: How did it go?`}
+            className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[#F4F4EE] text-[#0A0A0A]"
+          />
+        </>
       )}
 
       <button
