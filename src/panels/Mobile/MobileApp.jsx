@@ -2074,6 +2074,27 @@ export default function DrSelfTapeApp() {
   const [isMobile, setIsMobile] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showNoTokens, setShowNoTokens] = useState(false);
+  // Scroll-driven top bar: hide while scrolling down, reveal on scroll up.
+  // headerHidden controls opacity + translate; lastScrollYRef avoids a
+  // setState on every scroll frame.
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollYRef = useRef(0);
+  const handleContentScroll = (e) => {
+    const y = e.currentTarget.scrollTop;
+    const prev = lastScrollYRef.current;
+    if (y < 16) {
+      // Always show near the top.
+      if (headerHidden) setHeaderHidden(false);
+    } else if (y > prev + 6 && !headerHidden) {
+      setHeaderHidden(true);
+    } else if (y < prev - 6 && headerHidden) {
+      setHeaderHidden(false);
+    }
+    lastScrollYRef.current = y;
+  };
+  // Resetting tabs/panels jumps scroll to the top — reveal the header
+  // so the user lands on a fresh screen with full chrome.
+  useEffect(() => { setHeaderHidden(false); lastScrollYRef.current = 0; }, [tab, currentPanel]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -2219,7 +2240,8 @@ export default function DrSelfTapeApp() {
 
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
-          {/* Top Bar — Aurora style: logo badge + mono wordmark, streak + bell + avatar */}
+          {/* Top Bar — Aurora style: logo badge + mono wordmark, streak + bell + avatar.
+              Fades + slides up while the content scrolls down; reappears on scroll up. */}
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
             background: "transparent",
@@ -2227,7 +2249,11 @@ export default function DrSelfTapeApp() {
             display: "flex", alignItems: "center", justifyContent: "space-between",
             height: "calc(54px + env(safe-area-inset-top, 0px))",
             flexShrink: 0,
-            pointerEvents: 'none',
+            pointerEvents: headerHidden ? 'none' : 'auto',
+            opacity: headerHidden ? 0 : 1,
+            transform: headerHidden ? 'translateY(-100%)' : 'translateY(0)',
+            transition: 'opacity 220ms ease, transform 260ms cubic-bezier(0.4, 0, 0.2, 1)',
+            willChange: 'opacity, transform',
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, pointerEvents: 'auto' }}>
               <img src={logo} alt="Dr Self Tape" style={{
@@ -2262,7 +2288,7 @@ export default function DrSelfTapeApp() {
           </div>
 
           {/* Scrollable Content Area — sits between fixed top bar and floating tab pill */}
-          <div style={{
+          <div onScroll={handleContentScroll} style={{
             flex: 1,
             minHeight: 0,
             overflowY: "auto",
