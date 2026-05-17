@@ -182,7 +182,7 @@ export default function SidesUpload({ onSubmit }) {
 
   return (
     <div className="max-w-2xl mx-auto">
-      <div className="mb-6">
+      <div className="mb-5">
         <h2 className="text-2xl font-bold text-[#0A0A0A]">Upload Your Sides</h2>
         <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
           {canContinue
@@ -300,7 +300,7 @@ export default function SidesUpload({ onSubmit }) {
       <button
         onClick={() => onSubmit(scriptText)}
         disabled={!canContinue}
-        className="mt-6 w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="mt-5 w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Start Session
       </button>
