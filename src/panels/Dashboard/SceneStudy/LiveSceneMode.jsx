@@ -828,37 +828,32 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           {/* START SCREEN — shown before scene begins */}
           {status === 'idle' && !sceneStarted && (
             <div className="text-center max-w-md w-full">
-              <div className="w-20 h-20 rounded-full bg-[#D4A85F]/10 border border-[#D4A85F]/30 flex items-center justify-center mx-auto mb-6">
-                <svg className="w-10 h-10 text-[#7A5A18]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="w-16 h-16 rounded-full bg-[#D4A85F]/15 flex items-center justify-center mx-auto mb-5">
+                <svg className="w-8 h-8 text-[#7A5A18]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z" />
                 </svg>
               </div>
-              <h2 className="text-[#0A0A0A] text-2xl font-bold mb-2">Ready to Study?</h2>
-              <p className="text-[rgba(10,10,10,0.4)] text-sm mb-2">
+              <h2 className="text-[#0A0A0A] text-2xl font-bold tracking-tight mb-2">Ready to Study?</h2>
+              <p className="text-[rgba(10,10,10,0.62)] text-sm mb-8">
                 Playing <span className="text-[#7A5A18] font-semibold">{userRole}</span> opposite <span className="text-[#0A0A0A] font-semibold">{partnerName}</span>
               </p>
-              <p className="text-[rgba(10,10,10,0.62)] text-xs mb-8">
-                Speak your lines naturally. The AI will respond automatically after a short pause.
-              </p>
-              <div className="bg-white/5 rounded-xl p-4 mb-8 text-left space-y-2">
-                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
-                  <span className="text-[#7A5A18]">🎙️</span> Speak your line — pause when done
-                </div>
-                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
-                  <span className="text-[#7A5A18]">🤖</span> AI responds as {partnerName}
-                </div>
-                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
-                  <span className="text-[#7A5A18]">🔊</span> ElevenLabs voice reads it aloud
-                </div>
-                <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)]">
-                  <span className="text-[#7A5A18]">🔁</span> Scene flows hands-free
-                </div>
+              <div className="bg-[#F4F4EE] rounded-xl p-5 mb-6 text-left space-y-3">
+                {[
+                  `Say your line, then pause — the AI listens and responds as ${partnerName}.`,
+                  `Listen to ${partnerName}, then deliver yours. The scene flows automatically.`,
+                  'Pause or end anytime from the controls below.',
+                ].map((step, i) => (
+                  <div key={i} className="flex items-start gap-3 text-[13px] leading-relaxed text-[rgba(10,10,10,0.7)]">
+                    <span className="shrink-0 w-5 h-5 rounded-full bg-[#D4A85F]/20 text-[#7A5A18] text-[11px] font-bold flex items-center justify-center mt-0.5">{i + 1}</span>
+                    <span>{step}</span>
+                  </div>
+                ))}
               </div>
               <button
                 onClick={() => setShowMicPermission(true)}
-                className="w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-8 py-4 rounded-xl font-bold text-lg transition-colors cursor-pointer flex items-center justify-center gap-3"
+                className="w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-8 py-3.5 rounded-xl font-semibold text-base transition-colors cursor-pointer flex items-center justify-center gap-2"
               >
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z" />
                 </svg>
                 Start Scene
