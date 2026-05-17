@@ -22,6 +22,7 @@ import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
 import * as pdfjsLib from "pdfjs-dist";
+import { extractCharacters } from "../../utils/scriptParser";
 
 import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
@@ -209,6 +210,7 @@ function mapScript(s) {
     lastPracticed: relativeTime(s.created_at) || s.lastPracticed || "",
     progress: s.progress || 0,
     content: s.content || s.script_content || s.text || "",
+    characters: Array.isArray(s.characters) ? s.characters : [],
   };
 }
 
@@ -1419,12 +1421,19 @@ function ScenesScreen({ setTab }) {
     }
 
     if (content && content.trim()) {
-      dispatch(createScriptThunk({ title, content: content.trim() }));
+      // Parse the cast once at upload time so the BE can store it. The
+      // backend echoes the same array back on subsequent fetches, which
+      // lets the SceneStudy panel skip the parse step entirely.
+      const characters = extractCharacters(content);
+      dispatch(createScriptThunk({ title, content: content.trim(), characters }));
     }
   };
 
   if (selectedScript) {
-    sessionStorage.setItem('preloadedScript', JSON.stringify({ scriptContent: selectedScript.content }));
+    sessionStorage.setItem('preloadedScript', JSON.stringify({
+      scriptContent: selectedScript.content,
+      characters: Array.isArray(selectedScript.characters) ? selectedScript.characters : undefined,
+    }));
     return (
       <div style={{ height: "calc(100vh - 64px)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid var(--aurora-line)", flexShrink: 0 }}>

@@ -88,6 +88,7 @@ export default function SceneStudy() {
   const useV2 = searchParams.get('layout') !== 'v1';
   const [step, setStep] = useState('upload');
   const [scriptText, setScriptText] = useState('');
+  const [cachedCharacters, setCachedCharacters] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedVoice, setSelectedVoice] = useState('partner_male');
   const [showJournal, setShowJournal] = useState(null); // null or session type string
@@ -98,8 +99,12 @@ export default function SceneStudy() {
   useEffect(() => {
     // Priority 1: route state (passed via navigate)
     const routeScript = location?.state?.scriptContent;
+    const routeCharacters = location?.state?.characters;
     if (routeScript) {
       setScriptText(routeScript);
+      if (Array.isArray(routeCharacters) && routeCharacters.length) {
+        setCachedCharacters(routeCharacters);
+      }
       setStep('pick-role');
       // Clear sessionStorage if it was also set
       sessionStorage.removeItem('preloadedScript');
@@ -110,9 +115,12 @@ export default function SceneStudy() {
     const raw = sessionStorage.getItem('preloadedScript');
     if (raw) {
       try {
-        const { scriptContent } = JSON.parse(raw);
+        const { scriptContent, characters: preloadedCharacters } = JSON.parse(raw);
         if (scriptContent) {
           setScriptText(scriptContent);
+          if (Array.isArray(preloadedCharacters) && preloadedCharacters.length) {
+            setCachedCharacters(preloadedCharacters);
+          }
           setStep('pick-role');
         }
       } catch { /* ignore */ }
@@ -120,8 +128,16 @@ export default function SceneStudy() {
     }
   }, [location?.state]);
 
+  // Parse lines (always — Teleprompter / PracticeV2 need the dialogue
+  // structure, not just the cast list). For the character list itself
+  // we prefer the BE-cached value when available and fall back to the
+  // parser, so legacy scripts saved before the `characters` field
+  // landed still work.
   const parsedLines = useMemo(() => parseScript(scriptText), [scriptText]);
-  const characters = useMemo(() => extractCharacters(parsedLines), [parsedLines]);
+  const parsedCharacters = useMemo(() => extractCharacters(parsedLines), [parsedLines]);
+  const characters = cachedCharacters && cachedCharacters.length
+    ? cachedCharacters
+    : parsedCharacters;
 
   const currentStepIdx = STEPS.indexOf(step);
 
