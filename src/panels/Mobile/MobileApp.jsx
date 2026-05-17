@@ -1426,17 +1426,17 @@ function ScenesScreen({ setTab }) {
     sessionStorage.setItem('preloadedScript', JSON.stringify({ scriptContent: selectedScript.content }));
     return (
       <div style={{ height: "calc(100vh - 64px)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid rgba(167,236,218,0.06)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid var(--aurora-line)", flexShrink: 0 }}>
           <button onClick={() => setSelectedScript(null)} style={{
-            width: 36, height: 36, borderRadius: 10, background: "#1a1c26",
-            border: "1px solid rgba(167,236,218,0.06)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
+            width: 36, height: 36, borderRadius: 10, background: 'var(--aurora-surface-solid)',
+            border: "1px solid var(--aurora-line)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
           }}>
-            <Icon name="back" size={18} color="#8a9a96" />
+            <Icon name="back" size={18} color="var(--aurora-sub)" />
           </button>
-          <span style={{ fontSize: 16, fontWeight: 600, color: "#f2f0ed", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedScript.title}</span>
+          <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--aurora-text)', overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedScript.title}</span>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px", WebkitOverflowScrolling: "touch" }}>
-          <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}><div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div></div>}>
+          <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}><div style={{ fontSize: 13, color: "var(--aurora-sub)" }}>Loading...</div></div>}>
             <SceneStudy key={selectedScript.id} />
           </Suspense>
         </div>
@@ -1447,7 +1447,7 @@ function ScenesScreen({ setTab }) {
   return (
     <div style={{ padding: "0 16px 24px" }}>
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--aurora-text)', margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
         <button style={{
           width: 38, height: 38, borderRadius: 12,
           background: 'var(--aurora-glass)',
@@ -1471,22 +1471,22 @@ function ScenesScreen({ setTab }) {
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.25 }} />
                 <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
               </svg>
-              <p style={{ fontSize: 13, color: TEXT_SECONDARY, margin: 0 }}>{pdfLoading ? "Parsing PDF..." : "Saving..."}</p>
+              <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: 0 }}>{pdfLoading ? "Parsing PDF..." : "Saving..."}</p>
             </div>
           ) : (
             <>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: `${MINT}18`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px" }}>
                 <Icon name="plus" size={22} color={MINT} />
               </div>
-              <p style={{ fontSize: 15, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, letterSpacing: "-0.2px" }}>Add a Script</p>
-              <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "6px 0 0", letterSpacing: "0.2px" }}>Upload PDF or paste text</p>
+              <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, letterSpacing: "-0.2px" }}>Add a Script</p>
+              <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "6px 0 0", letterSpacing: "0.2px" }}>Upload PDF or paste text</p>
             </>
           )}
         </div>
         <input id="script-upload-input" ref={fileInputRef} type="file" accept=".pdf,.txt" style={{ display: "none" }} onChange={e => handleFileUpload(e.target.files?.[0])} />
       </label>
 
-      <p style={{ fontSize: 11, fontWeight: 600, color: TEXT_MUTED, margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "1px" }}>Your Scripts</p>
+      <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--aurora-dim)', margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "1px" }}>Your Scripts</p>
 
       {/* Confirm delete dialog */}
       {confirmDelete && (
@@ -1528,9 +1528,9 @@ function ScenesScreen({ setTab }) {
 
       {scripts.map(sc => (
         <div key={sc.id} style={{
-          background: deletingId === sc.id ? "rgba(239,68,68,0.08)" : BG_CARD,
+          background: deletingId === sc.id ? "rgba(239,68,68,0.08)" : 'var(--aurora-surface-solid)',
           borderRadius: 14, padding: "16px", marginBottom: 10,
-          border: deletingId === sc.id ? "1px solid rgba(239,68,68,0.3)" : `1px solid ${BORDER}`,
+          border: deletingId === sc.id ? "1px solid rgba(239,68,68,0.3)" : "1px solid var(--aurora-line)",
           display: "flex", alignItems: "center", gap: 14,
           opacity: deletingId === sc.id ? 0.5 : 1,
           transition: "all 0.2s",
@@ -1538,8 +1538,8 @@ function ScenesScreen({ setTab }) {
           <div onClick={() => setSelectedScript(sc)} style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, cursor: "pointer" }}>
             <ProgressRing pct={sc.progress} size={44} stroke={3} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontSize: 14, fontWeight: 600, color: TEXT_PRIMARY, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
-              <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "3px 0 0" }}>{sc.pages}{sc.lastPracticed ? ` · Last practiced ${sc.lastPracticed}` : ""}</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
+              <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "3px 0 0" }}>{sc.pages}{sc.lastPracticed ? ` · Last practiced ${sc.lastPracticed}` : ""}</p>
             </div>
           </div>
           {/* Delete button */}
