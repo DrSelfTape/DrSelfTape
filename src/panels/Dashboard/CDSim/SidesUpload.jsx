@@ -4,7 +4,8 @@ import { cleanScriptText, detectScriptQuality } from '../../../utils/scriptClean
 import axiosInstance from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 // Simple hash for caching — avoids re-calling GPT on same content
 function simpleHash(str) {

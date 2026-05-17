@@ -8,7 +8,8 @@ import {
   deleteScriptThunk,
 } from '../../../redux/features/scripts/scriptsSlice';
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 
 async function extractPdfText(file) {
   const arrayBuffer = await file.arrayBuffer();
