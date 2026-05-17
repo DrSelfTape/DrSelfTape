@@ -469,6 +469,7 @@ function callbackBadge(dateStr) {
 
 const TABS = [
   { id: "home", icon: "home", label: "Home" },
+  { id: "scenes", icon: "scenes", label: "Practice" },
   { id: "auditions", icon: "auditions", label: "Auditions" },
   { id: "find-a-reader", icon: "community", label: "Find Reader" },
   { id: "green-room", icon: "mic", label: "Green Room" },
