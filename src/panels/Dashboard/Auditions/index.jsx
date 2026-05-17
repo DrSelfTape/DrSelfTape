@@ -544,8 +544,8 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     setParseError('');
     try {
       const pdfjsLib = await import('pdfjs-dist');
-      const { default: pdfWorkerUrl } = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+      const { default: PdfWorker } = await import('pdfjs-dist/build/pdf.worker.min.mjs?worker');
+      pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
       const { cleanScriptText } = await import('../../../utils/scriptCleaner');
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
