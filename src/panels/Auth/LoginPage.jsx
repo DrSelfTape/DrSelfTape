@@ -1,10 +1,13 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../redux/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { getFirstRouteByRole } from "../../routes/routeHelpers";
 import { loginLogo } from "../../assets/images";
 import { setAuthToken } from "../../redux/http";
+
+const COOLDOWN_AFTER = 5;
+const COOLDOWN_SECONDS = 30;
 
 const MINT = "#D4A85F";
 const GOLD = "#F0D097";
@@ -37,6 +40,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+  const passwordRef = useRef(null);
+
+  // Tick down the cooldown timer
+  useEffect(() => {
+    if (cooldownLeft <= 0) return;
+    const id = setInterval(() => {
+      setCooldownLeft((s) => (s <= 1 ? 0 : s - 1));
+    }, 1000);
+    return () => clearInterval(id);
+  }, [cooldownLeft]);
 
   useEffect(() => {
     const t = [
@@ -58,20 +74,34 @@ export default function LoginPage() {
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
+    if (cooldownLeft > 0) return;
     if (!email || !password) { setError("Please enter your email and password"); return; }
     setError("");
     const result = await dispatch(loginUser({ email, password }));
     if (loginUser.fulfilled.match(result)) {
-      // Set the axios bearer header immediately so any in-flight effects
-      // (e.g. fetchUserSettings) that fire on the new userId have auth.
       const token = result.payload?.token?.access || result.payload?.token;
       if (token) setAuthToken(token);
       const role = result.payload?.active_role || result.payload?.role || 'actor';
       navigate(getFirstRouteByRole(role));
     } else {
-      setError(result.payload || "Invalid credentials. Please try again.");
+      const nextAttempts = failedAttempts + 1;
+      setFailedAttempts(nextAttempts);
+      setError(result.payload || "Email and password don't match. Try again.");
+      setPassword("");
+      // Re-focus the password field so retry is one keystroke away
+      setTimeout(() => passwordRef.current?.focus(), 0);
+      if (nextAttempts >= COOLDOWN_AFTER) {
+        setCooldownLeft(COOLDOWN_SECONDS);
+      }
     }
-  }, [email, password, dispatch, navigate]);
+  }, [email, password, dispatch, navigate, failedAttempts, cooldownLeft]);
+
+  // Caps Lock detection on the password input
+  const checkCapsLock = useCallback((e) => {
+    if (typeof e.getModifierState === 'function') {
+      setCapsLockOn(e.getModifierState('CapsLock'));
+    }
+  }, []);
 
   const showForm = phase === "form";
   const isExit = phase === "exit";
@@ -199,30 +229,51 @@ export default function LoginPage() {
             <div style={{ marginBottom: 8 }}>
               <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: TEXT2, marginBottom: 6 }}>Password</label>
               <div style={{ position: "relative" }}>
-                <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password"
+                <input ref={passwordRef} type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={checkCapsLock} onKeyUp={checkCapsLock} placeholder="Enter your password"
                   style={{ width: "100%", height: 52, background: BG_INPUT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "0 16px", paddingRight: 48, color: TEXT, fontSize: 14, outline: "none", transition: "border-color 0.2s, box-shadow 0.2s" }}
                   onFocus={(e) => { e.target.style.borderColor = "#D4A85F"; e.target.style.boxShadow = "0 0 0 3px rgba(212,168,95,0.20)"; }} onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }} />
                 <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
                   <EyeIcon open={showPw} />
                 </button>
               </div>
+              {capsLockOn && (
+                <p style={{ marginTop: 6, fontSize: 11, color: "#B26F00", display: "flex", alignItems: "center", gap: 4 }}>
+                  <span style={{ fontSize: 13 }}>⇧</span> Caps Lock is on
+                </p>
+              )}
             </div>
 
             <div style={{ textAlign: "right", marginBottom: 24 }}>
               <a href="/forgot-password" style={{ fontSize: 12, color: CORAL, textDecoration: "none", fontWeight: 500 }}>Forgot password?</a>
             </div>
 
-            {error && <div style={{ background: `${CORAL}12`, border: `1px solid ${CORAL}25`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: CORAL }}>{error}</div>}
+            {error && (
+              <div style={{ background: `${CORAL}12`, border: `1px solid ${CORAL}25`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: CORAL }}>
+                {error}
+                {failedAttempts >= 2 && cooldownLeft === 0 && (
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${CORAL}25`, fontSize: 12 }}>
+                    Trouble signing in?{" "}
+                    <a href="/forgot-password" style={{ color: CORAL, fontWeight: 600, textDecoration: "underline" }}>Reset your password →</a>
+                  </div>
+                )}
+                {cooldownLeft > 0 && (
+                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${CORAL}25`, fontSize: 12 }}>
+                    Too many attempts. Try again in {cooldownLeft}s, or{" "}
+                    <a href="/forgot-password" style={{ color: CORAL, fontWeight: 600, textDecoration: "underline" }}>reset your password</a>.
+                  </div>
+                )}
+              </div>
+            )}
 
-            <button type="submit" disabled={authLoading} style={{
-              width: "100%", height: 52, padding: 0, borderRadius: 28, border: "none", cursor: "pointer",
-              background: authLoading ? "#D4A85F60" : "linear-gradient(135deg, #D4A85F, #7A5A18)",
+            <button type="submit" disabled={authLoading || cooldownLeft > 0} style={{
+              width: "100%", height: 52, padding: 0, borderRadius: 28, border: "none", cursor: cooldownLeft > 0 ? "not-allowed" : "pointer",
+              background: (authLoading || cooldownLeft > 0) ? "#D4A85F60" : "linear-gradient(135deg, #D4A85F, #7A5A18)",
               color: "#fff", fontSize: 15, fontWeight: 600, transition: "all 0.2s",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
               boxShadow: "0 8px 22px rgba(212,168,95,0.30)",
             }}>
               {authLoading && <div style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />}
-              {authLoading ? "Signing in..." : "Sign in"}
+              {authLoading ? "Signing in..." : cooldownLeft > 0 ? `Wait ${cooldownLeft}s` : "Sign in"}
             </button>
           </form>
 
