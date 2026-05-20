@@ -56,10 +56,16 @@ export class ErrorBoundary extends Component {
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, letterSpacing: '-0.4px' }}>
             {isChunkError ? 'New version available' : 'Something went wrong'}
           </h1>
-          <p style={{ fontSize: 14, color: 'rgba(10,10,10,0.62)', marginBottom: 24, maxWidth: 360 }}>
+          <p style={{ fontSize: 14, color: 'rgba(10,10,10,0.62)', marginBottom: 24, maxWidth: 360, lineHeight: 1.5 }}>
             {isChunkError
-              ? 'Dr Self Tape just got an update. Tap below to load the latest version.'
-              : 'An unexpected error occurred. Please refresh to try again.'}
+              ? 'Dr Self Tape just got an update. Tap below to load the latest version — your work is safe.'
+              : (
+                <>
+                  Something tripped us up. We logged the error and the team has been notified — no action needed on your end.
+                  <br />
+                  Tap below to reload and try again.
+                </>
+              )}
           </p>
           <button
             onClick={() => {

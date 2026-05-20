@@ -3,8 +3,14 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
+  // Strip console.* and debugger statements from production bundles only.
+  // Sentry captures real exceptions via ErrorBoundary; the remaining
+  // console.error/warn/log calls were diagnostic noise that spammed
+  // TestFlight logs and added zero production signal. Dev builds keep
+  // them so local debugging still works.
+  esbuild: mode === 'production' ? { drop: ['console', 'debugger'] } : {},
   build: {
     rollupOptions: {
       output: {
@@ -35,4 +41,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));

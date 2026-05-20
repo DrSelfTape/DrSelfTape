@@ -7,7 +7,6 @@ import { AuthLayout } from '../../../components/Auth/AuthLayout';
 import { isEmpty, isError, validateEmail } from '../../../utils/utils';
 import { loginUser } from '../../../redux/features/auth/authSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
-import { AppleIcon, GoogleIcon } from '../../../assets/icons';
 import { getFirstRouteByRole } from '../../../routes/routeHelpers';
 import { setAuthToken } from '../../../redux/http';
 import { CustomButton, CustomInput, Logo } from '../../../components/Shared';
