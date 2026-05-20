@@ -17,9 +17,26 @@ function simpleHash(str) {
   return String(hash);
 }
 
+// 5 MB. PDFs above this routinely OOM-crash WKWebView's renderer on
+// real iPhones (the sim has 16GB so it never triggers there).
+const MAX_PDF_BYTES = 5 * 1024 * 1024;
+
 async function extractPdfText(file) {
+  if (file.size > MAX_PDF_BYTES) {
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    throw new Error(`PDF is ${mb}MB — please use a smaller file (max 5MB) or paste your script.`);
+  }
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const pdf = await pdfjsLib.getDocument({
+    data: arrayBuffer,
+    // Encrypted PDFs would hang on iOS without this — fail fast instead.
+    password: '',
+  }).promise.catch((err) => {
+    if (err?.name === 'PasswordException') {
+      throw new Error('This PDF is password-protected — please remove the password or paste your script.');
+    }
+    throw err;
+  });
   const pageTexts = [];
 
   for (let i = 1; i <= pdf.numPages; i++) {
@@ -114,8 +131,8 @@ export default function ScriptUpload({ onSubmit }) {
 
         setScriptText(finalText);
         setPdfStatus('');
-      } catch {
-        setPdfError('Could not parse PDF — please paste your script manually.');
+      } catch (err) {
+        setPdfError(err?.message || 'Could not parse PDF — please paste your script manually.');
         setFileName('');
         setPdfStatus('');
       } finally {

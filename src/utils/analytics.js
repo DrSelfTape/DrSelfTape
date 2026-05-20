@@ -2,6 +2,8 @@
 // key means it's a no-op right now anyway. We also skip init entirely until
 // a real key is set, so the chunk never downloads on first paint.
 
+import { baseURL } from '../redux/constant';
+
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
 
@@ -55,9 +57,9 @@ export function trackEvent(event, properties = {}) {
     });
   }
 
-  // Also send to our backend for server-side logging
+  // Also send to our backend for server-side logging. Reuse the same
+  // baseURL the rest of the app uses so we can't accidentally diverge.
   try {
-    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
     const token = JSON.parse(localStorage.getItem('persist:root') || '{}');
     const auth = JSON.parse(token?.auth || '{}');
     const accessToken = auth?.user?.token?.access || auth?.user?.token;

@@ -290,18 +290,25 @@ export default function Membership() {
 
               {/* CTA */}
               {isCurrent ? (
-                <button
-                  onClick={handleManage}
-                  className="w-full py-3 rounded-xl text-sm font-semibold border transition-all"
-                  style={{ borderColor: plan.color, color: plan.color }}
-                >
-                  Manage Plan
-                </button>
+                <>
+                  <button
+                    onClick={handleManage}
+                    className="w-full py-3 rounded-xl text-sm font-semibold border transition-all"
+                    style={{ borderColor: plan.color, color: plan.color }}
+                  >
+                    Manage Plan
+                  </button>
+                  {isNativeIOS() && (
+                    <p className="text-[11px] text-center mt-2" style={{ color: 'var(--aurora-dim)' }}>
+                      Opens Apple Settings · Subscriptions
+                    </p>
+                  )}
+                </>
               ) : (
                 <button
                   onClick={() => handleSubscribe(plan.id)}
                   disabled={!!checkoutLoading}
-                  className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50"
+                  className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{
                     background: plan.popular
                       ? 'linear-gradient(135deg, #D4A85F, #7A5A18)'
@@ -311,7 +318,22 @@ export default function Membership() {
                     boxShadow: plan.popular ? '0 8px 22px rgba(212,168,95,0.30)' : 'none',
                   }}
                 >
-                  {checkoutLoading === plan.id ? 'Loading...' : `Get ${plan.name}`}
+                  {checkoutLoading === plan.id ? (
+                    <>
+                      <span
+                        style={{
+                          width: 14, height: 14, borderRadius: '50%',
+                          border: '2px solid currentColor',
+                          borderTopColor: 'transparent',
+                          animation: 'drst-spin 0.7s linear infinite',
+                          display: 'inline-block',
+                        }}
+                      />
+                      <span>Opening checkout…</span>
+                    </>
+                  ) : (
+                    `Get ${plan.name}`
+                  )}
                 </button>
               )}
             </div>

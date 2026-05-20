@@ -12,6 +12,7 @@ import { markStep } from "../../components/Dashboard/TutorialChecklist";
 import { logoutUser, performLogout } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
+import ProfileCompleteness from "../../components/Dashboard/ProfileCompleteness";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
@@ -636,6 +637,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {/* Pending likes banner */}
       <div style={{ paddingTop: 16, marginBottom: (matchingStats?.pending_likes_count || 0) > 0 ? 8 : 0 }}>
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
+      </div>
+
+      {/* Profile completeness — auto-hides at 100% */}
+      <div style={{ paddingTop: 8 }}>
+        <ProfileCompleteness onTapMissing={() => setCurrentPanel('dash-profile')} />
       </div>
 
       {/* ── Greeting block ── */}

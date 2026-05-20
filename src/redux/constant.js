@@ -1,6 +1,13 @@
-// Base URL
-// In production, set VITE_API_URL env var (e.g. https://yourapp.up.railway.app/api)
-export const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+// Base URL — must be supplied via VITE_API_URL at build time in production.
+// Localhost fallback ONLY when running `vite dev` (DEV mode); a missing
+// env var in a production build is a hard failure so we never ship an
+// iOS bundle that silently points at localhost (it would 100% fail review
+// and confuse users).
+const envApiUrl = import.meta.env.VITE_API_URL;
+if (!envApiUrl && !import.meta.env.DEV) {
+  throw new Error('VITE_API_URL must be set for production builds. Got: ' + envApiUrl);
+}
+export const baseURL = envApiUrl || 'http://localhost:8000/api';
 
 // Endpoints
 const endPoints = {

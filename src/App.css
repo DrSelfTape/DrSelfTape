@@ -466,3 +466,8 @@ input:-webkit-autofill:active {
 .animate-card-enter {
   animation: card-enter 0.35s ease-out forwards;
 }
+
+/* Spinner used by inline loading states (e.g., Membership checkout button). */
+@keyframes drst-spin {
+  to { transform: rotate(360deg); }
+}

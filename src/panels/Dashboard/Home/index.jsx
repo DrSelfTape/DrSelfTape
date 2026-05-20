@@ -14,6 +14,7 @@ import { fetchMatchingStats } from '../../../redux/features/readers/readersMatch
 import AuditionBadges from '../../../components/AuditionBadges';
 import UpcomingCallbacks from '../../../components/UpcomingCallbacks';
 import PendingLikesBanner from '../../../components/Dashboard/PendingLikesBanner';
+import ProfileCompleteness from '../../../components/Dashboard/ProfileCompleteness';
 import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
 import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardingModal';
 import NotificationBell from '../../../components/Dashboard/NotificationBell';
@@ -274,6 +275,9 @@ export default function DashboardHome() {
 
       {/* ── Pending Matches Banner ── */}
       <PendingLikesBanner />
+
+      {/* ── Profile completeness — auto-hides when 100% ── */}
+      <ProfileCompleteness />
 
       {/* ── Smart Next Step — ONE primary CTA ── */}
       <div

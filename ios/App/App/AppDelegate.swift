@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import AVFoundation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,7 +8,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Configure the shared audio session up front so the scene-partner
+        // flow can record mic input AND play TTS through the speaker
+        // simultaneously. Without `playAndRecord` + `defaultToSpeaker`,
+        // recording silently fails when audio is playing, and playback
+        // routes to the earpiece during/after a recording.
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(
+                .playAndRecord,
+                mode: .default,
+                options: [.defaultToSpeaker, .allowBluetooth, .duckOthers]
+            )
+            try session.setActive(true)
+        } catch {
+            NSLog("AVAudioSession setup failed: \(error)")
+        }
         return true
     }
 

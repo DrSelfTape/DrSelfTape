@@ -18,8 +18,8 @@ const BG_CARD = "#FFFFFF";
 const BG_INPUT = "#FFFFFF";
 const BORDER = "rgba(10,10,10,0.08)";
 const TEXT = "#0A0A0A";
-const TEXT2 = "rgba(10,10,10,0.62)";
-const TEXT3 = "rgba(10,10,10,0.40)";
+const TEXT2 = "rgba(10,10,10,0.72)"; // body subtle — bumped from 0.62 for WCAG AA
+const TEXT3 = "rgba(10,10,10,0.55)"; // placeholders/footnotes — bumped from 0.40 for WCAG AA
 
 const LOGO_SRC = loginLogo;
 

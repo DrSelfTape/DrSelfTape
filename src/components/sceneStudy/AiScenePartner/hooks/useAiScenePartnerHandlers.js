@@ -621,7 +621,10 @@ export const useAiScenePartnerHandlers = ({
 
       recorder.onstop = () => {
         if (chunksRef.current.length > 0) {
-          const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+          // Use the recorder's actual mime type — iOS records mp4/aac, web records webm/opus.
+          // Hardcoding webm makes the blob unplayable on iOS.
+          const blobType = recorder.mimeType || chunksRef.current[0]?.type || 'audio/mp4';
+          const blob = new Blob(chunksRef.current, { type: blobType });
           const url = URL.createObjectURL(blob);
 
           setRecordings((prevRecs) => {
@@ -665,7 +668,8 @@ export const useAiScenePartnerHandlers = ({
     chunksRef.current = [];
     rec.onstop = () => {
       if (chunksRef.current.length > 0) {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        const blobType = rec.mimeType || chunksRef.current[0]?.type || 'audio/mp4';
+        const blob = new Blob(chunksRef.current, { type: blobType });
         const url = URL.createObjectURL(blob);
 
         setRecordings((prevRecs) => {
