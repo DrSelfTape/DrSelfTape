@@ -9,7 +9,7 @@ import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/featu
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
 import { markStep } from "../../components/Dashboard/TutorialChecklist";
-import { logoutUser } from "../../redux/features/auth/authSlice";
+import { logoutUser, performLogout } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
@@ -1678,7 +1678,7 @@ function ProfileScreen({ setCurrentPanel }) {
   const menu = [
     { label: "Edit Profile", icon: "profile", action: () => setCurrentPanel("dash-profile") },
     { label: "Membership", icon: "star", action: () => setCurrentPanel("membership") },
-    { label: "Log Out", icon: "logout", action: () => dispatch(logoutUser()), danger: true },
+    { label: "Log Out", icon: "logout", action: () => dispatch(performLogout()), danger: true },
   ];
 
   return (
@@ -1838,7 +1838,7 @@ function MoreScreen({ setCurrentPanel }) {
 
       {/* Log Out */}
       <button
-        onClick={() => dispatch(logoutUser())}
+        onClick={() => dispatch(performLogout())}
         className="aurora-mono"
         style={{
           width: "100%", marginTop: 24, padding: "14px", borderRadius: 100,

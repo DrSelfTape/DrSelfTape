@@ -15,7 +15,7 @@ import { CustomPopover } from '../CustomPopover';
 import { CustomAvatar } from '../CustomAvatar';
 import { PopoverData } from '../PopoverData';
 import NotificationEmptyState from '../NotificationEmptyState';
-import { logoutUser, getProfileDetails, switchRole } from '../../../redux/features/auth/authSlice';
+import { performLogout, getProfileDetails, switchRole } from '../../../redux/features/auth/authSlice';
 import { getNotifications } from '../../../redux/features/notifications/notificationsSlice';
 import { sideMenuRoutes } from '../../../routes/sideMenuConfig';
 import { useNotificationActions } from '../../../hooks/useNotificationActions';
@@ -66,7 +66,7 @@ export const Header = () => {
   useNotificationSync(notifications);
   
   const handleLogout = () => {
-    dispatch(logoutUser());
+    dispatch(performLogout());
   };
   const handleProfile = () => {
     setIsPopoverOpen(false);

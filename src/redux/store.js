@@ -38,11 +38,22 @@ import adminSlice from './features/admin/adminSlice';
 import userSettingsSlice from './features/userSettings/userSettingsSlice';
 
 // Define the persist configuration
+// Whitelisted slices hydrate from disk on app launch so users see their
+// last-known data immediately (stale-while-revalidate). Mount-time fetches
+// in screens still run and refresh whatever's stale. Logout flow purges.
 const persistConfig = {
   key: 'root',
   version: 3,
   storage,
-  whitelist: ['auth'],
+  whitelist: [
+    'auth',
+    'auditions',          // stats + data drive home cards/chart
+    'submissions',        // recent subs list on home
+    'readersMatch',       // green room matches, activity feed, availability
+    'sceneStudyScripts',  // script list shown on multiple screens
+    'profile',            // profile completeness / role hints
+    'userSettings',       // theme, tutorial flags (cross-device)
+  ],
   migrate: migrationConfig,
 };
 

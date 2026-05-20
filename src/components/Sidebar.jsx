@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
-import { logoutUser } from '../redux/features/auth/authSlice'
+import { performLogout } from '../redux/features/auth/authSlice'
 import ProfilePhoto from './Shared/ProfilePhoto'
 import AvailabilityToggle from './Dashboard/AvailabilityToggle'
 import {
@@ -249,7 +249,7 @@ export default function Sidebar() {
 
         {/* Log Out */}
         <button
-          onClick={() => dispatch(logoutUser())}
+          onClick={() => dispatch(performLogout())}
           className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[rgba(10,10,10,0.62)] hover:text-red-400 hover:bg-red-500/10 transition-colors mt-1"
         >
           <LogOut className="w-4 h-4 shrink-0" />

@@ -330,4 +330,14 @@ export const authSlice = createSlice({
 
 export const { logoutUser, clearTempSession } = authSlice.actions;
 
+// Logout that ALSO clears persisted data slices (auditions, submissions,
+// scripts, etc.) so the next user on this device starts clean. Call this
+// instead of `logoutUser` at user-facing sign-out points.
+export const performLogout = () => async (dispatch) => {
+  dispatch(logoutUser());
+  // Import lazily to avoid a circular dependency with redux/store.js.
+  const { persistor } = await import('../../store');
+  await persistor.purge();
+};
+
 export default authSlice.reducer;
