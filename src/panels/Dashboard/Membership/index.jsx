@@ -308,7 +308,7 @@ export default function Membership() {
                 <button
                   onClick={() => handleSubscribe(plan.id)}
                   disabled={!!checkoutLoading}
-                  className="w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="aurora-glow w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   style={{
                     background: plan.popular
                       ? 'linear-gradient(135deg, #D4A85F, #7A5A18)'

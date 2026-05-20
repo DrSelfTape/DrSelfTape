@@ -471,3 +471,124 @@ input:-webkit-autofill:active {
 @keyframes drst-spin {
   to { transform: rotate(360deg); }
 }
+
+/* ─────────────────────────────────────────────────────────────────────
+ * Polish: hover + press micro-interactions
+ *
+ * All hover effects gated on (hover: hover) so they don't trigger
+ * accidental "sticky hover" on touchscreens. Touch devices get a
+ * tactile :active press state instead.
+ * ───────────────────────────────────────────────────────────────────── */
+
+/* Cards: gentle lift + warm halo on hover. */
+@media (hover: hover) and (pointer: fine) {
+  .aurora-card {
+    transition:
+      transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      box-shadow 220ms ease,
+      border-color 220ms ease;
+  }
+  .aurora-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in oklch, var(--aurora-accent) 35%, transparent);
+    box-shadow:
+      0 1px 2px rgba(10,10,10,0.04),
+      0 20px 40px color-mix(in oklch, var(--aurora-accent) 20%, transparent),
+      0 8px 16px rgba(10,10,10,0.05),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+}
+
+/* Universal press state — feels tactile under a finger or click. */
+button:not(:disabled):active,
+.aurora-card:active,
+[role="button"]:active {
+  transform: translateY(1px) scale(0.985);
+  transition: transform 80ms ease-out;
+}
+
+/* Inline link with sliding gold underline (grows from center). */
+.aurora-link {
+  position: relative;
+  text-decoration: none;
+  color: var(--aurora-accent-deep);
+  font-weight: 600;
+  display: inline-block;
+  padding-bottom: 2px;
+}
+.aurora-link::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 0;
+  height: 1.5px;
+  background: linear-gradient(90deg, var(--aurora-accent), var(--aurora-accent-deep));
+  border-radius: 2px;
+  transition:
+    width 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    left 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .aurora-link:hover::after {
+    width: 100%;
+    left: 0;
+  }
+}
+
+/* Glow-on-hover — for prominent CTAs (Get Premium, Sign in, etc.). */
+.aurora-glow {
+  transition:
+    box-shadow 280ms ease,
+    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@media (hover: hover) and (pointer: fine) {
+  .aurora-glow:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      0 14px 36px color-mix(in oklch, var(--aurora-accent) 45%, transparent),
+      0 6px 16px color-mix(in oklch, var(--aurora-accent) 28%, transparent);
+  }
+}
+
+/* Loading shimmer skeleton — drop in to replace "..." placeholders. */
+@keyframes drst-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.aurora-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--aurora-line) 0%,
+    color-mix(in oklch, var(--aurora-accent) 22%, transparent) 50%,
+    var(--aurora-line) 100%
+  );
+  background-size: 200% 100%;
+  animation: drst-shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
+  color: transparent;
+  user-select: none;
+}
+
+/* Focused inputs get a gentle breathing ring in the brand accent. */
+@keyframes drst-focus-breathe {
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklch, var(--aurora-accent) 22%, transparent); }
+  50%      { box-shadow: 0 0 0 5px color-mix(in oklch, var(--aurora-accent) 32%, transparent); }
+}
+.aurora-input:focus-visible {
+  outline: none;
+  border-color: var(--aurora-accent);
+  animation: drst-focus-breathe 1.8s ease-in-out infinite;
+}
+
+/* Respect reduced-motion preferences. */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-card,
+  .aurora-link::after,
+  .aurora-glow,
+  .aurora-skeleton,
+  .aurora-input:focus-visible {
+    transition: none !important;
+    animation: none !important;
+  }
+}

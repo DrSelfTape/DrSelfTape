@@ -244,7 +244,7 @@ export default function LoginPage() {
             </div>
 
             <div style={{ textAlign: "right", marginBottom: 24 }}>
-              <a href="/forgot-password" style={{ fontSize: 12, color: CORAL, textDecoration: "none", fontWeight: 500 }}>Forgot password?</a>
+              <a href="/forgot-password" className="aurora-link" style={{ fontSize: 12 }}>Forgot password?</a>
             </div>
 
             {error && (
@@ -265,7 +265,7 @@ export default function LoginPage() {
               </div>
             )}
 
-            <button type="submit" disabled={authLoading || cooldownLeft > 0} style={{
+            <button type="submit" disabled={authLoading || cooldownLeft > 0} className="aurora-glow" style={{
               width: "100%", height: 52, padding: 0, borderRadius: 28, border: "none", cursor: cooldownLeft > 0 ? "not-allowed" : "pointer",
               background: (authLoading || cooldownLeft > 0) ? "#D4A85F60" : "linear-gradient(135deg, #D4A85F, #7A5A18)",
               color: "#fff", fontSize: 15, fontWeight: 600, transition: "all 0.2s",
@@ -281,7 +281,7 @@ export default function LoginPage() {
         </div>
 
         <p style={{ marginTop: 24, fontSize: 13, color: TEXT2, position: "relative", zIndex: 1, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.7s" }}>
-          Don't have account?{" "}<a href="/signup" style={{ color: "#7A5A18", textDecoration: "none", fontWeight: 700 }}>Sign Up</a>
+          Don't have account?{" "}<a href="/signup" className="aurora-link">Sign Up</a>
         </p>
 
         <p style={{ marginTop: 16, fontSize: 11, color: TEXT3, position: "relative", zIndex: 1, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.9s" }}>

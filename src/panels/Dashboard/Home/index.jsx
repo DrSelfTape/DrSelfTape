@@ -282,7 +282,10 @@ export default function DashboardHome() {
       {/* ── Smart Next Step — ONE primary CTA ── */}
       <div
         onClick={() => navigate(nextStep.path)}
-        className={`bg-gradient-to-r ${nextStep.gradient} rounded-2xl p-6 border border-[rgba(10,10,10,0.08)] cursor-pointer hover:shadow-xl hover:shadow-[#FF8280]/10 transition-all duration-300 group relative overflow-hidden`}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(nextStep.path); }}
+        className={`aurora-glow bg-gradient-to-r ${nextStep.gradient} rounded-2xl p-6 border border-[rgba(10,10,10,0.08)] cursor-pointer transition-all duration-300 group relative overflow-hidden`}
       >
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_rgba(212,168,95,0.1),_transparent_60%)]" />
         <div className="relative flex items-center gap-5">
