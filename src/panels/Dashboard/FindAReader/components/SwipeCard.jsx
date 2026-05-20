@@ -167,13 +167,13 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* ── SLATE stamp (swipe right) */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, left: 20,
-        border: '2.5px solid #FF8280', color: '#FF8280',
+        border: '2.5px solid #4ADE80', color: '#4ADE80',
         fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
         padding: '4px 14px', borderRadius: 6,
         opacity: slateOpacity,
         transform: 'rotate(-12deg)',
         pointerEvents: 'none',
-        textShadow: '0 0 20px rgba(255, 130, 128,0.5)',
+        textShadow: '0 0 20px rgba(74, 222, 128, 0.55)',
         fontFamily: '"Space Grotesk", sans-serif',
       }}>SLATE</div>
 

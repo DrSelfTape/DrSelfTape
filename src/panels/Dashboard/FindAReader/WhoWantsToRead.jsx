@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Heart } from 'lucide-react';
 import ActorProfileCard from './components/ActorProfileCard';
+import MatchCelebration from './components/MatchCelebration';
 import {
   fetchWhoWantsToRead,
   swipeOnReader,
@@ -15,6 +16,7 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
   const { whoWantsToRead, likesLoading } = useSelector(
     (state) => state.readersMatch
   );
+  const [celebrating, setCelebrating] = useState(null);
 
   useEffect(() => {
     dispatch(fetchWhoWantsToRead());
@@ -26,21 +28,29 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
         swipeOnReader({ reader_id: actor.id, action: 'right' })
       ).unwrap();
       if (result?.match && result?.match_details?.id) {
-        if (onMatchNavigate) {
-          onMatchNavigate(result.match_details.id);
-        } else {
-          const isMob = window.innerWidth < 768;
-          if (isMob) {
-            window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
-          } else {
-            navigate(`/dashboard/its-a-scene/${result.match_details.id}`);
-          }
-        }
+        // Hold on the celebration; navigate when burst finishes.
+        setCelebrating({ matchId: result.match_details.id });
       } else {
         dispatch(fetchWhoWantsToRead());
       }
     } catch { /* handled in slice */ }
   };
+
+  const onCelebrationDone = useCallback(() => {
+    const id = celebrating?.matchId;
+    setCelebrating(null);
+    if (!id) return;
+    if (onMatchNavigate) {
+      onMatchNavigate(id);
+    } else {
+      const isMob = window.innerWidth < 768;
+      if (isMob) {
+        window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
+      } else {
+        navigate(`/dashboard/its-a-scene/${id}`);
+      }
+    }
+  }, [celebrating, onMatchNavigate, navigate]);
 
   const handleStar = async (actor) => {
     try {
@@ -99,6 +109,9 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
           </div>
         )}
       </div>
+
+      {/* Match celebration overlay */}
+      {celebrating && <MatchCelebration onDone={onCelebrationDone} />}
     </div>
   );
 };

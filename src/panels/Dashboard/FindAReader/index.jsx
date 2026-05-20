@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Filter, Loader2, Users, Camera } from 'lucide-react';
 import SwipeCard from './components/SwipeCard';
 import SwipeActions from './components/SwipeActions';
+import MatchCelebration from './components/MatchCelebration';
 import ReaderFilters from './ReaderFilters';
 import {
   fetchAvailableReaders,
@@ -67,6 +68,7 @@ const FindAReader = () => {
   };
 
   const [swiping, setSwiping] = useState(false);
+  const [celebrating, setCelebrating] = useState(null); // null | { matchId }
 
   const handleSwipe = useCallback(
     async (action) => {
@@ -79,12 +81,9 @@ const FindAReader = () => {
           swipeOnReader({ reader_id: actor.id, action })
         ).unwrap();
         if (result?.match && result?.match_details?.id) {
-          const isMob = window.innerWidth < 768;
-          if (isMob) {
-            window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
-          } else {
-            navigate(`/dashboard/its-a-scene/${result.match_details.id}`);
-          }
+          // Hold the user on the celebration overlay; navigation runs
+          // when the burst finishes (MatchCelebration calls onDone).
+          setCelebrating({ matchId: result.match_details.id });
           return;
         }
       } catch {
@@ -93,8 +92,21 @@ const FindAReader = () => {
       setCurrentIndex((prev) => prev + 1);
       setSwiping(false);
     },
-    [currentIndex, readers, dispatch, navigate, swiping]
+    [currentIndex, readers, dispatch, swiping]
   );
+
+  const onCelebrationDone = useCallback(() => {
+    const id = celebrating?.matchId;
+    setCelebrating(null);
+    setSwiping(false);
+    if (!id) return;
+    const isMob = window.innerWidth < 768;
+    if (isMob) {
+      window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
+    } else {
+      navigate(`/dashboard/its-a-scene/${id}`);
+    }
+  }, [celebrating, navigate]);
 
   const currentActor = readers[currentIndex];
   const nextActor = readers[currentIndex + 1];
@@ -298,6 +310,9 @@ const FindAReader = () => {
       {showFilters && (
         <ReaderFilters onClose={() => setShowFilters(false)} />
       )}
+
+      {/* Match celebration — fixed overlay; holds nav until burst finishes */}
+      {celebrating && <MatchCelebration onDone={onCelebrationDone} />}
     </div>
   );
 };
