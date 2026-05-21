@@ -13,7 +13,6 @@ import {
 import {
   ActorBookingColumnData,
   ActorBookingColumnExtensionsData,
-  ActorBookingRowData,
 } from '../../../../components/Shared/CustomTable/dummyData';
 import {
   ActionUtil,
@@ -144,11 +143,11 @@ export const CastingDirectorBooking = () => {
         <Box mt='15px' px={{ xxs: '10px', base: '20px' }}>
           <Box height='calc(100vh - 160px)' overflow='auto' mt={2}>
             <CustomTable
-              rows={ActorBookingRowData}
+              rows={[]}
               columns={ActorBookingColumnData}
               tableColumnExtensions={ActorBookingColumnExtensionsData}
               dataProviders={dataProviders}
-              metaData={{ totalCount: ActorBookingRowData?.length }}
+              metaData={{ totalCount: 0 }}
             />
           </Box>
         </Box>

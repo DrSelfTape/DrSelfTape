@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { HeartHandshake } from "lucide-react";
 import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats, fetchGreenRoomMessages, fetchActivityFeed } from "../redux/features/readers/readersMatchSlice";
+import { baseURL } from "../redux/constant";
 
 const SocketContext = React.createContext(null);
 const isMobile = () => window.innerWidth < 768;
@@ -103,13 +104,11 @@ export const SocketProvider = ({ children }) => {
   useEffect(() => {
     if (!currentUser || !token) return;
 
-    const apiUrl = import.meta.env.VITE_API_URL || '';
-    const wsHost = apiUrl
-      ? apiUrl.replace(/^https?:\/\//, '').replace(/\/api$/, '')
-      : window.location.hostname !== 'localhost'
-        ? window.location.hostname
-        : 'localhost:8000';
-    const wsProto = (apiUrl.startsWith('https') || window.location.protocol === 'https:') ? 'wss' : 'ws';
+    // baseURL is the single source of truth — it hard-fails in prod
+    // builds if VITE_API_URL is missing, so we never silently fall back
+    // to localhost in a shipped iOS bundle.
+    const wsHost = baseURL.replace(/^https?:\/\//, '').replace(/\/api$/, '');
+    const wsProto = baseURL.startsWith('https') ? 'wss' : 'ws';
     const wsUrl = `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
     const ws = new ReconnectingWebSocket(wsUrl);
     socketRef.current = ws;
@@ -123,8 +122,7 @@ export const SocketProvider = ({ children }) => {
 
     // Auto-offline when user leaves the app/tab
     const handleVisibility = () => {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-      const presenceUrl = `${apiUrl}/v1/matching/presence/`;
+      const presenceUrl = `${baseURL}/v1/matching/presence/`;
       const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
       if (document.visibilityState === 'hidden') {
         navigator.sendBeacon?.(presenceUrl, new Blob([JSON.stringify({ is_online: false })], { type: 'application/json' }));
