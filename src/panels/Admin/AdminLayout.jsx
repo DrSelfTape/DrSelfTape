@@ -1,5 +1,5 @@
 import { Suspense } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   Clapperboard,
@@ -38,6 +38,15 @@ export default function AdminLayout() {
   const location = useLocation();
   const user = useSelector((state) => state.auth?.user);
   const pageTitle = getPageTitle(location.pathname);
+
+  // Hard gate: admin routes require Django staff/superuser status.
+  // The BE permission also blocks unauthorized API calls (IsAdminUser
+  // now requires is_staff), but bouncing here means a non-admin user
+  // never even sees the admin chrome.
+  const isAdmin = !!(user?.is_staff || user?.is_superuser);
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="flex h-screen">

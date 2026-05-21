@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { MapPin, Clock } from 'lucide-react';
+import { tapSelect } from '../../../../utils/haptics';
 
 const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   const cardRef = useRef(null);
@@ -58,9 +59,11 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     dragState.current.isDragging = false;
     const delta = dragState.current.currentX;
     if (delta > 100) {
+      tapSelect(); // tactile slate
       setTransform('translateX(150%) rotate(25deg)');
       setTimeout(() => onSwipeRight?.(), 280);
     } else if (delta < -100) {
+      tapSelect(); // tactile pass
       setTransform('translateX(-150%) rotate(-25deg)');
       setTimeout(() => onSwipeLeft?.(), 280);
     } else {

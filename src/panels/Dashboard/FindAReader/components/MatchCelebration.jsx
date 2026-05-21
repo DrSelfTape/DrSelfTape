@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from 'react';
+import { cheer } from '../../../../utils/haptics';
 
 /**
  * Fireworks burst overlay shown when an actor + reader match successfully.
@@ -31,6 +32,8 @@ const MatchCelebration = ({ onDone }) => {
   }, []);
 
   useEffect(() => {
+    // Tactile success cue alongside the visual burst.
+    cheer();
     const t = setTimeout(() => onDone?.(), RUNTIME_MS);
     return () => clearTimeout(t);
   }, [onDone]);

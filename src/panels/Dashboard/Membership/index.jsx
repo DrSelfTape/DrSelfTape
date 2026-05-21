@@ -69,7 +69,12 @@ export default function Membership() {
   useEffect(() => {
     axiosInstance.get('/v1/subscriptions/status/')
       .then(res => setStatus(res.data.data))
-      .catch(() => {})
+      .catch(() => {
+        // If we can't fetch status (offline, BE blip), fall back to a
+        // safe shape so the paywall still renders all 3 tiers as
+        // purchasable instead of getting stuck on "Loading…".
+        setStatus({ balance: 0, plan: null, status: 'unknown' });
+      })
       .finally(() => setLoading(false));
 
     // Handle the redirect query params Stripe Checkout adds. Webhooks

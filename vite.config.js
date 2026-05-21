@@ -36,7 +36,7 @@ export default defineConfig(({ mode }) => ({
           "vendor-media": ["react-media-recorder", "html2canvas", "canvas-confetti"],
           "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
           "vendor-headlessui": ["@headlessui/react"],
-          "vendor-dates": ["date-fns", "dayjs"],
+          "vendor-dates": ["dayjs"],
         },
       },
     },

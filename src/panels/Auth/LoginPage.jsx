@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { getFirstRouteByRole } from "../../routes/routeHelpers";
 import { loginLogo } from "../../assets/images";
 import { setAuthToken } from "../../redux/http";
+import { warn as hapticWarn } from "../../utils/haptics";
 
 const COOLDOWN_AFTER = 5;
 const COOLDOWN_SECONDS = 30;
@@ -88,6 +89,7 @@ export default function LoginPage() {
       setFailedAttempts(nextAttempts);
       setError(result.payload || "Email and password don't match. Try again.");
       setPassword("");
+      hapticWarn(); // tactile "nope"
       // Re-focus the password field so retry is one keystroke away
       setTimeout(() => passwordRef.current?.focus(), 0);
       if (nextAttempts >= COOLDOWN_AFTER) {

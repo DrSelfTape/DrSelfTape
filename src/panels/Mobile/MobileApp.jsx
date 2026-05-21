@@ -13,6 +13,7 @@ import { logoutUser, performLogout } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ProfileCompleteness from "../../components/Dashboard/ProfileCompleteness";
+import DeleteAccountModal from "../../components/Dashboard/DeleteAccountModal";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
@@ -1640,6 +1641,7 @@ const PLAN_BADGES = {
 
 function ProfileScreen({ setCurrentPanel }) {
   const dispatch = useDispatch();
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const user = useSelector((state) => state.auth?.user);
   const profileData = useSelector((state) => state.profile?.profile);
   const statsData = useSelector((state) => state.auditions.stats?.data);
@@ -1685,6 +1687,9 @@ function ProfileScreen({ setCurrentPanel }) {
     { label: "Edit Profile", icon: "profile", action: () => setCurrentPanel("dash-profile") },
     { label: "Membership", icon: "star", action: () => setCurrentPanel("membership") },
     { label: "Log Out", icon: "logout", action: () => dispatch(performLogout()), danger: true },
+    // Apple Guideline 5.1.1(V): in-app account deletion required for
+    // any app that supports account creation.
+    { label: "Delete Account", icon: "trash", action: () => setShowDeleteAccount(true), danger: true },
   ];
 
   return (
@@ -1809,6 +1814,8 @@ function ProfileScreen({ setCurrentPanel }) {
           </div>
         ))}
       </div>
+
+      <DeleteAccountModal open={showDeleteAccount} onClose={() => setShowDeleteAccount(false)} />
     </div>
   );
 }

@@ -14,7 +14,6 @@ import { Layout } from '../components/Shared/Layout';
 import LoginPageBranded from '../panels/Auth/LoginPage';
 
 const JoinPage = lazy(() => import('../panels/Join'));
-const Login = lazy(() => import('../panels/Authentication/Login').then((m) => ({ default: m.Login })));
 const Signup = lazy(() => import('../panels/Authentication/SignUp').then((m) => ({ default: m.Signup })));
 const ForgotPassword = lazy(() => import('../panels/Authentication/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('../panels/Authentication/ResetPassword').then((m) => ({ default: m.ResetPassword })));
@@ -272,15 +271,6 @@ export const castingDirectorRoutes = [
         ),
       },
     ],
-  },
-  {
-    path: '/castingDirector',
-    moduleName: 'CastingDirector',
-    element: (
-      <Layout>
-        <ComingSoon />
-      </Layout>
-    ),
   },
 ];
 
