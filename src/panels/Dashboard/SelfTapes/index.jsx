@@ -6,6 +6,7 @@ import {
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { isIOSNative, saveLocalTape, deleteLocalTape, makeLocalTapeId } from '../../../utils/selfTapeStore';
+import { openExternal } from '../../../utils/openExternal';
 import {
   enqueueUpload, subscribe as subscribeQueue, getQueueSnapshot,
 } from '../../../utils/uploadQueue';
@@ -633,7 +634,7 @@ export default function SelfTapes() {
 
   const handlePlay = (tape) => {
     if (tape.video_url) {
-      window.open(tape.video_url, '_blank');
+      openExternal(tape.video_url);
     }
   };
 

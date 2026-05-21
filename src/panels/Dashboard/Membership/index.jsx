@@ -346,6 +346,25 @@ export default function Membership() {
         Rollover credits accumulate up to a maximum of 2 months' worth of unused tokens. Billed in USD.
       </p>
 
+      {/* Auto-renewal + legal disclosures.
+       *
+       * App Store Review Guideline 3.1.1 requires that the Terms of Use
+       * and Privacy Policy be reachable from the purchase screen, and
+       * that auto-renewing subscription terms be clearly stated before
+       * the user commits. This block satisfies both.
+       */}
+      <div className="mt-6 text-center text-[11px] leading-relaxed" style={{ color: 'var(--aurora-sub)', maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
+        <p className="mb-2">
+          Subscriptions auto-renew monthly or annually at the price shown. Cancel anytime in your Apple ID Subscription settings; cancelling stops the next renewal but doesn't refund the current period.
+        </p>
+        <p>
+          By subscribing, you agree to our{' '}
+          <a href="/terms" className="aurora-link" style={{ fontSize: 11 }}>Terms of Use</a>
+          {' '}and{' '}
+          <a href="/privacy" className="aurora-link" style={{ fontSize: 11 }}>Privacy Policy</a>.
+        </p>
+      </div>
+
       {/* iOS-only "Restore Purchases" — required by App Store guidelines. */}
       {isNativeIOS() && (
         <div className="mt-4 text-center">

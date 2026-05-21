@@ -69,16 +69,6 @@ export const useAiScenePartnerSession = ({
       return;
     }
 
-    // Demo mode: skip API call but keep integration ready
-    const demoSkipApi = true;
-    if (demoSkipApi) {
-      setSessionId(Date.now());
-      setSessionStarted(true);
-      setCompletedLines(new Set());
-      onSessionStart?.();
-      return;
-    }
-
     const sceneId =
       scriptAnalysis?.scenes && scriptAnalysis.scenes.length > 0
         ? scriptAnalysis.scenes[0]?.id || null
@@ -138,21 +128,14 @@ export const useAiScenePartnerSession = ({
         fd.append(`audios[${i}].line_id`, a.line_id);
         fd.append(`audios[${i}].order_index`, a.order_index);
         fd.append(`audios[${i}].tone`, a.tone);
-        // Append file with filename - browsers need filename for proper multipart encoding
-        const fileName = `audio_${a.line_id}_${Date.now()}.webm`;
+        // Derive the extension from the blob's actual mime type so iOS
+        // (mp4/aac) and web (webm/opus) recordings both upload with the
+        // correct extension.
+        const mime = a.file?.type || 'audio/mp4';
+        const ext = mime.includes('mp4') ? 'm4a' : mime.includes('webm') ? 'webm' : 'audio';
+        const fileName = `audio_${a.line_id}_${Date.now()}.${ext}`;
         fd.append(`audios[${i}].file`, a.file, fileName);
       });
-
-      // Demo mode: skip API call
-      const demoSkipApi = true;
-      if (demoSkipApi) {
-        console.log('Demo complete payload (FormData):', fd);
-        setSessionStarted(false);
-        setEndSessionModal({ open: false });
-        setCompletedLines(new Set());
-        onSessionEnd?.();
-        return;
-      }
 
       try {
         await dispatch(completeRehearsalSession(fd)).unwrap();

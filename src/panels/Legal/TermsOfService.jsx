@@ -1,10 +1,6 @@
 import { LegalLayout, Section } from '../../components/Legal/LegalLayout';
 
 // Plain-English Terms of Service for Dr Self Tape.
-// PLACEHOLDERS the user MUST fill in before relying on this in front
-// of users or App Store/Google Play review:
-//   - [LEGAL_ENTITY] — registered company name (e.g. "Dr Self Tape LLC")
-//   - [JURISDICTION] — governing law state/country (e.g. "California, USA")
 // This content is a reasonable starting point; have an attorney review
 // it before significant scale or any contested situation.
 
@@ -14,7 +10,7 @@ export default function TermsOfService() {
       <p>
         Welcome to Dr Self Tape. These Terms of Service ("Terms") govern your access to and use of
         the Dr Self Tape website, mobile application, and related services (collectively, the
-        "Service"), operated by [LEGAL_ENTITY] ("we," "us," "our"). By creating an account or
+        "Service"), operated by Dr Self Tape LLC ("we," "us," "our"). By creating an account or
         using the Service, you agree to these Terms. If you do not agree, do not use the Service.
       </p>
 
@@ -112,7 +108,7 @@ export default function TermsOfService() {
 
       <Section heading="10. Limitation of liability">
         <p>
-          To the maximum extent permitted by law, [LEGAL_ENTITY] will not be liable for indirect,
+          To the maximum extent permitted by law, Dr Self Tape LLC will not be liable for indirect,
           incidental, consequential, or punitive damages arising from your use of the Service. Our
           total liability for any claim related to the Service is limited to the greater of
           (a) the amount you paid us in the twelve months before the claim arose, or (b) USD $100.
@@ -129,9 +125,9 @@ export default function TermsOfService() {
 
       <Section heading="12. Governing law">
         <p>
-          These Terms are governed by the laws of [JURISDICTION], without regard to its conflict
+          These Terms are governed by the laws of California, USA, without regard to its conflict
           of laws principles. You agree to the exclusive jurisdiction of the courts of
-          [JURISDICTION] for any dispute arising from these Terms.
+          California, USA for any dispute arising from these Terms.
         </p>
       </Section>
 

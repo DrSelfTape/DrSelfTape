@@ -1,9 +1,6 @@
 import { LegalLayout, Section } from '../../components/Legal/LegalLayout';
 
 // Privacy Policy for Dr Self Tape.
-// PLACEHOLDERS to fill in:
-//   - [LEGAL_ENTITY] — registered company name
-//   - [JURISDICTION] — governing law state/country
 // App Store and Google Play both require a Privacy Policy URL for any
 // app that handles user accounts or payments; this URL is what they
 // link to in store listings.
@@ -12,7 +9,7 @@ export default function PrivacyPolicy() {
   return (
     <LegalLayout title="Privacy Policy" lastUpdated="May 14, 2026">
       <p>
-        This Privacy Policy explains how [LEGAL_ENTITY] ("we," "us," "our") collects, uses, and
+        This Privacy Policy explains how Dr Self Tape LLC ("we," "us," "our") collects, uses, and
         shares information when you use Dr Self Tape — our website, mobile app, and related
         services (the "Service").
       </p>
@@ -117,8 +114,8 @@ export default function PrivacyPolicy() {
 
       <Section heading="International users">
         <p>
-          We are based in [JURISDICTION] and our infrastructure providers may store data in the
-          United States and other countries. By using the Service from outside [JURISDICTION], you
+          We are based in California, USA and our infrastructure providers may store data in the
+          United States and other countries. By using the Service from outside California, USA, you
           consent to the transfer of your data to these locations.
         </p>
       </Section>

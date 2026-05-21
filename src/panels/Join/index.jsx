@@ -8,6 +8,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Users, Film, Megaphone, Clapperboard, Theater, Mic, Building2 } from 'lucide-react';
 import { baseURL } from '../../redux/constant';
+import { openExternal } from '../../utils/openExternal';
 
 const TYPE_LABELS = {
   film: 'Film/TV',
@@ -125,7 +126,7 @@ export default function JoinPage() {
             Join with Account
           </button>
           <button
-            onClick={() => window.open(room.room_url, '_blank')}
+            onClick={() => openExternal(room.room_url)}
             className="w-full border border-white/10 hover:border-white/20 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
           >
             Join via Daily.co directly
