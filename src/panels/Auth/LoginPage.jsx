@@ -109,7 +109,7 @@ export default function LoginPage() {
   const textPhases = phase === "tagline" || phase === "bar";
 
   return (
-    <div style={{ minHeight: "100vh", background: BG, fontFamily: "'Poppins', sans-serif", color: TEXT, overflow: "hidden" }}>
+    <div style={{ minHeight: "100vh", background: BG, color: TEXT, overflow: "hidden" }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
 
       {/* ═══════════ SPLASH ═══════════ */}
@@ -211,7 +211,7 @@ export default function LoginPage() {
           opacity: showForm ? 1 : 0, transform: showForm ? "translateY(0)" : "translateY(24px)",
           transition: "all 0.6s ease 0.4s",
         }}>
-          <h1 style={{ fontSize: 30, fontWeight: 700, color: "#0A0A0A", margin: "0 0 4px", fontFamily: "'Space Grotesk', sans-serif", textAlign: "center", letterSpacing: "-0.6px" }}>
+          <h1 style={{ fontSize: 30, fontWeight: 700, color: "#0A0A0A", margin: "0 0 4px", fontFamily: "'Space Grotesk', sans-serif", textAlign: "center", letterSpacing: "-0.02em" }}>
             Hello Again
           </h1>
           <p style={{ fontSize: 13, color: TEXT2, margin: "0 0 28px", textAlign: "center" }}>

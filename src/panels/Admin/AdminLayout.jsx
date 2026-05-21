@@ -49,7 +49,7 @@ export default function AdminLayout() {
             <Clapperboard className="w-6 h-6 text-[#7A5A18]" />
           </div>
           <div>
-            <h1 className="text-white font-bold text-lg leading-tight">DrSelfTape</h1>
+            <h1 className="text-white font-bold text-lg leading-tight">Dr Self Tape</h1>
             <p className="text-[#999999] text-xs">Admin Panel</p>
           </div>
         </div>

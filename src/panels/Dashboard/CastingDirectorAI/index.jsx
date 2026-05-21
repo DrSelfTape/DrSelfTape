@@ -536,7 +536,7 @@ function GeneratorScreen() {
             <Badge text="Cold read" color={MINT} />
           </div>
           <div style={{ background: BG_CARD, borderRadius: 16, padding: "18px", border: `1px solid ${BORDER}`, marginBottom: 16 }}>
-            <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.8, fontFamily: "monospace", whiteSpace: "pre-wrap" }}>{sceneText}</p>
+            <p style={{ fontSize: 13, color: TEXT, margin: 0, lineHeight: 1.55, fontFamily: '"JetBrains Mono", ui-monospace, monospace', whiteSpace: "pre-wrap" }}>{sceneText}</p>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => setGenerated(false)} style={{ flex: 1, padding: "14px", borderRadius: 12, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Regenerate</button>

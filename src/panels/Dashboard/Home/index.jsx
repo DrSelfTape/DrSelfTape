@@ -337,8 +337,8 @@ export default function DashboardHome() {
           {/* Collapsible analytics */}
           <button
             onClick={() => setShowAnalytics(!showAnalytics)}
-            className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest cursor-pointer hover:text-[#7A5A18] transition-colors"
-            style={{ color: 'var(--text-secondary, #8a9a96)' }}
+            className="aurora-eyebrow flex items-center gap-2 cursor-pointer hover:text-[#7A5A18] transition-colors"
+            style={{ color: 'var(--aurora-dim)' }}
           >
             Analytics
             {showAnalytics ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}

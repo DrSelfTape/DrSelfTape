@@ -52,6 +52,7 @@ const MatchCelebration = ({ onDone }) => {
         fontWeight: 700,
         color: '#fff',
         letterSpacing: '-0.02em',
+        lineHeight: 1.1,
         textShadow: '0 6px 30px rgba(74,222,128,0.55), 0 2px 10px rgba(0,0,0,0.35)',
         animation: 'drst-match-pop 1.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
       }}>
