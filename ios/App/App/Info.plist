@@ -55,8 +55,10 @@
 	<string>Dr Self Tape needs photo access to upload your headshot.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Dr Self Tape saves your self-tape recordings to your photo library.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>Allow Dr Self Tape to use anonymous usage data so we can improve features you actually use.</string>
+	<!-- NSUserTrackingUsageDescription intentionally omitted. We declared
+	     it earlier but never actually call ATTrackingManager — Apple flagged
+	     it during review pre-flight. If we ever add real tracking later,
+	     restore the string AND update the Privacy survey to declare tracking. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<!-- UIBackgroundModes intentionally omitted. We don't currently
