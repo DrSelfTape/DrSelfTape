@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { getFirstRouteByRole } from "../../routes/routeHelpers";
 import { setAuthToken } from "../../redux/http";
 import { warn as hapticWarn } from "../../utils/haptics";
+import AppleSignInButton from "../../components/Auth/AppleSignInButton";
 
 const COOLDOWN_AFTER = 5;
 const COOLDOWN_SECONDS = 30;
@@ -339,6 +340,18 @@ export default function LoginPage() {
                 )}
                 {authLoading ? "Signing in…" : cooldownLeft > 0 ? `Wait ${cooldownLeft}s` : "Sign in →"}
               </button>
+
+              {/* Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '16px 0' }}>
+                <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
+                <span style={{
+                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                  color: DIM, letterSpacing: '0.15em',
+                }}>OR</span>
+                <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
+              </div>
+
+              <AppleSignInButton onError={(msg) => setError(msg)} />
 
               <div style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: SUB }}>
                 New here?{" "}

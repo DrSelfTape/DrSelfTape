@@ -52,6 +52,24 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// Sign in with Apple — verifies the Apple identityToken on the BE and
+// returns the same shape as a normal login response.
+export const appleLoginUser = createAsyncThunk(
+  'auth/appleLogin',
+  async ({ identityToken, firstName, lastName }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post('/v1/users/apple-login/', {
+        identityToken,
+        firstName: firstName || '',
+        lastName: lastName || '',
+      });
+      return data?.data;
+    } catch (error) {
+      return rejectWithValue(handleApiError(error));
+    }
+  }
+);
+
 // Forgot Password API Function
 export const forgotPassword = createAsyncThunk(
   'auth/forgotPassword',
@@ -221,6 +239,38 @@ export const authSlice = createSlice({
         state.isAuthenticated = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+        state.user = null;
+        state.isAuthenticated = false;
+      })
+      // Sign in with Apple — mirror loginUser handlers so the dashboard
+      // route guards see the same authenticated state.
+      .addCase(appleLoginUser.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+        state.user = null;
+      })
+      .addCase(appleLoginUser.fulfilled, (state, action) => {
+        state.loading = false;
+        const userData = {
+          id: action.payload?.id,
+          first_name: action.payload?.first_name,
+          last_name: action.payload?.last_name,
+          phone_no: action.payload?.phone_no,
+          email: action.payload?.email,
+          token: action.payload?.token?.access,
+          all_user_permissions: action.payload?.all_user_permissions,
+          role: action.payload?.active_role || action.payload?.role,
+          is_active: action.payload?.is_active,
+          is_reset_password: action.payload?.is_reset_password,
+          is_staff: action.payload?.is_staff,
+        };
+        state.user = userData;
+        state.error = null;
+        state.isAuthenticated = true;
+      })
+      .addCase(appleLoginUser.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
         state.user = null;

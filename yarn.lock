@@ -250,6 +250,11 @@
   resolved "https://registry.yarnpkg.com/@capacitor/synapse/-/synapse-1.0.4.tgz#c6beb33119d9656b1f04cb7783989fb78933ef6d"
   integrity sha512-/C1FUo8/OkKuAT4nCIu/34ny9siNHr9qtFezu4kxm6GY1wNFxrCFWjfYx5C1tUhVGz3fxBABegupkpjXvjCHrw==
 
+"@capawesome/capacitor-apple-sign-in@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@capawesome/capacitor-apple-sign-in/-/capacitor-apple-sign-in-0.1.0.tgz#c707b4f0cc825583eec9656c8f4c9926007c8888"
+  integrity sha512-/iSFHj2ZEJa1TYfEkgtAhwLIqMB/sr1ntr/HfXNz3fdssmh/j00mWgDK7sFXUSIj5G8ArpVBzaK2hJKFBWoDUQ==
+
 "@daily-co/daily-js@^0.89.1":
   version "0.89.1"
   resolved "https://registry.npmjs.org/@daily-co/daily-js/-/daily-js-0.89.1.tgz"
