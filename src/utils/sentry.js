@@ -11,6 +11,8 @@ export function initSentry() {
   Sentry.init({
     dsn,
     environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE,
+    // Collect IP address + user-agent for easier beta debugging.
+    sendDefaultPii: true,
     integrations: [
       Sentry.browserTracingIntegration(),
       Sentry.replayIntegration({ maskAllText: false, blockAllMedia: true }),
@@ -25,6 +27,24 @@ export function initSentry() {
       'Loading CSS chunk',
     ],
   });
+}
+
+/* Tag every subsequent error with the authenticated user so we can
+ * triage beta reports by who hit them. Call from App.jsx after login. */
+export function identifySentryUser(user) {
+  if (!user?.id || !import.meta.env.VITE_SENTRY_DSN) return;
+  try {
+    Sentry.setUser({
+      id: String(user.id),
+      email: user.email,
+      username: user.email,
+    });
+  } catch { /* swallow */ }
+}
+
+export function clearSentryUser() {
+  if (!import.meta.env.VITE_SENTRY_DSN) return;
+  try { Sentry.setUser(null); } catch { /* swallow */ }
 }
 
 export { Sentry };

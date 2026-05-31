@@ -7,6 +7,7 @@ import './App.css';
 import { SocketProvider } from './socket/socket';
 import { Router } from './routes/index';
 import { initAnalytics, identifyUser } from './utils/analytics';
+import { identifySentryUser, clearSentryUser } from './utils/sentry';
 import { fetchUserSettings, resetSettings } from './redux/features/userSettings/userSettingsSlice';
 import { initPurchases } from './utils/purchases';
 import { resumeQueue } from './utils/uploadQueue';
@@ -21,7 +22,12 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (user) identifyUser(user);
+    if (user) {
+      identifyUser(user);
+      identifySentryUser(user);
+    } else {
+      clearSentryUser();
+    }
   }, [user]);
 
   // Hydrate per-user settings (theme, tutorial state, reader filters, etc.)
