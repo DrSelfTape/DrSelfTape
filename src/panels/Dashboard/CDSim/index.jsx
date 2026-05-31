@@ -146,6 +146,14 @@ export default function CDSim() {
             ai_feedback: reportData,
             duration_seconds: duration,
           }));
+          import('../../../utils/analytics').then(({ trackEvent, Events }) => {
+            trackEvent(Events.ACTING_COACH, {
+              role: selectedRole,
+              voice: selectedVoice,
+              duration_seconds: duration,
+              script_length: scriptText.length,
+            });
+          }).catch(() => { /* swallow */ });
         }
       })
       .catch((err) => {

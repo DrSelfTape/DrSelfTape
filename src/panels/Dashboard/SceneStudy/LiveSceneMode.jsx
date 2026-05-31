@@ -187,6 +187,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     conversationHistoryRef.current = conversationHistory;
   }, [conversationHistory]);
 
+  // Fire practice_with_ai analytics event when the session opens.
+  useEffect(() => {
+    import('../../../utils/analytics').then(({ trackEvent, Events }) => {
+      trackEvent(Events.PRACTICE_AI, { script_lines: lines?.length || 0, role: userRole || null });
+    }).catch(() => { /* swallow */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Create AudioContext on mount — resumed on user gesture (not created inside it)
   useEffect(() => {
     const AC = window.AudioContext || window.webkitAudioContext;

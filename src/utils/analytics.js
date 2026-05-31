@@ -92,4 +92,5 @@ export const Events = {
   SCAN_SCREENSHOT: 'scan_screenshot',
   TUTORIAL_STEP: 'tutorial_step_complete',
   TUTORIAL_COMPLETE: 'tutorial_complete',
+  ACTING_COACH: 'acting_coach_review',
 };
