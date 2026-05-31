@@ -46,6 +46,18 @@ export default function LoginPage() {
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const passwordRef = useRef(null);
   const videoRef = useRef(null);
+  const cardRef = useRef(null);
+
+  // On iOS Capacitor + Keyboard.resize="native" the WebView shrinks above the
+  // keyboard but the marketing copy still claims the upper half — leaving the
+  // glass auth card pinned below the keyboard. Force-scroll the card to the
+  // top of the visible WebView when any input focuses.
+  const scrollCardIntoView = useCallback(() => {
+    // Defer to next frame so the WKWebView keyboard reflow lands first.
+    requestAnimationFrame(() => {
+      cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, []);
 
   // Respect prefers-reduced-motion: skip the video background entirely so we
   // don't burn battery or trigger vestibular issues.
@@ -201,8 +213,9 @@ export default function LoginPage() {
           </p>
 
           {/* Glass auth card */}
-          <div style={{
+          <div ref={cardRef} style={{
             marginTop: 26, borderRadius: 26, padding: 20, position: "relative", overflow: "hidden",
+            scrollMarginTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
             background: "linear-gradient(160deg, rgba(255,255,255,0.78), rgba(255,255,255,0.58))",
             backdropFilter: "blur(30px) saturate(1.6)",
             WebkitBackdropFilter: "blur(30px) saturate(1.6)",
@@ -223,6 +236,7 @@ export default function LoginPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onFocus={scrollCardIntoView}
                   placeholder="Email address"
                   autoComplete="email"
                   style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: 15, color: TEXT }}
@@ -243,6 +257,7 @@ export default function LoginPage() {
                   type={showPw ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  onFocus={scrollCardIntoView}
                   onKeyDown={checkCapsLock}
                   onKeyUp={checkCapsLock}
                   placeholder="Password"
