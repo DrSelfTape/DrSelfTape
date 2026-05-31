@@ -28,6 +28,10 @@ export async function initAnalytics() {
       autocapture: true,
       capture_pageview: true,
       capture_pageleave: true,
+      // Capture events from anonymous (logged-out) visitors too. Without
+      // this the project-level 'identified only' default would suppress
+      // landing-page / signup-page activity from our beta funnels.
+      person_profiles: 'always',
       persistence: 'localStorage',
       loaded: () => { initialized = true; },
     });
