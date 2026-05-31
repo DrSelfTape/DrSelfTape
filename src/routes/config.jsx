@@ -17,6 +17,7 @@ const JoinPage = lazy(() => import('../panels/Join'));
 const Signup = lazy(() => import('../panels/Authentication/SignUp').then((m) => ({ default: m.Signup })));
 const ForgotPassword = lazy(() => import('../panels/Authentication/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
 const ResetPassword = lazy(() => import('../panels/Authentication/ResetPassword').then((m) => ({ default: m.ResetPassword })));
+const AppleCallback = lazy(() => import('../panels/Auth/AppleCallback'));
 const TermsOfService = lazy(() => import('../panels/Legal/TermsOfService'));
 const PrivacyPolicy = lazy(() => import('../panels/Legal/PrivacyPolicy'));
 
@@ -337,6 +338,14 @@ export const authRoutes = [
     path: '/reset-password',
     moduleName: 'Reset Password',
     element: <ResetPassword />,
+  },
+  // Apple Services ID redirect URL — registered with Apple Developer
+  // Portal for web Sign in with Apple. The popup loads this URL; the JS
+  // SDK reads the result via postMessage and resolves on the opener.
+  {
+    path: '/auth/apple-callback',
+    moduleName: 'Apple Callback',
+    element: <AppleCallback />,
   },
   {
     path: '/join/:id',
