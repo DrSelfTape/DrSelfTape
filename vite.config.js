@@ -1,10 +1,30 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [react(), tailwindcss()],
+  plugins: [
+    react(),
+    tailwindcss(),
+    // Source-map upload to Sentry. Active only in production builds when
+    // SENTRY_AUTH_TOKEN is present in the env (set on Vercel + locally in
+    // ~/.dst-signing/sentry-user-token.txt). Without the token the plugin
+    // skips upload — local dev builds stay fast.
+    mode === 'production' && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+      org: 'dr-self-tape',
+      project: 'javascript-react',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      sourcemaps: {
+        assets: './dist/**',
+        // Strip .map files from /dist after upload so they aren't served
+        // publicly from Vercel — Sentry has them, that's all that matters.
+        filesToDeleteAfterUpload: ['./dist/**/*.map'],
+      },
+      telemetry: false,
+    }),
+  ].filter(Boolean),
   // Strip console.* and debugger statements from production bundles only.
   // Sentry captures real exceptions via ErrorBoundary; the remaining
   // console.error/warn/log calls were diagnostic noise that spammed
@@ -12,6 +32,11 @@ export default defineConfig(({ mode }) => ({
   // them so local debugging still works.
   esbuild: mode === 'production' ? { drop: ['console', 'debugger'] } : {},
   build: {
+    // Emit source maps so the Sentry plugin can upload them.
+    // They get uploaded then deleted from /dist if filesToDeleteAfterUpload
+    // is set — but for cleanliness Vercel already strips .map files from
+    // the served build. Keep them in /dist for the upload step.
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {

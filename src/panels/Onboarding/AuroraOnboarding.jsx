@@ -814,6 +814,7 @@ export default function AuroraOnboarding({ onClose }) {
         try {
           const blob = await (await fetch(data.headshotDataUrl)).blob();
           fd.append('headshot', blob, 'headshot.jpg');
+          try { const { trackEvent, Events } = await import('../../utils/analytics'); trackEvent(Events.UPLOAD_HEADSHOT, { source: 'onboarding' }); } catch { /* swallow */ }
         } catch { /* headshot upload failed, continue without */ }
       }
 

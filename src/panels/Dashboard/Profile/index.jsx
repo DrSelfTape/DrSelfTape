@@ -208,6 +208,7 @@ export default function Profile() {
       // Mark tutorial step if headshot uploaded
       if (hasPhoto) {
         markStep('headshot');
+        try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.UPLOAD_HEADSHOT, { source: 'profile_edit' }); } catch { /* swallow */ }
       }
 
       // Show badge + confetti if photo uploaded or first time completing profile

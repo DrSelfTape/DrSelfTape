@@ -33,6 +33,11 @@ function markStep(stepId) {
   if (current[stepId]) return;
   const next = { ...current, [stepId]: true };
   store.dispatch(patchUserSettings({ tutorial_progress: next }));
+  // Fire analytics for each tutorial milestone — lazy-import so this file
+  // stays a tiny dependency-free helper for any panel that wants to mark.
+  import('../../utils/analytics').then(({ trackEvent, Events }) => {
+    trackEvent(Events.TUTORIAL_STEP, { step: stepId });
+  }).catch(() => { /* swallow */ });
 }
 
 export { markStep };
@@ -91,6 +96,9 @@ export default function TutorialChecklist({ onNavigate }) {
     // doesn't come back on next login.
     dispatch(patchUserSettings({ tutorial_complete: true }));
     window.dispatchEvent(new CustomEvent('drst-tutorial-complete'));
+    import('../../utils/analytics').then(({ trackEvent, Events }) => {
+      trackEvent(Events.TUTORIAL_COMPLETE, { steps_done: completedCount, total: totalSteps });
+    }).catch(() => { /* swallow */ });
   };
 
   return (

@@ -221,6 +221,8 @@ const GreenRoomChat = (props = {}) => {
       // Mark as host so PeerJS creates the hosting peer
       localStorage.setItem(`dr-self-tapes_meeting_host_${roomId}`, 'true');
 
+      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.START_REHEARSAL, { match_id: matchId, room_id: roomId }); } catch { /* swallow */ }
+
       // Send a system message to the chat
       sendLocalMsg(`🎬 Live rehearsal started! Joining room...`, 'system');
 

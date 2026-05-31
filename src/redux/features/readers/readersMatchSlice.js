@@ -26,7 +26,13 @@ export const swipeOnReader = createAsyncThunk(
         to_user_id: reader_id,
         direction: action,
       });
-      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.SWIPE, { direction: action }); } catch {}
+      try {
+        const { trackEvent, Events } = await import('../../../utils/analytics');
+        trackEvent(Events.SWIPE, { direction: action });
+        // If the swipe resulted in a mutual match, fire match_created too.
+        const matched = data?.data?.matched || data?.data?.is_match || data?.matched;
+        if (matched) trackEvent(Events.MATCH, { match_id: data?.data?.match_id || data?.data?.id });
+      } catch { /* swallow */ }
       return data?.data || data;
     } catch (error) {
       return rejectWithValue(
@@ -67,6 +73,7 @@ export const fetchGreenRoomMessages = createAsyncThunk(
 export const sendGreenRoomMessage = createAsyncThunk(
   'readersMatch/sendGreenRoomMessage',
   async ({ match_id, content }, { rejectWithValue }) => {
+    try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.SEND_MESSAGE, { match_id, length: (content || '').length }); } catch { /* swallow */ }
     try {
       const { data } = await axios.post(`${baseURL}/v1/matching/messages/send/`, {
         match_id,
@@ -169,6 +176,7 @@ export const toggleAvailability = createAsyncThunk(
   async (isAvailable, { rejectWithValue }) => {
     try {
       const { data } = await axios.post(`${baseURL}/v1/matching/presence/`, { is_available: isAvailable });
+      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.GO_AVAILABLE, { available: !!isAvailable }); } catch { /* swallow */ }
       return { is_available: isAvailable, data: data?.data };
     } catch (error) {
       return rejectWithValue(error?.response?.data?.message || 'Failed to toggle availability');

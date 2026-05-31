@@ -1114,6 +1114,7 @@ function AuditionsScreen() {
         project_type: parsed.project_type || prev.project_type,
         notes: parsed.notes || prev.notes,
       }));
+      try { const { trackEvent, Events } = await import('../../utils/analytics'); trackEvent(Events.SCAN_SCREENSHOT, { fields_extracted: Object.keys(parsed).length }); } catch { /* swallow */ }
     } catch (err) {
       console.error('Failed to parse screenshot:', err);
     }
@@ -1140,6 +1141,7 @@ function AuditionsScreen() {
       await dispatch(createAuditionThunk(payload)).unwrap();
       dispatch(fetchAuditionsThunk());
       dispatch(fetchAuditionStatsThunk());
+      try { const { trackEvent, Events } = await import('../../utils/analytics'); trackEvent(Events.ADD_AUDITION, { type: payload.project_type, has_callback: !!payload.callback_date }); } catch { /* swallow */ }
       // Mark tutorial step
       markStep('track_audition');
       setAddForm({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });

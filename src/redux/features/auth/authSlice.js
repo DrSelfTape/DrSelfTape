@@ -30,6 +30,7 @@ export const registerUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const { data } = await axios.post(endPoints.register, formData);
+      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.SIGNUP, { method: 'email' }); } catch { /* swallow */ }
       return data?.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
@@ -45,6 +46,7 @@ export const loginUser = createAsyncThunk(
       const { data } = await axios.post(endPoints.login, {
         ...values,
       });
+      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.LOGIN, { method: 'email' }); } catch { /* swallow */ }
       return data?.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
@@ -63,6 +65,10 @@ export const appleLoginUser = createAsyncThunk(
         firstName: firstName || '',
         lastName: lastName || '',
       });
+      // Apple sign-in covers both first-time signup AND returning login. We
+      // can't tell which from this response, so fire LOGIN — the BE creates
+      // the User on first signin if needed.
+      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.LOGIN, { method: 'apple' }); } catch { /* swallow */ }
       return data?.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
