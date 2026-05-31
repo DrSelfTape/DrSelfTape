@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import axiosInstance from '../redux/http';
 
 function urlBase64ToUint8Array(base64String) {
@@ -26,69 +27,142 @@ export function isStandalone() {
   );
 }
 
+// Capacitor native iOS / Android wrapper — uses APNs / FCM, not Web Push
+export function isCapacitorNative() {
+  try { return Capacitor.isNativePlatform(); } catch { return false; }
+}
+
 // True if push is supported in this context
 export function isPushSupported() {
+  if (isCapacitorNative()) return true; // native handles permission flow
   if (typeof Notification === 'undefined') return false;
   if (!('serviceWorker' in navigator)) return false;
   if (!('PushManager' in window)) return false;
-  // iOS only supports push when installed as PWA
+  // iOS Safari only supports Web Push when installed as PWA
   if (isIOS() && !isStandalone()) return false;
   return true;
 }
 
+/* ─── Native (Capacitor APNs / FCM) registration ────────────────────── */
+let _nativeListenersWired = false;
+
+async function subscribeNative() {
+  // Dynamic import so non-native bundles don't pull in the plugin.
+  const { PushNotifications } = await import('@capacitor/push-notifications');
+
+  const perm = await PushNotifications.requestPermissions();
+  if (perm.receive !== 'granted') {
+    return { granted: false };
+  }
+
+  // Wire listeners ONCE per app lifecycle.
+  if (!_nativeListenersWired) {
+    _nativeListenersWired = true;
+
+    PushNotifications.addListener('registration', async (token) => {
+      try {
+        await axiosInstance.post('/v1/notifications/push/device-token/', {
+          token: token.value,
+          platform: Capacitor.getPlatform() === 'android' ? 'android' : 'ios',
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('device-token POST failed:', err);
+      }
+    });
+
+    PushNotifications.addListener('registrationError', (err) => {
+      // eslint-disable-next-line no-console
+      console.warn('APNs registration error:', err);
+    });
+
+    PushNotifications.addListener('pushNotificationReceived', (notif) => {
+      // Foreground notification: emit a window event so the in-app
+      // NotificationBell / toast layer can react. The OS won't display a
+      // system banner while the app is in the foreground.
+      try {
+        window.dispatchEvent(new CustomEvent('drst-push-received', { detail: notif }));
+      } catch { /* swallow */ }
+    });
+
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      // User tapped the notification — emit a deeplink event so the app
+      // can navigate. notif.data.type tells us which screen to open.
+      try {
+        window.dispatchEvent(new CustomEvent('drst-push-tap', { detail: action.notification }));
+      } catch { /* swallow */ }
+    });
+  }
+
+  await PushNotifications.register();
+  return { granted: true };
+}
+
+/* ─── Web Push (VAPID) registration ─────────────────────────────────── */
+async function subscribeWeb() {
+  const { data } = await axiosInstance.get('/v1/notifications/push/vapid-key/');
+  const vapidKey = data.vapid_public_key;
+
+  const reg = await navigator.serviceWorker.register('/sw.js');
+  await navigator.serviceWorker.ready;
+
+  const result = await Notification.requestPermission();
+  if (result !== 'granted') return { granted: false };
+
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(vapidKey),
+  });
+  const subJson = sub.toJSON();
+  await axiosInstance.post('/v1/notifications/push/subscribe/', {
+    endpoint: subJson.endpoint,
+    p256dh: subJson.keys.p256dh,
+    auth: subJson.keys.auth,
+  });
+  return { granted: true };
+}
+
 export function usePushNotifications() {
+  const native = isCapacitorNative();
   const [permission, setPermission] = useState(
-    typeof Notification !== 'undefined' ? Notification.permission : 'default'
+    native ? 'default'
+      : typeof Notification !== 'undefined' ? Notification.permission : 'default'
   );
   const [subscribed, setSubscribed] = useState(false);
   const [supported] = useState(isPushSupported());
   const [showIOSPrompt, setShowIOSPrompt] = useState(
-    isIOS() && !isStandalone()
+    !native && isIOS() && !isStandalone()
   );
 
   const subscribe = async () => {
     if (!supported) {
-      if (isIOS() && !isStandalone()) {
-        setShowIOSPrompt(true);
-      }
+      if (!native && isIOS() && !isStandalone()) setShowIOSPrompt(true);
       return;
     }
 
     try {
-      const { data } = await axiosInstance.get('/v1/notifications/push/vapid-key/');
-      const vapidKey = data.vapid_public_key;
-
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      await navigator.serviceWorker.ready;
-
-      const result = await Notification.requestPermission();
-      setPermission(result);
-      if (result !== 'granted') return;
-
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
-
-      const subJson = sub.toJSON();
-      await axiosInstance.post('/v1/notifications/push/subscribe/', {
-        endpoint: subJson.endpoint,
-        p256dh: subJson.keys.p256dh,
-        auth: subJson.keys.auth,
-      });
-
-      setSubscribed(true);
-      setPermission('granted');
+      const result = native ? await subscribeNative() : await subscribeWeb();
+      if (result.granted) {
+        setSubscribed(true);
+        setPermission('granted');
+      }
     } catch (err) {
+      // eslint-disable-next-line no-console
       console.error('Push subscription failed:', err);
     }
   };
 
-  // Auto-subscribe if already granted and supported
+  // Auto-subscribe on mount when running natively (Capacitor handles its
+  // own permission prompt; we don't surface an in-app prompt for it).
+  // Web Push only auto-runs if already granted to avoid prompting on
+  // every load.
   useEffect(() => {
-    if (supported && permission === 'granted') {
+    if (native) {
+      subscribe();
+    } else if (supported && permission === 'granted') {
       subscribe();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
