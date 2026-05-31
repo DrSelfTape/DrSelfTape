@@ -3,31 +3,31 @@ import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../redux/features/auth/authSlice";
 import { useNavigate } from "react-router-dom";
 import { getFirstRouteByRole } from "../../routes/routeHelpers";
-import { loginLogo } from "../../assets/images";
 import { setAuthToken } from "../../redux/http";
 import { warn as hapticWarn } from "../../utils/haptics";
 
 const COOLDOWN_AFTER = 5;
 const COOLDOWN_SECONDS = 30;
 
-const MINT = "#D4A85F";
-const GOLD = "#F0D097";
-const CORAL_SOFT = "#F0D097";
-const CORAL = "#D4A85F";
+const ACCENT = "#D4A85F";
+// DEEP was #7A5A18 — too washed-out over the bright aurora background. Darkened
+// for legibility of eyebrow text, forgot-password / signup links, and error copy.
+const DEEP = "#4A3208";
 const BG = "#FAFAF7";
-const BG_CARD = "#FFFFFF";
-const BG_INPUT = "#FFFFFF";
-const BORDER = "rgba(10,10,10,0.08)";
-const TEXT = "#0A0A0A";
-const TEXT2 = "rgba(10,10,10,0.72)"; // body subtle — bumped from 0.62 for WCAG AA
-const TEXT3 = "rgba(10,10,10,0.55)"; // placeholders/footnotes — bumped from 0.40 for WCAG AA
+const TEXT = "#0E0D0A";
+const SUB = "rgba(14,13,10,0.6)";
+const DIM = "rgba(14,13,10,0.4)";
 
-const LOGO_SRC = loginLogo;
+const BG_VIDEO = `${import.meta.env.BASE_URL}login-bg.mp4`;
 
 function EyeIcon({ open }) {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={TEXT3} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-      {open ? (<><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>) : (<><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></>)}
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      {open ? (
+        <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></>
+      ) : (
+        <><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" /><line x1="1" y1="1" x2="23" y2="23" /></>
+      )}
     </svg>
   );
 }
@@ -35,8 +35,8 @@ function EyeIcon({ open }) {
 export default function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { loading: authLoading, error: authError } = useSelector((state) => state.auth);
-  const [phase, setPhase] = useState("dark");
+  const { loading: authLoading } = useSelector((state) => state.auth);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
@@ -45,33 +45,34 @@ export default function LoginPage() {
   const [capsLockOn, setCapsLockOn] = useState(false);
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const passwordRef = useRef(null);
+  const videoRef = useRef(null);
 
-  // Tick down the cooldown timer
+  // Respect prefers-reduced-motion: skip the video background entirely so we
+  // don't burn battery or trigger vestibular issues.
+  const [reducedMotion, setReducedMotion] = useState(false);
   useEffect(() => {
-    if (cooldownLeft <= 0) return;
-    const id = setInterval(() => {
-      setCooldownLeft((s) => (s <= 1 ? 0 : s - 1));
-    }, 1000);
-    return () => clearInterval(id);
-  }, [cooldownLeft]);
-
-  useEffect(() => {
-    const t = [
-      setTimeout(() => setPhase("logo-in"), 400),
-      setTimeout(() => setPhase("logo-glow"), 1200),
-      setTimeout(() => setPhase("tagline"), 2100),
-      setTimeout(() => setPhase("bar"), 3000),
-      setTimeout(() => setPhase("exit"), 4000),
-      setTimeout(() => setPhase("form"), 4600),
-    ];
-    return () => t.forEach(clearTimeout);
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setReducedMotion(mq.matches);
+    const onChange = (e) => setReducedMotion(e.matches);
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
   }, []);
 
-  const skip = useCallback(() => {
-    if (phase === "form") return;
-    setPhase("exit");
-    setTimeout(() => setPhase("form"), 600);
-  }, [phase]);
+  // Some iOS browsers refuse autoplay until the element is in the DOM and
+  // muted attributes are confirmed. Kick play() defensively.
+  useEffect(() => {
+    if (reducedMotion) return;
+    const v = videoRef.current;
+    if (!v) return;
+    v.play?.().catch(() => {});
+  }, [reducedMotion]);
+
+  useEffect(() => {
+    if (cooldownLeft <= 0) return;
+    const id = setInterval(() => setCooldownLeft((s) => (s <= 1 ? 0 : s - 1)), 1000);
+    return () => clearInterval(id);
+  }, [cooldownLeft]);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -89,216 +90,282 @@ export default function LoginPage() {
       setFailedAttempts(nextAttempts);
       setError(result.payload || "Email and password don't match. Try again.");
       setPassword("");
-      hapticWarn(); // tactile "nope"
-      // Re-focus the password field so retry is one keystroke away
+      hapticWarn();
       setTimeout(() => passwordRef.current?.focus(), 0);
-      if (nextAttempts >= COOLDOWN_AFTER) {
-        setCooldownLeft(COOLDOWN_SECONDS);
-      }
+      if (nextAttempts >= COOLDOWN_AFTER) setCooldownLeft(COOLDOWN_SECONDS);
     }
   }, [email, password, dispatch, navigate, failedAttempts, cooldownLeft]);
 
-  // Caps Lock detection on the password input
   const checkCapsLock = useCallback((e) => {
     if (typeof e.getModifierState === 'function') {
       setCapsLockOn(e.getModifierState('CapsLock'));
     }
   }, []);
 
-  const showForm = phase === "form";
-  const isExit = phase === "exit";
-  const glowPhases = phase === "logo-glow" || phase === "tagline" || phase === "bar";
-  const textPhases = phase === "tagline" || phase === "bar";
-
   return (
-    <div style={{ minHeight: "100vh", background: BG, color: TEXT, overflow: "hidden" }}>
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+    <div style={{
+      // 100dvh shrinks with the iOS virtual keyboard so the Sign In button
+      // stays reachable when the password field is focused.
+      minHeight: "100dvh", position: "relative", overflow: "hidden",
+      background: "#0E0D0A", color: TEXT,
+      fontFamily: "'Space Grotesk', system-ui, sans-serif",
+    }}>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
 
-      {/* ═══════════ SPLASH ═══════════ */}
-      <div onClick={skip} style={{
-        position: "fixed", inset: 0, zIndex: 50, background: "#FAFAF7",
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        transform: isExit ? "scale(1.12)" : "scale(1)",
-        opacity: isExit ? 0 : showForm ? 0 : 1,
-        transition: "transform 0.7s cubic-bezier(0.76, 0, 0.24, 1), opacity 0.6s ease",
-        pointerEvents: showForm ? "none" : "auto",
-        cursor: phase !== "dark" ? "pointer" : "default",
-      }}>
-        {/* Ambient light orbs */}
-        <div style={{
-          position: "absolute", width: 400, height: 400, borderRadius: "50%",
-          background: `radial-gradient(circle, ${MINT}0e 0%, transparent 70%)`,
-          opacity: glowPhases ? 1 : 0,
-          transition: "opacity 1.5s ease", pointerEvents: "none",
-        }} />
-        <div style={{
-          position: "absolute", width: 280, height: 280, borderRadius: "50%",
-          background: `radial-gradient(circle, ${CORAL}0a 0%, transparent 70%)`,
-          transform: "translate(80px, 60px)",
-          opacity: textPhases ? 1 : 0,
-          transition: "opacity 1.2s ease 0.2s", pointerEvents: "none",
-        }} />
+      {/* Washed-out video background. Hidden under prefers-reduced-motion;
+          the wash gradient below still renders, so the screen never looks bare. */}
+      {!reducedMotion && (
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#0E0D0A" }}>
+          <video
+            ref={videoRef}
+            src={BG_VIDEO}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover",
+              filter: "saturate(0.65) brightness(1.06) contrast(0.92)",
+              opacity: 0.42,
+            }}
+          />
+        </div>
+      )}
 
-        {/* ACTUAL LOGO IMAGE */}
-        <img
-          src={LOGO_SRC}
-          alt="Dr Self Tape"
-          draggable={false}
-          style={{
-            width: 180, height: "auto", userSelect: "none",
-            opacity: phase === "dark" ? 0 : 1,
-            transform: phase === "dark" ? "scale(0.6) translateY(30px)" :
-                       phase === "logo-in" ? "scale(1) translateY(0)" : "scale(1.03) translateY(0)",
-            transition: "all 1s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            filter: glowPhases
-              ? `drop-shadow(0 0 40px ${MINT}40) drop-shadow(0 0 80px ${CORAL}20)`
-              : "none",
-          }}
-        />
+      {/* Aurora wash — always renders, regardless of video presence. */}
+      <div aria-hidden="true" style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: `
+          linear-gradient(180deg, rgba(250,250,247,0.55) 0%, rgba(250,250,247,0.30) 32%, rgba(250,250,247,0.62) 70%, rgba(250,250,247,0.96) 100%),
+          radial-gradient(70% 45% at 80% 12%, rgba(212,168,95,0.30) 0%, transparent 55%),
+          radial-gradient(60% 40% at 0% 38%, rgba(167,214,255,0.30) 0%, transparent 55%),
+          radial-gradient(60% 45% at 60% 90%, rgba(159,230,180,0.28) 0%, transparent 55%)
+        `,
+      }} />
 
-        {/* Tagline */}
-        <p style={{
-          fontSize: 14, color: TEXT2, marginTop: 28,
-          fontFamily: "'Playfair Display', serif", fontStyle: "italic", letterSpacing: "0.5px",
-          opacity: textPhases ? 1 : 0,
-          transform: textPhases ? "translateY(0)" : "translateY(14px)",
-          transition: "all 0.7s ease",
-        }}>
-          Empowering Actors, One Take at a Time
-        </p>
+      {/* Fine grain texture for tactility. */}
+      <div aria-hidden="true" style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        opacity: 0.4, mixBlendMode: "soft-light",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")`,
+      }} />
 
-        {/* Brand gradient bar */}
-        <div style={{
-          height: 2.5, borderRadius: 2, marginTop: 20,
-          background: `linear-gradient(90deg, ${MINT}, ${GOLD}, ${CORAL_SOFT}, ${CORAL})`,
-          width: phase === "bar" ? 240 : 0,
-          transition: "width 1s cubic-bezier(0.34, 1.56, 0.64, 1)",
-        }} />
-
-        <p style={{
-          position: "absolute", bottom: 44, fontSize: 11, color: TEXT3,
-          opacity: phase === "bar" ? 0.5 : 0, transition: "opacity 0.4s ease",
-        }}>tap to continue</p>
-      </div>
-
-      {/* ═══════════ LOGIN FORM ═══════════ */}
+      {/* Content layer */}
       <div style={{
-        minHeight: "100vh", background: BG,
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        padding: "24px 20px",
-        opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.1s",
+        position: "relative", zIndex: 10,
+        minHeight: "100dvh",
+        display: "flex", flexDirection: "column",
+        padding: "max(96px, env(safe-area-inset-top, 24px) + 80px) 24px max(40px, env(safe-area-inset-bottom, 24px)) 24px",
+        maxWidth: 460, margin: "0 auto",
+        // Allow vertical scroll when the keyboard pushes the form upward —
+        // otherwise Password + Sign In button get pinned under the keyboard.
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
       }}>
-        <div style={{
-          position: "fixed", inset: 0, pointerEvents: "none",
-          background: `radial-gradient(ellipse 500px 350px at 15% 85%, ${MINT}06, transparent), radial-gradient(ellipse 400px 400px at 85% 15%, ${CORAL}05, transparent)`,
-        }} />
+        {/* Full Dr Self Tape logo — the mark already contains the wordmark, so
+            we drop the previous tiny mark + "DR · SELF · TAPE" text row. */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <img
+            src={`${import.meta.env.BASE_URL}logo-black.png`}
+            alt="Dr Self Tape"
+            style={{
+              width: "min(180px, 44vw)", height: "auto", display: "block",
+              filter: "drop-shadow(0 6px 16px rgba(10,10,10,0.12))",
+            }}
+          />
+        </div>
 
-        {/* Small logo above form */}
-        <img
-          src={LOGO_SRC}
-          alt="Dr Self Tape"
-          draggable={false}
-          style={{
-            width: 90, height: "auto", marginBottom: 28,
-            position: "relative", zIndex: 1, userSelect: "none",
-            opacity: showForm ? 1 : 0, transform: showForm ? "scale(1)" : "scale(0.85)",
-            transition: "all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s",
-          }}
-        />
+        {/* Hero text + auth card pinned to the bottom of the viewport */}
+        <div style={{ marginTop: "auto" }}>
+          <div style={{
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DEEP,
+          }}>FOR ACTORS WHO BOOK</div>
 
-        {/* Card */}
-        <div style={{
-          width: "100%", maxWidth: 400, position: "relative", zIndex: 1,
-          background: BG_CARD, borderRadius: 24, border: `1px solid ${BORDER}`, padding: "36px 28px 28px",
-          opacity: showForm ? 1 : 0, transform: showForm ? "translateY(0)" : "translateY(24px)",
-          transition: "all 0.6s ease 0.4s",
-        }}>
-          <h1 style={{ fontSize: 30, fontWeight: 700, color: "#0A0A0A", margin: "0 0 4px", fontFamily: "'Space Grotesk', sans-serif", textAlign: "center", letterSpacing: "-0.02em" }}>
-            Hello Again
+          <h1 style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontSize: "clamp(40px, 11vw, 52px)", lineHeight: 0.98, letterSpacing: "-1px",
+            color: TEXT, margin: "14px 0 0", fontWeight: 500,
+          }}>
+            Your craft,<br /><em>in motion.</em>
           </h1>
-          <p style={{ fontSize: 13, color: TEXT2, margin: "0 0 28px", textAlign: "center" }}>
-            Sign in to your account
+
+          <p style={{
+            fontSize: 14, color: SUB, lineHeight: 1.5, marginTop: 16, maxWidth: 300,
+          }}>
+            Track auditions, run sides with verified readers, and get AI notes on every take.
           </p>
 
-          <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: TEXT2, marginBottom: 6 }}>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="demo@drselftape.com"
-                style={{ width: "100%", height: 52, background: BG_INPUT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "0 16px", color: TEXT, fontSize: 14, outline: "none", transition: "border-color 0.2s, box-shadow 0.2s" }}
-                onFocus={(e) => { e.target.style.borderColor = "#D4A85F"; e.target.style.boxShadow = "0 0 0 3px rgba(212,168,95,0.20)"; }} onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }} />
-            </div>
+          {/* Glass auth card */}
+          <div style={{
+            marginTop: 26, borderRadius: 26, padding: 20, position: "relative", overflow: "hidden",
+            background: "linear-gradient(160deg, rgba(255,255,255,0.78), rgba(255,255,255,0.58))",
+            backdropFilter: "blur(30px) saturate(1.6)",
+            WebkitBackdropFilter: "blur(30px) saturate(1.6)",
+            border: "1px solid rgba(255,255,255,0.65)",
+            boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85), 0 1px 2px rgba(10,10,10,0.05), 0 18px 44px rgba(122,90,24,0.10)",
+          }}>
+            <form onSubmit={handleSubmit}>
+              {/* Email field */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                background: "rgba(255,255,255,0.6)", border: "1px solid rgba(10,10,10,0.08)",
+                borderRadius: 14, padding: "13px 14px", marginBottom: 10,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="1.7" style={{ flexShrink: 0 }}>
+                  <rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" />
+                </svg>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Email address"
+                  autoComplete="email"
+                  style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: 15, color: TEXT }}
+                />
+              </div>
 
-            <div style={{ marginBottom: 8 }}>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: TEXT2, marginBottom: 6 }}>Password</label>
-              <div style={{ position: "relative" }}>
-                <input ref={passwordRef} type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={checkCapsLock} onKeyUp={checkCapsLock} placeholder="Enter your password"
-                  style={{ width: "100%", height: 52, background: BG_INPUT, border: `1px solid ${BORDER}`, borderRadius: 12, padding: "0 16px", paddingRight: 48, color: TEXT, fontSize: 14, outline: "none", transition: "border-color 0.2s, box-shadow 0.2s" }}
-                  onFocus={(e) => { e.target.style.borderColor = "#D4A85F"; e.target.style.boxShadow = "0 0 0 3px rgba(212,168,95,0.20)"; }} onBlur={(e) => { e.target.style.borderColor = BORDER; e.target.style.boxShadow = "none"; }} />
-                <button type="button" onClick={() => setShowPw(!showPw)} style={{ position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+              {/* Password field */}
+              <div style={{
+                display: "flex", alignItems: "center", gap: 10,
+                background: "rgba(255,255,255,0.6)", border: "1px solid rgba(10,10,10,0.08)",
+                borderRadius: 14, padding: "13px 14px", marginBottom: capsLockOn ? 4 : 10,
+              }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="1.7" style={{ flexShrink: 0 }}>
+                  <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                </svg>
+                <input
+                  ref={passwordRef}
+                  type={showPw ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={checkCapsLock}
+                  onKeyUp={checkCapsLock}
+                  placeholder="Password"
+                  autoComplete="current-password"
+                  style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: "inherit", fontSize: 15, color: TEXT }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPw(!showPw)}
+                  aria-label={showPw ? "Hide password" : "Show password"}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}
+                >
                   <EyeIcon open={showPw} />
                 </button>
               </div>
+
               {capsLockOn && (
-                <p style={{ marginTop: 6, fontSize: 11, color: "#B26F00", display: "flex", alignItems: "center", gap: 4 }}>
+                <p style={{ margin: "0 0 10px 4px", fontSize: 11, color: "#B26F00", display: "flex", alignItems: "center", gap: 4 }}>
                   <span style={{ fontSize: 13 }}>⇧</span> Caps Lock is on
                 </p>
               )}
-            </div>
 
-            <div style={{ textAlign: "right", marginBottom: 24 }}>
-              <a href="/forgot-password" className="aurora-link" style={{ fontSize: 12 }}>Forgot password?</a>
-            </div>
-
-            {error && (
-              <div style={{ background: `${CORAL}12`, border: `1px solid ${CORAL}25`, borderRadius: 10, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: CORAL }}>
-                {error}
-                {failedAttempts >= 2 && cooldownLeft === 0 && (
-                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${CORAL}25`, fontSize: 12 }}>
-                    Trouble signing in?{" "}
-                    <a href="/forgot-password" style={{ color: CORAL, fontWeight: 600, textDecoration: "underline" }}>Reset your password →</a>
-                  </div>
-                )}
-                {cooldownLeft > 0 && (
-                  <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${CORAL}25`, fontSize: 12 }}>
-                    Too many attempts. Try again in {cooldownLeft}s, or{" "}
-                    <a href="/forgot-password" style={{ color: CORAL, fontWeight: 600, textDecoration: "underline" }}>reset your password</a>.
-                  </div>
-                )}
+              {/* Forgot password — right-aligned, just above the CTA */}
+              <div style={{ textAlign: "right", marginBottom: 12 }}>
+                <a href="/forgot-password" className="aurora-link" style={{ fontSize: 12, color: DEEP, fontWeight: 600, textDecoration: "none" }}>
+                  Forgot password?
+                </a>
               </div>
-            )}
 
-            <button type="submit" disabled={authLoading || cooldownLeft > 0} className="aurora-glow" style={{
-              width: "100%", height: 52, padding: 0, borderRadius: 28, border: "none", cursor: cooldownLeft > 0 ? "not-allowed" : "pointer",
-              background: (authLoading || cooldownLeft > 0) ? "#D4A85F60" : "linear-gradient(135deg, #D4A85F, #7A5A18)",
-              color: "#fff", fontSize: 15, fontWeight: 600, transition: "all 0.2s",
-              display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-              boxShadow: "0 8px 22px rgba(212,168,95,0.30)",
-            }}>
-              {authLoading && <div style={{ width: 18, height: 18, border: "2.5px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />}
-              {authLoading ? "Signing in..." : cooldownLeft > 0 ? `Wait ${cooldownLeft}s` : "Sign in"}
-            </button>
-          </form>
+              {error && (
+                <div style={{
+                  background: `${ACCENT}1A`, border: `1px solid ${ACCENT}40`,
+                  borderRadius: 12, padding: "10px 14px", marginBottom: 12,
+                  fontSize: 13, color: DEEP,
+                }}>
+                  {error}
+                  {failedAttempts >= 2 && cooldownLeft === 0 && (
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${ACCENT}40`, fontSize: 12 }}>
+                      Trouble signing in?{" "}
+                      <a href="/forgot-password" style={{ color: DEEP, fontWeight: 600, textDecoration: "underline" }}>
+                        Reset your password →
+                      </a>
+                    </div>
+                  )}
+                  {cooldownLeft > 0 && (
+                    <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${ACCENT}40`, fontSize: 12 }}>
+                      Too many attempts. Try again in {cooldownLeft}s, or{" "}
+                      <a href="/forgot-password" style={{ color: DEEP, fontWeight: 600, textDecoration: "underline" }}>
+                        reset your password
+                      </a>.
+                    </div>
+                  )}
+                </div>
+              )}
 
+              {/* Gold CTA with animated sheen */}
+              <button
+                type="submit"
+                disabled={authLoading || cooldownLeft > 0}
+                className="login-cta"
+                style={{
+                  width: "100%", padding: 15, border: "none", borderRadius: 100,
+                  cursor: cooldownLeft > 0 ? "not-allowed" : "pointer",
+                  position: "relative", overflow: "hidden",
+                  background: (authLoading || cooldownLeft > 0)
+                    ? `${ACCENT}80`
+                    : "linear-gradient(135deg, #C99A4E 0%, #D4A85F 45%, #F0D097 100%)",
+                  color: "#1A1408", fontFamily: "inherit", fontSize: 15, fontWeight: 600, letterSpacing: "-0.2px", marginTop: 4,
+                  boxShadow: "0 2px 4px rgba(122,90,24,0.25), 0 14px 30px rgba(212,168,95,0.4), inset 0 1px 0 rgba(255,255,255,0.6), inset 0 0 0 1px rgba(212,168,95,0.3)",
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}
+              >
+                {authLoading && (
+                  <span style={{
+                    width: 16, height: 16, borderRadius: "50%",
+                    border: "2px solid rgba(26,20,8,0.3)", borderTopColor: "#1A1408",
+                    animation: "drst-spin 0.7s linear infinite", display: "inline-block",
+                  }} />
+                )}
+                {authLoading ? "Signing in…" : cooldownLeft > 0 ? `Wait ${cooldownLeft}s` : "Sign in →"}
+              </button>
 
+              <div style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: SUB }}>
+                New here?{" "}
+                <a href="/signup" style={{ color: DEEP, fontWeight: 600, textDecoration: "none" }}>
+                  Create an account
+                </a>
+              </div>
+            </form>
+          </div>
+
+          {/* Legal foot — matches the EULA path enforced by App Store guidelines */}
+          <div style={{
+            textAlign: "center", marginTop: 18,
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 9, letterSpacing: "0.08em", color: DIM, lineHeight: 1.6,
+          }}>
+            BY CONTINUING YOU AGREE TO OUR{" "}
+            <a href="/terms" style={{ color: DIM, textDecoration: "underline" }}>TERMS</a>{" "}&{" "}
+            <a href="/privacy" style={{ color: DIM, textDecoration: "underline" }}>PRIVACY POLICY</a>
+          </div>
         </div>
-
-        <p style={{ marginTop: 24, fontSize: 13, color: TEXT2, position: "relative", zIndex: 1, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.7s" }}>
-          Don't have account?{" "}<a href="/signup" className="aurora-link">Sign Up</a>
-        </p>
-
-        <p style={{ marginTop: 16, fontSize: 11, color: TEXT3, position: "relative", zIndex: 1, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.9s" }}>
-          <a href="/terms" style={{ color: TEXT3, textDecoration: "underline" }}>Terms</a>
-          {" · "}
-          <a href="/privacy" style={{ color: TEXT3, textDecoration: "underline" }}>Privacy</a>
-        </p>
-
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${MINT}, ${GOLD}, ${CORAL_SOFT}, ${CORAL})`, opacity: showForm ? 1 : 0, transition: "opacity 0.5s ease 0.8s" }} />
       </div>
 
       <style>{`
-        * { box-sizing: border-box; margin: 0; }
-        input::placeholder { color: ${TEXT3}; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes drst-spin { to { transform: rotate(360deg); } }
+        @keyframes drst-sheen {
+          0% { transform: translateX(-120%) rotate(8deg); }
+          100% { transform: translateX(240%) rotate(8deg); }
+        }
+        .login-cta::after {
+          content: '';
+          position: absolute;
+          top: -40%;
+          left: 0;
+          width: 55%;
+          height: 180%;
+          background: linear-gradient(100deg, transparent, rgba(255,255,255,0.55), transparent);
+          transform: translateX(-120%) rotate(8deg);
+          animation: drst-sheen 5.5s ease-in-out infinite 1s;
+          pointer-events: none;
+        }
+        input::placeholder { color: ${DIM}; }
       `}</style>
     </div>
   );

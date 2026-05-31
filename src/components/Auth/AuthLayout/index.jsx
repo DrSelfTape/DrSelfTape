@@ -13,13 +13,28 @@ export const AuthLayout = ({ children }) => {
     : null;
 
   return (
-    <div className="aurora-orbs flex min-h-screen" style={{ background: 'var(--aurora-bg)' }}>
+    <div className="aurora-orbs flex" style={{
+      background: 'var(--aurora-bg)',
+      // 100dvh shrinks with the iOS virtual keyboard so inputs at the bottom
+      // of the form stay reachable. min-h-screen (100vh) does not.
+      minHeight: '100dvh',
+    }}>
 
       {/* Left — Form */}
-      <div className="flex-1 flex flex-col justify-start py-10 px-6 sm:px-10 lg:px-16 overflow-auto">
+      <div
+        className="flex-1 flex flex-col justify-start px-6 sm:px-10 lg:px-16 overflow-y-auto"
+        style={{
+          // Respect iOS safe-area (dynamic island / status bar). py-10 alone
+          // rendered the logo under the status bar on iPhone 14+.
+          paddingTop: 'calc(env(safe-area-inset-top, 0px) + 24px)',
+          // Extra bottom space so the submit button isn't pinned under the
+          // iOS keyboard when an input above it is focused.
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 120px)',
+        }}
+      >
         {/* Logo */}
         <div className="flex items-center gap-2 mb-10">
-          <img src={logo} alt="Dr Self Tape" className="w-10 h-10 rounded-xl" style={{
+          <img src={logo} alt="Dr Self Tape" className="w-10 h-10 rounded-xl shrink-0" style={{
             background: 'var(--aurora-surface-solid)',
             boxShadow: '0 0 0 1px var(--aurora-line), 0 4px 12px rgba(10,10,10,0.06)',
             padding: 4,

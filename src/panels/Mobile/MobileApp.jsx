@@ -15,11 +15,11 @@ import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ProfileCompleteness from "../../components/Dashboard/ProfileCompleteness";
 import DeleteAccountModal from "../../components/Dashboard/DeleteAccountModal";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
+import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
 import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
-import ThemeToggle from "../../components/Dashboard/ThemeToggle";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -486,6 +486,227 @@ function AuroraPipeline({ stats, auditions, setTab }) {
   );
 }
 
+/* ── Aurora "Today" section ──
+ * 7-day date strip + 3 daily craft trackers (sides, rehearsal minutes, tapes).
+ * Date dots are derived from real data; tracker progress mixes server data
+ * (rehearsal minutes from /v1/growth/practice/week) with local-state
+ * persistence for the quick-add trackers.
+ *
+ * Aurora handoff §14.3 — V1Today equivalent.
+ */
+function AuroraToday({ auditions, submissions, scripts, setTab, setCurrentPanel }) {
+  const today = new Date();
+  const todayN = today.getDate();
+  const isoToday = today.toISOString().slice(0, 10);
+
+  // Build 7-day strip centered on today (3 before, today, 3 after)
+  const days = [];
+  for (let off = -3; off <= 3; off += 1) {
+    const d = new Date(today);
+    d.setDate(today.getDate() + off);
+    const labels = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    days.push({
+      d: labels[d.getDay()],
+      n: d.getDate(),
+      iso: d.toISOString().slice(0, 10),
+    });
+  }
+
+  // Compute events per date (callback / sub / tape / coach)
+  const events = {};
+  auditions?.forEach((a) => {
+    if (a.callbackDate) {
+      const iso = String(a.callbackDate).slice(0, 10);
+      events[iso] = "callback";
+    }
+  });
+  submissions?.forEach((s) => {
+    const iso = String(s.created_at || s.createdAt || "").slice(0, 10);
+    if (iso) events[iso] = events[iso] || (s.self_tape_url ? "tape" : "sub");
+  });
+
+  const evColor = {
+    sub: "var(--aurora-sky)",
+    callback: "var(--aurora-heritage-gold)",
+    tape: "var(--aurora-peach)",
+    coach: "var(--aurora-mint)",
+  };
+
+  const [sel, setSel] = useState(isoToday);
+
+  // ─── Trackers ───
+  // Self-tapes sent: count of submissions created today
+  const tapesToday = (submissions || []).filter((s) => {
+    const iso = String(s.created_at || s.createdAt || "").slice(0, 10);
+    return iso === isoToday;
+  }).length;
+
+  // Sides memorized: local state (per-day localStorage)
+  const sidesKey = `dst_today_sides_${isoToday}`;
+  const [sidesDone, setSidesDone] = useState(() => {
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem(sidesKey) : null;
+    return raw ? parseInt(raw, 10) || 0 : 0;
+  });
+  useEffect(() => {
+    try { window.localStorage.setItem(sidesKey, String(sidesDone)); } catch {}
+  }, [sidesDone, sidesKey]);
+
+  // Rehearsal minutes: pulled from /v1/growth/practice/week
+  const [rehearsalSec, setRehearsalSec] = useState(0);
+  const [rehearsalGoal, setRehearsalGoal] = useState(600);
+  useEffect(() => {
+    axiosInstance.get('/v1/growth/practice/week/').then((res) => {
+      const d = res?.data?.data;
+      const todayRow = (d?.days || []).find((x) => x.date === isoToday);
+      if (todayRow) setRehearsalSec(todayRow.seconds || 0);
+      if (d?.daily_goal_seconds) setRehearsalGoal(d.daily_goal_seconds);
+    }).catch(() => {});
+  }, [isoToday]);
+
+  const trackers = [
+    {
+      id: 'sides',
+      label: 'Sides memorized',
+      icon: 'book',
+      tint: 'var(--aurora-sky)',
+      tintAlpha: 'rgba(167,214,255,0.18)',
+      tintBorder: 'rgba(167,214,255,0.35)',
+      done: sidesDone, goal: 2, unit: '',
+      onBump: () => setSidesDone((n) => Math.min(2, n + 1)),
+    },
+    {
+      id: 'rehearsal',
+      label: 'Rehearsal minutes',
+      icon: 'mic',
+      tint: 'var(--aurora-mint)',
+      tintAlpha: 'rgba(159,230,180,0.18)',
+      tintBorder: 'rgba(159,230,180,0.35)',
+      done: Math.floor(rehearsalSec / 60),
+      goal: Math.round(rehearsalGoal / 60),
+      unit: 'm',
+      onBump: () => setTab && setTab('scenes'),
+    },
+    {
+      id: 'tapes',
+      label: 'Self-tapes sent',
+      icon: 'play',
+      tint: 'var(--aurora-peach)',
+      tintAlpha: 'rgba(255,201,163,0.18)',
+      tintBorder: 'rgba(255,201,163,0.35)',
+      done: tapesToday, goal: 3, unit: '',
+      onBump: () => setCurrentPanel && setCurrentPanel('self-tapes'),
+    },
+  ];
+
+  const completed = trackers.filter((t) => t.done >= t.goal).length;
+  const allDone = completed === trackers.length;
+
+  return (
+    <div style={{ marginBottom: 14 }}>
+      {/* 7-day date strip */}
+      <div className="aurora-card" style={{ padding: '14px 12px', marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          {days.map((day) => {
+            const on = sel === day.iso;
+            const ev = events[day.iso];
+            const isToday = day.iso === isoToday;
+            return (
+              <button
+                key={day.iso}
+                onClick={() => setSel(day.iso)}
+                style={{
+                  flex: 1, background: 'transparent', border: 'none', cursor: 'pointer',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '2px 0',
+                }}
+              >
+                <span className="aurora-micro" style={{ fontSize: 8, letterSpacing: '0.12em', color: on ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)' }}>{day.d}</span>
+                <span className="aurora-mono" style={{
+                  width: 32, height: 32, borderRadius: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 13, fontWeight: 500,
+                  background: on ? 'var(--aurora-heritage-gold)' : isToday ? 'rgba(212,168,95,0.18)' : 'transparent',
+                  color: on ? '#1A1408' : 'var(--aurora-text)',
+                  boxShadow: on ? '0 4px 12px rgba(212,168,95,0.40)' : 'none',
+                  transition: 'background 0.2s, box-shadow 0.2s',
+                }}>{day.n}</span>
+                <span style={{ width: 5, height: 5, borderRadius: 100, background: ev ? evColor[ev] : 'transparent' }} />
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Daily craft trackers */}
+      <div className="aurora-card" style={{ padding: '16px 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <span className="aurora-eyebrow">TODAY&rsquo;S CRAFT</span>
+          {allDone ? (
+            <span className="aurora-micro" style={{
+              fontSize: 9, color: '#0E0D0A',
+              background: 'var(--aurora-mint)',
+              padding: '3px 8px', borderRadius: 100, letterSpacing: '0.1em',
+            }}>ALL DONE ✦</span>
+          ) : (
+            <span className="aurora-micro" style={{ fontSize: 9, color: 'var(--aurora-dim)', letterSpacing: '0.12em' }}>
+              {completed}/{trackers.length} COMPLETE
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {trackers.map((t) => {
+            const pct = Math.min(1, t.done / Math.max(t.goal, 1));
+            const full = t.done >= t.goal;
+            return (
+              <div key={t.id} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '12px 14px', borderRadius: 16,
+                background: t.tintAlpha,
+                border: `1px solid ${t.tintBorder}`,
+                position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{
+                  position: 'absolute', left: 0, top: 0, bottom: 0,
+                  width: `${pct * 100}%`,
+                  background: `color-mix(in oklch, ${t.tint} 30%, transparent)`,
+                  transition: 'width 0.4s cubic-bezier(.2,.7,.3,1)',
+                }} />
+                <div style={{
+                  position: 'relative', width: 34, height: 34, borderRadius: 10,
+                  background: 'var(--aurora-surface-solid)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: '0 2px 6px rgba(10,10,10,0.06)',
+                }}>
+                  <Icon name={t.icon} size={18} color="var(--aurora-accent-deep)" />
+                </div>
+                <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.2px', color: 'var(--aurora-text)' }}>{t.label}</div>
+                  <div className="aurora-mono" style={{ fontSize: 10, color: 'var(--aurora-sub)', marginTop: 2, letterSpacing: '0.05em' }}>
+                    {t.done}{t.unit} / {t.goal}{t.unit}
+                  </div>
+                </div>
+                <button
+                  onClick={t.onBump}
+                  disabled={full}
+                  style={{
+                    position: 'relative', width: 34, height: 34, borderRadius: 100, flexShrink: 0,
+                    cursor: full ? 'default' : 'pointer',
+                    background: full ? 'var(--aurora-mint)' : 'var(--aurora-surface-solid)',
+                    border: full ? 'none' : `1.5px solid ${t.tint}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    boxShadow: full ? 'none' : '0 2px 6px rgba(10,10,10,0.06)',
+                  }}
+                >
+                  <Icon name={full ? 'check' : 'plus'} size={16} color="#1A1408" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function callbackBadge(dateStr) {
   if (!dateStr) return null;
   const d = new Date(dateStr);
@@ -632,7 +853,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
   return (
     <div className="aurora-orbs" style={{ padding: "0 20px 32px", minHeight: '100%' }}>
-      {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
+      {showOnboarding && <AuroraOnboarding onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
       {/* Pending likes banner */}
@@ -657,6 +878,15 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           {greeting} <span style={{ color: 'var(--aurora-heritage-gold)' }}>✦</span>
         </h1>
       </div>
+
+      {/* ── Today section: 7-day strip + daily craft trackers ── */}
+      <AuroraToday
+        auditions={auditions}
+        submissions={submissions}
+        scripts={rawScripts}
+        setTab={setTab}
+        setCurrentPanel={setCurrentPanel}
+      />
 
       {/* ── Smart Next Step CTA ── */}
       <button
@@ -1879,15 +2109,18 @@ function MoreScreen({ setCurrentPanel }) {
 // later Aurora reskin.
 const DARK_PANELS = new Set(["find-a-reader", "green-room", "who-wants-to-read", "jericho"]);
 
-// Wrapper to inject matchId into GreenRoomChat without React Router params
-function GreenRoomChatWrapper({ matchId }) {
+// Wrapper to inject matchId into GreenRoomChat without React Router params.
+// onBack lets the mobile sub-panel intercept the back action instead of the
+// component navigating to '/dashboard/green-room' (which doesn't exist as a
+// route in the Capacitor app).
+function GreenRoomChatWrapper({ matchId, onBack }) {
   return (
     <Suspense fallback={
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
         <div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div>
       </div>
     }>
-      <GreenRoomChat matchId={matchId} />
+      <GreenRoomChat matchId={matchId} onBack={onBack} />
     </Suspense>
   );
 }
@@ -1916,26 +2149,12 @@ function PanelScreen({ panelId, onBack }) {
 
   const isDark = DARK_PANELS.has(panelId);
 
-  // If we're in a sub-panel (e.g. GreenRoomChat or ItsAScene), render that instead
+  // If we're in a sub-panel (e.g. GreenRoomChat or ItsAScene), render that instead.
+  // GreenRoomChat owns its own header (back chevron + partner avatar + name +
+  // online dot + Start Rehearsal CTA), so PanelScreen should NOT wrap it in
+  // another header — that produced a duplicate back chevron behind the chat.
   if (subPanel?.id === 'green-room-chat') {
-    return (
-      <div style={{ padding: "0 0 24px" }}>
-        <div style={{
-          display: "flex", alignItems: "center", gap: 10, padding: "12px 16px",
-          borderBottom: `1px solid ${BORDER}`,
-        }}>
-          <button onClick={() => setSubPanel(null)} style={{
-            width: 36, height: 36, borderRadius: 10, background: BG_ELEVATED,
-            border: `1px solid ${BORDER}`, display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer",
-          }}>
-            <Icon name="back" size={18} color={TEXT_SECONDARY} />
-          </button>
-          <span style={{ fontSize: 16, fontWeight: 600, color: TEXT_PRIMARY }}>Green Room Chat</span>
-        </div>
-        <GreenRoomChatWrapper matchId={subPanel.matchId} />
-      </div>
-    );
+    return <GreenRoomChatWrapper matchId={subPanel.matchId} onBack={() => setSubPanel(null)} />;
   }
 
   if (subPanel?.id === 'its-a-scene') {

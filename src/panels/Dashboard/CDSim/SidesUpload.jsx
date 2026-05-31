@@ -96,7 +96,143 @@ async function extractPdfText(file) {
   return cleanScriptText(raw);
 }
 
+/* Aurora warm-up missions — pre-recording ritual cards */
+const WARMUPS = [
+  { id: 'cold', label: 'Cold read', desc: 'Jump in raw — no prep, pure instinct.', tint: 'var(--aurora-heritage-gold)', shadow: 'rgba(212,168,95,0.40)', hot: true },
+  { id: 'emo',  label: 'Emotional prep', desc: 'Two breaths into the moment before the slate.', tint: 'var(--aurora-sky)', shadow: 'rgba(167,214,255,0.40)' },
+  { id: 'phys', label: 'Physical warm-up', desc: 'Shake it out, drop into the body first.', tint: 'var(--aurora-mint)', shadow: 'rgba(159,230,180,0.40)' },
+];
+
+function WarmupAndRuler({ mission, setMission, len, setLen }) {
+  const railRef = useRef(null);
+  const [drag, setDrag] = useState(false);
+  const MIN = 1, MAX = 10;
+  const ticks = [];
+  for (let v = MIN; v <= MAX; v += 0.5) ticks.push(v);
+  const pick = (clientX) => {
+    const el = railRef.current; if (!el) return;
+    const r = el.getBoundingClientRect();
+    const t = Math.max(0, Math.min(1, (clientX - r.left) / r.width));
+    setLen(Math.round(MIN + t * (MAX - MIN)));
+  };
+
+  return (
+    <div style={{ marginBottom: 22 }}>
+      <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 10 }}>
+        WARM-UP MISSION
+      </span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 22 }}>
+        {WARMUPS.map((m) => {
+          const on = mission === m.id;
+          return (
+            <button
+              key={m.id}
+              onClick={() => setMission(m.id)}
+              style={{
+                textAlign: 'left', cursor: 'pointer',
+                padding: '14px 16px', borderRadius: 16,
+                position: 'relative', overflow: 'hidden', border: 'none',
+                background: on
+                  ? `linear-gradient(135deg, ${m.tint}, color-mix(in oklch, ${m.tint} 70%, #000))`
+                  : 'rgba(255,255,255,0.6)',
+                boxShadow: on ? `0 8px 22px ${m.shadow}` : 'none',
+                outline: `1.5px solid ${on ? m.tint : 'var(--aurora-line)'}`,
+                outlineOffset: '-1.5px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{
+                  fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: '#0E0D0A',
+                }}>{m.label}</span>
+                {m.hot && (
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 8,
+                    letterSpacing: '0.12em', background: '#0E0D0A',
+                    color: m.tint, padding: '2px 6px', borderRadius: 100,
+                  }}>HOT</span>
+                )}
+                {on && (
+                  <span style={{ marginLeft: 'auto', color: '#0E0D0A' }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M5 12l5 5 9-11" />
+                    </svg>
+                  </span>
+                )}
+              </div>
+              <div style={{
+                fontSize: 12, lineHeight: 1.35, marginTop: 4,
+                color: on ? 'rgba(14,13,10,0.7)' : 'var(--aurora-sub)',
+              }}>{m.desc}</div>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="aurora-card" style={{ padding: '16px 18px 12px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+          <span className="aurora-eyebrow">TAKE LENGTH</span>
+          <span style={{ fontFamily: "'JetBrains Mono', monospace", color: 'var(--aurora-accent-deep)' }}>
+            <span style={{ fontSize: 30, letterSpacing: '-1.5px', color: 'var(--aurora-text)', fontWeight: 600 }}>{len}</span>
+            <span style={{ fontSize: 13, marginLeft: 3 }}>min</span>
+          </span>
+        </div>
+        <div
+          ref={railRef}
+          onPointerDown={(e) => { setDrag(true); e.currentTarget.setPointerCapture(e.pointerId); pick(e.clientX); }}
+          onPointerMove={(e) => drag && pick(e.clientX)}
+          onPointerUp={() => setDrag(false)}
+          style={{
+            position: 'relative', height: 56, cursor: 'pointer',
+            touchAction: 'none', userSelect: 'none',
+          }}
+        >
+          <div style={{
+            position: 'absolute',
+            left: `${((len - MIN) / (MAX - MIN)) * 100}%`,
+            top: 0, transform: 'translateX(-50%)',
+            width: 0, height: 0,
+            borderLeft: '6px solid transparent', borderRight: '6px solid transparent',
+            borderTop: '8px solid var(--aurora-heritage-gold)',
+            transition: drag ? 'none' : 'left 0.2s', zIndex: 2,
+          }} />
+          <div style={{
+            position: 'absolute', left: 0, right: 0, top: 14, height: 30,
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          }}>
+            {ticks.map((t, i) => {
+              const major = Number.isInteger(t);
+              const active = Math.abs(t - len) < 0.3;
+              return (
+                <div key={i} style={{
+                  width: active ? 3 : 2,
+                  height: major ? (active ? 28 : 20) : 12,
+                  borderRadius: 3,
+                  background: t <= len ? 'var(--aurora-heritage-gold)' : 'rgba(10,10,10,0.12)',
+                  opacity: active ? 1 : t <= len ? 0.85 : 1,
+                  transition: 'background 0.2s',
+                }} />
+              );
+            })}
+          </div>
+          <div style={{
+            position: 'absolute', left: 0, right: 0, bottom: 0,
+            display: 'flex', justifyContent: 'space-between',
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 9, color: 'var(--aurora-dim)', letterSpacing: '0.1em',
+          }}>
+            <span>{MIN}m</span>
+            <span>{Math.round((MIN + MAX) / 2)}m</span>
+            <span>{MAX}m</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SidesUpload({ onSubmit }) {
+  const [mission, setMission] = useState('cold');
+  const [takeLen, setTakeLen] = useState(4);
   const [scriptText, setScriptText] = useState('');
   const [fileName, setFileName] = useState('');
   const [dragActive, setDragActive] = useState(false);
@@ -206,6 +342,13 @@ export default function SidesUpload({ onSubmit }) {
             : 'Upload a .txt or .pdf file, or paste your sides below'}
         </p>
       </div>
+
+      {!canContinue && (
+        <WarmupAndRuler
+          mission={mission} setMission={setMission}
+          len={takeLen} setLen={setTakeLen}
+        />
+      )}
 
       {canContinue ? (
         <>

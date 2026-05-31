@@ -255,12 +255,17 @@ const GreenRoomChat = (props = {}) => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-80px)] flex-col" style={{ background: 'var(--bg-deep)' }}>
+    <div className="flex flex-col" style={{
+      background: 'var(--bg-deep)',
+      // 100dvh shrinks with the iOS keyboard so the message input stays
+      // visible above the keyboard. 100vh did not.
+      height: 'calc(100dvh - 80px)',
+    }}>
 
       {/* Header */}
       <div className="flex items-center gap-3 px-4 py-3" style={{ borderBottom: '1px solid var(--bg-surface)' }}>
         <button
-          onClick={() => navigate('/dashboard/green-room')}
+          onClick={() => (props.onBack ? props.onBack() : navigate('/dashboard/green-room'))}
           className="rounded-full p-1.5 transition-colors hover:text-white"
           style={{ color: 'var(--text-secondary)' }}
         >

@@ -242,6 +242,14 @@ body {
   transition: background 0.3s, color 0.3s;
 }
 
+/* Typography hygiene — kill orphans + balance ragged wraps. Aurora handoff §14.7 */
+body, p, li, span, div, button, a, label {
+  text-wrap: pretty;
+}
+h1, h2, h3, h4 {
+  text-wrap: balance;
+}
+
 /* iOS Safari auto-zooms the viewport when a form field with font-size
  * < 16px gets focus. The visible difference is a jarring scale-up that
  * doesn't reset until the user pinches out. Force at least 16px on
@@ -589,6 +597,77 @@ button:not(:disabled):active,
   .aurora-skeleton,
   .aurora-input:focus-visible {
     transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ── Living Aurora (drift + breathe) ────────────────────────────────
+ * Two orb layers gently drift + breathe behind the page. Subtle —
+ * 28s / 14s loops, alternate, low-motion gate respected.
+ * Apply by adding .aurora-orbs-live to a container after .aurora-orbs.
+ * ─────────────────────────────────────────────────────────────────── */
+@keyframes aurora-drift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); }
+  50%  { transform: translate3d(-2%, 1.4%, 0) scale(1.04); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+@keyframes aurora-breathe {
+  0%   { opacity: 0.86; transform: scale(1); }
+  50%  { opacity: 1;    transform: scale(1.03); }
+  100% { opacity: 0.86; transform: scale(1); }
+}
+.aurora-orbs.aurora-orbs-live::before {
+  animation: aurora-drift 28s ease-in-out infinite alternate;
+}
+.aurora-orbs.aurora-orbs-live::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(50% 36% at 70% 18%, rgba(255,201,163,0.45) 0%, transparent 60%),
+    radial-gradient(45% 32% at 12% 70%, rgba(216,197,242,0.42) 0%, transparent 60%);
+  animation: aurora-breathe 14s ease-in-out infinite alternate;
+}
+[data-theme="dark"] .aurora-orbs.aurora-orbs-live::after {
+  background:
+    radial-gradient(50% 36% at 70% 18%, rgba(255,201,163,0.10) 0%, transparent 60%),
+    radial-gradient(45% 32% at 12% 70%, rgba(216,197,242,0.10) 0%, transparent 60%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora-orbs.aurora-orbs-live::before,
+  .aurora-orbs.aurora-orbs-live::after {
+    animation: none !important;
+  }
+}
+
+/* ── Aurora wow-moment keyframes ────────────────────────────────────
+ * Used by shared effects (V1Sparkles, V1Pulse, V1FAB) and inline.
+ * ─────────────────────────────────────────────────────────────────── */
+@keyframes aurora-pulse {
+  0%   { box-shadow: 0 0 0 0 currentColor; opacity: 0.7; }
+  100% { box-shadow: 0 0 0 14px transparent; opacity: 0; }
+}
+@keyframes aurora-num-in {
+  0%   { opacity: 0; transform: translateY(6px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes aurora-sparkle {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0) rotate(0deg); }
+  20%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(var(--dx, 0), var(--dy, 0)) scale(1) rotate(var(--rot, 180deg)); }
+}
+@keyframes aurora-page-in {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.aurora-page-in {
+  animation: aurora-page-in 320ms cubic-bezier(.2,.7,.3,1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora-page-in {
     animation: none !important;
   }
 }

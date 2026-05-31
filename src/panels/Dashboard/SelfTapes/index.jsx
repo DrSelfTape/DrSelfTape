@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Play, Upload, Send, X, Film, Calendar, Clock, Check,
   Loader2, AlertCircle, HardDriveDownload,
@@ -136,11 +137,27 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+  // Portal to body so the modal escapes the panel's `.aurora-orbs` stacking
+  // context — otherwise the top bar + bottom tab bar (both fixed at z=50)
+  // paint over the modal's X / Cancel buttons.
+  //
+  // Top-align (items-start) + dvh-bounded max-height + internal scroll so the
+  // iOS keyboard can cover the bottom of the screen without hiding fields.
+  // 100dvh tracks the visual viewport (shrinks when keyboard is up).
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[1000] flex items-start justify-center bg-black/60"
+      style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 16px' }}
+    >
       <div
-        className="rounded-2xl p-6 w-full max-w-md border"
-        style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+        className="rounded-2xl p-6 w-full max-w-md border overflow-y-auto"
+        style={{
+          background: 'var(--bg-card)',
+          borderColor: 'var(--border-default)',
+          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 32px)',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+        }}
       >
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -174,29 +191,31 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
             </label>
           )}
 
-          {/* File Input */}
+          {/* File Input — label-based so the file picker is triggered by the
+              native click on the input itself. iOS WKWebView blocks programmatic
+              .click() on display:none inputs, so we keep the input in layout
+              but visually hidden via opacity. */}
           <div>
             <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
               Video File *
             </label>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="video/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="w-full rounded-xl px-4 py-3 text-sm text-left transition-colors"
+            <label
+              className="block w-full rounded-xl px-4 py-3 text-sm text-left transition-colors cursor-pointer"
               style={{
                 background: 'var(--bg-surface)',
                 color: file ? 'var(--text-primary)' : 'var(--text-muted)',
                 border: '1px solid var(--border-default)',
               }}
             >
+              <input
+                ref={fileRef}
+                type="file"
+                accept="video/*"
+                onChange={handleFileChange}
+                style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
+              />
               {file ? `${file.name} (${fileMb} MB)` : 'Choose a video file...'}
-            </button>
+            </label>
             <p className="mt-1.5 text-[11px]" style={{ color: 'var(--text-muted)' }}>
               Max {maxMb} MB per tape
               {quota?.tape_count_cap != null && (
@@ -303,7 +322,8 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -328,11 +348,20 @@ function SubmitModal({ tape, onClose }) {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[1000] flex items-start justify-center bg-black/60"
+      style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 16px' }}
+    >
       <div
-        className="rounded-2xl p-6 w-full max-w-md border"
-        style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+        className="rounded-2xl p-6 w-full max-w-md border overflow-y-auto"
+        style={{
+          background: 'var(--bg-card)',
+          borderColor: 'var(--border-default)',
+          maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 32px)',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+        }}
       >
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -387,7 +416,8 @@ function SubmitModal({ tape, onClose }) {
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 

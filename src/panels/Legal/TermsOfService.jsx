@@ -33,15 +33,26 @@ export default function TermsOfService() {
       <Section heading="3. Subscriptions and billing">
         <p>
           Some features require a paid subscription. Subscriptions are billed in advance on a
-          recurring basis (monthly or annually, as you select) through Stripe, our payment
-          processor. Subscriptions auto-renew at the end of each billing period until you cancel
-          via the in-app billing portal.
+          recurring basis (monthly or annually, as you select) and auto-renew at the end of each
+          billing period until you cancel.
         </p>
         <p>
-          You can cancel anytime; cancellation takes effect at the end of the current billing
-          period. Except where required by law (e.g., consumer protection statutes), payments are
-          non-refundable. We may change subscription prices on prospective renewals with at least
-          30 days' notice.
+          <strong>On iOS:</strong> payment is charged to your Apple ID at confirmation of purchase.
+          Manage or cancel your subscription in Settings &rarr; [Your Name] &rarr; Subscriptions on
+          your device, or via the App Store app. Apple's standard EULA at{' '}
+          <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" rel="noopener noreferrer">
+            apple.com/legal/internet-services/itunes/dev/stdeula
+          </a>{' '}
+          also applies to your subscription.
+        </p>
+        <p>
+          <strong>On the web:</strong> payment is processed by Stripe, our web payment processor.
+          You can cancel anytime from the in-app billing portal.
+        </p>
+        <p>
+          Cancellation takes effect at the end of the current billing period. Except where required
+          by law (e.g., consumer protection statutes), payments are non-refundable. We may change
+          subscription prices on prospective renewals with at least 30 days' notice.
         </p>
       </Section>
 
@@ -134,6 +145,95 @@ export default function TermsOfService() {
       <Section heading="13. Contact">
         <p>
           Questions about these Terms? Email <a href="mailto:info@drselftapes.com" style={{ color: '#7A5A18', fontWeight: 600 }}>info@drselftapes.com</a>.
+          You can also write to us at: Dr Self Tape LLC, 1621 Vista Del Mar, Hollywood, CA 90028, USA.
+        </p>
+      </Section>
+
+      <Section heading="14. Apple App Store — additional terms (iOS users)">
+        <p>
+          The following terms apply when you download and use the Dr Self Tape application (the
+          "Licensed Application") from the Apple App Store on an Apple-branded device. These terms
+          satisfy Apple's "Minimum Terms of Developer's End-User License Agreement" and supplement
+          the rest of these Terms.
+        </p>
+
+        <p>
+          <strong>14.1 Acknowledgement.</strong> You acknowledge that this agreement is concluded
+          between you and Dr Self Tape LLC only, and not with Apple Inc. ("Apple"). Dr Self Tape
+          LLC, not Apple, is solely responsible for the Licensed Application and its content.
+        </p>
+
+        <p>
+          <strong>14.2 Scope of license.</strong> Dr Self Tape LLC grants you a non-transferable
+          license to use the Licensed Application on any Apple-branded products that you own or
+          control, as permitted by the Apple App Store Terms of Service — including Family Sharing
+          and volume purchasing where Apple makes those features available.
+        </p>
+
+        <p>
+          <strong>14.3 Maintenance and support.</strong> Dr Self Tape LLC is solely responsible for
+          providing any maintenance and support services with respect to the Licensed Application.
+          Apple has no obligation whatsoever to furnish any maintenance and support services with
+          respect to the Licensed Application.
+        </p>
+
+        <p>
+          <strong>14.4 Warranty.</strong> Dr Self Tape LLC is solely responsible for any product
+          warranties, whether express or implied by law, to the extent not effectively disclaimed.
+          In the event of any failure of the Licensed Application to conform to any applicable
+          warranty, you may notify Apple, and Apple will refund the purchase price for the Licensed
+          Application to you. To the maximum extent permitted by applicable law, Apple will have no
+          other warranty obligation whatsoever with respect to the Licensed Application. Any other
+          claims, losses, liabilities, damages, costs or expenses attributable to any failure to
+          conform to any warranty will be the sole responsibility of Dr Self Tape LLC.
+        </p>
+
+        <p>
+          <strong>14.5 Product claims.</strong> Dr Self Tape LLC, not Apple, is responsible for
+          addressing any claims by you or any third party relating to the Licensed Application or
+          your possession and/or use of the Licensed Application, including: (i) product liability
+          claims; (ii) any claim that the Licensed Application fails to conform to any applicable
+          legal or regulatory requirement; and (iii) claims arising under consumer protection,
+          privacy, or similar legislation.
+        </p>
+
+        <p>
+          <strong>14.6 Intellectual property rights.</strong> In the event of any third-party claim
+          that the Licensed Application or your possession and use of it infringes that third
+          party's intellectual property rights, Dr Self Tape LLC, not Apple, will be solely
+          responsible for the investigation, defense, settlement and discharge of any such
+          intellectual property infringement claim.
+        </p>
+
+        <p>
+          <strong>14.7 Legal compliance.</strong> You represent and warrant that (i) you are not
+          located in a country that is subject to a U.S. Government embargo, or that has been
+          designated by the U.S. Government as a "terrorist supporting" country; and (ii) you are
+          not listed on any U.S. Government list of prohibited or restricted parties.
+        </p>
+
+        <p>
+          <strong>14.8 Developer name and contact.</strong> Dr Self Tape LLC, 1968 S. Coast Hwy
+          #4490, Laguna Beach, CA 92651, USA. Email:{' '}
+          <a href="mailto:info@drselftapes.com" style={{ color: '#7A5A18', fontWeight: 600 }}>info@drselftapes.com</a>.
+          Direct any questions, complaints, or claims regarding the Licensed Application to this
+          address.
+        </p>
+
+        <p>
+          <strong>14.9 Third-party terms of agreement.</strong> You must comply with applicable
+          third-party terms of agreement when using the Licensed Application — including, where
+          applicable, your wireless carrier's data plan terms and any third-party service the
+          Licensed Application interacts with (for example, casting platforms, video processing
+          services, or AI providers).
+        </p>
+
+        <p>
+          <strong>14.10 Third-party beneficiary.</strong> You acknowledge and agree that Apple, and
+          Apple's subsidiaries, are third-party beneficiaries of this agreement, and that, upon
+          your acceptance of the terms and conditions of this agreement, Apple will have the right
+          (and will be deemed to have accepted the right) to enforce this agreement against you as
+          a third-party beneficiary of this agreement.
         </p>
       </Section>
     </LegalLayout>

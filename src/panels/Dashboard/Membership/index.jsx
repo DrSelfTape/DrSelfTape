@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
-import { isNativeIOS, purchase as iapPurchase, restorePurchases, manageSubscriptions } from '../../../utils/purchases';
+import { isNativeIOS, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor } from '../../../utils/purchases';
 
 const PLANS = [
   {
@@ -12,9 +12,8 @@ const PLANS = [
     monthly: 9.99,
     yearly: 99.99,
     yearlySaving: '2 months free',
-    color: '#A7ECDA',
     features: [
-      '10 AI tokens per month',
+      '10 AI tokens / month',
       'Acting Coach sessions',
       'Live Study Mode',
       'Scene Generator',
@@ -29,10 +28,9 @@ const PLANS = [
     monthly: 14.99,
     yearly: 149.99,
     yearlySaving: '2 months free',
-    color: '#FF8280',
     popular: true,
     features: [
-      '20 AI tokens per month',
+      '20 AI tokens / month',
       'Rollover unused tokens',
       'Everything in Basic',
       'Priority support',
@@ -47,9 +45,8 @@ const PLANS = [
     monthly: 24.99,
     yearly: 249.99,
     yearlySaving: '2 months free',
-    color: '#FCE072',
     features: [
-      '50 AI tokens per month',
+      '50 AI tokens / month',
       'Rollover unused tokens',
       'Everything in Plus',
       'Early access to new features',
@@ -59,44 +56,109 @@ const PLANS = [
   },
 ];
 
-export default function Membership() {
+function introOfferLabel(intro) {
+  if (!intro?.unit || !intro?.value) return null;
+  const unitWord = { DAY: 'day', WEEK: 'week', MONTH: 'month', YEAR: 'year' }[intro.unit];
+  if (!unitWord) return null;
+  const plural = intro.value === 1 ? unitWord : `${unitWord}s`;
+  if (intro.isFreeTrial) return `${intro.value}-${unitWord} free trial`;
+  return `${intro.priceString} for first ${intro.value} ${plural}`;
+}
+
+/* Before/After comparison rings — "Without Pro" 3% vs "With Pro" 17% callback rate */
+function ComparisonRings() {
+  const r = 38;
+  const c = 2 * Math.PI * r;
+  const arc = (pct) => c * (1 - pct);
+  return (
+    <div className="aurora-card" style={{
+      padding: '18px 16px', marginBottom: 18,
+      display: 'flex', alignItems: 'stretch', gap: 12,
+    }}>
+      {/* Without Pro */}
+      <div style={{
+        flex: 1, textAlign: 'center', padding: '10px 4px',
+        opacity: 0.55, position: 'relative',
+      }}>
+        <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 8 }}>WITHOUT PRO</span>
+        <svg width="86" height="86" viewBox="0 0 86 86" style={{ display: 'block', margin: '0 auto' }}>
+          <circle cx="43" cy="43" r={r} stroke="rgba(10,10,10,0.10)" strokeWidth="7" fill="none" />
+          <circle cx="43" cy="43" r={r} stroke="var(--aurora-dim)" strokeWidth="7" fill="none"
+            strokeLinecap="round" strokeDasharray={c} strokeDashoffset={arc(0.03)} transform="rotate(-90 43 43)" />
+          <text x="43" y="48" textAnchor="middle" style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500,
+            fill: 'var(--aurora-sub)',
+          }}>3%</text>
+        </svg>
+        <div className="aurora-mono" style={{ fontSize: 10, color: 'var(--aurora-dim)', marginTop: 6 }}>
+          callback rate
+        </div>
+      </div>
+      {/* Arrow */}
+      <div style={{ display: 'flex', alignItems: 'center', color: 'var(--aurora-heritage-gold)' }}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M5 12h14M13 5l7 7-7 7" />
+        </svg>
+      </div>
+      {/* With Pro */}
+      <div style={{
+        flex: 1, textAlign: 'center', padding: '10px 4px',
+        background: 'linear-gradient(160deg, rgba(212,168,95,0.16), rgba(212,168,95,0.05))',
+        borderRadius: 16, border: '1px solid rgba(212,168,95,0.30)',
+      }}>
+        <span className="aurora-eyebrow" style={{
+          display: 'block', marginBottom: 8, color: 'var(--aurora-accent-deep)',
+        }}>WITH PRO</span>
+        <svg width="86" height="86" viewBox="0 0 86 86" style={{ display: 'block', margin: '0 auto' }}>
+          <circle cx="43" cy="43" r={r} stroke="rgba(10,10,10,0.08)" strokeWidth="7" fill="none" />
+          <circle cx="43" cy="43" r={r} stroke="var(--aurora-heritage-gold)" strokeWidth="7" fill="none"
+            strokeLinecap="round" strokeDasharray={c} strokeDashoffset={arc(0.17)} transform="rotate(-90 43 43)"
+            style={{ filter: 'drop-shadow(0 0 6px rgba(212,168,95,0.5))' }} />
+          <text x="43" y="48" textAnchor="middle" style={{
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500,
+            fill: 'var(--aurora-text)',
+          }}>17%</text>
+        </svg>
+        <div className="aurora-mono" style={{ fontSize: 10, color: 'var(--aurora-accent-deep)', marginTop: 6 }}>
+          callback rate
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function Membership({ onClose }) {
   const dispatch = useDispatch();
-  const [billing, setBilling] = useState('monthly');
+  const [billing, setBilling] = useState('yearly'); // default yearly so free trial is featured
+  const [selectedPlan, setSelectedPlan] = useState('plus'); // default to Plus (popular)
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(null);
+  const [introOffers, setIntroOffers] = useState({});
 
   useEffect(() => {
     axiosInstance.get('/v1/subscriptions/status/')
-      .then(res => setStatus(res.data.data))
-      .catch(() => {
-        // If we can't fetch status (offline, BE blip), fall back to a
-        // safe shape so the paywall still renders all 3 tiers as
-        // purchasable instead of getting stuck on "Loading…".
-        setStatus({ balance: 0, plan: null, status: 'unknown' });
-      })
+      .then((res) => setStatus(res.data.data))
+      .catch(() => setStatus({ balance: 0, plan: null, status: 'unknown' }))
       .finally(() => setLoading(false));
 
-    // Handle the redirect query params Stripe Checkout adds. Webhooks
-    // are the source of truth; we just refetch status and surface a
-    // toast so the user gets immediate feedback.
+    if (isNativeIOS()) {
+      const combos = ['basic', 'plus', 'premium'].flatMap((p) => ['monthly', 'yearly'].map((b) => [p, b]));
+      Promise.all(combos.map(async ([p, b]) => {
+        const offer = await getIntroOfferFor(p, b).catch(() => null);
+        return [`${p}_${b}`, offer];
+      })).then((entries) => setIntroOffers(Object.fromEntries(entries)));
+    }
+
     const params = new URLSearchParams(window.location.search);
     if (params.get('subscribed') === 'true') {
-      dispatch(showSnackbar({
-        message: 'Subscription activated. Welcome aboard!',
-        variant: 'success',
-      }));
-      // Webhook usually lands within ~1s; refetch after a short delay.
+      dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
       setTimeout(() => {
-        axiosInstance.get('/v1/subscriptions/status/').then(res => setStatus(res.data.data));
+        axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
       }, 1500);
-      // Drop the params so a refresh doesn't re-fire the toast.
       window.history.replaceState({}, '', window.location.pathname);
     } else if (params.get('canceled') === 'true') {
-      dispatch(showSnackbar({
-        message: 'Checkout canceled — no changes to your subscription.',
-        variant: 'info',
-      }));
+      dispatch(showSnackbar({ message: 'Checkout canceled — no changes to your subscription.', variant: 'info' }));
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [dispatch]);
@@ -104,25 +166,20 @@ export default function Membership() {
   const handleSubscribe = async (planId) => {
     setCheckoutLoading(planId);
 
-    // iOS: route through Apple IAP via RevenueCat. App Store guideline
-    // 3.1.1 forbids using Stripe for in-app digital goods on iOS.
     if (isNativeIOS()) {
       const result = await iapPurchase(planId, billing);
       setCheckoutLoading(null);
 
-      if (result.userCancelled) return; // Silent — Apple already showed UI.
+      if (result.userCancelled) return;
 
       if (!result.ok) {
         const msg = result.reason === 'no_package'
-          ? 'This plan isn\'t available in the App Store right now. Please try again later.'
+          ? "This plan isn't available in the App Store right now. Please try again later."
           : 'Purchase failed. Please try again.';
         dispatch(showSnackbar({ message: msg, variant: 'error' }));
         return;
       }
 
-      // Success — RevenueCat's webhook will update UserSubscription on
-      // the backend. Refetch status after a short delay so the UI shows
-      // the new plan.
       dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
       setTimeout(() => {
         axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
@@ -130,12 +187,8 @@ export default function Membership() {
       return;
     }
 
-    // Web: existing Stripe Checkout flow.
     try {
-      const res = await axiosInstance.post('/v1/subscriptions/checkout/', {
-        plan: planId,
-        billing,
-      });
+      const res = await axiosInstance.post('/v1/subscriptions/checkout/', { plan: planId, billing });
       window.location.href = res.data.data.checkout_url;
     } catch (err) {
       const message = err?.response?.data?.error || 'Something went wrong starting checkout. Please try again.';
@@ -145,13 +198,10 @@ export default function Membership() {
   };
 
   const handleManage = async () => {
-    // iOS: open Apple's native Settings → Subscriptions UI. Required by
-    // App Store guidelines — third-party billing portals aren't allowed.
     if (isNativeIOS()) {
       await manageSubscriptions();
       return;
     }
-
     try {
       const res = await axiosInstance.post('/v1/subscriptions/portal/');
       window.location.href = res.data.data.portal_url;
@@ -161,9 +211,6 @@ export default function Membership() {
     }
   };
 
-  // Apple requires a user-visible "Restore Purchases" control. Surfaces
-  // any prior IAP receipts, useful when a user reinstalls or signs in
-  // on a new device. No-op on web.
   const handleRestore = async () => {
     if (!isNativeIOS()) return;
     const result = await restorePurchases();
@@ -179,209 +226,321 @@ export default function Membership() {
 
   const currentPlan = status?.plan;
   const tokenBalance = status?.balance ?? 0;
+  const sel = PLANS.find((p) => p.id === selectedPlan);
+  const selIntro = introOffers[`${selectedPlan}_${billing}`];
+  const selIntroLabel = introOfferLabel(selIntro);
+  const isCurrent = currentPlan === selectedPlan && status?.status === 'active';
+  const ctaPrice = sel ? (billing === 'monthly' ? sel.monthly : sel.yearly) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-[#0A0A0A] mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>
-          Choose Your Plan
-        </h1>
-        <p className="text-[rgba(10,10,10,0.5)] text-sm">
-          One token = one AI session. No surprises.
-        </p>
-
-        {/* Token balance badge */}
-        {!loading && (
-          <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full bg-[#F4F4EE] border border-[rgba(167,236,218,0.15)] text-sm">
-            <span className="text-[#A7ECDA] font-bold">{tokenBalance}</span>
-            <span className="text-[rgba(10,10,10,0.5)]">tokens remaining</span>
-          </div>
+    <div className="aurora-orbs" style={{
+      position: 'relative', minHeight: '100%',
+      padding: '0 0 calc(env(safe-area-inset-bottom, 0px) + 110px)',
+    }}>
+      {/* Top bar: X / Restore */}
+      <div style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        padding: '12px 20px 4px', position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        {onClose ? (
+          <button onClick={onClose} style={{
+            width: 36, height: 36, borderRadius: 100, border: 'none',
+            background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(20px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', boxShadow: '0 4px 12px rgba(10,10,10,0.06)',
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        ) : <div style={{ width: 36 }} />}
+        {isNativeIOS() && (
+          <button onClick={handleRestore} style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+            letterSpacing: '0.1em', color: 'var(--aurora-accent-deep)',
+            padding: '8px 12px',
+          }}>RESTORE</button>
         )}
       </div>
 
-      {/* Billing toggle */}
-      <div className="flex items-center justify-center gap-3 mb-6">
-        <button
-          onClick={() => setBilling('monthly')}
-          className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-            billing === 'monthly'
-              ? 'bg-[#D4A85F] text-[#0A0A0A]'
-              : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.5)] border border-[rgba(167,236,218,0.1)]'
-          }`}
-        >
-          Monthly
-        </button>
-        <button
-          onClick={() => setBilling('yearly')}
-          className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-            billing === 'yearly'
-              ? 'bg-[#D4A85F] text-[#0A0A0A]'
-              : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.5)] border border-[rgba(167,236,218,0.1)]'
-          }`}
-        >
-          Yearly
-          <span className="ml-2 text-[10px] font-bold text-[#A7ECDA] uppercase tracking-wide">Save 2 months</span>
-        </button>
+      <div style={{ padding: '0 22px' }}>
+        {/* Serif headline */}
+        <div style={{ marginTop: 8, marginBottom: 18 }}>
+          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 8, color: 'var(--aurora-accent-deep)' }}>
+            UNLOCK YOUR STUDIO
+          </span>
+          <h1 className="aurora-display" style={{
+            fontSize: 32, color: 'var(--aurora-text)', margin: 0,
+            letterSpacing: '-0.7px', lineHeight: 1.05,
+          }}>
+            Book more roles.<br />Go Pro.
+          </h1>
+          <p style={{
+            fontSize: 14, color: 'var(--aurora-sub)', marginTop: 10, lineHeight: 1.5,
+          }}>
+            AI coaching, unlimited rehearsals, and verified scene partners.
+            <strong style={{ color: 'var(--aurora-text)' }}> Pro members convert callbacks 5× more often.</strong>
+          </p>
+        </div>
+
+        {/* Before / After comparison */}
+        <ComparisonRings />
+
+        {/* Token balance pill */}
+        {!loading && (
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14,
+            padding: '6px 14px', borderRadius: 100,
+            background: 'rgba(255,255,255,0.7)',
+            border: '1px solid rgba(159,230,180,0.4)',
+            backdropFilter: 'blur(20px)',
+          }}>
+            <span style={{ fontSize: 14 }}>🎟️</span>
+            <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{tokenBalance}</span>
+            <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>tokens remaining</span>
+          </div>
+        )}
+
+        {/* Billing toggle — Monthly / Yearly */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 6, padding: 4, marginBottom: 16,
+          background: 'rgba(10,10,10,0.05)', borderRadius: 100,
+        }}>
+          {['monthly', 'yearly'].map((b) => {
+            const on = billing === b;
+            return (
+              <button key={b} onClick={() => setBilling(b)} style={{
+                flex: 1, padding: '10px 14px', borderRadius: 100, border: 'none',
+                cursor: 'pointer',
+                fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600,
+                background: on ? '#fff' : 'transparent',
+                color: on ? 'var(--aurora-text)' : 'var(--aurora-sub)',
+                boxShadow: on ? '0 2px 6px rgba(10,10,10,0.08)' : 'none',
+                transition: 'all 0.2s',
+              }}>
+                {b === 'monthly' ? 'Monthly' : 'Yearly · Save 2mo'}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Plan cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+          {PLANS.map((plan) => {
+            const price = billing === 'monthly' ? plan.monthly : plan.yearly;
+            const isActive = currentPlan === plan.id;
+            const planIsCurrent = isActive && status?.status === 'active';
+            const selected = selectedPlan === plan.id;
+            const planIntro = introOffers[`${plan.id}_${billing}`];
+            const planIntroLabel = introOfferLabel(planIntro);
+
+            return (
+              <button
+                key={plan.id}
+                onClick={() => setSelectedPlan(plan.id)}
+                style={{
+                  width: '100%', textAlign: 'left', cursor: 'pointer',
+                  padding: '16px 18px', borderRadius: 22, position: 'relative',
+                  background: selected
+                    ? 'linear-gradient(160deg, #FFFFFF, #FBF6E9)'
+                    : 'rgba(255,255,255,0.7)',
+                  border: selected
+                    ? '2px solid var(--aurora-heritage-gold)'
+                    : '1.5px solid var(--aurora-line)',
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: selected
+                    ? '0 12px 30px rgba(212,168,95,0.20), inset 0 1px 0 rgba(255,255,255,0.7)'
+                    : 'none',
+                  transition: 'all 0.2s',
+                }}
+              >
+                {plan.popular && (
+                  <div style={{
+                    position: 'absolute', top: -10, right: 14,
+                    padding: '3px 10px', borderRadius: 100,
+                    background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-accent-deep))',
+                    color: '#fff', fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
+                  }}>POPULAR</div>
+                )}
+                {planIsCurrent && (
+                  <div style={{
+                    position: 'absolute', top: -10, left: 14,
+                    padding: '3px 10px', borderRadius: 100,
+                    background: 'var(--aurora-mint)', color: '#0E0D0A',
+                    fontFamily: "'JetBrains Mono', monospace",
+                    fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
+                  }}>CURRENT</div>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                  {/* Radio dot */}
+                  <div style={{
+                    width: 22, height: 22, borderRadius: 100, flexShrink: 0,
+                    border: `2px solid ${selected ? 'var(--aurora-heritage-gold)' : 'var(--aurora-line)'}`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    marginTop: 2,
+                  }}>
+                    {selected && <div style={{
+                      width: 10, height: 10, borderRadius: 100, background: 'var(--aurora-heritage-gold)',
+                    }} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
+                      <div className="aurora-display" style={{
+                        fontSize: 18, color: 'var(--aurora-text)',
+                      }}>{plan.name}</div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span className="aurora-mono" style={{ fontSize: 18, color: 'var(--aurora-text)', fontWeight: 600 }}>${price}</span>
+                        <span style={{ fontSize: 11, color: 'var(--aurora-sub)' }}>/{billing === 'monthly' ? 'mo' : 'yr'}</span>
+                      </div>
+                    </div>
+                    <div style={{
+                      fontSize: 12, color: 'var(--aurora-sub)', marginTop: 4, lineHeight: 1.4,
+                    }}>
+                      <span style={{ fontWeight: 600, color: 'var(--aurora-mint)' }}>{plan.tokens}</span> AI tokens · {plan.rollover ? 'rollover' : 'no rollover'}
+                    </div>
+                    {planIntroLabel && (
+                      <div style={{
+                        display: 'inline-block', marginTop: 8,
+                        padding: '4px 10px', borderRadius: 100,
+                        background: 'color-mix(in oklch, var(--aurora-heritage-gold) 22%, transparent)',
+                        color: 'var(--aurora-accent-deep)',
+                        fontFamily: "'JetBrains Mono', monospace",
+                        fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
+                      }}>
+                        {planIntroLabel.toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Feature ticks (Plus highlights) */}
+        <div style={{ marginBottom: 16 }}>
+          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 10 }}>
+            EVERY PLAN INCLUDES
+          </span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[
+              'Unlimited audition tracking',
+              'AI scene coaching feedback',
+              'Find a Reader matching + Green Room chat',
+              'GPT-4o weekly craft readout',
+            ].map((feat) => (
+              <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{
+                  width: 22, height: 22, borderRadius: 100, flexShrink: 0,
+                  background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: 'color-mix(in oklch, var(--aurora-mint) 80%, var(--aurora-text))',
+                }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12l5 5 9-11" />
+                  </svg>
+                </span>
+                <span style={{ fontSize: 14, color: 'var(--aurora-text)' }}>{feat}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* "No payment now" microcopy */}
+        {selIntro?.isFreeTrial && (
+          <div style={{
+            textAlign: 'center', fontSize: 12, color: 'var(--aurora-sub)',
+            marginBottom: 14, lineHeight: 1.5,
+          }}>
+            <strong style={{ color: 'var(--aurora-accent-deep)' }}>No payment now.</strong>
+            {' '}You'll be reminded before your trial ends.
+          </div>
+        )}
+
+        {/* Legal */}
+        <p style={{
+          textAlign: 'center', fontSize: 11, lineHeight: 1.55,
+          color: 'var(--aurora-sub)', marginBottom: 8, maxWidth: 460,
+          marginLeft: 'auto', marginRight: 'auto',
+        }}>
+          Subscriptions auto-renew at the price shown until cancelled in your Apple ID Subscription settings.
+        </p>
+        <p style={{
+          textAlign: 'center', fontSize: 11, color: 'var(--aurora-sub)',
+          marginBottom: 14,
+        }}>
+          <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
+             target="_blank" rel="noopener noreferrer"
+             className="aurora-link" style={{ fontSize: 11 }}>
+            Terms (EULA)
+          </a>
+          {' · '}
+          <a href="/privacy" className="aurora-link" style={{ fontSize: 11 }}>Privacy Policy</a>
+        </p>
       </div>
 
-      {/* Plan cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-6">
-        {PLANS.map(plan => {
-          const price = billing === 'monthly' ? plan.monthly : plan.yearly;
-          const isActive = currentPlan === plan.id;
-          const isCurrent = isActive && status?.status === 'active';
-
-          return (
-            <div
-              key={plan.id}
-              className="relative rounded-2xl p-6 flex flex-col"
+      {/* Sticky bottom CTA */}
+      <div style={{
+        position: 'fixed', left: 0, right: 0,
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 86px)',
+        padding: '12px 22px',
+        background: 'linear-gradient(to top, rgba(250,250,247,1) 60%, rgba(250,250,247,0))',
+        zIndex: 20,
+        pointerEvents: 'none',
+      }}>
+        <div style={{ pointerEvents: 'auto' }}>
+          {isCurrent ? (
+            <button onClick={handleManage} className="aurora-glow" style={{
+              width: '100%', padding: '16px', borderRadius: 100, cursor: 'pointer',
+              border: '2px solid var(--aurora-heritage-gold)',
+              background: 'transparent',
+              fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
+              color: 'var(--aurora-accent-deep)',
+            }}>
+              Manage Plan
+              {isNativeIOS() && <span style={{ display: 'block', fontSize: 10, opacity: 0.7, marginTop: 4 }}>
+                Opens Apple Settings · Subscriptions
+              </span>}
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSubscribe(selectedPlan)}
+              disabled={!!checkoutLoading}
+              className="aurora-glow"
               style={{
-                background: plan.popular ? 'linear-gradient(145deg, #FFFFFF, #F4F4EE)' : '#FFFFFF',
-                border: isCurrent
-                  ? `2px solid ${plan.color}`
-                  : plan.popular
-                  ? `1px solid rgba(212,168,95,0.4)`
-                  : '1px solid rgba(10,10,10,0.06)',
-                boxShadow: plan.popular
-                  ? '0 12px 30px rgba(212,168,95,0.18), 0 1px 2px rgba(10,10,10,0.04)'
-                  : '0 1px 2px rgba(10,10,10,0.04), 0 8px 24px rgba(10,10,10,0.05)',
+                width: '100%', padding: '16px', borderRadius: 100, border: 'none',
+                cursor: checkoutLoading ? 'wait' : 'pointer',
+                position: 'relative', overflow: 'hidden',
+                background: 'linear-gradient(135deg, #0E0D0A 0%, #1F1B12 100%)',
+                color: '#FFFFFF',
+                fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
+                letterSpacing: '-0.2px',
+                boxShadow: '0 12px 30px rgba(10,10,10,0.30), inset 0 1px 0 rgba(255,255,255,0.08)',
+                opacity: checkoutLoading ? 0.7 : 1,
               }}
             >
-              {plan.popular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 rounded-full text-xs font-bold text-white"
-                  style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', boxShadow: '0 6px 14px rgba(212,168,95,0.30)' }}>
-                  Most Popular
-                </div>
-              )}
-              {isCurrent && (
-                <div className="absolute -top-3 right-4 px-3 py-1 rounded-full text-xs font-bold"
-                  style={{ background: plan.color, color: '#080a0f' }}>
-                  Current Plan
-                </div>
-              )}
-
-              {/* Plan name + price */}
-              <div className="mb-5">
-                <h2 className="text-xl font-bold text-[#0A0A0A] mb-1" style={{ fontFamily: "'Playfair Display', serif" }}>{plan.name}</h2>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-3xl font-bold text-[#0A0A0A]">${price}</span>
-                  <span className="text-[rgba(10,10,10,0.5)] text-sm">/{billing === 'monthly' ? 'mo' : 'yr'}</span>
-                </div>
-                {billing === 'yearly' && (
-                  <p className="text-xs mt-1" style={{ color: plan.color }}>Save ${((plan.monthly * 12) - plan.yearly).toFixed(2)}/year</p>
-                )}
-              </div>
-
-              {/* Token highlight */}
-              <div className="flex items-center gap-2 mb-5 px-3 py-2.5 rounded-xl"
-                style={{ background: `${plan.color}12`, border: `1px solid ${plan.color}25` }}>
-                <span className="text-2xl font-bold" style={{ color: plan.color }}>{plan.tokens}</span>
-                <div>
-                  <p className="text-[#0A0A0A] text-xs font-semibold">tokens / month</p>
-                  {plan.rollover && <p className="text-[10px]" style={{ color: plan.color }}>+ rollover up to 2 months</p>}
-                </div>
-              </div>
-
-              {/* Features */}
-              <ul className="space-y-2.5 flex-1 mb-6">
-                {plan.features.map(f => (
-                  <li key={f} className="flex items-start gap-2 text-sm text-[rgba(10,10,10,0.5)]">
-                    <span className="mt-0.5 text-xs" style={{ color: plan.color }}>✓</span>
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              {/* CTA */}
-              {isCurrent ? (
-                <>
-                  <button
-                    onClick={handleManage}
-                    className="w-full py-3 rounded-xl text-sm font-semibold border transition-all"
-                    style={{ borderColor: plan.color, color: plan.color }}
-                  >
-                    Manage Plan
-                  </button>
-                  {isNativeIOS() && (
-                    <p className="text-[11px] text-center mt-2" style={{ color: 'var(--aurora-dim)' }}>
-                      Opens Apple Settings · Subscriptions
-                    </p>
-                  )}
-                </>
+              {checkoutLoading === selectedPlan ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{
+                    width: 14, height: 14, borderRadius: '50%',
+                    border: '2px solid currentColor', borderTopColor: 'transparent',
+                    animation: 'drst-spin 0.7s linear infinite',
+                  }} />
+                  Opening checkout…
+                </span>
+              ) : selIntro?.isFreeTrial ? (
+                <>Start your {selIntroLabel} →</>
               ) : (
-                <button
-                  onClick={() => handleSubscribe(plan.id)}
-                  disabled={!!checkoutLoading}
-                  className="aurora-glow w-full py-3 rounded-xl text-sm font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{
-                    background: plan.popular
-                      ? 'linear-gradient(135deg, #D4A85F, #7A5A18)'
-                      : `${plan.color}1A`,
-                    color: plan.popular ? 'white' : plan.color,
-                    border: plan.popular ? 'none' : `1px solid ${plan.color}40`,
-                    boxShadow: plan.popular ? '0 8px 22px rgba(212,168,95,0.30)' : 'none',
-                  }}
-                >
-                  {checkoutLoading === plan.id ? (
-                    <>
-                      <span
-                        style={{
-                          width: 14, height: 14, borderRadius: '50%',
-                          border: '2px solid currentColor',
-                          borderTopColor: 'transparent',
-                          animation: 'drst-spin 0.7s linear infinite',
-                          display: 'inline-block',
-                        }}
-                      />
-                      <span>Opening checkout…</span>
-                    </>
-                  ) : (
-                    `Get ${plan.name}`
-                  )}
-                </button>
+                <>Get {sel?.name} · ${ctaPrice}/{billing === 'monthly' ? 'mo' : 'yr'} →</>
               )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Rollover disclaimer */}
-      <p className="text-center text-xs text-[#4a5a56]">
-        Rollover credits accumulate up to a maximum of 2 months' worth of unused tokens. Billed in USD.
-      </p>
-
-      {/* Auto-renewal + legal disclosures.
-       *
-       * App Store Review Guideline 3.1.1 requires that the Terms of Use
-       * and Privacy Policy be reachable from the purchase screen, and
-       * that auto-renewing subscription terms be clearly stated before
-       * the user commits. This block satisfies both.
-       */}
-      <div className="mt-6 text-center text-[11px] leading-relaxed" style={{ color: 'var(--aurora-sub)', maxWidth: 560, marginLeft: 'auto', marginRight: 'auto' }}>
-        <p className="mb-2">
-          Subscriptions auto-renew monthly or annually at the price shown. Cancel anytime in your Apple ID Subscription settings; cancelling stops the next renewal but doesn't refund the current period.
-        </p>
-        <p>
-          By subscribing, you agree to our{' '}
-          <a href="/terms" className="aurora-link" style={{ fontSize: 11 }}>Terms of Use</a>
-          {' '}and{' '}
-          <a href="/privacy" className="aurora-link" style={{ fontSize: 11 }}>Privacy Policy</a>.
-        </p>
-      </div>
-
-      {/* iOS-only "Restore Purchases" — required by App Store guidelines. */}
-      {isNativeIOS() && (
-        <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={handleRestore}
-            className="text-xs font-medium text-[rgba(10,10,10,0.62)] underline hover:text-[#0A0A0A]"
-          >
-            Restore Purchases
-          </button>
+            </button>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }

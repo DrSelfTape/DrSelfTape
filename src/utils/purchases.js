@@ -90,6 +90,23 @@ export async function purchase(plan, billing) {
   }
 }
 
+// Returns the introductory offer for a (plan, billing) pair, or null.
+// Normalizes RC's PurchasesIntroPrice into the shape the paywall renders.
+// RC's real shape: { price, priceString, cycles, period (ISO 8601 string),
+// periodUnit ('DAY'|'WEEK'|'MONTH'|'YEAR'), periodNumberOfUnits }.
+export async function getIntroOfferFor(plan, billing) {
+  const pkg = await getPackageFor(plan, billing);
+  const intro = pkg?.product?.introPrice;
+  if (!intro || !intro.periodUnit || !intro.periodNumberOfUnits) return null;
+  return {
+    unit: intro.periodUnit,
+    value: intro.periodNumberOfUnits,
+    price: intro.price,
+    priceString: intro.priceString,
+    isFreeTrial: intro.price === 0,
+  };
+}
+
 /** Restore previous purchases (App Store guideline 3.1.1 requires this UI). */
 export async function restorePurchases() {
   const sdk = await loadSDK();

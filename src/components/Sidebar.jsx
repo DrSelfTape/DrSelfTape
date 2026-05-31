@@ -20,6 +20,7 @@ import {
   ChevronDown,
   Sparkles,
   Video,
+  Crown,
 } from 'lucide-react'
 
 /* ── Grouped navigation structure ── */
@@ -63,6 +64,7 @@ const NAV_GROUPS = [
     key: 'profile',
     items: [
       { label: 'My Profile', path: '/dashboard/profile', icon: UserCircle },
+      { label: 'Subscription', path: '/dashboard/membership', icon: Crown },
     ],
   },
 ]
