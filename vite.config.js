@@ -5,6 +5,15 @@ import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
+  // Dev server bound to the LAN (0.0.0.0) so a physical iPhone running the
+  // Capacitor app can reach it for live-reload. `npx cap run ios --livereload
+  // --external` points the WebView at this machine's LAN IP on the port below.
+  // strictPort keeps the URL stable so the injected server.url never drifts.
+  server: {
+    host: true,
+    port: 5173,
+    strictPort: true,
+  },
   plugins: [
     react(),
     tailwindcss(),
