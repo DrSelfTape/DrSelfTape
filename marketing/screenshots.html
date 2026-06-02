@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Dr Self Tape — App Store deck v2 (editorial + alive)</title>
+  <title>Dr Self Tape — App Store deck v3 (real captures)</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -50,17 +50,14 @@
     .vignette {
       position: absolute; inset: 0;
       background: linear-gradient(180deg,
-        rgba(0,0,0,0.18) 0%,
+        rgba(0,0,0,0.2) 0%,
         rgba(0,0,0,0.0) 28%,
         rgba(0,0,0,0.0) 50%,
         rgba(14,13,10,0.94) 100%
       );
     }
 
-    /* Sparkle motes for "alive" feel */
-    .sparkles {
-      position: absolute; inset: 0; pointer-events: none;
-    }
+    .sparkles { position: absolute; inset: 0; pointer-events: none; }
     .sparkle {
       position: absolute;
       width: 14px; height: 14px;
@@ -73,10 +70,7 @@
     .sparkle.coral { background: var(--coral); box-shadow: 0 0 28px rgba(255,130,128,0.7); }
     .sparkle.mint { background: var(--mint); box-shadow: 0 0 24px rgba(167,236,218,0.7); }
 
-    /* Brand lockup — top-left of every panel.
-       Dark-backdrop screens use the .light modifier which lifts the
-       black PNG to cream via CSS filter. Sized to be present but
-       never compete with the headline. */
+    /* Brand lockup — top-left of every panel. */
     .brand {
       position: absolute;
       top: 90px; left: 70px;
@@ -90,11 +84,8 @@
       opacity: 0.95;
     }
 
-    .copy {
-      position: absolute;
-      top: 290px; left: 80px; right: 80px;
-      z-index: 5;
-    }
+    .copy { position: absolute; top: 290px; left: 80px; right: 80px; z-index: 5; }
+    .copy.right-aligned { text-align: right; }
     .eyebrow {
       font-family: 'JetBrains Mono', monospace;
       font-size: 22px; font-weight: 600;
@@ -103,13 +94,10 @@
       color: var(--deep-gold);
       margin-bottom: 22px;
     }
-    .eyebrow.light {
-      color: var(--gold-soft);
-      text-shadow: 0 2px 14px rgba(0,0,0,0.5);
-    }
+    .eyebrow.light { color: var(--gold-soft); text-shadow: 0 2px 14px rgba(0,0,0,0.5); }
     .headline {
       font-family: 'DM Serif Display', serif;
-      font-size: 124px;
+      font-size: 118px;
       line-height: 0.92;
       letter-spacing: -0.018em;
       color: var(--ink);
@@ -118,14 +106,14 @@
     .headline.light { color: var(--cream); text-shadow: 0 4px 38px rgba(0,0,0,0.55); }
     .subhead {
       font-family: 'Inter', sans-serif;
-      font-size: 34px; font-weight: 500;
+      font-size: 32px; font-weight: 500;
       line-height: 1.34;
       color: var(--ink-2);
       max-width: 1000px;
     }
     .subhead.light { color: rgba(255,253,248,0.92); text-shadow: 0 2px 14px rgba(0,0,0,0.4); }
 
-    /* Hand-drawn underline — curved coral/gold sweep */
+    /* Hand-drawn underline */
     .underline-sweep {
       display: inline-block;
       position: relative;
@@ -141,20 +129,7 @@
     .underline-sweep.gold::after {
       background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 22' preserveAspectRatio='none'><path d='M2 14 C 70 -2, 140 28, 238 8' stroke='%23D4A85F' stroke-width='6' fill='none' stroke-linecap='round'/></svg>") center/100% 100% no-repeat;
     }
-
-    /* Script accent (Caveat) for casual flourishes */
-    .script {
-      font-family: 'Caveat', cursive;
-      font-weight: 700;
-    }
-
-    /* Doodle arrow */
-    .doodle-arrow {
-      position: absolute;
-      width: 280px; height: 180px;
-      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 180' fill='none'><path d='M10 30 C 60 100, 130 80, 200 140' stroke='%23D4A85F' stroke-width='4' stroke-linecap='round' fill='none'/><path d='M180 130 L 205 145 L 195 118' stroke='%23D4A85F' stroke-width='4' stroke-linecap='round' fill='none'/></svg>") center/contain no-repeat;
-      pointer-events: none;
-    }
+    .script { font-family: 'Caveat', cursive; font-weight: 700; }
 
     /* Pills + badges */
     .pill {
@@ -168,10 +143,7 @@
       color: var(--ink);
       box-shadow: 0 12px 36px rgba(0,0,0,0.25);
     }
-    .pill.dark {
-      background: rgba(26,22,18,0.88);
-      color: var(--cream);
-    }
+    .pill.dark { background: rgba(26,22,18,0.88); color: var(--cream); }
     .pill .star { color: var(--gold-soft); font-size: 28px; }
     .pill .divider { width: 1px; height: 22px; background: rgba(26,22,18,0.18); }
     .pill.dark .divider { background: rgba(255,255,255,0.22); }
@@ -186,13 +158,8 @@
       letter-spacing: 0.14em; text-transform: uppercase;
       box-shadow: 0 10px 30px rgba(167,236,218,0.4);
     }
-    .live-pill .dot {
-      width: 12px; height: 12px; border-radius: 50%;
-      background: #1AB680;
-      box-shadow: 0 0 12px #1AB680;
-    }
+    .live-pill .dot { width: 12px; height: 12px; border-radius: 50%; background: #1AB680; box-shadow: 0 0 12px #1AB680; }
 
-    /* Award ribbon */
     .award {
       display: inline-flex; align-items: center; gap: 14px;
       padding: 16px 24px;
@@ -205,29 +172,27 @@
     }
     .award .laurel { font-size: 26px; }
 
-    /* Testimonial sticker — Polaroid-feel */
     .testimonial {
       position: absolute;
-      width: 360px;
+      width: 380px;
       background: var(--cream);
-      padding: 24px 28px 22px;
+      padding: 26px 30px 24px;
       border-radius: 14px;
-      box-shadow: 0 22px 40px rgba(0,0,0,0.35), 0 2px 0 rgba(0,0,0,0.06);
+      box-shadow: 0 24px 44px rgba(0,0,0,0.4), 0 2px 0 rgba(0,0,0,0.06);
       font-family: 'Inter', sans-serif;
       transform-origin: center;
     }
-    .testimonial .stars { color: var(--gold); font-size: 20px; letter-spacing: 2px; margin-bottom: 8px; }
-    .testimonial .quote { font-family: 'DM Serif Display', serif; font-size: 22px; line-height: 1.25; color: var(--ink); margin-bottom: 12px; }
+    .testimonial .stars { color: var(--gold); font-size: 22px; letter-spacing: 2px; margin-bottom: 8px; }
+    .testimonial .quote { font-family: 'DM Serif Display', serif; font-size: 24px; line-height: 1.25; color: var(--ink); margin-bottom: 12px; }
     .testimonial .who { font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-2); }
     .testimonial .tape {
       position: absolute;
       top: -14px; left: 50%; transform: translateX(-50%) rotate(-2deg);
-      width: 120px; height: 36px;
+      width: 130px; height: 38px;
       background: rgba(252,224,114,0.55);
       border: 1px dashed rgba(0,0,0,0.08);
     }
 
-    /* Sticky note */
     .sticky {
       position: absolute;
       width: 280px;
@@ -243,85 +208,43 @@
     .sticky.mint { background: var(--mint); }
     .sticky.coral { background: var(--coral); color: var(--cream); }
 
-    /* Device frame */
+    /* Device — wraps a real screenshot. No fake status bar / island
+       since the captures include those naturally. */
     .device {
       position: absolute;
       background: #000;
-      border-radius: 70px;
-      padding: 18px;
+      border-radius: 64px;
+      padding: 14px;
       box-shadow:
         0 4px 0 rgba(255,255,255,0.05) inset,
         0 0 0 2px rgba(255,255,255,0.06),
         0 80px 100px -30px rgba(0,0,0,0.7);
       transform-origin: center;
+      /* Lock aspect ratio to iPhone 17 sim captures (1290 × 2796) */
+      aspect-ratio: 1290 / 2796;
     }
-    .device .island {
-      position: absolute;
-      top: 32px; left: 50%; transform: translateX(-50%);
-      width: 220px; height: 42px;
-      background: #000; border-radius: 24px;
-      z-index: 5;
-    }
-    .device .scrn {
+    .device img {
       width: 100%; height: 100%;
-      border-radius: 56px;
-      overflow: hidden;
-      position: relative;
-      background: var(--cream);
+      object-fit: cover; object-position: top;
+      border-radius: 52px;
+      display: block;
     }
 
-    /* Mock content */
-    .mock { width: 100%; height: 100%; font-family: 'Inter', sans-serif; color: var(--ink); padding: 70px 32px 32px; position: relative; background: var(--cream); }
-    .mock .status-bar {
-      position: absolute; top: 22px; left: 50px; right: 50px;
-      display: flex; justify-content: space-between;
-      font-size: 22px; font-weight: 600; color: var(--ink);
+    /* For some screens we want to clip a slightly tighter portion so
+       the marketing-relevant rows sit higher in the frame. */
+    .device img.shift-up { object-position: top; }
+
+    .doodle-arrow {
+      position: absolute;
+      width: 280px; height: 180px;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 280 180' fill='none'><path d='M10 30 C 60 100, 130 80, 200 140' stroke='%23D4A85F' stroke-width='4' stroke-linecap='round' fill='none'/><path d='M180 130 L 205 145 L 195 118' stroke='%23D4A85F' stroke-width='4' stroke-linecap='round' fill='none'/></svg>") center/contain no-repeat;
+      pointer-events: none;
     }
-    .mock .h-eye { font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--deep-gold); margin-bottom: 10px; }
-    .mock .h-title { font-family: 'DM Serif Display', serif; font-size: 48px; line-height: 1.02; color: var(--ink); margin-bottom: 18px; }
-    .mock .card {
-      background: var(--cream);
-      border: 1px solid rgba(212,168,95,0.18);
-      border-radius: 28px;
-      padding: 26px;
-      margin-bottom: 18px;
-      box-shadow: 0 10px 30px rgba(26,22,18,0.04);
-    }
-    .mock .card-dark {
-      background: var(--night);
-      border-radius: 28px;
-      padding: 26px;
-      color: var(--cream);
-      margin-bottom: 18px;
-    }
-    .mock .cta {
-      background: linear-gradient(135deg, var(--gold), #C09850);
-      color: var(--night);
-      border-radius: 100px;
-      padding: 22px;
-      text-align: center;
-      font-weight: 700; font-size: 22px;
-      box-shadow: 0 12px 24px rgba(212,168,95,0.32);
-    }
-    .mock .stat-big { font-family: 'DM Serif Display', serif; font-size: 70px; color: var(--gold); line-height: 1; }
-    .mock .stat-small { font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2); }
-    .mock .tab-bar {
-      position: absolute; bottom: 24px; left: 28px; right: 28px;
-      background: rgba(255,253,248,0.94);
-      backdrop-filter: blur(12px);
-      border-radius: 100px;
-      border: 1px solid rgba(212,168,95,0.18);
-      padding: 18px;
-      display: flex; justify-content: space-around;
-      box-shadow: 0 14px 40px rgba(26,22,18,0.12);
-    }
-    .mock .tab { width: 48px; height: 48px; border-radius: 50%; background: rgba(212,168,95,0.12); display: grid; place-items: center; font-size: 20px; }
-    .mock .tab.active { background: var(--gold); color: var(--night); }
   </style>
 </head>
 <body>
-  <h1 class="page">Dr Self Tape — App Store deck v2</h1>
-  <p class="page">Editorial + alive · 1320 × 2868 per screen · 7 screens</p>
+  <h1 class="page">Dr Self Tape — App Store deck v3</h1>
+  <p class="page">Real sim captures · editorial cinematic framing · 1320 × 2868 per screen</p>
 
   <div class="deck">
 
@@ -337,89 +260,23 @@
       </div>
 
       <div class="copy">
-        <div class="eyebrow light">For actors who work ⌗ from anywhere</div>
-        <div class="headline light" style="font-size: 156px;">Your craft,<br><span class="underline-sweep">in motion.</span></div>
-        <div class="subhead light">Track auditions, run sides with verified readers, and get AI notes on every take. Built by working actors.</div>
+        <div class="eyebrow light">For actors who book</div>
+        <div class="headline light" style="font-size: 148px;">Your craft,<br><span class="underline-sweep">in motion.</span></div>
+        <div class="subhead light">Track auditions, run sides with verified readers, and get AI notes on every take.</div>
         <div style="display: flex; gap: 14px; flex-wrap: wrap; margin-top: 44px;">
           <div class="pill dark"><span class="star">★</span> 4.9 <span class="divider"></span> 2,400+ working actors</div>
-          <div class="award"><span class="laurel">🏆</span> Featured · iOS 26</div>
         </div>
       </div>
 
-      <!-- Two phones overlapping -->
-      <div class="device" style="width: 760px; height: 1560px; bottom: -100px; left: 60px; transform: rotate(-7deg);">
-        <div class="island"></div>
-        <div class="scrn">
-          <div class="mock">
-            <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
-            <div class="h-eye">Today, June 2</div>
-            <div class="h-title">Welcome back,<br>Maya.</div>
-            <div class="card" style="background: linear-gradient(135deg, rgba(212,168,95,0.16), rgba(167,236,218,0.12));">
-              <div style="display: flex; gap: 20px; align-items: end;">
-                <div>
-                  <div class="stat-small">Today</div>
-                  <div class="stat-big">3</div>
-                  <div class="stat-small">tapes due</div>
-                </div>
-                <div style="margin-left: auto; text-align: right;">
-                  <div class="stat-small">Active</div>
-                  <div class="stat-big" style="color: var(--mint);">12</div>
-                  <div class="stat-small">submissions</div>
-                </div>
-              </div>
-            </div>
-            <div class="card-dark">
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px;">Up next · Tomorrow</div>
-              <div style="font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.1;">Hamlet — Co-Star · A24</div>
-              <div style="margin-top: 14px; color: rgba(255,253,248,0.6); font-size: 18px;">2 sides · self-tape due 6 PM</div>
-            </div>
-            <div class="cta">Continue your day →</div>
-          </div>
-        </div>
+      <!-- Big device: Home -->
+      <div class="device" style="width: 760px; bottom: -60px; left: 60px; transform: rotate(-5deg);">
+        <img src="captures/02-home.png" alt="Home — Hey Joel">
       </div>
-      <!-- Second phone — Auditions Tracker -->
-      <div class="device" style="width: 620px; height: 1280px; bottom: 60px; right: 30px; transform: rotate(5deg);">
-        <div class="island" style="width: 180px; height: 36px;"></div>
-        <div class="scrn">
-          <div class="mock" style="padding: 60px 24px 28px;">
-            <div class="status-bar" style="font-size: 18px;"><span>9:41</span><span>● ● ●</span></div>
-            <div class="h-eye" style="font-size: 12px;">Pipeline · May</div>
-            <div class="h-title" style="font-size: 36px;">Your month.</div>
-            <div class="card" style="padding: 22px;">
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; height: 220px;">
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--gold);">14</div>
-                  <div style="width: 100%; height: 180px; background: linear-gradient(180deg, var(--gold), #8C6E33); border-radius: 8px; margin-top: 6px;"></div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--coral);">9</div>
-                  <div style="width: 100%; height: 120px; background: linear-gradient(180deg, var(--coral), #B85A58); border-radius: 8px; margin-top: 6px;"></div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--gold-soft);">4</div>
-                  <div style="width: 100%; height: 56px; background: linear-gradient(180deg, var(--gold-soft), #C4A832); border-radius: 8px; margin-top: 6px;"></div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--mint);">2</div>
-                  <div style="width: 100%; height: 28px; background: linear-gradient(180deg, var(--mint), #6FAA98); border-radius: 8px; margin-top: 6px;"></div>
-                </div>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 10px;">
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); text-align: center;">Sub</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); text-align: center;">View</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); text-align: center;">CB</div>
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-2); text-align: center;">Book</div>
-              </div>
-            </div>
-            <div class="card-dark" style="padding: 20px;">
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold-soft); margin-bottom: 8px;">★ Booked</div>
-              <div style="font-family: 'DM Serif Display', serif; font-size: 24px; line-height: 1.15; color: var(--cream);">Detective Reyes — CBS</div>
-            </div>
-          </div>
-        </div>
+      <!-- Second device: Tracker -->
+      <div class="device" style="width: 540px; bottom: 60px; right: 30px; transform: rotate(5deg);">
+        <img src="captures/05-tracker.png" alt="Audition tracker">
       </div>
 
-      <!-- Testimonial sticker -->
       <div class="testimonial" style="bottom: 60px; right: 60px; transform: rotate(7deg);">
         <div class="tape"></div>
         <div class="stars">★★★★★</div>
@@ -428,7 +285,7 @@
       </div>
     </div>
 
-    <!-- ─────── 2. AI COACH ─────── -->
+    <!-- ─────── 2. AI COACH (Jericho) ─────── -->
     <div class="screen">
       <div class="backdrop" style="background-image: url('../public/photos/night-study.png')"></div>
       <div class="vignette"></div>
@@ -440,116 +297,22 @@
       </div>
 
       <div class="copy">
-        <div class="eyebrow light">AI Coach · CD-trained</div>
+        <div class="eyebrow light">Jericho · AI Coach</div>
         <div class="headline light">Notes from a<br>casting director's <span class="underline-sweep gold">lens.</span></div>
-        <div class="subhead light">Upload your take. Get score-ringed feedback on pace, stakes, specificity, listening — plus one specific note to try.</div>
+        <div class="subhead light">Performance DNA across emotional range, cold reads, comedy timing, and depth — with growth areas you can actually train.</div>
       </div>
 
-      <!-- Three-phone flow: upload → process → report -->
-      <div style="position: absolute; bottom: 120px; left: 60px; right: 60px; display: flex; gap: 20px; justify-content: center; align-items: flex-end;">
-        <!-- Upload -->
-        <div class="device" style="width: 360px; height: 740px; transform: rotate(-5deg);">
-          <div class="island" style="width: 110px; height: 22px;"></div>
-          <div class="scrn">
-            <div class="mock" style="padding: 50px 14px 14px;">
-              <div class="h-eye" style="font-size: 9px; margin-top: 24px;">Step 1 · Upload</div>
-              <div class="h-title" style="font-size: 22px;">Drop your take.</div>
-              <div style="border: 2px dashed rgba(212,168,95,0.5); border-radius: 22px; height: 320px; display: grid; place-items: center; background: rgba(212,168,95,0.06); margin-top: 14px;">
-                <div style="text-align: center;">
-                  <div style="font-size: 56px;">📹</div>
-                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; color: var(--deep-gold); margin-top: 10px;">DROP A FILE</div>
-                </div>
-              </div>
-              <div style="margin-top: 14px;">
-                <div class="cta" style="font-size: 14px; padding: 14px;">Choose your take →</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Processing -->
-        <div class="device" style="width: 380px; height: 780px;">
-          <div class="island" style="width: 120px; height: 24px;"></div>
-          <div class="scrn">
-            <div class="mock" style="padding: 50px 14px 14px; background: var(--night); color: var(--cream);">
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--gold); margin-top: 24px;">ANALYZING · 0:42</div>
-              <div style="font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--cream); margin-top: 6px; line-height: 1.1;">Reading your scene.</div>
-              <div style="margin-top: 22px; display: flex; flex-direction: column; gap: 18px;">
-                <div style="display: flex; align-items: center; gap: 14px;">
-                  <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--mint); display: grid; place-items: center; color: var(--night); font-weight: 800;">✓</div>
-                  <div style="font-size: 14px;">Transcribing dialogue</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 14px;">
-                  <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--mint); display: grid; place-items: center; color: var(--night); font-weight: 800;">✓</div>
-                  <div style="font-size: 14px;">Comparing to sides</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 14px;">
-                  <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; color: var(--night); font-size: 12px;">●●●</div>
-                  <div style="font-size: 14px; color: var(--gold);">GPT-4o listening …</div>
-                </div>
-                <div style="display: flex; align-items: center; gap: 14px;">
-                  <div style="width: 26px; height: 26px; border-radius: 50%; background: rgba(255,253,248,0.18);"></div>
-                  <div style="font-size: 14px; opacity: 0.55;">Drafting notes</div>
-                </div>
-              </div>
-              <div style="margin-top: 30px; height: 5px; background: rgba(255,253,248,0.1); border-radius: 4px; overflow: hidden;">
-                <div style="width: 64%; height: 100%; background: linear-gradient(90deg, var(--gold), var(--coral));"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Report -->
-        <div class="device" style="width: 360px; height: 740px; transform: rotate(5deg);">
-          <div class="island" style="width: 110px; height: 22px;"></div>
-          <div class="scrn">
-            <div class="mock" style="padding: 50px 14px 14px;">
-              <div class="h-eye" style="font-size: 9px; margin-top: 24px;">Step 3 · Your notes</div>
-              <div class="h-title" style="font-size: 22px;">Strong choice.</div>
-              <div class="card-dark" style="padding: 18px;">
-                <div style="display: flex; align-items: center; gap: 14px;">
-                  <div style="width: 72px; height: 72px; border-radius: 50%; background: conic-gradient(var(--gold) 0deg 280deg, rgba(255,255,255,0.08) 280deg 360deg); display: grid; place-items: center;">
-                    <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--night); display: grid; place-items: center; font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--gold);">77</div>
-                  </div>
-                  <div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(255,253,248,0.55);">Overall</div>
-                    <div style="font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--cream); margin-top: 2px;">Clean instinct.</div>
-                  </div>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 14px;">
-                  <div style="background: rgba(212,168,95,0.14); border-radius: 10px; padding: 8px;">
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: 0.16em; color: var(--gold); text-transform: uppercase;">Pace</div>
-                    <div style="font-size: 16px; font-weight: 700; color: var(--cream); margin-top: 2px;">8.2</div>
-                  </div>
-                  <div style="background: rgba(167,236,218,0.14); border-radius: 10px; padding: 8px;">
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: 0.16em; color: var(--mint); text-transform: uppercase;">Stakes</div>
-                    <div style="font-size: 16px; font-weight: 700; color: var(--cream); margin-top: 2px;">7.5</div>
-                  </div>
-                  <div style="background: rgba(255,130,128,0.12); border-radius: 10px; padding: 8px;">
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: 0.16em; color: var(--coral); text-transform: uppercase;">Specific</div>
-                    <div style="font-size: 16px; font-weight: 700; color: var(--cream); margin-top: 2px;">6.8</div>
-                  </div>
-                  <div style="background: rgba(212,168,95,0.14); border-radius: 10px; padding: 8px;">
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 7px; letter-spacing: 0.16em; color: var(--gold); text-transform: uppercase;">Listen</div>
-                    <div style="font-size: 16px; font-weight: 700; color: var(--cream); margin-top: 2px;">8.6</div>
-                  </div>
-                </div>
-              </div>
-              <div class="card" style="border-left: 3px solid var(--mint); padding: 14px;">
-                <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--deep-gold); margin-bottom: 6px;">Try this →</div>
-                <div style="font-size: 12px; line-height: 1.4; color: var(--ink);">"Let the silence breathe one count longer."</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Jericho dominant device -->
+      <div class="device" style="width: 880px; bottom: -200px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
+        <img src="captures/08-jericho.png" alt="Jericho — My Growth Performance DNA">
       </div>
 
-      <div class="sticky mint" style="top: 1080px; right: 60px; transform: rotate(8deg); width: 240px; font-size: 26px;">
+      <div class="sticky mint" style="top: 1280px; right: 60px; transform: rotate(8deg); width: 270px; font-size: 28px;">
         Like having an acting coach in your pocket
       </div>
     </div>
 
-    <!-- ─────── 3. SELF-TAPE STUDIO ─────── -->
+    <!-- ─────── 3. PRACTICE / SCENE GENERATOR ─────── -->
     <div class="screen">
       <div class="backdrop" style="background-image: url('../public/photos/street-script.png')"></div>
       <div class="vignette"></div>
@@ -557,56 +320,25 @@
       <div class="sparkles">
         <div class="sparkle coral" style="top: 200px; right: 220px;"></div>
         <div class="sparkle" style="top: 320px; right: 80px;"></div>
+        <div class="sparkle mint" style="top: 480px; left: 180px;"></div>
       </div>
 
       <div class="copy">
-        <div class="eyebrow light">Self-tape studio</div>
-        <div class="headline light">Studio takes.<br><span class="underline-sweep">Anywhere.</span></div>
-        <div class="subhead light">Frame guides. Auto-slate. Clean audio. Your bedroom is the booking room now.</div>
+        <div class="eyebrow light">Practice · on demand</div>
+        <div class="headline light">A fresh scene<br>whenever you <span class="underline-sweep">show up.</span></div>
+        <div class="subhead light">Generate cold reads in any genre or tone. Pair with warm-up missions. No more "I have nothing to work on."</div>
       </div>
 
-      <div class="device" style="width: 920px; height: 1880px; bottom: -120px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
-        <div class="island"></div>
-        <div class="scrn">
-          <div style="position: relative; width: 100%; height: 100%; background: var(--night); overflow: hidden;">
-            <div style="position: absolute; inset: 0; background-image: url('../public/photos/class-table.png'); background-size: cover; background-position: center; filter: contrast(1.05);"></div>
-            <div style="position: absolute; top: 90px; left: 40px; right: 40px; display: flex; justify-content: space-between; align-items: flex-start;">
-              <div style="background: rgba(0,0,0,0.65); backdrop-filter: blur(20px); border-radius: 22px; padding: 22px 28px; color: var(--cream); font-family: 'JetBrains Mono', monospace;">
-                <div style="font-size: 12px; letter-spacing: 0.18em; opacity: 0.7;">SCENE</div>
-                <div style="font-size: 24px; font-weight: 600; margin-top: 4px;">02 / TAKE 03</div>
-              </div>
-              <div style="background: var(--coral); border-radius: 100px; padding: 12px 22px; color: var(--night); font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; letter-spacing: 0.16em;">● REC 00:42</div>
-            </div>
-            <div style="position: absolute; top: 250px; left: 70px; right: 70px; bottom: 360px; border: 2px dashed rgba(252, 224, 114, 0.6); border-radius: 8px;"></div>
-            <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 14px; height: 14px; border: 2px solid var(--gold); border-radius: 50%;"></div>
-            <div style="position: absolute; bottom: 70px; left: 40px; right: 40px;">
-              <div style="background: rgba(0,0,0,0.55); backdrop-filter: blur(20px); border-radius: 28px; padding: 20px; display: flex; justify-content: space-around; align-items: center;">
-                <div style="text-align: center; color: var(--cream); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
-                  <div style="opacity: 0.55;">FRAME</div>
-                  <div style="margin-top: 4px; font-size: 16px;">MED-CLOSE</div>
-                </div>
-                <div style="width: 90px; height: 90px; border-radius: 50%; background: var(--coral); display: grid; place-items: center; box-shadow: 0 0 0 6px rgba(255,255,255,0.18), 0 12px 30px rgba(255,130,128,0.45);">
-                  <div style="width: 28px; height: 28px; border-radius: 6px; background: var(--cream);"></div>
-                </div>
-                <div style="text-align: center; color: var(--cream); font-family: 'JetBrains Mono', monospace; font-size: 12px;">
-                  <div style="opacity: 0.55;">AUDIO</div>
-                  <div style="margin-top: 4px; font-size: 16px; color: var(--mint);">CLEAN</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- Two devices side by side -->
+      <div class="device" style="width: 600px; bottom: 60px; left: 60px; transform: rotate(-5deg);">
+        <img src="captures/09-scene-gen.png" alt="Scene Generator">
+      </div>
+      <div class="device" style="width: 600px; bottom: 140px; right: 60px; transform: rotate(5deg);">
+        <img src="captures/10-coach-upload.png" alt="Acting Coach — Upload Your Sides">
       </div>
 
-      <!-- Annotation arrows + stickies -->
-      <div class="sticky" style="top: 1080px; left: 60px; transform: rotate(-6deg); background: var(--mint);">
-        Auto-slate at the top — never edit it in again
-      </div>
-      <div class="sticky" style="top: 1860px; right: 60px; transform: rotate(5deg);">
-        CDs frame at med-close. <span class="script">we set it for you ↗</span>
-      </div>
-      <div class="sticky coral" style="bottom: 100px; left: 80px; transform: rotate(-3deg); width: 250px;">
-        Audio noise gate · no more apartment hum
+      <div class="sticky" style="top: 1180px; left: 50%; transform: translateX(-50%) rotate(-2deg); width: 320px; text-align: center;">
+        6 genres · 6 tones · 3 levels
       </div>
     </div>
 
@@ -624,78 +356,16 @@
       <div class="copy">
         <div class="eyebrow light">Find a Reader · live</div>
         <div class="headline light">Real readers.<br><span class="underline-sweep">Real time.</span></div>
-        <div class="subhead light">Match with verified scene partners in seconds. Rehearse over HD video in minutes.</div>
+        <div class="subhead light">Swipe through verified actors near you. Match in seconds. Rehearse over HD video in minutes.</div>
         <div style="margin-top: 30px;">
           <div class="live-pill"><span class="dot"></span>234 readers online · 12 in NY · 8 in LA</div>
         </div>
       </div>
 
-      <!-- Phone 1: swipe card -->
-      <div class="device" style="width: 560px; height: 1180px; bottom: 200px; left: 60px; transform: rotate(-6deg);">
-        <div class="island" style="width: 160px; height: 32px;"></div>
-        <div class="scrn">
-          <div class="mock" style="padding: 56px 22px 22px;">
-            <div class="status-bar" style="font-size: 16px;"><span>9:41</span><span>● ● ●</span></div>
-            <div class="h-eye" style="font-size: 12px; margin-top: 14px;">Find a Reader</div>
-            <div class="h-title" style="font-size: 32px;">200 nearby.</div>
-            <div style="position: relative; height: 720px; margin-top: 18px;">
-              <div style="position: absolute; inset: 0; transform: rotate(-3deg) translate(-12px, 18px); border-radius: 24px; background: var(--ink-2); opacity: 0.35;"></div>
-              <div style="position: absolute; inset: 0; transform: rotate(2deg) translate(6px, 8px); border-radius: 24px; background: var(--gold); opacity: 0.55;"></div>
-              <div style="position: absolute; inset: 0; border-radius: 24px; background-image: url('../public/photos/crucible-circle.png'); background-size: cover; background-position: top; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.3);">
-                <div style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, transparent 50%);"></div>
-                <div style="position: absolute; top: 18px; right: 18px; background: rgba(167,236,218,0.95); color: var(--night); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; padding: 8px 14px; border-radius: 100px;">FREE</div>
-                <div style="position: absolute; bottom: 22px; left: 22px; right: 22px; color: var(--cream);">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 30px; line-height: 1.1;">Jordan T.</div>
-                  <div style="opacity: 0.85; font-size: 16px; margin-top: 4px;">Brooklyn · 9yrs · ★ 4.8</div>
-                </div>
-              </div>
-            </div>
-            <div style="display: flex; gap: 14px; justify-content: center; margin-top: 22px;">
-              <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(26,22,18,0.08); display: grid; place-items: center; font-size: 24px;">✕</div>
-              <div style="width: 64px; height: 64px; border-radius: 50%; background: rgba(252,224,114,0.18); display: grid; place-items: center; font-size: 24px;">★</div>
-              <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--gold); display: grid; place-items: center; font-size: 24px;">🎬</div>
-            </div>
-          </div>
-        </div>
+      <!-- Swipe card -->
+      <div class="device" style="width: 820px; bottom: -100px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
+        <img src="captures/06-swipe-card.png" alt="Find a Reader — D'Kia Anderson">
       </div>
-
-      <!-- Phone 2: video rehearsal -->
-      <div class="device" style="width: 480px; height: 1000px; top: 280px; right: 60px; transform: rotate(6deg);">
-        <div class="island" style="width: 140px; height: 28px;"></div>
-        <div class="scrn">
-          <div style="position: relative; width: 100%; height: 100%; background: var(--night); overflow: hidden;">
-            <div style="position: absolute; inset: 0; background-image: url('../public/photos/partners-table.png'); background-size: cover; background-position: center;"></div>
-            <div style="position: absolute; inset: 0; background: linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.6) 100%);"></div>
-            <!-- Top status -->
-            <div style="position: absolute; top: 60px; left: 24px; right: 24px; display: flex; justify-content: space-between;">
-              <div class="live-pill" style="font-size: 12px; padding: 8px 14px;"><span class="dot"></span>LIVE · 00:14:32</div>
-              <div style="background: rgba(0,0,0,0.5); backdrop-filter: blur(20px); color: var(--cream); padding: 8px 14px; border-radius: 100px; font-size: 14px;">DAILY.CO</div>
-            </div>
-            <!-- Picture-in-picture self -->
-            <div style="position: absolute; top: 130px; right: 24px; width: 140px; height: 200px; border-radius: 16px; overflow: hidden; border: 2px solid rgba(255,255,255,0.4); background-image: url('../public/photos/audition-wait-32.png'); background-size: cover; background-position: top;"></div>
-            <!-- Captions -->
-            <div style="position: absolute; bottom: 100px; left: 24px; right: 24px; display: flex; flex-direction: column; gap: 8px;">
-              <div style="background: rgba(0,0,0,0.7); backdrop-filter: blur(12px); color: var(--cream); padding: 10px 16px; border-radius: 16px; font-size: 14px; max-width: 78%;">
-                <span style="color: var(--gold-soft); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em;">JORDAN</span><br>
-                "From the top, when you're ready."
-              </div>
-              <div style="background: rgba(212,168,95,0.85); backdrop-filter: blur(12px); color: var(--night); padding: 10px 16px; border-radius: 16px; font-size: 14px; max-width: 78%; align-self: flex-end;">
-                <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em;">YOU</span><br>
-                "Take 3, here we go."
-              </div>
-            </div>
-            <!-- Controls -->
-            <div style="position: absolute; bottom: 24px; left: 24px; right: 24px; display: flex; justify-content: center; gap: 12px;">
-              <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.18); backdrop-filter: blur(12px); display: grid; place-items: center; color: var(--cream); font-size: 18px;">🎤</div>
-              <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.18); backdrop-filter: blur(12px); display: grid; place-items: center; color: var(--cream); font-size: 18px;">📹</div>
-              <div style="width: 60px; height: 50px; border-radius: 100px; background: var(--coral); display: grid; place-items: center; color: var(--cream); font-size: 18px;">END</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="doodle-arrow" style="top: 720px; left: 50%; transform: translateX(-50%) rotate(0deg);"></div>
-      <div class="script" style="position: absolute; top: 880px; left: 50%; transform: translateX(-50%) rotate(-3deg); color: var(--gold-soft); font-size: 42px; text-shadow: 0 2px 14px rgba(0,0,0,0.4);">swipe · match · rehearse</div>
     </div>
 
     <!-- ─────── 5. TRACKER ─────── -->
@@ -709,70 +379,26 @@
       </div>
 
       <div class="copy">
-        <div class="eyebrow light">Tracker · Pipeline · Wins</div>
+        <div class="eyebrow light">Audition tracker</div>
         <div class="headline light">Auditions.<br>Callbacks.<br><span class="underline-sweep">Bookings.</span></div>
-        <div class="subhead light">Your career in one feed. Pipeline charts the journey from submission to set.</div>
+        <div class="subhead light">Your career in one feed. Drag a card to update status — no spreadsheet, ever.</div>
       </div>
 
-      <div class="device" style="width: 720px; height: 1480px; bottom: 200px; left: 80px; transform: rotate(-5deg);">
-        <div class="island"></div>
-        <div class="scrn">
-          <div class="mock">
-            <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
-            <div class="h-eye">Tracker · this month</div>
-            <div class="h-title">Your pipeline.</div>
-            <div class="card" style="padding: 28px;">
-              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; align-items: end; height: 290px;">
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end; height: 100%;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--gold);">14</div>
-                  <div style="width: 100%; height: 220px; background: linear-gradient(180deg, var(--gold), #8C6E33); border-radius: 10px; margin-top: 8px; box-shadow: 0 2px 0 rgba(255,255,255,0.25) inset;"></div>
-                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); margin-top: 8px;">Submitted</div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end; height: 100%;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--coral);">9</div>
-                  <div style="width: 100%; height: 140px; background: linear-gradient(180deg, var(--coral), #B85A58); border-radius: 10px; margin-top: 8px; box-shadow: 0 2px 0 rgba(255,255,255,0.25) inset;"></div>
-                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); margin-top: 8px;">Viewed</div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end; height: 100%;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--gold-soft);">4</div>
-                  <div style="width: 100%; height: 62px; background: linear-gradient(180deg, var(--gold-soft), #C4A832); border-radius: 10px; margin-top: 8px; box-shadow: 0 2px 0 rgba(255,255,255,0.3) inset;"></div>
-                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); margin-top: 8px;">Callback</div>
-                </div>
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: end; height: 100%;">
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 34px; color: var(--mint);">2</div>
-                  <div style="width: 100%; height: 30px; background: linear-gradient(180deg, var(--mint), #6FAA98); border-radius: 10px; margin-top: 8px; box-shadow: 0 2px 0 rgba(255,255,255,0.4) inset;"></div>
-                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-2); margin-top: 8px;">Booked</div>
-                </div>
-              </div>
-            </div>
-            <div class="card-dark">
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-bottom: 10px;">★ Booked · May 28</div>
-              <div style="font-family: 'DM Serif Display', serif; font-size: 26px; color: var(--cream); line-height: 1.15;">Detective Reyes — Procedural Pilot<br><span style="opacity: 0.55; font-size: 18px; font-family: 'Inter';">CBS · Co-Star · 2 days</span></div>
-            </div>
-            <div class="card" style="border-left: 3px solid var(--gold-soft);">
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--deep-gold); margin-bottom: 6px;">Callback · June 4</div>
-              <div style="font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); line-height: 1.15;">Series Regular — Untitled Drama</div>
-            </div>
-          </div>
-        </div>
+      <div class="device" style="width: 820px; bottom: -100px; left: 50%; transform: translateX(-50%) rotate(2deg);">
+        <img src="captures/05-tracker.png" alt="Audition Tracker — 2 submissions">
       </div>
 
-      <div class="sticky mint" style="top: 1480px; right: 80px; transform: rotate(4deg); width: 320px; font-size: 28px;">
-        Drag a card to update status — no spreadsheet, ever.
-      </div>
-
-      <!-- Win badge -->
-      <div class="award" style="position: absolute; bottom: 200px; right: 60px; transform: rotate(-4deg); font-size: 22px; padding: 22px 30px;">
-        <span class="laurel">🏆</span> 2 books this month
+      <div class="award" style="position: absolute; top: 1280px; right: 60px; transform: rotate(-4deg); font-size: 22px; padding: 22px 30px;">
+        <span class="laurel">🏆</span> First book — Third Shift
       </div>
     </div>
 
-    <!-- ─────── 6. CRAFT JOURNEY (new screen) ─────── -->
+    <!-- ─────── 6. COMMUNITY LEADERBOARD ─────── -->
     <div class="screen">
       <div style="position: absolute; inset: 0; background: linear-gradient(160deg, #FBF4E2 0%, #F4E7D0 100%);"></div>
       <div style="position: absolute; top: 600px; left: 50%; transform: translateX(-50%); width: 1200px; height: 1200px; border-radius: 50%; background: radial-gradient(circle, rgba(212,168,95,0.18) 0%, rgba(167,236,218,0.12) 50%, transparent 80%); filter: blur(40px);"></div>
-
       <div class="brand"></div>
+
       <div class="sparkles">
         <div class="sparkle" style="top: 280px; right: 220px;"></div>
         <div class="sparkle mint" style="top: 460px; left: 180px;"></div>
@@ -781,73 +407,26 @@
       </div>
 
       <div class="copy">
-        <div class="eyebrow">Craft Journey · Level up</div>
-        <div class="headline">Train the<br>craft <span class="underline-sweep gold">daily.</span></div>
-        <div class="subhead">12 skill levels across Foundations, Emotional Range, and On-Camera. Every node a new chapter.</div>
+        <div class="eyebrow">Community · Craft XP</div>
+        <div class="headline">Grind with<br>actors who <span class="underline-sweep gold">show up.</span></div>
+        <div class="subhead">Daily craft turns into points. Points turn into ranks. Climb a real community of actors who train.</div>
       </div>
 
-      <div class="device" style="width: 820px; height: 1700px; bottom: -100px; left: 50%; transform: translateX(-50%);">
-        <div class="island"></div>
-        <div class="scrn">
-          <div class="mock" style="padding: 70px 32px 32px;">
-            <div class="status-bar"><span>9:41</span><span>● ● ●</span></div>
-            <div class="h-eye">Craft Journey · Level 4</div>
-            <div class="h-title">Foundations →<br>Emotional Range</div>
-            <!-- Skill nodes serpentine -->
-            <div style="position: relative; height: 800px; margin-top: 22px;">
-              <!-- Path SVG -->
-              <svg viewBox="0 0 700 800" style="position: absolute; inset: 0; width: 100%; height: 100%;" fill="none">
-                <path d="M 350 80 Q 500 200, 500 320 Q 500 440, 200 520 Q 100 560, 200 680" stroke="rgba(212,168,95,0.35)" stroke-width="4" stroke-dasharray="8 12"/>
-              </svg>
-              <!-- Nodes -->
-              <div style="position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 110px; height: 110px; background: var(--mint); border-radius: 28px; display: grid; place-items: center; box-shadow: 0 12px 0 #6FAA98, 0 30px 30px rgba(0,0,0,0.16);">
-                <div style="text-align: center;"><div style="font-size: 32px;">✓</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em;">DONE</div></div>
-              </div>
-              <div style="position: absolute; top: 280px; right: 70px; width: 110px; height: 110px; background: var(--mint); border-radius: 28px; display: grid; place-items: center; box-shadow: 0 12px 0 #6FAA98, 0 30px 30px rgba(0,0,0,0.16);">
-                <div style="text-align: center;"><div style="font-size: 28px;">★★★</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em;">3/3</div></div>
-              </div>
-              <div style="position: absolute; top: 480px; left: 70px; width: 130px; height: 130px; background: var(--gold); border-radius: 32px; display: grid; place-items: center; box-shadow: 0 14px 0 #8C6E33, 0 32px 36px rgba(212,168,95,0.45);">
-                <div style="text-align: center; color: var(--night);">
-                  <div style="font-size: 32px;">▶</div>
-                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.14em; font-weight: 700;">START HERE</div>
-                </div>
-              </div>
-              <div style="position: absolute; top: 480px; left: 60px; width: 130px; height: 130px; border-radius: 32px; background: transparent; border: 2px dashed var(--gold); animation: pulse 1.5s ease-in-out infinite; pointer-events: none;"></div>
-              <div style="position: absolute; top: 700px; left: 160px; width: 100px; height: 100px; background: rgba(26,22,18,0.08); border-radius: 24px; display: grid; place-items: center;">
-                <div style="font-size: 28px; opacity: 0.4;">🔒</div>
-              </div>
-              <!-- Labels next to nodes -->
-              <div style="position: absolute; top: 70px; left: 50%; transform: translateX(80px); font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); max-width: 200px;">Cold reads<br><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.16em; color: var(--deep-gold);">FOUNDATIONS</span></div>
-              <div style="position: absolute; top: 310px; right: 200px; font-family: 'DM Serif Display', serif; font-size: 22px; color: var(--ink); text-align: right; max-width: 200px;">Audition copy<br><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.16em; color: var(--deep-gold);">FOUNDATIONS</span></div>
-              <div style="position: absolute; top: 510px; left: 220px; font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--ink);">Emotional truth<br><span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.16em; color: var(--coral);">EMOTIONAL RANGE</span></div>
-            </div>
-            <div class="card" style="background: linear-gradient(135deg, rgba(212,168,95,0.16), rgba(252,224,114,0.08)); border: 1px solid rgba(212,168,95,0.3);">
-              <div style="display: flex; align-items: center; gap: 18px;">
-                <div style="font-size: 38px;">🏆</div>
-                <div>
-                  <div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--deep-gold);">Craft XP</div>
-                  <div style="font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--ink); line-height: 1.1;">1,240 XP</div>
-                  <div style="font-family: 'Inter'; font-size: 14px; color: var(--ink-2);">Next badge in 60 XP</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="device" style="width: 820px; bottom: -100px; left: 50%; transform: translateX(-50%);">
+        <img src="captures/07-leaderboard.png" alt="Community Leaderboard">
       </div>
 
-      <div class="sticky" style="top: 1140px; left: 60px; transform: rotate(-6deg); width: 220px;">
-        12 levels.<br><span class="script">no spreadsheet, no shame</span>
+      <div class="sticky" style="top: 1200px; left: 60px; transform: rotate(-6deg); width: 220px;">
+        50 actors<br><span class="script">grinding with you</span>
       </div>
-
-      <style>@keyframes pulse {0%, 100%{transform: scale(1); opacity: 0.8;} 50%{transform: scale(1.08); opacity: 0.4;}}</style>
     </div>
 
-    <!-- ─────── 7. PRIVACY / SIGN-UP ─────── -->
+    <!-- ─────── 7. PRIVACY / SIGN-IN ─────── -->
     <div class="screen">
       <div style="position: absolute; inset: 0; background: linear-gradient(180deg, #FBF4E2 0%, #F2E7CC 100%);"></div>
       <div style="position: absolute; top: 400px; left: 50%; transform: translateX(-50%); width: 1000px; height: 1000px; border-radius: 50%; background: radial-gradient(circle, rgba(212,168,95,0.2) 0%, rgba(167,236,218,0.12) 50%, transparent 80%); filter: blur(50px);"></div>
-
       <div class="brand"></div>
+
       <div class="sparkles">
         <div class="sparkle" style="top: 260px; right: 200px;"></div>
         <div class="sparkle mint" style="top: 360px; left: 220px;"></div>
@@ -856,43 +435,16 @@
 
       <div class="copy" style="text-align: center;">
         <div class="eyebrow" style="display: block;">Yours, always</div>
-        <div class="headline" style="font-size: 130px;">Sign in with Apple.<br>Yours by <span class="underline-sweep gold">design.</span></div>
-        <div class="subhead" style="text-align: center; margin: 0 auto; max-width: 980px;">Your videos never go to AI. Your tapes never leave your device. Your career data — only yours to share.</div>
+        <div class="headline" style="font-size: 124px;">Sign in with Apple.<br>Yours by <span class="underline-sweep gold">design.</span></div>
+        <div class="subhead" style="text-align: center; margin: 0 auto; max-width: 980px;">Your videos never go to AI. Your tapes never leave your device. Free to start, no card required.</div>
       </div>
 
-      <!-- Floating preview phone -->
-      <div class="device" style="width: 480px; height: 980px; top: 1100px; left: 50%; transform: translateX(-50%) rotate(-3deg);">
-        <div class="island" style="width: 140px; height: 30px;"></div>
-        <div class="scrn">
-          <div class="mock" style="padding: 56px 22px; background: linear-gradient(180deg, #FBF4E2 0%, #F4E7D0 100%);">
-            <div class="status-bar" style="font-size: 16px;"><span>9:41</span><span>● ● ●</span></div>
-            <div style="margin-top: 28px; text-align: center;">
-              <div style="font-family: 'DM Serif Display', serif; font-size: 60px; color: var(--ink); margin-bottom: 8px;">Dr Self Tape</div>
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--deep-gold);">FOR ACTORS WHO WORK</div>
-            </div>
-            <div style="margin-top: 60px;">
-              <div style="background: var(--night); color: var(--cream); padding: 24px; border-radius: 100px; text-align: center; font-size: 18px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 12px;">
-                 Continue with Apple
-              </div>
-              <div style="background: var(--cream); border: 1.5px solid rgba(26,22,18,0.12); padding: 22px; border-radius: 100px; text-align: center; font-size: 16px; font-weight: 500; color: var(--ink); margin-top: 14px;">
-                Continue with Email
-              </div>
-            </div>
-            <div style="margin-top: 70px; text-align: center;">
-              <div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-2);">PRIVATE BY DEFAULT</div>
-              <div style="margin-top: 16px; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
-                <div style="font-size: 11px; background: rgba(212,168,95,0.14); border: 1px solid rgba(212,168,95,0.3); padding: 6px 12px; border-radius: 100px; color: var(--deep-gold); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">VIDEO NEVER TO AI</div>
-                <div style="font-size: 11px; background: rgba(167,236,218,0.18); border: 1px solid rgba(167,236,218,0.4); padding: 6px 12px; border-radius: 100px; color: #2D7C68; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">AI CONSENT GATE</div>
-                <div style="font-size: 11px; background: rgba(255,130,128,0.16); border: 1px solid rgba(255,130,128,0.4); padding: 6px 12px; border-radius: 100px; color: #B23A48; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em;">DELETE ANYTIME</div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="device" style="width: 720px; bottom: 240px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
+        <img src="captures/01-login.jpg" alt="Sign in with Apple">
       </div>
 
       <div style="position: absolute; bottom: 140px; left: 0; right: 0; text-align: center;">
-        <div style="font-family: 'DM Serif Display', serif; font-size: 56px; color: var(--ink); margin-bottom: 14px;">Free to start.</div>
-        <div style="font-family: 'JetBrains Mono', monospace; font-size: 18px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--deep-gold);">From the App Store · No card required</div>
+        <div style="font-family: 'JetBrains Mono', monospace; font-size: 18px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--deep-gold);">From the App Store · Free</div>
       </div>
     </div>
 
