@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Star, Clock, X, ChevronDown } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -27,7 +28,14 @@ function StarRating({ rating }) {
 }
 
 function ReaderCard({ reader, onBook }) {
+  const navigate = useNavigate();
   const [duration, setDuration] = useState(30);
+  // Headshot + name both navigate to the reader's full profile. The
+  // BE Marketplace serializer returns `user_id` (the reader's User row)
+  // OR `id` (the ReaderProfile row) — we prefer user_id since the
+  // reader-profile route is keyed on User.id everywhere else.
+  const targetId = reader?.user_id || reader?.userId || reader?.id;
+  const openProfile = () => { if (targetId) navigate(`/dashboard/reader-profile/${targetId}`); };
 
   const rates = reader.rates || {};
   const price = rates[duration] ?? '—';
@@ -37,8 +45,14 @@ function ReaderCard({ reader, onBook }) {
       className="rounded-2xl border overflow-hidden flex flex-col"
       style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
     >
-      {/* Headshot */}
-      <div className="relative h-44 bg-gradient-to-br from-[#FF8280]/20 to-[#A7ECDA]/10">
+      {/* Headshot — tappable to profile */}
+      <button
+        type="button"
+        onClick={openProfile}
+        aria-label={`View ${reader.name || 'reader'}'s profile`}
+        className="relative h-44 w-full bg-gradient-to-br from-[#FF8280]/20 to-[#A7ECDA]/10 p-0 border-0 block"
+        style={{ cursor: targetId ? 'pointer' : 'default' }}
+      >
         {reader.headshot ? (
           <img
             src={reader.headshot}
@@ -52,13 +66,19 @@ function ReaderCard({ reader, onBook }) {
             </span>
           </div>
         )}
-      </div>
+      </button>
 
       {/* Content */}
       <div className="p-4 flex flex-col flex-1">
-        <h3 className="text-base font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
+        <button
+          type="button"
+          onClick={openProfile}
+          aria-label={`View ${reader.name || 'reader'}'s profile`}
+          className="text-base font-semibold mb-1 bg-transparent border-0 p-0 text-left"
+          style={{ color: 'var(--text-primary)', cursor: targetId ? 'pointer' : 'default' }}
+        >
           {reader.name}
-        </h3>
+        </button>
 
         <StarRating rating={reader.rating || 0} />
 

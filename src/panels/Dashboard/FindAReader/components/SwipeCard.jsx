@@ -1,9 +1,18 @@
 import { useRef, useState, useEffect } from 'react';
 import { MapPin, Clock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { tapSelect } from '../../../../utils/haptics';
 import { ReaderPortrait } from '../../../../components/Aurora';
 
 const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
+  const navigate = useNavigate();
+  // Tap (not swipe) the name/bio strip → open the reader's full profile.
+  // The outer card eats swipe drags; this handler short-circuits via
+  // stopPropagation so it never registers as a swipe.
+  const openProfile = (e) => {
+    e?.stopPropagation?.();
+    if (actor?.id) navigate(`/dashboard/reader-profile/${actor.id}`);
+  };
   const cardRef = useRef(null);
   const dragState = useRef({ startX: 0, isDragging: false, currentX: 0 });
   const [transform, setTransform] = useState('');
@@ -198,9 +207,27 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         padding: '0 20px 16px',
         display: 'flex', flexDirection: 'column', gap: isMobile ? 6 : 8,
       }}>
-        {/* Name + Union */}
+        {/* Name + Union — name is tappable to open the full profile.
+            Pointer events are not blocked here so swipes still register
+            on the surrounding card; the explicit stopPropagation in the
+            onClick handler keeps the tap from being interpreted as a
+            tiny swipe. */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-          <h3 style={{ fontSize: isMobile ? 26 : 24, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.1 }}>
+          <h3
+            onClick={openProfile}
+            onTouchEnd={(e) => { e.stopPropagation(); openProfile(e); }}
+            style={{
+              fontSize: isMobile ? 26 : 24, fontWeight: 700, color: '#fff',
+              margin: 0, lineHeight: 1.1,
+              cursor: actor?.id ? 'pointer' : 'default',
+              textDecoration: actor?.id ? 'underline' : 'none',
+              textDecorationColor: 'rgba(212,168,95,0.5)',
+              textUnderlineOffset: 4,
+              textDecorationThickness: 1,
+            }}
+            aria-label={`View ${cleanName}'s profile`}
+            role={actor?.id ? 'button' : undefined}
+          >
             {cleanName}
           </h3>
           {unionLabel && (

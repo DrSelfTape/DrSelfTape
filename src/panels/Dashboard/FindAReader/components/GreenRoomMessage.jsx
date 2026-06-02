@@ -1,13 +1,23 @@
 import { FileText, ExternalLink, Flag } from 'lucide-react';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import http from '../../../../redux/http';
 import { baseURL } from '../../../../redux/constant';
 import { showSnackbar } from '../../../../redux/features/snackbarSlice/snackbarSlice';
 
 const GreenRoomMessage = ({ message, isOwn = false }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [flagging, setFlagging] = useState(false);
+  // Sender avatar → that user's profile. BE GreenRoomMessageSerializer
+  // returns senderId (apps/matching/serializers.py:GreenRoomMessageSerializer);
+  // we accept the snake_case spelling too in case any consumer normalizes it.
+  const senderId = message?.senderId || message?.sender_id;
+  const openSender = () => {
+    if (!senderId || isOwn) return;
+    navigate(`/dashboard/reader-profile/${senderId}`);
+  };
 
   // Per-message flag (Apple guideline 1.2). Only surfaced on partner
   // messages — you don't report yourself. Calls the same content-report
@@ -121,11 +131,18 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
   return (
     <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3 items-end gap-2`}>
       {!isOwn && (
-        <div className="w-7 h-7 rounded-full bg-[#D4A85F]/20 flex items-center justify-center shrink-0 mb-1">
+        <button
+          type="button"
+          onClick={openSender}
+          aria-label={`View ${message.senderName || 'sender'}'s profile`}
+          className="w-7 h-7 rounded-full bg-[#D4A85F]/20 flex items-center justify-center shrink-0 mb-1 border-0 p-0"
+          style={{ cursor: senderId ? 'pointer' : 'default' }}
+          disabled={!senderId}
+        >
           <span className="text-[#7A5A18] text-[9px] font-bold">
             {(message.senderName || 'R').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)}
           </span>
-        </div>
+        </button>
       )}
       <div
         className={`max-w-[72%] rounded-2xl px-4 py-2.5 ${
