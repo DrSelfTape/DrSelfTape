@@ -238,6 +238,73 @@
     .stamp.gold { color: var(--deep-gold); border-color: var(--deep-gold); background: rgba(252, 224, 114, 0.15); }
     .stamp.ink { color: var(--ink); border-color: var(--ink); }
 
+    /* Coffee ring stain — the smudge left behind by a mug set on the
+       sticky note. Brown rim, lighter center, slight blur. Multiplies
+       into the underlying color so it works on any background. */
+    .coffee-ring {
+      position: absolute;
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      border: 5px solid rgba(89, 56, 28, 0.55);
+      background: radial-gradient(circle, rgba(89, 56, 28, 0.0) 55%, rgba(89, 56, 28, 0.18) 70%, rgba(89, 56, 28, 0.0) 85%);
+      mix-blend-mode: multiply;
+      filter: blur(1px);
+      pointer-events: none;
+      z-index: 9;
+      opacity: 0.55;
+    }
+    .coffee-ring.sm { width: 80px; height: 80px; border-width: 4px; }
+    .coffee-ring.lg { width: 160px; height: 160px; border-width: 6px; }
+
+    /* Stopwatch tag — small slate-like pill with a hand-drawn
+       stopwatch icon and a running timer. Reads as a self-tape take
+       in progress without needing a full recording mock screen. */
+    .stopwatch-tag {
+      position: absolute;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 22px 14px 18px;
+      background: var(--night);
+      color: var(--cream);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 22px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+      z-index: 7;
+    }
+    .stopwatch-tag .icon {
+      width: 28px; height: 28px;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23FCE072' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='13' r='8'/><path d='M12 9v4l3 2'/><path d='M9 1h6M12 1v3'/></svg>") center/contain no-repeat;
+    }
+    .stopwatch-tag .rec-dot {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: var(--coral);
+      box-shadow: 0 0 12px var(--coral);
+    }
+
+    /* SAG ELIGIBLE tape strip — vertical tape strip on the edge of a
+       panel, like the casting breakdown labels on submission sheets. */
+    .breakdown-strip {
+      position: absolute;
+      padding: 16px 60px;
+      background: var(--coral);
+      color: var(--cream);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 20px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      box-shadow: 0 14px 30px rgba(255, 130, 128, 0.45), 0 0 0 2px rgba(255,255,255,0.18) inset;
+      transform-origin: center;
+      z-index: 7;
+    }
+    .breakdown-strip.gold { background: var(--gold); color: var(--night); box-shadow: 0 14px 30px rgba(212, 168, 95, 0.5), 0 0 0 2px rgba(255,255,255,0.3) inset; }
+    .breakdown-strip.dark { background: var(--night); color: var(--gold-soft); box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45); }
+
     /* Pills + badges */
     .pill {
       display: inline-flex; align-items: center; gap: 14px;
@@ -400,6 +467,14 @@
 
       <!-- Highlighter streak under "motion" -->
       <div class="highlighter" style="top: 580px; left: 220px; width: 470px; height: 70px;"></div>
+
+      <!-- Coffee ring smudge over the testimonial's edge -->
+      <div class="coffee-ring" style="bottom: 360px; right: 60px;"></div>
+
+      <!-- Stopwatch annotation -->
+      <div class="stopwatch-tag" style="top: 1840px; right: 50px; transform: rotate(4deg);">
+        <span class="rec-dot"></span> REC · 0:42 · TAKE 3
+      </div>
     </div>
 
     <!-- ─────── 2. AI COACH (Jericho) ─────── -->
@@ -441,6 +516,9 @@
 
       <!-- Coral highlighter under "casting director's lens" -->
       <div class="highlighter coral" style="top: 720px; left: 80px; width: 950px; height: 60px;"></div>
+
+      <!-- Coffee ring on the mint sticky -->
+      <div class="coffee-ring sm" style="top: 1240px; right: 30px;"></div>
     </div>
 
     <!-- ─────── 3. PRACTICE / SCENE GENERATOR ─────── -->
@@ -486,6 +564,14 @@
       <div class="stamp gold" style="top: 2400px; right: 90px; transform: rotate(-8deg);">
         TAKE 1
       </div>
+
+      <!-- Highlighter on "show up." in headline -->
+      <div class="highlighter" style="top: 690px; left: 80px; width: 670px; height: 70px;"></div>
+
+      <!-- Stopwatch in lower margin -->
+      <div class="stopwatch-tag" style="bottom: 220px; left: 60px; transform: rotate(-5deg);">
+        <span class="icon"></span> 0:42 / 4:00
+      </div>
     </div>
 
     <!-- ─────── 4. FIND A READER ─────── -->
@@ -529,8 +615,17 @@
         Verified actors — no ghosts
       </div>
 
-      <!-- CD red circle around D'Kia's SAG-AFTRA tag -->
-      <div class="red-circle" style="top: 2170px; left: 280px; width: 620px; height: 230px; transform: rotate(-3deg);"></div>
+      <!-- Highlighter on "Real time." -->
+      <div class="highlighter coral" style="top: 700px; left: 80px; width: 540px; height: 60px;"></div>
+
+      <!-- SAG ELIGIBLE breakdown tape strip — vertical on the left edge -->
+      <div class="breakdown-strip" style="top: 1380px; left: -100px; transform: rotate(-90deg);">
+        USA · SAG ELIGIBLE · 18+
+      </div>
+
+      <!-- Coffee ring near the sticky -->
+      <div class="coffee-ring sm" style="top: 940px; right: 200px;"></div>
+
     </div>
 
     <!-- ─────── 5. TRACKER ─────── -->
@@ -582,6 +677,9 @@
         <i style="top: 290px; left: 60px; width: 12px; height: 12px; background: var(--gold-soft); border-radius: 50%;"></i>
         <i style="top: 280px; left: 180px; width: 14px; height: 14px; background: var(--mint); transform: rotate(-30deg);"></i>
       </div>
+
+      <!-- Highlighter on "Bookings." -->
+      <div class="highlighter" style="top: 810px; left: 80px; width: 560px; height: 70px;"></div>
     </div>
 
     <!-- ─────── 6. COMMUNITY LEADERBOARD ─────── -->
@@ -626,6 +724,12 @@
       <div style="position: absolute; top: 1300px; right: 60px; transform: rotate(6deg); z-index: 7;">
         <div class="streak-pill"><span class="fire">🔥</span>14 day streak</div>
       </div>
+
+      <!-- Highlighter on "show up." -->
+      <div class="highlighter" style="top: 640px; left: 460px; width: 520px; height: 70px;"></div>
+
+      <!-- Coffee ring on the mini sticky -->
+      <div class="coffee-ring sm" style="top: 1150px; left: 50px;"></div>
     </div>
 
     <!-- ─────── 7. PRIVACY / SIGN-IN ─────── -->
@@ -663,6 +767,9 @@
       <div class="stamp ink" style="top: 1260px; left: 60px; transform: rotate(-9deg); font-size: 44px;">
         Action.
       </div>
+
+      <!-- Highlighter on "by design." in the headline -->
+      <div class="highlighter" style="top: 760px; left: 360px; width: 600px; height: 70px;"></div>
     </div>
 
   </div>
