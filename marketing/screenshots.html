@@ -168,6 +168,76 @@
       text-underline-offset: 4px;
     }
 
+    /* Highlighter streak — yellow translucent swatch with a slight
+       skew, mimics the way actors highlight key beats on their sides. */
+    .highlighter {
+      position: absolute;
+      background: linear-gradient(180deg, rgba(252, 224, 114, 0.0) 0%, rgba(252, 224, 114, 0.7) 30%, rgba(252, 224, 114, 0.7) 70%, rgba(252, 224, 114, 0.0) 100%);
+      border-radius: 4px;
+      transform: skew(-4deg);
+      pointer-events: none;
+      z-index: 4;
+      mix-blend-mode: multiply;
+    }
+    .highlighter.coral {
+      background: linear-gradient(180deg, rgba(255, 130, 128, 0.0) 0%, rgba(255, 130, 128, 0.55) 30%, rgba(255, 130, 128, 0.55) 70%, rgba(255, 130, 128, 0.0) 100%);
+    }
+
+    /* CD red-pen circle annotation — the gesture of a casting director
+       circling a key beat or character note on a printed page. */
+    .red-circle {
+      position: absolute;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 240 110' fill='none'><path d='M 120 12 C 50 12, 12 32, 12 55 C 12 78, 50 98, 120 98 C 190 98, 228 78, 228 55 C 228 36, 200 18, 150 14' stroke='%23FF8280' stroke-width='5' stroke-linecap='round' fill='none'/></svg>") center/contain no-repeat;
+      pointer-events: none;
+      z-index: 7;
+    }
+
+    /* Confetti burst — scattered colorful shapes radiating from a
+       focal point. Used to celebrate the BOOKED moment on Tracker. */
+    .confetti {
+      position: absolute;
+      width: 360px; height: 360px;
+      pointer-events: none;
+      z-index: 6;
+    }
+    .confetti i {
+      position: absolute;
+      display: block;
+    }
+
+    /* Streak fire pill — gradient gold→coral pill for gamification. */
+    .streak-pill {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 14px 24px; border-radius: 100px;
+      background: linear-gradient(135deg, #FCE072, #FF8280);
+      color: var(--night);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700; font-size: 22px;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      box-shadow: 0 12px 30px rgba(255, 130, 128, 0.4);
+    }
+    .streak-pill .fire { font-size: 28px; }
+
+    /* Ink stamp — caps lettering inside a hand-wobble box, slightly
+       faded like a real rubber stamp on paper. */
+    .stamp {
+      position: absolute;
+      font-family: 'Inter', sans-serif;
+      font-weight: 800;
+      font-size: 36px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      border: 5px solid;
+      padding: 14px 26px;
+      border-radius: 8px;
+      pointer-events: none;
+      opacity: 0.88;
+      z-index: 7;
+    }
+    .stamp.coral { color: var(--coral); border-color: var(--coral); }
+    .stamp.gold { color: var(--deep-gold); border-color: var(--deep-gold); background: rgba(252, 224, 114, 0.15); }
+    .stamp.ink { color: var(--ink); border-color: var(--ink); }
+
     /* Pills + badges */
     .pill {
       display: inline-flex; align-items: center; gap: 14px;
@@ -327,6 +397,9 @@
       <div class="actor-note coral" style="top: 1740px; right: 50px; font-size: 38px; transform: rotate(-5deg);">
         ✓ daily ritual
       </div>
+
+      <!-- Highlighter streak under "motion" -->
+      <div class="highlighter" style="top: 580px; left: 220px; width: 470px; height: 70px;"></div>
     </div>
 
     <!-- ─────── 2. AI COACH (Jericho) ─────── -->
@@ -365,6 +438,9 @@
       <div class="actor-note coral" style="top: 1900px; right: 70px; font-size: 38px; transform: rotate(-6deg);">
         slower —<br>let it land
       </div>
+
+      <!-- Coral highlighter under "casting director's lens" -->
+      <div class="highlighter coral" style="top: 720px; left: 80px; width: 950px; height: 60px;"></div>
     </div>
 
     <!-- ─────── 3. PRACTICE / SCENE GENERATOR ─────── -->
@@ -404,6 +480,11 @@
       </div>
       <div class="actor-note gold" style="top: 2240px; left: 80px; font-size: 38px; transform: rotate(-5deg);">
         go BIG
+      </div>
+
+      <!-- Ink stamp: TAKE 1 -->
+      <div class="stamp gold" style="top: 2400px; right: 90px; transform: rotate(-8deg);">
+        TAKE 1
       </div>
     </div>
 
@@ -447,6 +528,9 @@
       <div class="sticky mint" style="top: 980px; right: 50px; transform: rotate(8deg); width: 240px; font-size: 26px;">
         Verified actors — no ghosts
       </div>
+
+      <!-- CD red circle around D'Kia's SAG-AFTRA tag -->
+      <div class="red-circle" style="top: 2170px; left: 280px; width: 620px; height: 230px; transform: rotate(-3deg);"></div>
     </div>
 
     <!-- ─────── 5. TRACKER ─────── -->
@@ -482,6 +566,21 @@
       </div>
       <div class="actor-note" style="top: 2360px; right: 80px; font-size: 36px; transform: rotate(-5deg);">
         update<br>after every tape
+      </div>
+
+      <!-- Confetti burst around the BOOKED card -->
+      <div class="confetti" style="top: 1840px; left: 30%; transform: rotate(-12deg);">
+        <i style="top: 20px; left: 20px; width: 14px; height: 14px; background: var(--gold-soft); border-radius: 50%;"></i>
+        <i style="top: 60px; left: 90px; width: 8px; height: 30px; background: var(--mint); transform: rotate(20deg);"></i>
+        <i style="top: 110px; left: 30px; width: 18px; height: 18px; background: var(--coral); transform: rotate(45deg);"></i>
+        <i style="top: 30px; left: 220px; width: 14px; height: 14px; background: var(--coral); border-radius: 50%;"></i>
+        <i style="top: 90px; left: 280px; width: 10px; height: 30px; background: var(--gold); transform: rotate(-25deg);"></i>
+        <i style="top: 150px; left: 200px; width: 18px; height: 18px; background: var(--gold-soft); transform: rotate(-15deg);"></i>
+        <i style="top: 200px; left: 100px; width: 12px; height: 12px; background: var(--mint); border-radius: 50%;"></i>
+        <i style="top: 240px; left: 250px; width: 14px; height: 14px; background: var(--coral); transform: rotate(30deg);"></i>
+        <i style="top: 0px; left: 150px; width: 10px; height: 25px; background: var(--gold); transform: rotate(8deg);"></i>
+        <i style="top: 290px; left: 60px; width: 12px; height: 12px; background: var(--gold-soft); border-radius: 50%;"></i>
+        <i style="top: 280px; left: 180px; width: 14px; height: 14px; background: var(--mint); transform: rotate(-30deg);"></i>
       </div>
     </div>
 
@@ -522,6 +621,11 @@
       <div class="actor-note ink" style="top: 2520px; right: 80px; font-size: 36px; transform: rotate(4deg);">
         practice ≠<br>perfect
       </div>
+
+      <!-- Streak fire pill -->
+      <div style="position: absolute; top: 1300px; right: 60px; transform: rotate(6deg); z-index: 7;">
+        <div class="streak-pill"><span class="fire">🔥</span>14 day streak</div>
+      </div>
     </div>
 
     <!-- ─────── 7. PRIVACY / SIGN-IN ─────── -->
@@ -551,11 +655,13 @@
       </div>
 
       <!-- Margin notes -->
-      <div class="actor-note ink" style="top: 1280px; left: 50px; font-size: 52px; transform: rotate(-9deg);">
-        Action.
-      </div>
       <div class="actor-note deep-gold" style="top: 1800px; right: 60px; font-size: 40px; transform: rotate(6deg);">
         from<br>anywhere
+      </div>
+
+      <!-- Ink stamp: ACTION. -->
+      <div class="stamp ink" style="top: 1260px; left: 60px; transform: rotate(-9deg); font-size: 44px;">
+        Action.
       </div>
     </div>
 
