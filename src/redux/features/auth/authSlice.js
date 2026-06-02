@@ -15,13 +15,41 @@ const initialState = {
   isAuthenticated: false,
 };
 
-// Helper function to handle API errors consistently
+// Helper function to handle API errors consistently.
+//
+// The BE wraps validation errors in `{ message: [...] }` where the list
+// contains one `{field: "human message"}` entry per failing field
+// (helpers/api_exception.py:validation_errors). Toasts + form labels
+// rendered that list directly and React threw "Objects are not valid
+// as a React child" on the resulting object — fix is to always return
+// a string, flattening field-keyed objects when present.
 const handleApiError = (error) => {
-  const message =
-    error?.response?.data?.message ||
-    error?.message ||
-    'An unexpected error occurred';
-  return message;
+  const raw = error?.response?.data?.message ?? error?.message;
+  if (typeof raw === 'string') return raw;
+  if (Array.isArray(raw)) {
+    const parts = raw.map((entry) => {
+      if (typeof entry === 'string') return entry;
+      if (entry && typeof entry === 'object') {
+        return Object.entries(entry)
+          .map(([field, msg]) => {
+            const text = Array.isArray(msg) ? msg.join(' ') : String(msg);
+            // Hide the field name on the common single-field cases —
+            // "This email already exists" reads better than
+            // "email: This email already exists" in a toast.
+            return text;
+          })
+          .join(' ');
+      }
+      return String(entry);
+    }).filter(Boolean);
+    return parts.join(' ') || 'An unexpected error occurred';
+  }
+  if (raw && typeof raw === 'object') {
+    return Object.values(raw)
+      .map((v) => (Array.isArray(v) ? v.join(' ') : String(v)))
+      .join(' ') || 'An unexpected error occurred';
+  }
+  return 'An unexpected error occurred';
 };
 
 // Sign Up User API Function
