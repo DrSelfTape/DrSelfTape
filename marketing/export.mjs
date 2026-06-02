@@ -47,9 +47,12 @@ const LABELS = [
   // and page.screenshot({clip}) returns the same first-screen pixels
   // for every clip. The deck is 7 screens × 1320px + 6 gaps × 24px =
   // 9384px wide; we pad it a bit for safety.
+  // App Store spec is 1320 × 2868 in single-density pixels. deviceScaleFactor
+  // = 1 means the exported PNG matches that 1:1 — no over-rendering, no
+  // upscaling of the 1179 × 2556 source captures (your iPhone screenshots).
   const browser = await puppeteer.launch({
     headless: 'new',
-    defaultViewport: { width: 9600, height: 2868, deviceScaleFactor: 2 },
+    defaultViewport: { width: 9600, height: 2868, deviceScaleFactor: 1 },
   });
   const page = await browser.newPage();
 
