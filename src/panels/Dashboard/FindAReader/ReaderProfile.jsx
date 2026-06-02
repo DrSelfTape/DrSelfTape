@@ -1,18 +1,15 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ArrowLeft, Clock, MessageCircle, Star, MapPin } from 'lucide-react';
+import { ArrowLeft, Clock, MessageCircle, Star, MapPin, Flag, ShieldOff } from 'lucide-react';
 import GenreTags from './components/GenreTags';
 import UnionBadge from './components/UnionBadge';
 import AvailabilityStatus from './components/AvailabilityStatus';
 import ProfilePhoto from '../../../components/Shared/ProfilePhoto';
 import { swipeOnReader, fetchFavorites, fetchReaderById } from '../../../redux/features/readers/readersMatchSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
+import ReportBlockMenu from '../../../components/Shared/ReportBlockMenu';
 
-// Look up a reader by id across every place we might already have them
-// cached locally. Route into this page can come from the swipe stack,
-// the Green Room matches list, or the Favorites tab, and any of those
-// already has the actor's public data in redux.
 function useReader(readerId) {
   const readers = useSelector((s) => s.readersMatch.readers || []);
   const matches = useSelector((s) => s.readersMatch.matches || []);
@@ -26,7 +23,6 @@ function useReader(readerId) {
 
     const fromMatch = matches.find((m) => String(m?.other_actor?.id) === idStr);
     if (fromMatch) {
-      // Match shape has the actor under `other_actor` plus match metadata.
       return { ...(fromMatch.other_actor || {}), matchId: fromMatch.id, source: 'match' };
     }
 
@@ -39,6 +35,12 @@ function useReader(readerId) {
   }, [readerId, readers, matches, favorites, fetched]);
 }
 
+const goldGradient = {
+  background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
+  color: '#FFF',
+  boxShadow: '0 8px 22px rgba(212,168,95,0.30)',
+};
+
 const ReaderProfile = () => {
   const { readerId } = useParams();
   const navigate = useNavigate();
@@ -47,9 +49,7 @@ const ReaderProfile = () => {
   const fetchState = useSelector(
     (s) => s.readersMatch.readerById?.[String(readerId)] || {},
   );
-  // If the local caches don't have this reader, fall back to the direct
-  // endpoint. Guards against re-firing once we already have data, are
-  // mid-flight, or hit a 404.
+
   useEffect(() => {
     if (!readerId) return;
     if (reader) return;
@@ -57,8 +57,6 @@ const ReaderProfile = () => {
     dispatch(fetchReaderById(readerId));
   }, [dispatch, readerId, reader, fetchState.loading, fetchState.data, fetchState.error]);
 
-  // If they came in via a Green Room match we already have a matchId;
-  // otherwise the "Chat" button takes them through the swipe flow.
   const matchId = reader?.matchId;
   const favorites = useSelector((s) => s.readersMatch.favorites || []);
   const isFavorited = favorites.some(
@@ -78,9 +76,6 @@ const ReaderProfile = () => {
     if (matchId) {
       navigate(`/dashboard/green-room/${matchId}`);
     } else {
-      // No match yet — bounce them to the swipe flow filtered to this user
-      // would be ideal, but for v1 we just send them to Find a Reader so
-      // they can find/swipe on this person.
       dispatch(showSnackbar({
         message: 'You need to match with this reader before you can chat.',
         variant: 'info',
@@ -92,7 +87,6 @@ const ReaderProfile = () => {
   const handleToggleFavorite = async () => {
     if (!reader?.id) return;
     if (isFavorited) {
-      // No "unstar" endpoint — leave a clear message rather than fail silently.
       dispatch(showSnackbar({
         message: 'Already in your favorites.',
         variant: 'info',
@@ -111,18 +105,19 @@ const ReaderProfile = () => {
   if (!reader) {
     const isLoading = fetchState.loading || (!fetchState.error && !fetchState.data);
     return (
-      <div className="min-h-[calc(100vh-80px)] bg-transparent px-4 py-8">
+      <div className="min-h-[calc(100vh-80px)] px-4 py-8 aurora-page-in">
         <div className="mx-auto max-w-lg">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="mb-6 flex items-center gap-1.5 text-sm text-[rgba(10,10,10,0.4)] transition-colors hover:text-[#0A0A0A]"
+            className="mb-6 flex items-center gap-1.5 text-sm transition-colors"
+            style={{ color: 'var(--aurora-sub)' }}
           >
             <ArrowLeft className="h-4 w-4" />
             Back
           </button>
-          <div className="rounded-xl border border-[rgba(10,10,10,0.08)] bg-white p-8 text-center shadow-sm">
-            <p className="text-sm text-[rgba(10,10,10,0.62)]">
+          <div className="aurora-card p-8 text-center">
+            <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>
               {isLoading
                 ? 'Loading profile…'
                 : "We couldn't find this profile. It may have been removed."}
@@ -134,81 +129,95 @@ const ReaderProfile = () => {
   }
 
   return (
-    <div className="min-h-[calc(100vh-80px)] bg-transparent px-4 py-8">
+    <div className="min-h-[calc(100vh-80px)] px-4 py-8 aurora-page-in">
       <div className="mx-auto max-w-lg">
-        {/* Back */}
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="mb-6 flex items-center gap-1.5 text-sm text-[rgba(10,10,10,0.4)] transition-colors hover:text-[#0A0A0A]"
+          className="mb-6 flex items-center gap-1.5 text-sm transition-colors"
+          style={{ color: 'var(--aurora-sub)' }}
         >
           <ArrowLeft className="h-4 w-4" />
           Back
         </button>
 
-        {/* Headshot */}
-        <div className="mb-6 flex h-64 w-full items-center justify-center overflow-hidden rounded-xl bg-gray-200">
+        {/* Headshot — full-bleed with subtle gold rim */}
+        <div
+          className="mb-6 relative h-72 w-full overflow-hidden"
+          style={{
+            borderRadius: 20,
+            background: 'linear-gradient(160deg, #1A1308 0%, #2E2415 45%, #0F0E0A 100%)',
+            boxShadow: '0 12px 30px rgba(10,10,10,0.18)',
+          }}
+        >
           {headshot ? (
-            <ProfilePhoto src={headshot} alt={reader.name} initials={initials} className="h-64 w-full" />
+            <ProfilePhoto src={headshot} alt={reader.name} initials={initials} className="h-72 w-full" />
           ) : (
-            <span className="text-7xl font-bold text-[rgba(10,10,10,0.4)]">{initials}</span>
+            <div className="flex h-full w-full items-center justify-center">
+              <span style={{ fontSize: 80, fontWeight: 800, color: 'rgba(212,168,95,0.35)' }}>{initials}</span>
+            </div>
           )}
+          {/* gold-tint scrim */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{ background: 'linear-gradient(180deg, transparent 60%, rgba(10,10,10,0.45) 100%)' }}
+          />
         </div>
 
         {/* Info card */}
-        <div className="rounded-xl border border-[rgba(10,10,10,0.08)] bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-[#0f0f1a]">
+        <div className="aurora-card p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>READER</span>
+              <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.4px' }}>
                 {reader.name || 'Actor'}
               </h1>
               {reader.experience_level && (
-                <p className="mt-0.5 text-sm text-[rgba(10,10,10,0.62)]">
+                <p className="mt-0.5 text-sm" style={{ color: 'var(--aurora-sub)' }}>
                   {reader.experience_level}
                 </p>
               )}
               {reader.based_in && (
-                <p className="mt-1 flex items-center gap-1 text-xs text-[rgba(10,10,10,0.5)]">
+                <p className="mt-1 inline-flex items-center gap-1 text-xs" style={{ color: 'var(--aurora-dim)' }}>
                   <MapPin size={11} />
                   {reader.based_in}
                 </p>
               )}
             </div>
-            <AvailabilityStatus online={reader.is_online} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <AvailabilityStatus online={reader.is_online} />
+              <ReportBlockMenu
+                targetType="user"
+                targetUserId={reader.id}
+                targetName={reader.name?.split(' ')[0] || 'this reader'}
+              />
+            </div>
           </div>
 
-          {/* Union */}
           {reader.union && (
             <div className="mt-4">
               <UnionBadge union={reader.union} />
             </div>
           )}
 
-          {/* Bio */}
           {reader.bio && (
             <div className="mt-5">
-              <h3 className="mb-1 text-xs font-semibold uppercase tracking-wider text-[rgba(10,10,10,0.4)]">
-                Bio
-              </h3>
-              <p className="text-sm leading-relaxed text-[rgba(10,10,10,0.62)]">
+              <h3 className="aurora-eyebrow mb-2" style={{ color: 'var(--aurora-dim)' }}>Bio</h3>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--aurora-sub)' }}>
                 {reader.bio}
               </p>
             </div>
           )}
 
-          {/* Genres */}
           {reader.genres?.length > 0 && (
             <div className="mt-5">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-[rgba(10,10,10,0.4)]">
-                Genres
-              </h3>
+              <h3 className="aurora-eyebrow mb-2" style={{ color: 'var(--aurora-dim)' }}>Genres</h3>
               <GenreTags genres={reader.genres} />
             </div>
           )}
 
-          {/* Recent activity */}
           {reader.recent_activity && (
-            <div className="mt-5 flex items-center gap-1.5 text-xs text-[rgba(10,10,10,0.4)]">
+            <div className="mt-5 flex items-center gap-1.5 text-xs" style={{ color: 'var(--aurora-dim)' }}>
               <Clock className="h-3.5 w-3.5" />
               {reader.recent_activity}
             </div>
@@ -220,7 +229,8 @@ const ReaderProfile = () => {
           <button
             type="button"
             onClick={handleChat}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#D4A85F] px-4 py-3 text-sm font-bold text-white transition-colors hover:bg-[#C09850]"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all"
+            style={goldGradient}
           >
             <MessageCircle size={16} />
             {matchId ? 'Open Chat' : 'Match to Chat'}
@@ -230,13 +240,13 @@ const ReaderProfile = () => {
             type="button"
             onClick={handleToggleFavorite}
             disabled={isFavorited}
-            className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors ${
-              isFavorited
-                ? 'border-[#D4A85F]/40 bg-[#D4A85F]/10 text-[#7A5A18]'
-                : 'border-[rgba(10,10,10,0.14)] bg-white text-[#0A0A0A] hover:bg-[#F4F4EE]'
-            }`}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-all"
+            style={isFavorited
+              ? { background: 'rgba(212,168,95,0.12)', border: '1px solid rgba(212,168,95,0.45)', color: 'var(--aurora-heritage-gold-deep)' }
+              : { background: 'var(--aurora-surface-solid)', border: '1px solid var(--aurora-line)', color: 'var(--aurora-text)' }
+            }
           >
-            <Star size={16} fill={isFavorited ? '#D4A85F' : 'none'} />
+            <Star size={16} fill={isFavorited ? 'var(--aurora-heritage-gold)' : 'none'} color={isFavorited ? 'var(--aurora-heritage-gold)' : 'currentColor'} />
             {isFavorited ? 'Favorited' : 'Add to Favorites'}
           </button>
         </div>

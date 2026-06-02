@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
-import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift, RefreshCw } from 'lucide-react';
+import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift, RefreshCw, Trash2 } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
 import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
+import DeleteAccountModal from '../../../components/Dashboard/DeleteAccountModal';
 import AuditionBadges, { BADGES } from '../../../components/AuditionBadges';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
 
@@ -78,6 +79,7 @@ export default function Profile() {
   const [toast, setToast] = useState(null);
   const [toastType, setToastType] = useState('success');
   const [showBadge, setShowBadge] = useState(false);
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
   const hadProfileBefore = useRef(false);
 
   const fetchReaderProfile = useCallback(() => {
@@ -229,7 +231,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--aurora-heritage-gold-deep)' }} />
       </div>
     );
   }
@@ -237,8 +239,11 @@ export default function Profile() {
   const completion = getCompletionPercent(profile);
 
   return (
-    <div className="px-4 py-6 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>My Profile</h1>
+    <div className="px-4 py-6 max-w-6xl mx-auto aurora-page-in">
+      <div className="mb-5">
+        <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>YOU</span>
+        <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>My Profile</h1>
+      </div>
 
       {/* Badge */}
       <ProfileCompleteBadge show={showBadge} onClose={() => setShowBadge(false)} />
@@ -260,15 +265,20 @@ export default function Profile() {
             </p>
             <div className="space-y-2 mb-6">
               {validationPopup.map((field) => (
-                <div key={field} className="flex items-center gap-2 px-3 py-2 bg-red-500/8 border border-red-500/15 rounded-lg">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0" />
-                  <span className="text-sm text-red-300 font-medium">{field}</span>
+                <div key={field} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,130,128,0.10)', border: '1px solid rgba(255,130,128,0.25)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--aurora-coral, #FF8280)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{field}</span>
                 </div>
               ))}
             </div>
             <button
               onClick={() => setValidationPopup(null)}
-              className="w-full py-3 rounded-xl bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold text-sm transition-colors"
+              className="w-full py-3 rounded-xl font-semibold text-sm transition-colors"
+              style={{
+                background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
+                color: '#FFF',
+                boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
+              }}
             >
               Got It
             </button>
@@ -346,7 +356,7 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* LEFT — Avatar Card */}
         <div className="lg:col-span-1">
-          <div className="rounded-xl shadow-sm p-6 text-center" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
+          <div className="aurora-card p-6 text-center">
             {/* Avatar */}
             <div className="relative mx-auto w-32 h-32 mb-4">
               {avatarPreview ? (
@@ -404,9 +414,9 @@ export default function Profile() {
 
           {/* Referral Card */}
           {referral.code && (
-            <div className="rounded-xl shadow-sm p-5 mt-6" style={{
-              background: 'linear-gradient(135deg, rgba(255, 130, 128,0.08), var(--bg-surface))',
-              border: '1px solid rgba(255, 130, 128,0.2)',
+            <div className="aurora-card p-5 mt-6" style={{
+              background: 'linear-gradient(135deg, rgba(212,168,95,0.08), var(--aurora-surface-solid))',
+              border: '1px solid rgba(212,168,95,0.30)',
             }}>
               <div className="flex items-center gap-2 mb-3">
                 <Gift className="w-4 h-4 text-[#7A5A18]" />
@@ -462,8 +472,8 @@ export default function Profile() {
         <div className="lg:col-span-2">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Personal Info */}
-            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Personal Information</h3>
+            <div className="aurora-card p-6">
+              <h3 className="aurora-display text-lg mb-4" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>Personal Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>First Name <span className="text-[#7A5A18]">*</span></label>
@@ -504,8 +514,8 @@ export default function Profile() {
             </div>
 
             {/* Actor Info */}
-            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Actor Information</h3>
+            <div className="aurora-card p-6">
+              <h3 className="aurora-display text-lg mb-4" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>Actor Information</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Bio</label>
@@ -813,8 +823,8 @@ export default function Profile() {
             </div>
 
             {/* File Uploads */}
-            <div className="rounded-xl shadow-sm p-6" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
-              <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Files</h3>
+            <div className="aurora-card p-6">
+              <h3 className="aurora-display text-lg mb-4" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>Files</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Headshot */}
                 <div>
@@ -940,6 +950,34 @@ export default function Profile() {
           </div>
         )}
       </div>
+
+      {/* ── Privacy & Account ── Apple guideline 5.1.1(v) requires an
+           in-app account deletion option for any app that supports
+           account creation. Surface it clearly here so reviewers and
+           users can find it without digging through menus. */}
+      <div className="aurora-card p-6 mt-6">
+        <h2 className="aurora-display text-lg mb-2" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>
+          Privacy &amp; Account
+        </h2>
+        <p className="text-sm mb-5" style={{ color: 'var(--aurora-sub)' }}>
+          Permanently delete your account and all associated data.
+        </p>
+        <button
+          type="button"
+          onClick={() => setShowDeleteAccount(true)}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+          style={{
+            background: 'rgba(255,130,128,0.10)',
+            border: '1px solid rgba(255,130,128,0.35)',
+            color: 'var(--aurora-coral-deep, #C05957)',
+          }}
+        >
+          <Trash2 size={16} />
+          Delete Account
+        </button>
+      </div>
+
+      <DeleteAccountModal open={showDeleteAccount} onClose={() => setShowDeleteAccount(false)} />
 
     </div>
   );

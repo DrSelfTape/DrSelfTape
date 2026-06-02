@@ -623,7 +623,7 @@ function Building({ onDone }) {
   const r = 54;
   const c = 2 * Math.PI * r;
   return (
-    <div className="aurora-orbs" style={{
+    <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'absolute', inset: 0, overflow: 'hidden',
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
       padding: 'calc(env(safe-area-inset-top, 0px) + 54px) 30px calc(env(safe-area-inset-bottom, 0px) + 40px)',
@@ -692,7 +692,7 @@ function Welcome({ data, onDone }) {
   const name = (data.first_name || 'there').trim();
   const COLS = ['var(--aurora-heritage-gold)', 'var(--aurora-mint)', 'var(--aurora-sky)', 'var(--aurora-rose)', 'var(--aurora-peach)'];
   return (
-    <div className="aurora-orbs" style={{
+    <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'absolute', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
     }}>
       <div style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none' }}>
@@ -836,7 +836,7 @@ export default function AuroraOnboarding({ onClose }) {
   const qIndex = Q_STEPS.indexOf(step);
 
   return (
-    <div className="aurora-orbs" style={{
+    <div className="aurora-orbs aurora-orbs-live" style={{
       // 100dvh + top:0 so the overlay shrinks with the iOS virtual keyboard
       // (inset:0 + 100vh would leave inputs hidden under the keyboard).
       position: 'fixed', top: 0, left: 0, right: 0,

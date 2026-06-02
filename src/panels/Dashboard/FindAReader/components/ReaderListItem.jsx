@@ -1,4 +1,4 @@
-import { MapPin, ChevronRight } from 'lucide-react';
+import { MapPin, ChevronRight, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
 
@@ -41,14 +41,21 @@ const ReaderListItem = ({ match, onClick }) => {
       }}
     >
       <div className="flex items-center gap-3">
-        {/* Avatar */}
+        {/* Avatar — separate tap target → ReaderProfile */}
         <span
           role="link"
           tabIndex={0}
           onClick={openProfile}
           onKeyDown={(e) => { if (e.key === 'Enter') openProfile(e); }}
           aria-label={`View ${other?.name || 'actor'}'s profile`}
-          className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/60 cursor-pointer"
+          className="relative shrink-0 rounded-full cursor-pointer focus:outline-none transition-transform active:scale-95"
+          style={{
+            // subtle persistent gold ring tells users the avatar is its
+            // own tap target distinct from the chat-opening row click
+            boxShadow: 'inset 0 0 0 2px rgba(212,168,95,0.40)',
+            padding: 2,
+            borderRadius: '9999px',
+          }}
         >
           <ProfilePhoto
             src={other?.headshot || other?.user_image}
@@ -56,10 +63,30 @@ const ReaderListItem = ({ match, onClick }) => {
             initials={initials}
             className="h-14 w-14"
           />
+          {/* Online dot */}
           <span
-            className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-green-500"
-            style={{ borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--aurora-surface-solid)' }}
+            className="absolute bottom-0 right-0 h-3 w-3 rounded-full"
+            style={{
+              background: '#22C55E',
+              borderWidth: 2,
+              borderStyle: 'solid',
+              borderColor: 'var(--aurora-surface-solid)',
+            }}
           />
+          {/* Tiny profile-link badge — top-right, persistent affordance */}
+          <span
+            className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full"
+            style={{
+              width: 16,
+              height: 16,
+              background: 'var(--aurora-heritage-gold)',
+              border: '1.5px solid var(--aurora-surface-solid)',
+              boxShadow: '0 1px 4px rgba(10,10,10,0.18)',
+            }}
+            aria-hidden="true"
+          >
+            <User size={9} color="#FFF" strokeWidth={2.5} />
+          </span>
         </span>
 
         {/* Main content */}

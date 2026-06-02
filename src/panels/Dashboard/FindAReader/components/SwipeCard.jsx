@@ -1,6 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { MapPin, Clock } from 'lucide-react';
 import { tapSelect } from '../../../../utils/haptics';
+import { ReaderPortrait } from '../../../../components/Aurora';
 
 const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   const cardRef = useRef(null);
@@ -129,20 +130,19 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               alt={cleanName}
               style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top' }}
               draggable={false}
-              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1a0a2e 0%,#0f0f1a 50%,#0a1a0a 100%);display:flex;align-items:center;justify-content:center"><span style="font-size:${isMobile ? 120 : 80}px;font-weight:800;color:rgba(255, 130, 128,0.3);user-select:none">${initials}</span></div>`); }}
+              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.parentElement.innerHTML = `<div style="width:100%;height:100%;background:linear-gradient(160deg,#1A1308 0%,#2E2415 45%,#0F0E0A 100%);display:flex;align-items:center;justify-content:center"><span style="font-size:${isMobile ? 120 : 80}px;font-weight:800;color:rgba(212,168,95,0.35);user-select:none">${initials}</span></div>`); }}
             />
             {/* Brand gradient overlay */}
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255, 130, 128,0.12) 0%, transparent 50%, rgba(167,236,218,0.08) 100%)', pointerEvents: 'none' }} />
           </>
         ) : (
-          <div style={{
-            width: '100%', height: '100%',
-            background: 'linear-gradient(160deg, #1a0a2e 0%, #0f0f1a 50%, #0a1a0a 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ fontSize: isMobile ? 120 : 80, fontWeight: 800, color: 'rgba(255, 130, 128,0.3)', userSelect: 'none' }}>
-              {initials}
-            </span>
+          <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+            <ReaderPortrait
+              reader={{ id: actor?.id, name: cleanName, color: actor?.brandColor }}
+              viewWidth={400}
+              viewHeight={isMobile ? 520 : 540}
+              showBackground
+            />
           </div>
         )}
       </div>
@@ -170,13 +170,13 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       {/* ── SLATE stamp (swipe right) */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, left: 20,
-        border: '2.5px solid #4ADE80', color: '#4ADE80',
+        border: '2.5px solid #FCE072', color: '#FCE072',
         fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
         padding: '4px 14px', borderRadius: 6,
         opacity: slateOpacity,
         transform: 'rotate(-12deg)',
         pointerEvents: 'none',
-        textShadow: '0 0 20px rgba(74, 222, 128, 0.55)',
+        textShadow: '0 0 20px rgba(252,224,114,0.55)',
         fontFamily: '"Space Grotesk", sans-serif',
       }}>SLATE</div>
 

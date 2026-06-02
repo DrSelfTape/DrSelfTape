@@ -114,7 +114,7 @@ const FindAReader = () => {
 
   return (
     <div
-      className="aurora-orbs flex min-h-screen flex-col items-center px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))]"
+      className="aurora-orbs aurora-orbs-live flex min-h-screen flex-col items-center px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))]"
       style={{ background: 'var(--aurora-bg)' }}
     >
       {/* Nav bar — hidden on mobile because the SwipeCard takes over the
@@ -226,7 +226,11 @@ const FindAReader = () => {
           backdropFilter: 'blur(12px)',
         }}>
           <Users size={11} />
-          {onlineCount ?? readers.length} readers online
+          {/* Use real onlineCount when BE returns it; otherwise show the
+              honest "X NEARBY" count instead of misleading "online". */}
+          {onlineCount > 0
+            ? `${onlineCount} readers online`
+            : `${readers.length} nearby`}
         </div>
       )}
 

@@ -37,6 +37,9 @@ import adminSlice from './features/admin/adminSlice';
 // User settings (cross-device sync)
 import userSettingsSlice from './features/userSettings/userSettingsSlice';
 
+// Community leaderboard (Aurora v3)
+import leaderboardSlice from './features/leaderboard/leaderboardSlice';
+
 // Define the persist configuration
 // Whitelisted slices hydrate from disk on app launch so users see their
 // last-known data immediately (stale-while-revalidate). Mount-time fetches
@@ -81,6 +84,8 @@ const rootReducer = combineReducers({
   admin: adminSlice,
   // User settings (theme, tutorial, filters — synced across devices)
   userSettings: userSettingsSlice,
+  // Community leaderboard (Aurora v3) — community rank + your_rank
+  leaderboard: leaderboardSlice,
 });
 
 // Create a persisted reducer

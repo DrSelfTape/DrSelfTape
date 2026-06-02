@@ -76,6 +76,114 @@ function extractCharacters(lines) {
     });
 }
 
+/**
+ * AnalyzingPhase — Aurora Processing visual (handoff §6 V1SProcessing).
+ * 3 stacked status rows that cascade through pending → active → done.
+ * Active rows show a 3-dot typing animation with a 16px gold glow;
+ * done rows get a mint check; pending rows show a faded step number.
+ */
+function AnalyzingPhase({ error, onRetry }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (error) return;
+    const timers = [
+      setTimeout(() => setStep(1), 1100),
+      setTimeout(() => setStep(2), 2300),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, [error]);
+
+  const stages = [
+    { k: 0, label: 'Transcribing scene', detail: 'WHISPER · 16kHz' },
+    { k: 1, label: 'Comparing to sides', detail: 'WORD-LEVEL DIFF' },
+    { k: 2, label: 'GPT-4o is listening', detail: 'ACTING NOTES INCOMING' },
+  ];
+
+  return (
+    <div className="aurora-page-in" style={{ paddingTop: 40, maxWidth: 360, margin: '0 auto' }}>
+      <style>{`
+        @keyframes cdsim-typedot { 0%,80%,100% { opacity: 0.25; } 40% { opacity: 1; } }
+        .cdsim-typedot { animation: cdsim-typedot 1.2s ease-in-out infinite; }
+      `}</style>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {stages.map((s) => {
+          const done = s.k < step;
+          const active = s.k === step;
+          return (
+            <div
+              key={s.k}
+              className="aurora-card"
+              style={{
+                padding: '14px 16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 14,
+                opacity: s.k > step ? 0.42 : 1,
+                transition: 'opacity 0.3s',
+              }}
+            >
+              <div
+                style={{
+                  width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                  background: done ? '#9FE6B4' : active ? '#D4A85F' : 'rgba(10,10,10,0.06)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#0E0D0A',
+                  boxShadow: active ? '0 0 16px rgba(212,168,95,0.55)' : 'none',
+                  transition: 'background 0.3s, box-shadow 0.3s',
+                }}
+              >
+                {done && (
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                )}
+                {active && (
+                  <div style={{ display: 'flex', gap: 2 }}>
+                    <div className="cdsim-typedot" style={{ width: 4, height: 4, borderRadius: '50%', background: '#0E0D0A' }} />
+                    <div className="cdsim-typedot" style={{ width: 4, height: 4, borderRadius: '50%', background: '#0E0D0A', animationDelay: '0.2s' }} />
+                    <div className="cdsim-typedot" style={{ width: 4, height: 4, borderRadius: '50%', background: '#0E0D0A', animationDelay: '0.4s' }} />
+                  </div>
+                )}
+                {!done && !active && (
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 12, color: 'var(--aurora-dim)' }}>{s.k + 1}</span>
+                )}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.2px', color: 'var(--aurora-text)' }}>{s.label}</div>
+                <div style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 9, color: 'var(--aurora-dim)', letterSpacing: '0.12em', marginTop: 2 }}>
+                  {s.detail}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {error && (
+        <div style={{ marginTop: 28, textAlign: 'center' }}>
+          <p style={{ color: 'var(--aurora-coral-deep, #C05957)', marginBottom: 14 }}>{error}</p>
+          <button
+            onClick={onRetry}
+            style={{
+              padding: '12px 22px',
+              borderRadius: 12,
+              background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
+              color: '#FFF',
+              border: 'none',
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CDSim() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -244,27 +352,7 @@ export default function CDSim() {
       )}
 
       {step === 'analyzing' && (
-        <div className="flex flex-col items-center justify-center py-24">
-          <div className="w-12 h-12 border-4 border-[#D4A85F] border-t-transparent rounded-full animate-spin mb-6" />
-          <h2 className="text-xl font-semibold text-[#0A0A0A] mb-2">Your coach is reviewing your scene...</h2>
-          <p className="text-[rgba(10,10,10,0.62)] text-sm">
-            Breaking down the beats, choices, and moments. Preparing your notes.
-          </p>
-          {error && (
-            <div className="mt-8 text-center">
-              <p className="text-red-600 mb-4">{error}</p>
-              <button
-                onClick={() => {
-                  setError('');
-                  setStep('analyzing');
-                }}
-                className="px-6 py-3 rounded-xl bg-[#D4A85F] text-[#0A0A0A] font-semibold hover:bg-[#C09850] transition-colors"
-              >
-                Retry
-              </button>
-            </div>
-          )}
-        </div>
+        <AnalyzingPhase error={error} onRetry={() => { setError(''); setStep('analyzing'); }} />
       )}
 
       {step === 'report' && report && (

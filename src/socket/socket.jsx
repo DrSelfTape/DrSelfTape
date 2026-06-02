@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { HeartHandshake } from "lucide-react";
 import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats, fetchGreenRoomMessages, fetchActivityFeed } from "../redux/features/readers/readersMatchSlice";
+import { getNotifications } from "../redux/features/notifications/notificationsSlice";
 import { baseURL } from "../redux/constant";
 
 const SocketContext = React.createContext(null);
@@ -41,6 +42,9 @@ export const SocketProvider = ({ children }) => {
     const { notification_type, data } = parsedData;
 
     setNotifications((prev) => [parsedData, ...prev]);
+    // Refresh the global bell on every incoming socket event so the unread
+    // count / dropdown row appears without waiting for a polling cycle.
+    dispatch(getNotifications());
 
     switch (notification_type) {
       // Someone swiped right on you — refresh data + show toast
@@ -65,7 +69,7 @@ export const SocketProvider = ({ children }) => {
         }
         break;
 
-      // Admin broadcast — show toast
+      // Admin broadcast — show toast (bell already refreshed above)
       case 'admin_broadcast':
         setLikeToast({ fromName: data?.title || 'Dr Self Tape', message: data?.message });
         setTimeout(() => setLikeToast(null), 8000);

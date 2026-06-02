@@ -333,11 +333,14 @@ const readersMatchSlice = createSlice({
       })
       .addCase(sendGreenRoomMessage.fulfilled, (state, action) => {
         const msg = action.payload;
-        if (msg?.matchId) {
-          if (!Array.isArray(state.greenRoomMessages[msg.matchId])) {
-            state.greenRoomMessages[msg.matchId] = [];
+        // BE may return match_id (snake_case) or matchId (camel) — accept
+        // both shapes so persisted messages always land in the right bucket.
+        const key = msg?.matchId || msg?.match_id;
+        if (key) {
+          if (!Array.isArray(state.greenRoomMessages[key])) {
+            state.greenRoomMessages[key] = [];
           }
-          state.greenRoomMessages[msg.matchId].push(msg);
+          state.greenRoomMessages[key].push(msg);
         }
       })
       .addCase(sendGreenRoomMessage.rejected, (state, action) => {

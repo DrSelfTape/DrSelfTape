@@ -40,14 +40,14 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
   const isPlaying = isPlayingKey === label && playingSection === 'playing';
 
   return (
-    <div className="bg-white rounded-xl border border-[rgba(10,10,10,0.08)] p-6">
+    <div className="aurora-card p-6">
       <div className="flex items-start justify-between mb-4">
-        <h3 className="font-serif text-xl font-bold text-[#0A0A0A]">{label}</h3>
+        <h3 className="aurora-display text-xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.3px' }}>{label}</h3>
         <button
           onClick={() => onPlayToggle(label, data)}
           disabled={isLoading}
           className="flex items-center gap-1.5 text-sm font-medium shrink-0 ml-4 transition-colors disabled:opacity-50"
-          style={{ color: isPlaying ? '#7A5A18' : '#D4A85F' }}
+          style={{ color: isPlaying ? 'var(--aurora-heritage-gold-deep)' : 'var(--aurora-heritage-gold)' }}
         >
           {isLoading ? (
             <Loader2 size={16} className="animate-spin" />
@@ -66,11 +66,11 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
             if (!value) return null;
             const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
             return (
-              <div key={key} className="border-l-2 border-[#D4A85F]/30 pl-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#7A5A18]/70 mb-1">
+              <div key={key} style={{ borderLeft: '2px solid rgba(212,168,95,0.30)', paddingLeft: 12 }}>
+                <p className="aurora-eyebrow mb-1" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>
                   {fieldLabel}
                 </p>
-                <p className="text-[#CCCCCC] text-sm leading-relaxed">{value}</p>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--aurora-text)' }}>{value}</p>
               </div>
             );
           })}

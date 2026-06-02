@@ -46,6 +46,20 @@ export default function NotificationBell({ onNavigate }) {
 
   useEffect(() => { dispatch(getNotifications()); }, [dispatch]);
 
+  // Build 23 APNs window events — re-fetch on incoming push so the bell
+  // badge updates in real time while the app is foregrounded; pop the
+  // panel open on tap so the user sees the notification immediately.
+  useEffect(() => {
+    const onReceived = () => dispatch(getNotifications());
+    const onTapped = () => { dispatch(getNotifications()); setOpen(true); };
+    window.addEventListener('drst-push-received', onReceived);
+    window.addEventListener('drst-push-tap', onTapped);
+    return () => {
+      window.removeEventListener('drst-push-received', onReceived);
+      window.removeEventListener('drst-push-tap', onTapped);
+    };
+  }, [dispatch]);
+
   useEffect(() => {
     if (!open) return;
     const handler = (e) => {
@@ -78,7 +92,7 @@ export default function NotificationBell({ onNavigate }) {
   const panelContent = (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--border-default)' }}>
+      <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--aurora-line)' }}>
         <div className="flex items-center gap-2">
           <Bell className="w-4 h-4 text-[#7A5A18]" />
           <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Notifications</h3>
@@ -104,7 +118,7 @@ export default function NotificationBell({ onNavigate }) {
               {markingAll ? 'Marking...' : unread.length === 1 ? 'Mark read' : 'Mark all read'}
             </button>
           )}
-          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}>
+          <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(10,10,10,0.04)', color: 'var(--aurora-sub)' }}>
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -133,7 +147,7 @@ export default function NotificationBell({ onNavigate }) {
           return (
             <div key={notif.id} onClick={() => handleClick(notif)}
               className="flex items-start gap-3 px-5 py-4 cursor-pointer transition-colors"
-              style={{ background: isUnread ? 'rgba(255, 130, 128,0.04)' : 'transparent', borderBottom: '1px solid var(--border-default)' }}
+              style={{ background: isUnread ? 'rgba(255, 130, 128,0.04)' : 'transparent', borderBottom: '1px solid var(--aurora-line)' }}
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15` }}>
                 <Icon className="w-5 h-5" style={{ color }} />

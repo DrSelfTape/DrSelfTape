@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
+import { Plus, Search, FileText, Trash2, Mic, Sparkles } from 'lucide-react';
 import {
   fetchScriptsThunk,
   createScriptThunk,
@@ -47,6 +49,38 @@ function formatDate(dateStr) {
   });
 }
 
+const SCRIPT_PHOTOS = [
+  '/photos/audition-hall-hamlet.png',
+  '/photos/audition-wait-32.png',
+  '/photos/class-table.png',
+  '/photos/night-study.png',
+  '/photos/partners-table.png',
+  '/photos/street-script.png',
+];
+
+function pickScriptPhoto(id) {
+  const s = String(id ?? '');
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = ((h << 5) - h) + s.charCodeAt(i);
+    h |= 0;
+  }
+  return SCRIPT_PHOTOS[Math.abs(h) % SCRIPT_PHOTOS.length];
+}
+
+const inputStyle = {
+  background: 'var(--aurora-surface-solid)',
+  color: 'var(--aurora-text)',
+  border: '1px solid var(--aurora-line)',
+  borderRadius: 10,
+};
+
+const goldGradient = {
+  background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
+  color: '#FFF',
+  boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
+};
+
 // ─── Add Script Modal ────────────────────────────────────────────
 function AddScriptModal({ onClose, onSubmit, loading }) {
   const [title, setTitle] = useState('');
@@ -67,7 +101,6 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
     }
     setFileError('');
     setFileName(file.name);
-    // Auto-fill title from filename if empty
     if (!title.trim()) {
       setTitle(file.name.replace(/\.(pdf|txt)$/i, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()));
     }
@@ -103,84 +136,135 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
     onSubmit({ title: title.trim(), content: content.trim() });
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <form onSubmit={handleSubmit} className="bg-[#F4F4EE] rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6">
-        <h2 className="text-lg font-bold text-[#0A0A0A] mb-4">Add Script</h2>
+  const dropzoneStyle = {
+    border: dragActive ? '2px dashed var(--aurora-heritage-gold)' : '2px dashed var(--aurora-line)',
+    background: dragActive ? 'rgba(212,168,95,0.06)' : 'transparent',
+    borderRadius: 14,
+  };
 
-        {/* Title */}
-        <label className="block text-sm font-medium text-[rgba(10,10,10,0.62)] mb-1">Title</label>
+  const modal = (
+    <div
+      className="fixed inset-0 z-[120] flex items-start justify-center p-4 pt-8 overflow-y-auto"
+      style={{ background: 'rgba(10,10,10,0.45)' }}
+      onClick={onClose}
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-lg max-h-[calc(100dvh-64px)] overflow-y-auto p-5 sm:p-6"
+        style={{
+          background: 'var(--aurora-surface-solid)',
+          borderRadius: 20,
+          border: '1px solid var(--aurora-line)',
+          boxShadow: 'var(--aurora-shadow-modal, 0 24px 60px rgba(10,10,10,0.18))',
+          animation: 'aurora-scale-in 0.2s cubic-bezier(.2,.7,.3,1)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>NEW SCRIPT</span>
+        <h2 className="aurora-display text-xl mb-4" style={{ color: 'var(--aurora-text)' }}>Save a scene</h2>
+
+        <label className="aurora-eyebrow block mb-1" style={{ color: 'var(--aurora-dim)' }}>Title</label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Breaking Bad — Pilot"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F] mb-4"
+          className="w-full px-3 py-2 text-sm outline-none focus:border-[color:var(--aurora-heritage-gold)] mb-4"
+          style={inputStyle}
         />
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4">
-          {[{ key: 'upload', label: '📄 Upload File' }, { key: 'paste', label: '✏️ Paste Text' }].map(t => (
-            <button key={t.key} type="button" onClick={() => setTab(t.key)}
-              className={`px-4 py-1.5 text-sm rounded-lg font-medium transition ${tab === t.key ? 'bg-[#D4A85F] text-[#0A0A0A]' : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)] hover:bg-[#3A3A3A]'}`}>
-              {t.label}
-            </button>
-          ))}
+        <div className="flex gap-1 mb-4">
+          {[
+            { key: 'upload', label: 'Upload File' },
+            { key: 'paste', label: 'Paste Text' },
+          ].map((t) => {
+            const active = tab === t.key;
+            return (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className="px-3 py-1.5 text-xs rounded-full font-semibold transition"
+                style={active
+                  ? { background: 'var(--aurora-heritage-gold)', color: '#FFF' }
+                  : { background: 'rgba(10,10,10,0.04)', color: 'var(--aurora-sub)' }
+                }
+              >
+                {t.label}
+              </button>
+            );
+          })}
         </div>
 
         {tab === 'upload' ? (
-          <div
+          <label
             onDrop={handleDrop}
             onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
             onDragLeave={() => setDragActive(false)}
-            onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors mb-4 ${
-              dragActive ? 'border-[#D4A85F] bg-[#D4A85F]/10' : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F]'
-            }`}
+            className="block p-8 text-center cursor-pointer transition-colors mb-4 relative"
+            style={dropzoneStyle}
           >
             {pdfLoading ? (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-8 h-8 text-[#7A5A18] animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-                  <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                </svg>
-                <p className="text-sm text-[rgba(10,10,10,0.62)]">Parsing PDF...</p>
+                <span
+                  className="w-8 h-8 rounded-full animate-spin"
+                  style={{ border: '3px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }}
+                />
+                <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>Parsing PDF...</p>
               </div>
             ) : fileName ? (
               <div className="flex flex-col items-center gap-2">
-                <span className="text-3xl">{fileName.endsWith('.pdf') ? '📄' : '📝'}</span>
-                <p className="text-sm font-semibold text-[#0A0A0A]">{fileName}</p>
-                <p className="text-xs text-green-600">✓ File loaded — {content.length.toLocaleString()} characters</p>
-                <p className="text-xs text-[rgba(10,10,10,0.4)]">Click to replace</p>
+                <FileText size={28} style={{ color: 'var(--aurora-heritage-gold-deep)' }} />
+                <p className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{fileName}</p>
+                <p className="text-xs" style={{ color: '#1A6A38' }}>✓ Loaded — {content.length.toLocaleString()} characters</p>
+                <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>Tap to replace</p>
               </div>
             ) : (
-              <>
-                <div className="text-4xl mb-3">📄</div>
-                <p className="text-sm font-medium text-[rgba(10,10,10,0.62)]">Drag & drop or click to upload</p>
-                <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">Supports <strong>.pdf</strong> and .txt files</p>
-              </>
+              <div className="flex flex-col items-center gap-2">
+                <FileText size={32} style={{ color: 'var(--aurora-heritage-gold)' }} />
+                <p className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>Drag, drop, or tap to upload</p>
+                <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>
+                  Supports <strong>.pdf</strong> and .txt files
+                </p>
+              </div>
             )}
-            <input ref={fileInputRef} type="file" accept=".pdf,.txt" className="hidden" onChange={e => handleFile(e.target.files?.[0])} />
-          </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.txt"
+              style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+              onChange={(e) => handleFile(e.target.files?.[0])}
+            />
+          </label>
         ) : (
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             rows={10}
             placeholder={'CHARACTER: Dialogue line...\nOTHER CHARACTER: Response...'}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#D4A85F] mb-4 resize-none"
+            className="w-full px-3 py-2 text-sm font-mono outline-none focus:border-[color:var(--aurora-heritage-gold)] mb-4 resize-none"
+            style={inputStyle}
           />
         )}
 
-        {fileError && <p className="text-red-500 text-xs mb-3">{fileError}</p>}
+        {fileError && (
+          <p className="text-xs mb-3" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{fileError}</p>
+        )}
 
-        {/* Actions */}
         <div className="flex justify-end gap-3">
-          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-[rgba(10,10,10,0.62)] hover:text-[#0A0A0A]">Cancel</button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 text-sm font-medium rounded-lg transition"
+            style={{ color: 'var(--aurora-sub)' }}
+          >
+            Cancel
+          </button>
           <button
             type="submit"
             disabled={!title.trim() || !content.trim() || loading || pdfLoading}
-            className="px-5 py-2 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] disabled:opacity-50 transition"
+            className="px-5 py-2 text-sm font-semibold rounded-lg disabled:opacity-50 transition"
+            style={goldGradient}
           >
             {loading ? 'Saving...' : 'Save Script'}
           </button>
@@ -188,6 +272,8 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
       </form>
     </div>
   );
+
+  return createPortal(modal, document.body);
 }
 
 // ─── Script Card ─────────────────────────────────────────────────
@@ -195,61 +281,80 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const chars = parseCharacterCount(script.content);
   const lines = countLines(script.content);
+  const thumb = pickScriptPhoto(script.id);
 
   return (
-    <div className="bg-[#F4F4EE] rounded-xl shadow-sm border border-[rgba(10,10,10,0.08)] p-4 flex flex-col gap-3">
-      <h3 className="font-bold text-[#0A0A0A] text-base truncate">
-        {script.title}
-      </h3>
-
-      <div className="flex flex-wrap gap-3 text-xs text-[rgba(10,10,10,0.62)]">
-        <span>{chars} character{chars !== 1 ? 's' : ''}</span>
-        <span>{lines} line{lines !== 1 ? 's' : ''}</span>
-        <span>{formatDate(script.created_at)}</span>
+    <div className="aurora-card flex flex-col overflow-hidden" style={{ minHeight: 220, padding: 0 }}>
+      {/* Photo thumbnail */}
+      <div
+        style={{
+          height: 90,
+          background: `#0E0D0A url(${thumb}) center 35%/cover`,
+          position: 'relative',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(180deg, transparent 40%, rgba(14,13,10,0.55) 100%)',
+          }}
+        />
       </div>
 
-      <div className="flex gap-2 mt-auto pt-2">
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        <h3 className="font-semibold text-base truncate" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>
+          {script.title}
+        </h3>
+
+        <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs" style={{ color: 'var(--aurora-sub)' }}>
+          <span className="inline-flex items-center gap-1">
+            <span className="w-1 h-1 rounded-full" style={{ background: 'var(--aurora-heritage-gold)' }} />
+            {chars} character{chars !== 1 ? 's' : ''}
+          </span>
+          <span>{lines} line{lines !== 1 ? 's' : ''}</span>
+          <span>{formatDate(script.created_at)}</span>
+        </div>
+
+      <div className="flex gap-2 mt-auto pt-1">
         <button
           onClick={onPractice}
-          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] transition"
+          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg transition"
+          style={goldGradient}
         >
           Practice
         </button>
         <button
           onClick={onCDSim}
-          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg border-2 border-[#D4A85F] text-[#7A5A18] hover:bg-[#D4A85F]/10 transition"
+          className="flex-1 px-3 py-2 text-sm font-semibold rounded-lg transition inline-flex items-center justify-center gap-1.5"
+          style={{
+            background: 'transparent',
+            border: '1.5px solid var(--aurora-heritage-gold)',
+            color: 'var(--aurora-heritage-gold-deep)',
+          }}
         >
+          <Mic size={14} />
           Coach
         </button>
         {confirmDelete ? (
           <button
             onClick={onDelete}
-            className="px-3 py-2 text-sm rounded-lg bg-red-500 text-[#0A0A0A] hover:bg-red-600 transition"
+            className="px-3 py-2 text-sm font-semibold rounded-lg transition"
+            style={{ background: 'var(--aurora-coral, #FF8280)', color: '#FFF' }}
           >
             Confirm
           </button>
         ) : (
           <button
             onClick={() => setConfirmDelete(true)}
-            className="px-3 py-2 text-sm rounded-lg text-[rgba(10,10,10,0.4)] hover:text-red-500 hover:bg-red-50 transition"
+            className="px-3 py-2 text-sm rounded-lg transition"
+            style={{ color: 'var(--aurora-dim)' }}
             title="Delete"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="w-4 h-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
+            <Trash2 size={16} />
           </button>
         )}
+      </div>
       </div>
     </div>
   );
@@ -259,30 +364,22 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
 function EmptyState({ onAdd }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-24 h-24 mb-6 rounded-full bg-[#D4A85F]/10 flex items-center justify-center">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-12 h-12 text-[#7A5A18]"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={1.5}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-          />
-        </svg>
+      <div
+        className="w-24 h-24 mb-6 rounded-full flex items-center justify-center"
+        style={{ background: 'rgba(212,168,95,0.12)' }}
+      >
+        <FileText size={36} style={{ color: 'var(--aurora-heritage-gold-deep)' }} />
       </div>
-      <h3 className="text-lg font-bold text-[#0A0A0A] mb-1">No scripts yet</h3>
-      <p className="text-sm text-[rgba(10,10,10,0.62)] mb-6">
-        Save your scripts here and launch them into practice mode with one click.
+      <h3 className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>No scripts yet</h3>
+      <p className="text-sm mb-6 max-w-sm" style={{ color: 'var(--aurora-sub)' }}>
+        Save your scripts here and launch them into practice mode with one tap.
       </p>
       <button
         onClick={onAdd}
-        className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] transition"
+        className="px-5 py-2.5 text-sm font-semibold rounded-xl inline-flex items-center gap-2 transition"
+        style={goldGradient}
       >
+        <Sparkles size={16} />
         Add your first script
       </button>
     </div>
@@ -323,45 +420,55 @@ export default function Scripts() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto">
-      {/* Header */}
+    <div className="max-w-7xl mx-auto aurora-page-in">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-2xl font-bold text-[#0A0A0A]">My Scripts</h1>
+        <div>
+          <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>YOUR LIBRARY</span>
+          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
+            My Scripts
+          </h1>
+        </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-5 py-2.5 text-sm font-semibold rounded-lg bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850] transition"
+          className="px-5 py-2.5 text-sm font-semibold rounded-xl inline-flex items-center gap-2 transition"
+          style={goldGradient}
         >
-          + Add Script
+          <Plus size={16} />
+          Add Script
         </button>
       </div>
 
-      {/* Search */}
       {scripts.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-6 relative max-w-md">
+          <Search
+            size={16}
+            style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--aurora-dim)' }}
+          />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search scripts..."
-            className="w-full max-w-md border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#D4A85F]"
+            className="w-full pl-9 pr-4 py-2 text-sm outline-none focus:border-[color:var(--aurora-heritage-gold)]"
+            style={inputStyle}
           />
         </div>
       )}
 
-      {/* Content */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="animate-pulse bg-[#F4F4EE] rounded-xl h-48"
+              className="animate-pulse rounded-xl h-40"
+              style={{ background: 'rgba(10,10,10,0.04)' }}
             />
           ))}
         </div>
       ) : filtered.length === 0 && !search ? (
         <EmptyState onAdd={() => setShowModal(true)} />
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-[rgba(10,10,10,0.62)] py-12 text-center">
+        <p className="text-sm py-12 text-center" style={{ color: 'var(--aurora-sub)' }}>
           No scripts match "{search}"
         </p>
       ) : (
@@ -378,7 +485,6 @@ export default function Scripts() {
         </div>
       )}
 
-      {/* Modal */}
       {showModal && (
         <AddScriptModal
           onClose={() => setShowModal(false)}
@@ -386,6 +492,13 @@ export default function Scripts() {
           loading={createLoading}
         />
       )}
+
+      <style>{`
+        @keyframes aurora-scale-in {
+          from { transform: scale(0.95); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+      `}</style>
     </div>
   );
 }

@@ -84,6 +84,11 @@ const actorMenu = [
     icon: <SparklesIcon height={19} width={19} />,
   },
   {
+    path: '/dashboard/leaderboard',
+    text: 'Leaderboard',
+    icon: <SparklesIcon height={19} width={19} />,
+  },
+  {
     path: '/scene-study',
     text: 'Scene Study',
     icon: <SceneStudyIcon height={19} width={19} />,

@@ -164,33 +164,72 @@ export default function Membership({ onClose }) {
   }, [dispatch]);
 
   const handleSubscribe = async (planId) => {
+    // Apple 2.1(b) rejection: the trial button appeared unresponsive
+    // because checkoutLoading could get stuck forever if the IAP plugin
+    // hung. Belt-and-suspenders watchdog clears the disabled state
+    // after 12s so the user can always retry.
     setCheckoutLoading(planId);
+    const watchdog = setTimeout(() => {
+      setCheckoutLoading((cur) => (cur === planId ? null : cur));
+      dispatch(showSnackbar({
+        message: 'Checkout is taking longer than expected. Please try again.',
+        variant: 'error',
+      }));
+    }, 12000);
+    const clearWatchdog = () => clearTimeout(watchdog);
+
+    // Fire the revenue funnel event — Joseph's "Paywall → purchase"
+    // funnel relies on this. Dynamic import keeps the analytics bundle
+    // out of the critical path; failure swallowed so a missing PostHog
+    // key never blocks a real subscription attempt.
+    import('../../../utils/analytics').then(({ trackEvent, Events }) => {
+      trackEvent(Events.PURCHASE, {
+        plan: planId,
+        billing,
+        platform: isNativeIOS() ? 'ios_iap' : 'stripe_web',
+      });
+    }).catch(() => { /* swallow */ });
 
     if (isNativeIOS()) {
-      const result = await iapPurchase(planId, billing);
-      setCheckoutLoading(null);
+      try {
+        const result = await iapPurchase(planId, billing);
+        clearWatchdog();
+        setCheckoutLoading(null);
 
-      if (result.userCancelled) return;
+        if (result.userCancelled) return;
 
-      if (!result.ok) {
-        const msg = result.reason === 'no_package'
-          ? "This plan isn't available in the App Store right now. Please try again later."
-          : 'Purchase failed. Please try again.';
-        dispatch(showSnackbar({ message: msg, variant: 'error' }));
-        return;
+        if (!result.ok) {
+          const msg = result.reason === 'no_package'
+            ? "This plan isn't available in the App Store right now. Please try again later."
+            : 'Purchase failed. Please try again.';
+          dispatch(showSnackbar({ message: msg, variant: 'error' }));
+          return;
+        }
+
+        dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+        setTimeout(() => {
+          axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
+        }, 2000);
+      } catch (err) {
+        // iapPurchase shouldn't throw, but if the plugin itself is
+        // missing or rejects, surface a real error instead of silently
+        // hanging on a spinner.
+        clearWatchdog();
+        setCheckoutLoading(null);
+        dispatch(showSnackbar({
+          message: 'In-App Purchase is unavailable. Please try again or restart the app.',
+          variant: 'error',
+        }));
       }
-
-      dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
-      setTimeout(() => {
-        axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
-      }, 2000);
       return;
     }
 
     try {
       const res = await axiosInstance.post('/v1/subscriptions/checkout/', { plan: planId, billing });
+      clearWatchdog();
       window.location.href = res.data.data.checkout_url;
     } catch (err) {
+      clearWatchdog();
       const message = err?.response?.data?.error || 'Something went wrong starting checkout. Please try again.';
       dispatch(showSnackbar({ message, variant: 'error' }));
       setCheckoutLoading(null);
@@ -233,7 +272,7 @@ export default function Membership({ onClose }) {
   const ctaPrice = sel ? (billing === 'monthly' ? sel.monthly : sel.yearly) : 0;
 
   return (
-    <div className="aurora-orbs" style={{
+    <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'relative', minHeight: '100%',
       padding: '0 0 calc(env(safe-area-inset-bottom, 0px) + 110px)',
     }}>
@@ -243,17 +282,18 @@ export default function Membership({ onClose }) {
         padding: '12px 20px 4px', position: 'sticky', top: 0, zIndex: 10,
       }}>
         {onClose ? (
-          <button onClick={onClose} style={{
-            width: 36, height: 36, borderRadius: 100, border: 'none',
+          <button onClick={onClose} aria-label="Close" style={{
+            // Apple HIG accessibility: minimum 44×44 tap target.
+            width: 44, height: 44, borderRadius: 100, border: 'none',
             background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(20px)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', boxShadow: '0 4px 12px rgba(10,10,10,0.06)',
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
           </button>
-        ) : <div style={{ width: 36 }} />}
+        ) : <div style={{ width: 44 }} />}
         {isNativeIOS() && (
           <button onClick={handleRestore} style={{
             background: 'transparent', border: 'none', cursor: 'pointer',
@@ -392,9 +432,11 @@ export default function Membership({ onClose }) {
                       <div className="aurora-display" style={{
                         fontSize: 18, color: 'var(--aurora-text)',
                       }}>{plan.name}</div>
+                      {/* Apple 3.1.2(c): bill amount must dominate. Bumped to
+                          22px / 700 so it visually outweighs the trial pill below. */}
                       <div style={{ textAlign: 'right' }}>
-                        <span className="aurora-mono" style={{ fontSize: 18, color: 'var(--aurora-text)', fontWeight: 600 }}>${price}</span>
-                        <span style={{ fontSize: 11, color: 'var(--aurora-sub)' }}>/{billing === 'monthly' ? 'mo' : 'yr'}</span>
+                        <span className="aurora-mono" style={{ fontSize: 22, color: 'var(--aurora-text)', fontWeight: 700, letterSpacing: '-0.4px' }}>${price}</span>
+                        <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>/{billing === 'monthly' ? 'mo' : 'yr'}</span>
                       </div>
                     </div>
                     <div style={{
@@ -461,13 +503,29 @@ export default function Membership({ onClose }) {
           </div>
         )}
 
-        {/* Legal */}
+        {/* Legal — full Apple-mandated disclosure block.
+            Auto-renewal language + cancellation location + refund pointer
+            are all required for App Store review under guideline 3.1.2. */}
         <p style={{
           textAlign: 'center', fontSize: 11, lineHeight: 1.55,
           color: 'var(--aurora-sub)', marginBottom: 8, maxWidth: 460,
           marginLeft: 'auto', marginRight: 'auto',
         }}>
-          Subscriptions auto-renew at the price shown until cancelled in your Apple ID Subscription settings.
+          Subscriptions auto-renew at the price shown until cancelled in your
+          Apple ID Subscription settings. You can cancel anytime; cancellation
+          takes effect at the end of the current billing period. Payment is
+          charged to your Apple ID at confirmation. Refunds are handled by
+          Apple at{' '}
+          <a
+            href="https://reportaproblem.apple.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="aurora-link"
+            style={{ fontSize: 11 }}
+          >
+            reportaproblem.apple.com
+          </a>
+          .
         </p>
         <p style={{
           textAlign: 'center', fontSize: 11, color: 'var(--aurora-sub)',
@@ -479,7 +537,9 @@ export default function Membership({ onClose }) {
             Terms (EULA)
           </a>
           {' · '}
-          <a href="/privacy" className="aurora-link" style={{ fontSize: 11 }}>Privacy Policy</a>
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="aurora-link" style={{ fontSize: 11 }}>
+            Privacy Policy
+          </a>
         </p>
       </div>
 
@@ -532,10 +592,25 @@ export default function Membership({ onClose }) {
                   }} />
                   Opening checkout…
                 </span>
-              ) : selIntro?.isFreeTrial ? (
-                <>Start your {selIntroLabel} →</>
               ) : (
-                <>Get {sel?.name} · ${ctaPrice}/{billing === 'monthly' ? 'mo' : 'yr'} →</>
+                /* Apple guideline 3.1.2(c): the billed amount must be
+                   the most clear and conspicuous pricing element. Always
+                   lead with the price (large) and surface the trial
+                   eyebrow above it in smaller, subordinate type. */
+                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 2, lineHeight: 1.15 }}>
+                  {selIntro?.isFreeTrial && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 500, letterSpacing: '0.12em',
+                      textTransform: 'uppercase', opacity: 0.78,
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}>
+                      {selIntroLabel} then
+                    </span>
+                  )}
+                  <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.3px' }}>
+                    ${ctaPrice}/{billing === 'monthly' ? 'month' : 'year'} →
+                  </span>
+                </span>
               )}
             </button>
           )}

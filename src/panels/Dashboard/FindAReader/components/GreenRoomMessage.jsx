@@ -1,8 +1,65 @@
-import { FileText, ExternalLink } from 'lucide-react';
+import { FileText, ExternalLink, Flag } from 'lucide-react';
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import http from '../../../../redux/http';
+import { baseURL } from '../../../../redux/constant';
+import { showSnackbar } from '../../../../redux/features/snackbarSlice/snackbarSlice';
 
 const GreenRoomMessage = ({ message, isOwn = false }) => {
+  const dispatch = useDispatch();
+  const [flagging, setFlagging] = useState(false);
+
+  // Per-message flag (Apple guideline 1.2). Only surfaced on partner
+  // messages — you don't report yourself. Calls the same content-report
+  // endpoint as the user-level ReportBlockMenu but scoped to a single
+  // message id so moderators can see exactly what was flagged.
+  const handleFlag = async () => {
+    const messageId = message.id || message.message_id;
+    if (!messageId || isOwn || flagging) return;
+    if (typeof window !== 'undefined' && !window.confirm('Report this message?')) return;
+    setFlagging(true);
+    try {
+      await http.post(`${baseURL}/v1/community/report/`, {
+        target_type: 'message',
+        target_object_id: messageId,
+        reason: 'inappropriate',
+        details: 'Reported from chat thread.',
+      });
+      dispatch(showSnackbar({ message: 'Thanks — our team will review this.', variant: 'success' }));
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Could not submit report.';
+      dispatch(showSnackbar({ message: msg, variant: 'error' }));
+    } finally {
+      setFlagging(false);
+    }
+  };
+
   const text = message.text || message.content || '';
   const type = message.message_type || message.type || 'text';
+
+  // Tiny flag affordance shown on partner messages. Inline (not a hover
+  // state) so the surface is reachable on touch devices too.
+  const flagBtn = (!isOwn && type !== 'system') ? (
+    <button
+      type="button"
+      onClick={handleFlag}
+      disabled={flagging}
+      title="Report this message"
+      aria-label="Report this message"
+      style={{
+        background: 'transparent',
+        border: 'none',
+        padding: 4,
+        marginLeft: 2,
+        color: 'var(--aurora-dim)',
+        cursor: flagging ? 'wait' : 'pointer',
+        opacity: 0.6,
+        alignSelf: 'flex-end',
+      }}
+    >
+      <Flag size={11} />
+    </button>
+  ) : null;
   const fileUrl = message.file_url || message.fileUrl || '';
   const fileName = message.fileName || (fileUrl ? fileUrl.split('/').pop() : 'Sides');
   const time = message.timestamp
@@ -25,7 +82,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
   // File / sides message
   if (type === 'file' || type === 'sides' || fileUrl) {
     return (
-      <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3`}>
+      <div className={`flex ${isOwn ? 'justify-end' : 'justify-start'} mb-3 items-end gap-1`}>
         <div
           className={`max-w-[75%] rounded-2xl px-4 py-3 ${
             isOwn
@@ -55,6 +112,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
           </a>
           <p className={`text-[10px] mt-2 text-right ${isOwn ? 'text-white/60' : ''}`} style={!isOwn ? { color: 'var(--text-muted)' } : {}}>{time}</p>
         </div>
+        {flagBtn}
       </div>
     );
   }
@@ -83,6 +141,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
           {time}
         </p>
       </div>
+      {flagBtn}
     </div>
   );
 };

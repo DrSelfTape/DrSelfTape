@@ -160,10 +160,12 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
               key={i}
               className="rounded-xl px-3 py-2.5 transition-colors"
               style={{
-                background: isUser ? 'color-mix(in oklch, var(--aurora-accent) 12%, transparent)' : 'transparent',
+                background: isUser ? 'rgba(212,168,95,0.10)' : 'transparent',
                 borderLeft: isUser
-                  ? '3px solid var(--aurora-accent)'
-                  : '3px solid var(--aurora-line)',
+                  ? '2px solid var(--aurora-heritage-gold)'
+                  : 'none',
+                paddingLeft: isUser ? 14 : 14,
+                boxShadow: isUser ? 'inset 6px 0 12px -8px rgba(212,168,95,0.55)' : 'none',
               }}
             >
               <span
@@ -171,7 +173,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
                 style={{
                   fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase',
                   display: 'block', marginBottom: 4,
-                  color: isUser ? 'var(--aurora-accent)' : 'var(--aurora-dim)',
+                  color: isUser ? 'var(--aurora-heritage-gold-deep)' : 'var(--aurora-dim)',
                   fontWeight: 700,
                 }}
               >
@@ -181,7 +183,7 @@ export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLi
                 style={{
                   lineHeight: 1.5, fontSize: 15,
                   color: isUser ? 'var(--aurora-text)' : 'var(--aurora-sub)',
-                  fontWeight: isUser ? 500 : 400,
+                  fontWeight: isUser ? 600 : 400,
                   margin: 0,
                 }}
               >

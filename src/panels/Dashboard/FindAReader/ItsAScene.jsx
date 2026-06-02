@@ -1,13 +1,26 @@
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Clapperboard } from 'lucide-react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { V1Sparkles } from '../../../components/Aurora';
+import { fetchMatches } from '../../../redux/features/readers/readersMatchSlice';
 
 const ItsAScene = (props = {}) => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const params = useParams();
   const matchId = props.matchId || params.matchId;
   const { matches } = useSelector((state) => state.readersMatch || {});
   const match = matches?.find((m) => String(m.id) === String(matchId));
+
+  // Deep-link / page-refresh fallback: if `matches` hasn't loaded yet,
+  // pull it now so the celebration screen has real names + headshots
+  // instead of "ME" / "Your Reader".
+  useEffect(() => {
+    if (matchId && (!Array.isArray(matches) || matches.length === 0)) {
+      dispatch(fetchMatches());
+    }
+  }, [matchId, matches, dispatch]);
 
   const myName = 'You';
   const theirName = match?.reader?.name || 'Your Reader';
@@ -21,20 +34,31 @@ const ItsAScene = (props = {}) => {
         background: 'linear-gradient(160deg, #F0D097 0%, #D4A85F 50%, #7A5A18 100%)',
       }}
     >
-      {/* Headshots */}
-      <div className="flex items-center justify-center mb-8" style={{ marginRight: '-16px' }}>
+      {/* Headshots — with sparkle burst on mount */}
+      <div className="relative flex items-center justify-center mb-8" style={{ marginRight: '-16px' }}>
+        <V1Sparkles count={14} radius={120} size={7} color="#FFFFFF" duration={1200} delayStagger={50} />
         <div
           className="w-32 h-32 rounded-full border-4 border-white shadow-2xl flex items-center justify-center z-10"
           style={{ background: 'rgba(255,255,255,0.18)', backdropFilter: 'blur(12px)' }}
         >
           <span className="text-3xl font-bold text-white">{myInitials}</span>
         </div>
-        <div
+        <button
+          type="button"
+          onClick={() => {
+            const otherActorId = match?.other_actor?.id || match?.reader?.id;
+            if (otherActorId) navigate(`/dashboard/reader-profile/${otherActorId}`);
+          }}
+          aria-label={`View ${theirName}'s profile`}
           className="w-32 h-32 rounded-full border-4 border-white shadow-2xl flex items-center justify-center -ml-6"
-          style={{ background: 'linear-gradient(135deg, #7A5A18, #4A3A10)' }}
+          style={{
+            background: 'linear-gradient(135deg, #7A5A18, #4A3A10)',
+            cursor: 'pointer',
+            padding: 0,
+          }}
         >
           <span className="text-3xl font-bold text-white">{theirInitials}</span>
-        </div>
+        </button>
       </div>
 
       {/* Clapperboard */}

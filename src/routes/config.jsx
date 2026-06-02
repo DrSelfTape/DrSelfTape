@@ -69,6 +69,8 @@ const Marketplace = lazy(() => import('../panels/Dashboard/Marketplace'));
 const SelfTapes = lazy(() => import('../panels/Dashboard/SelfTapes'));
 const Admin = lazy(() => import('../panels/Dashboard/Admin'));
 const Jericho = lazy(() => import('../panels/Dashboard/Jericho'));
+const CraftJourney = lazy(() => import('../panels/Dashboard/CraftJourney'));
+const Leaderboard = lazy(() => import('../panels/Dashboard/Leaderboard'));
 
 // Lazy-loaded Find a Reader imports
 const FindAReader = lazy(() => import('../panels/Dashboard/FindAReader'));
@@ -132,6 +134,8 @@ export const commonRoutes = [
       { path: 'profile', moduleName: 'Profile', element: <DashboardProfile /> },
       { path: 'generator', moduleName: 'AuditionGenerator', element: <AuditionGenerator /> },
       { path: 'jericho', moduleName: 'Jericho', element: <Jericho /> },
+      { path: 'craft-journey', moduleName: 'CraftJourney', element: <CraftJourney /> },
+      { path: 'leaderboard', moduleName: 'Leaderboard', element: <Leaderboard /> },
       { path: 'casting-director-ai', moduleName: 'CastingDirectorAI', element: <CastingDirectorAI /> },
       // Find a Reader
       { path: 'find-a-reader', moduleName: 'FindAReader', element: <FindAReader /> },

@@ -1,16 +1,11 @@
 /**
- * Auditions Kanban — Drag & Drop Tracker
- * src/panels/Dashboard/Auditions/index.jsx
- *
- * Features:
- *  • @dnd-kit drag-and-drop kanban columns
- *  • Filter pills by project type (client-side)
- *  • Click → detail side panel (view / edit / delete)
- *  • Quick-action buttons on each card (advance / pass)
- *  • Callback countdown badges + pulse glow
+ * Auditions Kanban — Aurora v1.2 reskin.
+ * Drag/drop, type filters, detail side panel, new audition modal (manual/paste/PDF/screenshot).
+ * Visual layer rewritten to Aurora tokens; logic preserved.
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   DndContext,
@@ -28,10 +23,10 @@ import {
 import { useDroppable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  X, ChevronRight, ChevronDown, Trash2, Edit3, Save,
+  X, Trash2, Edit3, Save,
   GripVertical, CheckCircle2, XCircle, Calendar, Clock,
   Film, Mic, Theater, Megaphone, Building2, Clapperboard,
-  Plus, Search, Filter,
+  Plus, Sparkles,
 } from 'lucide-react';
 import {
   fetchTrackerThunk,
@@ -40,24 +35,22 @@ import {
   deleteAuditionThunk,
   createAuditionThunk,
 } from '../../../redux/features/auditions/auditionsSlice';
+import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 
-/* ═══════════════════════════════════════════════════════════════════
-   CONSTANTS
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── constants ─────────────────────────────────────────────────── */
 
 const COLUMNS = [
-  { id: 'submitted',  label: 'Submitted',  color: '#6b7280' },
-  { id: 'in_review',  label: 'In Review',  color: '#3b82f6' },
-  { id: 'audition',   label: 'Audition',   color: '#FF8280' },
-  { id: 'callback',   label: 'Callback',   color: '#f59e0b' },
-  { id: 'booked',     label: 'Booked',     color: '#22c55e' },
-  { id: 'passed',     label: 'Passed',     color: '#ef4444' },
+  { id: 'submitted',  label: 'Submitted',  color: 'var(--aurora-sub)' },
+  { id: 'in_review',  label: 'In Review',  color: 'var(--aurora-sky)' },
+  { id: 'audition',   label: 'Audition',   color: 'var(--aurora-coral, #FF8280)' },
+  { id: 'callback',   label: 'Callback',   color: 'var(--aurora-heritage-gold)' },
+  { id: 'booked',     label: 'Booked',     color: 'var(--aurora-mint)' },
+  { id: 'passed',     label: 'Passed',     color: 'var(--aurora-dim)' },
 ];
 
 const STATUS_ORDER = ['submitted', 'in_review', 'audition', 'callback', 'booked'];
 
-// Map internal status → API status (backend uses "reviewed" not "in_review")
 const STATUS_TO_API = {
   submitted: 'submitted',
   in_review: 'reviewed',
@@ -78,17 +71,15 @@ const TYPE_FILTERS = [
 ];
 
 const TYPE_BADGES = {
-  film: { bg: 'bg-orange-500/10 text-orange-400', dot: 'bg-orange-400' },
-  commercial: { bg: 'bg-blue-500/10 text-blue-400', dot: 'bg-blue-400' },
-  theatrical: { bg: 'bg-violet-500/10 text-violet-400', dot: 'bg-violet-400' },
-  industrial: { bg: 'bg-[#2A2A2A] text-[#999999]', dot: 'bg-[#666666]' },
-  theater: { bg: 'bg-green-500/10 text-green-400', dot: 'bg-green-400' },
-  voiceover: { bg: 'bg-yellow-500/10 text-yellow-400', dot: 'bg-yellow-400' },
+  film:       { dot: 'var(--aurora-peach)',   tint: 'rgba(255,201,163,0.18)', ink: '#8A4A1A' },
+  commercial: { dot: 'var(--aurora-sky)',     tint: 'rgba(167,214,255,0.22)', ink: '#1E5A8A' },
+  theatrical: { dot: 'var(--aurora-purple)',  tint: 'rgba(216,197,242,0.22)', ink: '#5A3A8A' },
+  industrial: { dot: 'var(--aurora-dim)',     tint: 'rgba(10,10,10,0.06)',    ink: 'var(--aurora-sub)' },
+  theater:    { dot: 'var(--aurora-mint)',    tint: 'rgba(159,230,180,0.22)', ink: '#1A6A38' },
+  voiceover:  { dot: 'var(--aurora-gold)',    tint: 'rgba(252,224,114,0.22)', ink: 'var(--aurora-gold-deep)' },
 };
 
-/* ═══════════════════════════════════════════════════════════════════
-   HELPERS
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── helpers ───────────────────────────────────────────────────── */
 
 function callbackLabel(dateStr) {
   if (!dateStr) return null;
@@ -109,9 +100,7 @@ function nextStatus(current) {
   return STATUS_ORDER[idx + 1];
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   SORTABLE AUDITION CARD
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── sortable card ─────────────────────────────────────────────── */
 
 function SortableCard({ audition, onClick, onAdvance, onPass }) {
   const {
@@ -123,7 +112,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
     isDragging,
   } = useSortable({ id: String(audition.id) });
 
-  const style = {
+  const dragStyle = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
@@ -135,37 +124,48 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`
-        group relative bg-white rounded-xl border border-[#2A2A2A] shadow-sm
-        transition-all duration-200 cursor-pointer
-        ${isDragging ? 'shadow-xl opacity-90 rotate-1 scale-105 z-50' : 'hover:border-[#3A3A3A]'}
-        ${cb?.urgent ? 'ring-2 ring-[#FF8280]/40 animate-[pulse-glow_2s_ease-in-out_infinite]' : ''}
-      `}
+      style={{
+        ...dragStyle,
+        background: 'var(--aurora-surface-solid)',
+        borderRadius: 14,
+        border: '1px solid var(--aurora-line)',
+        boxShadow: isDragging
+          ? '0 16px 40px rgba(10,10,10,0.18)'
+          : '0 1px 2px rgba(10,10,10,0.04), 0 6px 16px rgba(10,10,10,0.04)',
+        cursor: 'pointer',
+        position: 'relative',
+        transform: isDragging ? 'rotate(1deg) scale(1.03)' : dragStyle.transform,
+        opacity: isDragging ? 0.92 : 1,
+        outline: cb?.urgent ? '2px solid var(--aurora-coral, #FF8280)' : 'none',
+        outlineOffset: cb?.urgent ? -1 : 0,
+      }}
+      className="group transition-shadow"
       onClick={() => onClick(audition)}
     >
-      {/* Drag Handle */}
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-2.5 left-1.5 text-[#666666] hover:text-[#999999] cursor-grab active:cursor-grabbing"
+        className="absolute top-2.5 left-1.5 cursor-grab active:cursor-grabbing"
+        style={{ color: 'var(--aurora-dim)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <GripVertical size={14} />
       </div>
 
       <div className="pl-6 pr-3 py-3">
-        {/* Header */}
         <div className="flex items-start justify-between gap-2">
-          <h4 className="text-sm font-semibold text-white leading-tight line-clamp-1">
+          <h4
+            className="text-sm font-semibold leading-tight line-clamp-1"
+            style={{ color: 'var(--aurora-text)' }}
+          >
             {audition.project_title}
           </h4>
-          {/* Quick Actions */}
           <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
             {canAdvance && (
               <button
                 onClick={(e) => { e.stopPropagation(); onAdvance(audition); }}
-                className="p-1 rounded-lg text-green-500 hover:bg-green-500/10 transition-colors"
+                className="p-1 rounded-lg transition-colors"
+                style={{ color: 'var(--aurora-mint, #2A9F58)' }}
                 title="Advance status"
               >
                 <CheckCircle2 size={15} />
@@ -173,7 +173,8 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
             )}
             <button
               onClick={(e) => { e.stopPropagation(); onPass(audition); }}
-              className="p-1 rounded-lg text-red-400 hover:bg-red-500/10 transition-colors"
+              className="p-1 rounded-lg transition-colors"
+              style={{ color: 'var(--aurora-coral, #FF8280)' }}
               title="Move to passed"
             >
               <XCircle size={15} />
@@ -181,26 +182,33 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
           </div>
         </div>
 
-        {/* Character & CD */}
         {audition.character && (
-          <p className="text-xs text-[#999999] mt-0.5 line-clamp-1">
-            as <span className="font-medium text-white">{audition.character}</span>
+          <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--aurora-sub)' }}>
+            as <span className="font-medium" style={{ color: 'var(--aurora-text)' }}>{audition.character}</span>
           </p>
         )}
         {audition.casting_director && (
-          <p className="text-xs text-[#666666] mt-0.5 line-clamp-1">
+          <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--aurora-dim)' }}>
             CD: {audition.casting_director}
           </p>
         )}
 
-        {/* Footer: type badge + callback */}
         <div className="flex items-center justify-between mt-2.5 gap-2">
-          <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${badge.bg}`}>
-            <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+          <span
+            className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+            style={{ background: badge.tint, color: badge.ink }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full" style={{ background: badge.dot }} />
             {audition.project_type}
           </span>
           {cb && (
-            <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${cb.urgent ? 'bg-orange-500/10 text-orange-400' : 'bg-[#2A2A2A] text-[#666666]'}`}>
+            <span
+              className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+              style={cb.urgent
+                ? { background: 'rgba(255,130,128,0.14)', color: 'var(--aurora-coral-deep, #C05957)' }
+                : { background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }
+              }
+            >
               <Clock size={10} />
               {cb.text}
             </span>
@@ -211,21 +219,32 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   STATIC CARD (for DragOverlay — no sortable hooks)
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── static card (drag overlay) ────────────────────────────────── */
 
 function StaticCard({ audition }) {
   const badge = TYPE_BADGES[audition.project_type] || TYPE_BADGES.film;
   return (
-    <div className="bg-white rounded-xl border border-[#2A2A2A] shadow-xl opacity-90 rotate-1 scale-105 w-64">
+    <div
+      style={{
+        background: 'var(--aurora-surface-solid)',
+        borderRadius: 14,
+        border: '1px solid var(--aurora-line)',
+        boxShadow: '0 16px 40px rgba(10,10,10,0.22)',
+        width: 256,
+        transform: 'rotate(1deg) scale(1.03)',
+        opacity: 0.94,
+      }}
+    >
       <div className="px-4 py-3">
-        <h4 className="text-sm font-semibold text-white">{audition.project_title}</h4>
+        <h4 className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{audition.project_title}</h4>
         {audition.character && (
-          <p className="text-xs text-[#999999] mt-0.5">as {audition.character}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-sub)' }}>as {audition.character}</p>
         )}
-        <span className={`inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mt-2 ${badge.bg}`}>
-          <span className={`w-1.5 h-1.5 rounded-full ${badge.dot}`} />
+        <span
+          className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mt-2"
+          style={{ background: badge.tint, color: badge.ink }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full" style={{ background: badge.dot }} />
           {audition.project_type}
         </span>
       </div>
@@ -233,9 +252,7 @@ function StaticCard({ audition }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   DROPPABLE COLUMN
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── droppable column ──────────────────────────────────────────── */
 
 function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
@@ -243,26 +260,27 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
 
   return (
     <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
-      {/* Column Header */}
       <div className="flex items-center gap-2 mb-3 px-1">
+        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: column.color }} />
+        <h3 className="aurora-eyebrow" style={{ color: 'var(--aurora-sub)' }}>{column.label}</h3>
         <span
-          className="w-2.5 h-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: column.color }}
-        />
-        <h3 className="text-sm font-semibold text-[#999999]">{column.label}</h3>
-        <span className="text-xs text-[#666666] font-medium bg-[#2A2A2A] px-1.5 py-0.5 rounded-full ml-auto">
+          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full ml-auto"
+          style={{ background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }}
+        >
           {items.length}
         </span>
       </div>
 
-      {/* Card Stack */}
       <div
         ref={setNodeRef}
-        className={`
-          flex-1 flex flex-col gap-2 p-2 rounded-xl min-h-[200px]
-          transition-colors duration-200
-          ${isOver ? 'bg-[#D4A85F]/5 ring-2 ring-[#FF8280]/20' : 'bg-[#FAFAF7]/60'}
-        `}
+        className="flex-1 flex flex-col gap-2 p-2 rounded-2xl min-h-[200px] transition-colors duration-200"
+        style={{
+          background: isOver
+            ? 'linear-gradient(180deg, rgba(212,168,95,0.10), rgba(212,168,95,0.04))'
+            : 'rgba(10,10,10,0.025)',
+          outline: isOver ? '2px dashed var(--aurora-heritage-gold)' : 'none',
+          outlineOffset: -2,
+        }}
       >
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {items.map((audition) => (
@@ -277,7 +295,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
         </SortableContext>
 
         {items.length === 0 && (
-          <div className="flex items-center justify-center h-24 text-xs text-[#666666]">
+          <div className="flex items-center justify-center h-24 text-xs" style={{ color: 'var(--aurora-dim)' }}>
             Drop here
           </div>
         )}
@@ -286,9 +304,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   DETAIL SIDE PANEL
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── detail side panel (portaled) ──────────────────────────────── */
 
 function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
   const [editing, setEditing] = useState(false);
@@ -304,7 +320,6 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
     }
   }, [audition]);
 
-  // Close on click outside
   useEffect(() => {
     function handleClick(e) {
       if (panelRef.current && !panelRef.current.contains(e.target)) {
@@ -324,15 +339,23 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
     setEditing(false);
   };
 
+  const inputStyle = {
+    background: 'var(--aurora-surface-solid)',
+    color: 'var(--aurora-text)',
+    border: '1px solid var(--aurora-line)',
+    borderRadius: 10,
+  };
+
   const Field = ({ label, field, type = 'text', options }) => (
     <div className="space-y-1">
-      <label className="text-xs font-medium text-[#666666] uppercase tracking-wider">{label}</label>
+      <label className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)' }}>{label}</label>
       {editing ? (
         type === 'select' ? (
           <select
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F] outline-none transition-all"
+            className="w-full text-sm px-3 py-2 outline-none transition-all focus:border-[color:var(--aurora-heritage-gold)]"
+            style={inputStyle}
           >
             {options.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -343,58 +366,68 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
             rows={3}
-            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F] outline-none transition-all resize-none"
+            className="w-full text-sm px-3 py-2 outline-none transition-all resize-none focus:border-[color:var(--aurora-heritage-gold)]"
+            style={inputStyle}
           />
         ) : (
           <input
             type={type}
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F] outline-none transition-all"
+            className="w-full text-sm px-3 py-2 outline-none transition-all focus:border-[color:var(--aurora-heritage-gold)]"
+            style={inputStyle}
           />
         )
       ) : (
-        <p className="text-sm text-white">{form[field] || '—'}</p>
+        <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>{form[field] || '—'}</p>
       )}
     </div>
   );
 
   const cb = callbackLabel(audition.callback_date);
 
-  return (
+  const panel = (
     <>
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black/20 z-40 transition-opacity" />
-
-      {/* Panel */}
+      <div className="fixed inset-0 z-[110]" style={{ background: 'rgba(10,10,10,0.25)' }} />
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-96 bg-[#FAFAF7] z-50 shadow-2xl border-l border-[#2A2A2A] overflow-y-auto animate-[slide-in_0.25s_ease-out]"
+        className="fixed top-0 right-0 h-full w-96 z-[120] overflow-y-auto"
+        style={{
+          background: 'var(--aurora-page)',
+          borderLeft: '1px solid var(--aurora-line)',
+          boxShadow: 'var(--aurora-shadow-modal, 0 24px 60px rgba(10,10,10,0.18))',
+          animation: 'aurora-slide-in 0.25s cubic-bezier(.2,.7,.3,1)',
+        }}
       >
-        {/* Header */}
-        <div className="sticky top-0 bg-[#FAFAF7] border-b border-[#2A2A2A] px-5 py-4 flex items-center justify-between z-10">
-          <h2 className="text-base font-bold text-white line-clamp-1 pr-4">
+        <div
+          className="sticky top-0 px-5 py-4 flex items-center justify-between z-10"
+          style={{ background: 'var(--aurora-page)', borderBottom: '1px solid var(--aurora-line)' }}
+        >
+          <h2 className="aurora-display text-base line-clamp-1 pr-4" style={{ color: 'var(--aurora-text)' }}>
             {audition.project_title}
           </h2>
           <div className="flex items-center gap-1">
             {editing ? (
               <button
                 onClick={handleSave}
-                className="p-2 rounded-lg bg-[#D4A85F] text-white hover:bg-[#C09850] transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ background: 'var(--aurora-heritage-gold)', color: '#FFF' }}
               >
                 <Save size={16} />
               </button>
             ) : (
               <button
                 onClick={() => setEditing(true)}
-                className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-white transition-colors"
+                className="p-2 rounded-lg transition-colors"
+                style={{ color: 'var(--aurora-sub)' }}
               >
                 <Edit3 size={16} />
               </button>
             )}
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-[#666666] hover:text-white hover:bg-white transition-colors"
+              className="p-2 rounded-lg transition-colors"
+              style={{ color: 'var(--aurora-sub)' }}
             >
               <X size={16} />
             </button>
@@ -402,21 +435,26 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Callback Badge */}
           {cb && (
-            <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium ${cb.urgent ? 'bg-orange-500/10 text-orange-400' : 'bg-white text-[#999999]'}`}>
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
+              style={cb.urgent
+                ? { background: 'rgba(255,130,128,0.14)', color: 'var(--aurora-coral-deep, #C05957)' }
+                : { background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }
+              }
+            >
               <Calendar size={14} />
               Callback {cb.text}
             </div>
           )}
 
-          {/* Move-to Status Dropdown */}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-[#666666] uppercase tracking-wider">Status</label>
+            <label className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)' }}>Status</label>
             <select
               value={audition._column}
               onChange={(e) => onStatusChange(audition.id, e.target.value)}
-              className="w-full text-sm font-medium border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F] outline-none"
+              className="w-full text-sm font-medium px-3 py-2 outline-none"
+              style={inputStyle}
             >
               {COLUMNS.map((col) => (
                 <option key={col.id} value={col.id}>{col.label}</option>
@@ -424,7 +462,6 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             </select>
           </div>
 
-          {/* Fields */}
           <Field label="Project" field="project_title" />
           <Field label="Character" field="character" />
           <Field label="Casting Director" field="casting_director" />
@@ -445,20 +482,23 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
           <Field label="Callback Date" field="callback_date" type="datetime-local" />
           <Field label="Notes" field="notes" type="textarea" />
 
-          {/* Delete */}
-          <div className="pt-4 border-t border-[#2A2A2A]">
+          <div className="pt-4" style={{ borderTop: '1px solid var(--aurora-line)' }}>
             {confirmDelete ? (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-red-600 font-medium">Delete this audition?</span>
+                <span className="text-sm font-medium" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>
+                  Delete this audition?
+                </span>
                 <button
                   onClick={() => onDelete(audition.id)}
-                  className="px-3 py-1.5 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600 transition-colors"
+                  className="px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors"
+                  style={{ background: 'var(--aurora-coral, #FF8280)', color: '#FFF' }}
                 >
                   Confirm
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="px-3 py-1.5 bg-[#2A2A2A] text-[#999999] text-sm font-medium rounded-lg hover:bg-[#3A3A3A] transition-colors"
+                  className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors"
+                  style={{ background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }}
                 >
                   Cancel
                 </button>
@@ -466,7 +506,8 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             ) : (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="flex items-center gap-2 text-sm text-red-400 hover:text-red-600 transition-colors"
+                className="flex items-center gap-2 text-sm transition-colors"
+                style={{ color: 'var(--aurora-coral-deep, #C05957)' }}
               >
                 <Trash2 size={14} />
                 Delete audition
@@ -477,14 +518,14 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
       </div>
     </>
   );
+
+  return createPortal(panel, document.body);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   NEW AUDITION FORM (modal)
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── new audition modal (portaled) ─────────────────────────────── */
 
 function NewAuditionModal({ open, onClose, onSubmit }) {
-  const [mode, setMode] = useState('manual'); // 'manual' | 'paste' | 'pdf' | 'screenshot'
+  const [mode, setMode] = useState('manual');
   const [pasteText, setPasteText] = useState('');
   const [parsing, setParsing] = useState(false);
   const [parseError, setParseError] = useState('');
@@ -497,7 +538,13 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
 
   if (!open) return null;
 
-  const inputCls = 'w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F] outline-none transition-all';
+  const inputStyle = {
+    background: 'var(--aurora-surface-solid)',
+    color: 'var(--aurora-text)',
+    border: '1px solid var(--aurora-line)',
+    borderRadius: 10,
+  };
+  const inputCls = 'w-full text-sm px-3 py-2.5 outline-none transition-all focus:border-[color:var(--aurora-heritage-gold)]';
 
   const resetForm = () => {
     setForm({ project: '', role: '', casting_director: '', agency: '', project_type: 'film', callback_date: '', notes: '' });
@@ -530,8 +577,8 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
         project_type: parsed.project_type || prev.project_type,
         notes: parsed.notes || prev.notes,
       }));
-      setMode('manual'); // switch to form to review/edit
-    } catch (err) {
+      setMode('manual');
+    } catch {
       setParseError('Could not parse breakdown — please fill in manually.');
     } finally {
       setParsing(false);
@@ -557,7 +604,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       }
       const text = cleanScriptText(pages.join('\n'));
       await parseWithAI(text);
-    } catch (err) {
+    } catch {
       setParseError('Could not read PDF — try pasting the text instead.');
       setParsing(false);
     }
@@ -586,145 +633,194 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
         notes: parsed.notes || prev.notes,
       }));
       setMode('manual');
-    } catch (err) {
+    } catch {
       setParseError('Could not read screenshot — try pasting the text instead.');
     } finally {
       setParsing(false);
     }
   };
 
-  return (
+  const dropzoneStyle = {
+    border: '2px dashed var(--aurora-line)',
+    borderRadius: 14,
+  };
+
+  const modal = (
     <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+      <div
+        className="fixed inset-0 z-[110]"
+        style={{ background: 'rgba(10,10,10,0.45)' }}
+        onClick={onClose}
+      />
+      <div className="fixed inset-0 flex items-start justify-center z-[120] p-4 pt-8 overflow-y-auto">
         <div
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-[scale-in_0.2s_ease-out]"
+          className="w-full max-w-lg max-h-[calc(100dvh-64px)] overflow-y-auto"
+          style={{
+            background: 'var(--aurora-surface-solid)',
+            borderRadius: 20,
+            border: '1px solid var(--aurora-line)',
+            boxShadow: 'var(--aurora-shadow-modal, 0 24px 60px rgba(10,10,10,0.18))',
+            animation: 'aurora-scale-in 0.2s cubic-bezier(.2,.7,.3,1)',
+          }}
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#2A2A2A]">
-            <h2 className="text-lg font-bold text-white">New Audition</h2>
-            <button type="button" onClick={() => { resetForm(); onClose(); }} className="p-1 rounded-lg text-[#666666] hover:text-white hover:bg-[#2A2A2A]">
+          <div
+            className="flex items-center justify-between px-6 pt-6 pb-4"
+            style={{ borderBottom: '1px solid var(--aurora-line)' }}
+          >
+            <div>
+              <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>NEW AUDITION</span>
+              <h2 className="aurora-display text-xl" style={{ color: 'var(--aurora-text)' }}>Track an opportunity</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => { resetForm(); onClose(); }}
+              className="p-1 rounded-lg"
+              style={{ color: 'var(--aurora-sub)' }}
+            >
               <X size={18} />
             </button>
           </div>
 
-          {/* Mode Tabs */}
-          <div className="flex gap-1 px-6 pt-4 pb-2">
+          <div className="flex gap-1 px-6 pt-4 pb-2 flex-wrap">
             {[
-              { id: 'manual', label: '✏️ Manual' },
-              { id: 'screenshot', label: '📸 Screenshot' },
-              { id: 'paste', label: '📋 Paste' },
-              { id: 'pdf', label: '📄 PDF' },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => { setMode(tab.id); setParseError(''); }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  mode === tab.id
-                    ? 'bg-[#D4A85F] text-white'
-                    : 'text-[#666] hover:text-white hover:bg-[#2A2A2A]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+              { id: 'manual', label: 'Manual' },
+              { id: 'screenshot', label: 'Screenshot' },
+              { id: 'paste', label: 'Paste' },
+              { id: 'pdf', label: 'PDF' },
+            ].map((tab) => {
+              const active = mode === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { setMode(tab.id); setParseError(''); }}
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
+                  style={active
+                    ? { background: 'var(--aurora-heritage-gold)', color: '#FFF' }
+                    : { background: 'rgba(10,10,10,0.04)', color: 'var(--aurora-sub)' }
+                  }
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
           <div className="px-6 pb-6 pt-2">
-            {/* Paste Mode */}
             {mode === 'paste' && (
               <div className="space-y-3">
-                <p className="text-xs text-[#888]">Paste the full casting breakdown — the AI will extract project, role, CD, and notes automatically.</p>
+                <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
+                  Paste the full casting breakdown — the AI will extract project, role, CD, and notes automatically.
+                </p>
                 <textarea
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
-                  placeholder="Paste breakdown here...&#10;&#10;e.g. SEEKING: MALE/FEMALE, 25-35&#10;Project: UNTITLED DRAMA PILOT&#10;Network: HBO&#10;Casting: Randi Hiller CSA&#10;Role: DETECTIVE WALSH — A seasoned cop hiding a dark secret..."
+                  placeholder="Paste breakdown here..."
                   rows={10}
-                  className="w-full text-sm border border-[#3A3A3A] bg-[#2A2A2A] text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#D4A85F]/30 focus:border-[#D4A85F] outline-none resize-none"
+                  className="w-full text-sm px-4 py-3 outline-none resize-none focus:border-[color:var(--aurora-heritage-gold)]"
+                  style={inputStyle}
                 />
-                {parseError && <p className="text-xs text-red-400">{parseError}</p>}
+                {parseError && <p className="text-xs" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{parseError}</p>}
                 <button
                   onClick={() => parseWithAI(pasteText)}
                   disabled={parsing || !pasteText.trim()}
-                  className="w-full bg-[#D4A85F] hover:bg-[#C09850] disabled:opacity-40 text-white font-semibold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                  className="w-full font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
+                    color: '#FFF',
+                    boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
+                  }}
                 >
-                  {parsing ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"/><span>Extracting...</span></> : '✨ Extract with AI'}
+                  {parsing
+                    ? <><span className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#FFF' }}/><span>Extracting...</span></>
+                    : <><Sparkles size={16} /> Extract with AI</>
+                  }
                 </button>
               </div>
             )}
 
-            {/* PDF Mode */}
             {mode === 'screenshot' && (
               <div className="space-y-3">
-                <p className="text-xs text-[#888]">Upload a screenshot of your audition breakdown — AI will read it and fill in the details.</p>
-                <div
-                  onClick={() => screenshotInputRef.current?.click()}
-                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#D4A85F] rounded-xl p-8 text-center cursor-pointer transition-colors"
+                <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
+                  Upload a screenshot of your audition breakdown — AI will read it and fill in the details.
+                </p>
+                <label
+                  className="block p-8 text-center cursor-pointer transition-colors hover:border-[color:var(--aurora-heritage-gold)]"
+                  style={dropzoneStyle}
                 >
                   {parsing ? (
                     <div className="flex flex-col items-center gap-2">
-                      <span className="w-8 h-8 border-2 border-[#D4A85F]/30 border-t-[#FF8280] rounded-full animate-spin" />
-                      <p className="text-sm text-white">Scanning screenshot with AI...</p>
+                      <span className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }} />
+                      <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>Scanning screenshot with AI...</p>
                     </div>
                   ) : (
                     <>
                       <p className="text-2xl mb-2">📸</p>
-                      <p className="text-sm font-medium text-white">Drop or click to upload screenshot</p>
-                      <p className="text-xs text-[#555] mt-1">JPG, PNG, WEBP</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>Tap to upload screenshot</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>JPG, PNG, WEBP</p>
                     </>
                   )}
-                </div>
-                <input
-                  ref={screenshotInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => handleScreenshot(e.target.files?.[0])}
-                />
+                  <input
+                    ref={screenshotInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+                    onChange={(e) => handleScreenshot(e.target.files?.[0])}
+                  />
+                </label>
+                {parseError && <p className="text-xs" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{parseError}</p>}
               </div>
             )}
 
             {mode === 'pdf' && (
               <div className="space-y-3">
-                <p className="text-xs text-[#888]">Upload the breakdown PDF — the AI will pull out all the key details.</p>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-[#3A3A3A] hover:border-[#D4A85F] rounded-xl p-8 text-center cursor-pointer transition-colors"
+                <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
+                  Upload the breakdown PDF — the AI will pull out all the key details.
+                </p>
+                <label
+                  className="block p-8 text-center cursor-pointer transition-colors hover:border-[color:var(--aurora-heritage-gold)]"
+                  style={dropzoneStyle}
                 >
                   {parsing ? (
                     <div className="flex flex-col items-center gap-2">
-                      <span className="w-8 h-8 border-2 border-[#D4A85F]/30 border-t-[#FF8280] rounded-full animate-spin" />
-                      <p className="text-sm text-white">Reading PDF...</p>
+                      <span className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }} />
+                      <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>Reading PDF...</p>
                     </div>
                   ) : (
                     <>
                       <p className="text-2xl mb-2">📄</p>
-                      <p className="text-sm font-medium text-white">Drop or click to upload breakdown PDF</p>
-                      <p className="text-xs text-[#555] mt-1">PDF files only</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>Tap to upload breakdown PDF</p>
+                      <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>PDF files only</p>
                     </>
                   )}
-                </div>
-                <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={(e) => handlePDFFile(e.target.files?.[0])} />
-                {parseError && <p className="text-xs text-red-400">{parseError}</p>}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
+                    onChange={(e) => handlePDFFile(e.target.files?.[0])}
+                  />
+                </label>
+                {parseError && <p className="text-xs" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{parseError}</p>}
               </div>
             )}
 
-            {/* Manual Form */}
             {mode === 'manual' && (
               <form onSubmit={handleSubmit} className="space-y-3 mt-2">
-                {/* Show success hint if just parsed */}
                 {(form.project || form.role) && (
-                  <div className="bg-[#1A2A1A] border border-green-500/20 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <span className="text-green-400 text-sm">✓</span>
-                    <p className="text-xs text-green-400">Fields populated from breakdown — review and edit below</p>
+                  <div
+                    className="rounded-lg px-3 py-2 flex items-center gap-2"
+                    style={{ background: 'rgba(159,230,180,0.15)', border: '1px solid rgba(159,230,180,0.35)' }}
+                  >
+                    <span className="text-sm" style={{ color: '#1A6A38' }}>✓</span>
+                    <p className="text-xs" style={{ color: '#1A6A38' }}>Fields populated from breakdown — review and edit below</p>
                   </div>
                 )}
-                <input placeholder="Project name *" value={form.project} onChange={(e) => setForm({ ...form, project: e.target.value })} className={inputCls} required />
-                <input placeholder="Role / Character" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputCls} />
-                <input placeholder="Casting Director" value={form.casting_director} onChange={(e) => setForm({ ...form, casting_director: e.target.value })} className={inputCls} />
-                <input placeholder="Agency / Production Company" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} className={inputCls} />
-                <select value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} className={inputCls}>
+                <input placeholder="Project name *" value={form.project} onChange={(e) => setForm({ ...form, project: e.target.value })} className={inputCls} style={inputStyle} required />
+                <input placeholder="Role / Character" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputCls} style={inputStyle} />
+                <input placeholder="Casting Director" value={form.casting_director} onChange={(e) => setForm({ ...form, casting_director: e.target.value })} className={inputCls} style={inputStyle} />
+                <input placeholder="Agency / Production Company" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} className={inputCls} style={inputStyle} />
+                <select value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} className={inputCls} style={inputStyle}>
                   <option value="film">Film/TV</option>
                   <option value="commercial">Commercial</option>
                   <option value="theatrical">Theatrical</option>
@@ -733,11 +829,19 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                   <option value="voiceover">Voice Over</option>
                 </select>
                 <div>
-                  <label className="block text-xs text-[#666666] mb-1">Callback Date</label>
-                  <input type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} />
+                  <label className="aurora-eyebrow block mb-1" style={{ color: 'var(--aurora-dim)' }}>Callback Date</label>
+                  <input type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} style={inputStyle} />
                 </div>
-                <textarea placeholder="Notes (character description, rate, union status, shoot dates...)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className={`${inputCls} resize-none`} />
-                <button type="submit" className="w-full bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold py-2.5 rounded-xl transition-colors">
+                <textarea placeholder="Notes (character description, rate, union status, shoot dates...)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className={`${inputCls} resize-none`} style={inputStyle} />
+                <button
+                  type="submit"
+                  className="w-full font-semibold py-2.5 rounded-xl transition-all"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
+                    color: '#FFF',
+                    boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
+                  }}
+                >
                   Add Audition
                 </button>
               </form>
@@ -747,11 +851,11 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       </div>
     </>
   );
+
+  return createPortal(modal, document.body);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   MAIN EXPORT — AUDITIONS KANBAN PAGE
-   ═══════════════════════════════════════════════════════════════════ */
+/* ─── main export ───────────────────────────────────────────────── */
 
 export default function DashboardAuditions() {
   const dispatch = useDispatch();
@@ -762,7 +866,6 @@ export default function DashboardAuditions() {
   const [selectedAudition, setSelectedAudition] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
 
-  // Flatten tracker buckets into a single array with _column tag
   const allAuditions = useMemo(() => {
     const data = tracker?.data || {};
     const list = [];
@@ -773,13 +876,11 @@ export default function DashboardAuditions() {
     return list;
   }, [tracker]);
 
-  // Client-side type filter
   const filteredAuditions = useMemo(() => {
     if (activeFilter === 'all') return allAuditions;
     return allAuditions.filter((a) => a.project_type === activeFilter);
   }, [allAuditions, activeFilter]);
 
-  // Group by column
   const columns = useMemo(() => {
     const grouped = {};
     for (const col of COLUMNS) grouped[col.id] = [];
@@ -789,7 +890,6 @@ export default function DashboardAuditions() {
     return grouped;
   }, [filteredAuditions]);
 
-  // Type counts (unfiltered)
   const typeCounts = useMemo(() => {
     const counts = { all: allAuditions.length };
     allAuditions.forEach((a) => {
@@ -798,13 +898,11 @@ export default function DashboardAuditions() {
     return counts;
   }, [allAuditions]);
 
-  // Active dragging card (for overlay)
   const activeCard = useMemo(
     () => allAuditions.find((a) => String(a.id) === activeDragId),
     [allAuditions, activeDragId]
   );
 
-  // Sensors — small activation distance to avoid accidental drags
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
   );
@@ -813,15 +911,16 @@ export default function DashboardAuditions() {
     dispatch(fetchTrackerThunk());
   }, [dispatch]);
 
-  /* ── Status change (used by drag, quick actions, side panel) ─── */
   const changeStatus = useCallback(
     async (auditionId, newColumn) => {
       const apiStatus = STATUS_TO_API[newColumn];
       if (!apiStatus) return;
       try {
         await dispatch(updateAuditionThunk({ id: auditionId, data: { status: apiStatus } })).unwrap();
-      } catch {
-        // Revert handled inside thunk (re-fetch)
+      } catch (err) {
+        const msg = err?.message || err?.detail || 'Could not update audition status.';
+        dispatch(showSnackbar({ message: msg, variant: 'error' }));
+        // Fall through to re-fetch so UI reverts to server truth.
       }
       dispatch(fetchTrackerThunk());
       dispatch(fetchAuditionStatsThunk());
@@ -829,7 +928,6 @@ export default function DashboardAuditions() {
     [dispatch]
   );
 
-  /* ── Drag handlers ─────────────────────────────────────────── */
   const onDragStart = useCallback((event) => {
     setActiveDragId(event.active.id);
   }, []);
@@ -841,9 +939,7 @@ export default function DashboardAuditions() {
       if (!over) return;
 
       const auditionId = Number(active.id);
-      // "over" could be a card id or a column id — find the column
       let targetColumn = over.id;
-      // If we dropped on a card, resolve its column
       if (!COLUMNS.find((c) => c.id === targetColumn)) {
         const overCard = allAuditions.find((a) => String(a.id) === over.id);
         targetColumn = overCard?._column;
@@ -857,7 +953,6 @@ export default function DashboardAuditions() {
     [allAuditions, changeStatus]
   );
 
-  /* ── Quick actions ──────────────────────────────────────────── */
   const handleAdvance = useCallback(
     (audition) => {
       const next = nextStatus(audition._column);
@@ -871,10 +966,14 @@ export default function DashboardAuditions() {
     [changeStatus]
   );
 
-  /* ── Side panel save / delete ───────────────────────────────── */
   const handleSave = useCallback(
     async (form) => {
+      // All editable fields must be in the payload — earlier version
+      // silently dropped project_title / character / casting_director.
       const payload = {
+        project_title: form.project_title || '',
+        character: form.character || '',
+        casting_director: form.casting_director || '',
         project_type: form.project_type,
         agency: form.agency || '',
         callback_date: form.callback_date || null,
@@ -898,35 +997,45 @@ export default function DashboardAuditions() {
     [dispatch]
   );
 
-  /* ── Create ─────────────────────────────────────────────────── */
   const handleCreate = useCallback(
     async (form) => {
       await dispatch(createAuditionThunk(form)).unwrap();
       dispatch(fetchTrackerThunk());
       dispatch(fetchAuditionStatsThunk());
-      // Mark tutorial step
       markStep('track_audition');
     },
     [dispatch]
   );
 
-  /* ── Loading state ──────────────────────────────────────────── */
   if (loading && allAuditions.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-3 border-[#D4A85F] border-t-transparent rounded-full animate-spin" />
+        <div
+          className="w-8 h-8 rounded-full animate-spin"
+          style={{ border: '3px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }}
+        />
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 aurora-page-in">
       {/* Page Header */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Audition Tracker</h1>
+        <div>
+          <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>YOUR WORK</span>
+          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
+            Audition Tracker
+          </h1>
+        </div>
         <button
           onClick={() => setShowNewForm(true)}
-          className="flex items-center gap-2 bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold px-4 py-2.5 rounded-xl transition-colors text-sm"
+          className="flex items-center gap-2 font-semibold px-4 py-2.5 rounded-xl transition-all text-sm"
+          style={{
+            background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
+            color: '#FFF',
+            boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
+          }}
         >
           <Plus size={16} />
           New Audition
@@ -942,18 +1051,18 @@ export default function DashboardAuditions() {
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
-              className={`
-                flex items-center gap-1.5 text-sm font-medium px-3.5 py-1.5 rounded-full
-                transition-all duration-150
-                ${active
-                  ? 'bg-[#D4A85F] text-white shadow-sm'
-                  : 'bg-white text-[#999999] border border-[#3A3A3A] hover:border-[#D4A85F] hover:bg-[#2A2A2A]'
-                }
-              `}
+              className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-1.5 rounded-full transition-all duration-150"
+              style={active
+                ? { background: 'var(--aurora-heritage-gold)', color: '#FFF', boxShadow: '0 4px 12px rgba(212,168,95,0.22)' }
+                : { background: 'var(--aurora-surface-solid)', color: 'var(--aurora-sub)', border: '1px solid var(--aurora-line)' }
+              }
             >
               {f.icon && <f.icon size={13} />}
               {f.label}
-              <span className={`text-xs font-semibold ${active ? 'text-white/70' : 'text-[#666666]'}`}>
+              <span
+                className="text-xs font-semibold"
+                style={{ color: active ? 'rgba(255,255,255,0.75)' : 'var(--aurora-dim)' }}
+              >
                 {count}
               </span>
             </button>
@@ -986,7 +1095,6 @@ export default function DashboardAuditions() {
         </DragOverlay>
       </DndContext>
 
-      {/* Detail Side Panel */}
       <DetailPanel
         audition={selectedAudition}
         onClose={() => setSelectedAudition(null)}
@@ -998,26 +1106,20 @@ export default function DashboardAuditions() {
         }}
       />
 
-      {/* New Audition Modal */}
       <NewAuditionModal
         open={showNewForm}
         onClose={() => setShowNewForm(false)}
         onSubmit={handleCreate}
       />
 
-      {/* Custom Animations */}
       <style>{`
-        @keyframes slide-in {
+        @keyframes aurora-slide-in {
           from { transform: translateX(100%); }
           to { transform: translateX(0); }
         }
-        @keyframes scale-in {
+        @keyframes aurora-scale-in {
           from { transform: scale(0.95); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
-        }
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(255, 130, 128, 0); }
-          50% { box-shadow: 0 0 0 4px rgba(255, 130, 128, 0.15); }
         }
       `}</style>
     </div>

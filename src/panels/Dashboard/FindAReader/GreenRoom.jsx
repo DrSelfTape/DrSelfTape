@@ -23,7 +23,7 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
   }, [dispatch]);
 
   return (
-    <div className="aurora-orbs min-h-[calc(100vh-80px)] px-4 py-2" style={{ background: 'var(--aurora-bg)' }}>
+    <div className="aurora-orbs aurora-orbs-live min-h-[calc(100vh-80px)] px-4 py-2 aurora-page-in" style={{ background: 'var(--aurora-bg)' }}>
       <div className="mx-auto max-w-2xl">
         <p className="aurora-eyebrow mb-4" style={{ color: 'var(--aurora-dim)' }}>
           Your matches

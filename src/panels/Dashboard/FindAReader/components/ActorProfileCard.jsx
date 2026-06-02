@@ -1,7 +1,9 @@
 import { MapPin, Clock, Star, Clapperboard, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
 
 const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
+  const navigate = useNavigate();
   const initials = (actor?.name || 'A')
     .split(' ')
     .map((n) => n[0])
@@ -16,11 +18,21 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
     'fi-core': 'Fi-Core',
   }[actor?.union] || actor?.union;
 
+  const openProfile = () => {
+    if (actor?.id) navigate(`/dashboard/reader-profile/${actor.id}`);
+  };
+
   return (
     <div className="rounded-xl p-5 shadow-sm" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
       <div className="flex items-start gap-4">
-        {/* Avatar */}
-        <div className="relative shrink-0">
+        {/* Avatar — tappable to open this actor's full profile. */}
+        <button
+          type="button"
+          onClick={openProfile}
+          aria-label={`View ${actor?.name || 'actor'}'s profile`}
+          className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-[#D4A85F]/60"
+          style={{ background: 'none', border: 'none', padding: 0, cursor: actor?.id ? 'pointer' : 'default' }}
+        >
           <ProfilePhoto
             src={actor?.headshot || actor?.user_image}
             alt={actor?.name}
@@ -28,14 +40,20 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
             className="h-16 w-16"
           />
           <span className="absolute bottom-0.5 right-0.5 h-3 w-3 rounded-full bg-green-500" style={{ borderWidth: 2, borderStyle: 'solid', borderColor: 'var(--bg-surface)' }} />
-        </div>
+        </button>
 
         <div className="min-w-0 flex-1 space-y-2">
           {/* Name + Union */}
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+            <button
+              type="button"
+              onClick={openProfile}
+              className="text-sm font-bold truncate text-left bg-transparent border-0 p-0"
+              style={{ color: 'var(--text-primary)', cursor: actor?.id ? 'pointer' : 'default' }}
+              aria-label={`View ${actor?.name || 'actor'}'s profile`}
+            >
               {actor?.name || 'Actor'}
-            </h4>
+            </button>
             {unionLabel && (
               <span className="shrink-0 rounded-full bg-[#D4A85F]/15 px-2 py-0.5 text-[10px] font-semibold text-[#7A5A18] border border-[#D4A85F]/30">
                 {unionLabel}

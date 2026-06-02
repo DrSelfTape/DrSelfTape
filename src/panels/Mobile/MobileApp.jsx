@@ -16,6 +16,7 @@ import ProfileCompleteness from "../../components/Dashboard/ProfileCompleteness"
 import DeleteAccountModal from "../../components/Dashboard/DeleteAccountModal";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
+import { V1HeroGraph, V1FAB, V1Sparkles } from "../../components/Aurora";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
@@ -93,6 +94,8 @@ async function extractPdfText(file) {
 /* Lazy-load dashboard panels for the "More" menu */
 const CDSim = lazy(() => import("../Dashboard/CDSim"));
 const Jericho = lazy(() => import("../Dashboard/Jericho"));
+const CraftJourney = lazy(() => import("../Dashboard/CraftJourney"));
+const Leaderboard = lazy(() => import("../Dashboard/Leaderboard"));
 
 const WhoWantsToRead = lazy(() => import("../Dashboard/FindAReader/WhoWantsToRead"));
 const Favorites = lazy(() => import("../Dashboard/FindAReader/Favorites"));
@@ -223,6 +226,7 @@ function Icon({ name, size = 20, color = TEXT_SECONDARY }) {
   const p = {
     home: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1",
     auditions: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
+    target: "M12 21a9 9 0 100-18 9 9 0 000 18zm0-3a6 6 0 110-12 6 6 0 010 12zm0-3a3 3 0 100-6 3 3 0 000 6z",
     scenes: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
     mic: "M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z",
     profile: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
@@ -268,6 +272,95 @@ function ProgressRing({ pct, size = 36, stroke = 3 }) {
  * Animated arc + 12 trend dots + center number.
  * Tap a dot to scrub; tap a metric pill to switch.
  */
+/* ── 12-period hero graph data ───────────────────────────────────────
+ * Buckets the user's auditions into 12 weeks / 12 months / 12 quarters
+ * and emits the {labels, callback, submitted, booked} shape that
+ * V1HeroGraph consumes. submitted = count of auditions whose
+ * created_at falls in the period; callback = subset whose CURRENT
+ * status is callback/audition/booked (best available proxy without
+ * a status-history table); booked = subset whose status is booked.
+ * Periods with no data render as 0. */
+function buildHeroData(auditions) {
+  const now = new Date();
+  const list = Array.isArray(auditions) ? auditions : [];
+
+  const startOfWeek = (d) => {
+    const x = new Date(d);
+    const day = x.getDay();
+    const diff = (day === 0 ? -6 : 1 - day);
+    x.setDate(x.getDate() + diff);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+  const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
+  const quarterOf = (d) => Math.floor(d.getMonth() / 3);
+  const startOfQuarter = (d) => new Date(d.getFullYear(), quarterOf(d) * 3, 1);
+
+  const bucketsFor = (periodKey) => {
+    const buckets = [];
+    for (let i = 11; i >= 0; i--) {
+      const ref = new Date(now);
+      let start, label;
+      if (periodKey === 'W') {
+        ref.setDate(ref.getDate() - 7 * i);
+        start = startOfWeek(ref);
+        const wk = Math.ceil(((start - new Date(start.getFullYear(), 0, 1)) / 86400000 + 1) / 7);
+        label = `W${wk}`;
+      } else if (periodKey === 'M') {
+        ref.setMonth(ref.getMonth() - i);
+        start = startOfMonth(ref);
+        label = start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+      } else {
+        ref.setMonth(ref.getMonth() - i * 3);
+        start = startOfQuarter(ref);
+        const q = quarterOf(start) + 1;
+        const y = String(start.getFullYear()).slice(2);
+        label = `Q${q}·${y}`;
+      }
+      let end;
+      if (periodKey === 'W') { end = new Date(start); end.setDate(end.getDate() + 7); }
+      else if (periodKey === 'M') { end = new Date(start.getFullYear(), start.getMonth() + 1, 1); }
+      else { end = new Date(start.getFullYear(), start.getMonth() + 3, 1); }
+      buckets.push({ label, start, end });
+    }
+    return buckets;
+  };
+
+  const aggregate = (periodKey) => {
+    const buckets = bucketsFor(periodKey);
+    const labels = buckets.map(b => b.label);
+    const submitted = new Array(12).fill(0);
+    const callback = new Array(12).fill(0);
+    const booked = new Array(12).fill(0);
+
+    list.forEach((a) => {
+      const created = a.createdAt || a.created_at || a.submittedAt;
+      if (!created) return;
+      const d = new Date(created);
+      if (Number.isNaN(d.getTime())) return;
+      const bucketIdx = buckets.findIndex(b => d >= b.start && d < b.end);
+      if (bucketIdx === -1) return;
+      submitted[bucketIdx] += 1;
+      const status = a.status || '';
+      if (status === 'callback' || status === 'audition' || status === 'booked') callback[bucketIdx] += 1;
+      if (status === 'booked') booked[bucketIdx] += 1;
+    });
+
+    // For callback metric, show RATE (%) not raw count — same metric the
+    // existing dashboard headlines use ("callback rate").
+    const callbackRate = submitted.map((s, i) => s > 0 ? Math.round((callback[i] / s) * 100) : 0);
+
+    const periodLabelMap = { W: '12 WEEKS', M: '12 MONTHS', Q: 'BY QUARTER' };
+    return { label: periodLabelMap[periodKey], labels, callback: callbackRate, submitted, booked };
+  };
+
+  return {
+    W: aggregate('W'),
+    M: aggregate('M'),
+    Q: aggregate('Q'),
+  };
+}
+
 function AuroraHeroRing({ stats, auditions }) {
   // Prefer the local audition list (always fresh after a status change)
   // over the cached stats endpoint. Falls back to stats if auditions is
@@ -447,7 +540,10 @@ function AuroraPracticeStrip() {
   );
 }
 
-/* ── Aurora pipeline blocks ── Submitted / Reviewed / Callback / Booked */
+/* ── Aurora pipeline blocks ── Submitted / Reviewed / Callback / Booked
+ * Heights are proportional to value (handoff §6 spec). Each bar gets
+ * a 180deg gradient, a 2px white inner top highlight, and a colored
+ * drop shadow. Numbers in JetBrains Mono on top. */
 function AuroraPipeline({ stats, auditions, setTab }) {
   const counts = {
     sub: auditions.filter(a => a.status === 'submitted').length,
@@ -456,31 +552,68 @@ function AuroraPipeline({ stats, auditions, setTab }) {
     bk:  stats?.total_booked || auditions.filter(a => a.status === 'booked').length,
   };
   const blocks = [
-    { id: 'sub', label: 'SUB', val: counts.sub, color: 'var(--aurora-sky)',           shadow: 'rgba(167,214,255,0.35)' },
-    { id: 'rev', label: 'REV', val: counts.rev, color: 'var(--aurora-purple)',        shadow: 'rgba(216,197,242,0.35)' },
-    { id: 'cb',  label: 'CB',  val: counts.cb,  color: 'var(--aurora-heritage-gold)', shadow: 'rgba(212,168,95,0.35)' },
-    { id: 'bk',  label: 'BK',  val: counts.bk,  color: 'var(--aurora-mint)',          shadow: 'rgba(159,230,180,0.35)' },
+    { id: 'sub', label: 'SUB', val: counts.sub, color: '#A7D6FF', shadow: 'rgba(167,214,255,0.45)' },
+    { id: 'rev', label: 'REV', val: counts.rev, color: '#D8C5F2', shadow: 'rgba(216,197,242,0.45)' },
+    { id: 'cb',  label: 'CB',  val: counts.cb,  color: '#D4A85F', shadow: 'rgba(212,168,95,0.45)' },
+    { id: 'bk',  label: 'BK',  val: counts.bk,  color: '#9FE6B4', shadow: 'rgba(159,230,180,0.45)' },
   ];
+  const max = Math.max(...blocks.map(b => b.val), 1);
+
   return (
     <div className="aurora-card" style={{ padding: 16, marginBottom: 14 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span className="aurora-eyebrow">PIPELINE</span>
-        <button onClick={() => setTab('auditions')} className="aurora-micro" style={{
-          background: 'none', border: 'none', color: 'var(--aurora-sub)', cursor: 'pointer',
-        }}>VIEW ALL →</button>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <span className="aurora-eyebrow" style={{ color: 'var(--aurora-dim)' }}>PIPELINE</span>
+        <button
+          onClick={() => setTab('auditions')}
+          className="aurora-micro"
+          style={{
+            background: 'none', border: 'none', color: 'var(--aurora-sub)',
+            cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 10, letterSpacing: '0.15em',
+          }}
+        >
+          VIEW ALL →
+        </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-        {blocks.map(b => (
-          <div key={b.id} style={{
-            background: `linear-gradient(180deg, ${b.color}, color-mix(in oklch, ${b.color} 60%, transparent))`,
-            borderRadius: 14, padding: '14px 8px', textAlign: 'center',
-            boxShadow: `0 6px 14px ${b.shadow}`,
-            border: '1px solid rgba(255,255,255,0.5)',
-          }}>
-            <div className="aurora-mono" style={{ fontSize: 22, color: '#0A0A0A' }}>{b.val}</div>
-            <div className="aurora-micro" style={{ color: 'rgba(10,10,10,0.65)' }}>{b.label}</div>
-          </div>
-        ))}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, height: 110, alignItems: 'flex-end' }}>
+        {blocks.map((b) => {
+          const h = (b.val / max) * 86 + 20;
+          return (
+            <div key={b.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+              <div
+                style={{
+                  height: h,
+                  borderRadius: 12,
+                  background: `linear-gradient(180deg, ${b.color} 0%, ${b.color}AA 100%)`,
+                  border: '1px solid rgba(255,255,255,0.5)',
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  justifyContent: 'center',
+                  paddingTop: 8,
+                  position: 'relative',
+                  overflow: 'hidden',
+                  boxShadow: `0 6px 14px ${b.shadow}`,
+                  transition: 'height 0.5s cubic-bezier(.2,.7,.3,1)',
+                }}
+              >
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.6)' }} />
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, color: '#0A0A0A', fontWeight: 600 }}>{b.val}</span>
+              </div>
+              <div
+                style={{
+                  fontFamily: 'JetBrains Mono, monospace',
+                  fontSize: 9,
+                  color: 'var(--aurora-sub)',
+                  letterSpacing: '0.15em',
+                  textAlign: 'center',
+                  marginTop: 8,
+                }}
+              >
+                {b.label}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -725,6 +858,7 @@ const TABS = [
   { id: "auditions", icon: "auditions", label: "Auditions" },
   { id: "find-a-reader", icon: "community", label: "Find Reader" },
   { id: "green-room", icon: "mic", label: "Green Room" },
+  { id: "leaderboard", icon: "sparkle", label: "Ranks" },
   { id: "more", icon: "more", label: "More" },
 ];
 
@@ -748,6 +882,8 @@ const PANEL_COMPONENTS = {
   "green-room": GreenRoom,
   "cd-sim": CDSim,
   "jericho": Jericho,
+  "craft-journey": CraftJourney,
+  "leaderboard": Leaderboard,
   "scripts": Scripts,
   "submissions": Submissions,
   "reports": Reports,
@@ -846,13 +982,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     // matched.
     if (nextStep.action === 'profile') setCurrentPanel('dash-profile');
     else if (nextStep.action === 'generator') setCurrentPanel('generator');
-    else if (nextStep.action === 'live') setTab('live');
+    else if (nextStep.action === 'live') setTab('scenes');
   };
 
   const firstCallback = callbacks[0];
 
   return (
-    <div className="aurora-orbs" style={{ padding: "0 20px 32px", minHeight: '100%' }}>
+    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 20px 32px", minHeight: '100%' }}>
       {showOnboarding && <AuroraOnboarding onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
@@ -920,8 +1056,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </span>
       </button>
 
-      {/* ── Hero metric ring ── */}
-      <AuroraHeroRing stats={s} auditions={auditions} />
+      {/* ── Hero metric ring (V1HeroGraph) ── */}
+      <div style={{ marginBottom: 18 }}>
+        <V1HeroGraph data={buildHeroData(auditions)} />
+      </div>
 
       {/* ── Callback card (Aurora gold gradient) ── */}
       {firstCallback && (
@@ -966,6 +1104,325 @@ function HomeScreen({ setTab, setCurrentPanel }) {
            redundant — the Smart Next Step banner and the Get Started
            tutorial checklist below already prompt the same action. */}
       {hasStats && <AuroraPipeline stats={s} auditions={auditions} setTab={setTab} />}
+
+      {/* ── Community Leaderboard teaser ── */}
+      <button
+        type="button"
+        onClick={() => setCurrentPanel('leaderboard')}
+        style={{
+          width: '100%',
+          marginBottom: 14,
+          padding: 0,
+          cursor: 'pointer',
+          borderRadius: 20,
+          border: '1px solid rgba(255,255,255,0.5)',
+          overflow: 'hidden',
+          position: 'relative',
+          background: '#0E0D0A url(/photos/audition-hall-hamlet.png) center 30%/cover',
+          boxShadow: '0 10px 28px rgba(20,18,14,0.18)',
+          height: 116,
+          display: 'block',
+          textAlign: 'left',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'linear-gradient(110deg, rgba(14,13,10,0.55), transparent 60%)',
+          }}
+        />
+        <div
+          style={{
+            position: 'absolute',
+            left: 16,
+            top: 0,
+            bottom: 0,
+            right: 96,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          <span
+            className="aurora-eyebrow"
+            style={{ color: 'rgba(255,255,255,0.75)' }}
+          >
+            COMMUNITY LEADERBOARD
+          </span>
+          <div
+            className="aurora-display"
+            style={{
+              fontSize: 18,
+              color: '#FFF',
+              letterSpacing: '-0.4px',
+              lineHeight: 1.1,
+              marginTop: 4,
+            }}
+          >
+            See where you rank this season →
+          </div>
+        </div>
+      </button>
+
+      {/* ── Craft Journey teaser ── */}
+      <button
+        type="button"
+        onClick={() => setCurrentPanel('craft-journey')}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 14,
+          padding: '16px 18px',
+          marginBottom: 14,
+          cursor: 'pointer',
+          textAlign: 'left',
+          borderRadius: 18,
+          background: 'linear-gradient(135deg, rgba(167,214,255,0.45) 0%, rgba(159,230,180,0.45) 100%)',
+          border: '1px solid rgba(255,255,255,0.55)',
+          boxShadow: '0 8px 22px rgba(159,230,180,0.18)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: 'linear-gradient(135deg, #A7D6FF, #9FE6B4)',
+            border: '1px solid rgba(255,255,255,0.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#0E0D0A', flexShrink: 0,
+            boxShadow: '0 4px 12px rgba(159,230,180,0.40)',
+          }}
+        >
+          <Icon name="sparkle" size={20} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span
+            className="aurora-eyebrow"
+            style={{ display: 'block', color: 'var(--aurora-heritage-gold-deep)', marginBottom: 2 }}
+          >
+            CRAFT JOURNEY
+          </span>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#0E0D0A', margin: 0 }}>
+            Up next: <span style={{ color: 'var(--aurora-heritage-gold-deep)' }}>Anger Work</span>
+          </p>
+        </div>
+        <span
+          className="aurora-micro"
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: '#0E0D0A',
+            background: 'rgba(255,255,255,0.7)',
+            padding: '6px 12px',
+            borderRadius: 100,
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          OPEN →
+        </span>
+      </button>
+
+      {/* ── Match tease ── 3 stacked reader avatars + "X new readers near you" ── */}
+      {(() => {
+        const recent = Array.isArray(matchingStats?.recent_readers) ? matchingStats.recent_readers : [];
+        const readers = recent.slice(0, 3);
+        const count = Number(matchingStats?.pending_likes_count) || Number(matchingStats?.available_count) || 0;
+        if (count === 0 && readers.length === 0) return null;
+        return (
+          <button
+            type="button"
+            onClick={() => setTab('find-a-reader')}
+            className="aurora-card"
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+              padding: '14px 18px', marginBottom: 14, cursor: 'pointer',
+              textAlign: 'left', border: 'none',
+            }}
+          >
+            <div style={{ position: 'relative', width: 64, height: 36, flexShrink: 0 }}>
+              {[0, 1, 2].map((i) => {
+                const r = readers[i];
+                const initials = r?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '·';
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: i * 16,
+                      width: 36, height: 36, borderRadius: '50%',
+                      background: r?.headshot ? `url(${r.headshot}) center/cover` : 'linear-gradient(135deg, #D4A85F, #F0D097)',
+                      border: '2px solid var(--aurora-surface-solid)',
+                      boxShadow: '0 2px 8px rgba(10,10,10,0.10)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#0E0D0A', fontSize: 11, fontWeight: 700,
+                      zIndex: 3 - i,
+                    }}
+                  >
+                    {!r?.headshot && initials}
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <span className="aurora-eyebrow" style={{ display: 'block', color: 'var(--aurora-dim)', marginBottom: 2 }}>
+                FIND A READER
+              </span>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
+                {count} new reader{count !== 1 ? 's' : ''} near you
+              </p>
+              <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+                Swipe to run sides together
+              </p>
+            </div>
+            <span
+              className="aurora-mono"
+              style={{
+                fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)',
+                letterSpacing: '0.12em',
+              }}
+            >
+              MATCH →
+            </span>
+          </button>
+        );
+      })()}
+
+      {/* ── Recent submissions ── 4 rows with colored status bar ── */}
+      {submissions && submissions.length > 0 && (
+        <div className="aurora-card" style={{ padding: '14px 16px 8px', marginBottom: 14 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span className="aurora-eyebrow" style={{ color: 'var(--aurora-dim)' }}>RECENT</span>
+            <button
+              onClick={() => setTab('auditions')}
+              className="aurora-mono"
+              style={{
+                background: 'none', border: 'none', color: 'var(--aurora-sub)',
+                cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
+                fontSize: 10, letterSpacing: '0.15em',
+              }}
+            >
+              VIEW ALL →
+            </button>
+          </div>
+          {submissions.slice(0, 4).map((sub, i) => {
+            const status = sub.status || 'submitted';
+            const statusColor = {
+              submitted: '#A7D6FF',
+              reviewed: '#FFC9A3',
+              viewed: '#FFC9A3',
+              callback: '#D4A85F',
+              booked: '#9FE6B4',
+              passed: 'rgba(10,10,10,0.30)',
+            }[status] || '#A7D6FF';
+            const statusLabel = status.replace('_', ' ').toUpperCase();
+            const isLast = i === Math.min(submissions.length, 4) - 1;
+            return (
+              <div
+                key={sub.id || i}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 12,
+                  padding: '12px 0',
+                  borderBottom: isLast ? 'none' : '1px solid var(--aurora-line-soft)',
+                }}
+              >
+                <div
+                  style={{
+                    width: 4, height: 28, background: statusColor,
+                    borderRadius: 2, boxShadow: `0 0 8px ${statusColor}88`,
+                    flexShrink: 0,
+                  }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 14, fontWeight: 500, color: 'var(--aurora-text)',
+                      letterSpacing: '-0.2px', whiteSpace: 'nowrap',
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {sub.project_title || sub.project || 'Untitled'}
+                  </div>
+                  {sub.character && (
+                    <div
+                      className="aurora-mono"
+                      style={{ fontSize: 10, color: 'var(--aurora-dim)', marginTop: 3, letterSpacing: '0.05em' }}
+                    >
+                      {String(sub.character).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <span
+                  className="aurora-mono"
+                  style={{
+                    fontSize: 9, color: '#0E0D0A', background: statusColor,
+                    padding: '3px 8px', borderRadius: 100, letterSpacing: '0.12em',
+                    flexShrink: 0,
+                  }}
+                >
+                  {statusLabel}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── Studio CTA ── dark gradient block w/ gold mic ── */}
+      <button
+        type="button"
+        onClick={() => setCurrentPanel('cd-sim')}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+          padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
+          textAlign: 'left', borderRadius: 18,
+          background: 'linear-gradient(135deg, rgba(10,10,10,0.95), rgba(30,28,22,0.95))',
+          border: '1px solid rgba(212,168,95,0.32)',
+          position: 'relative', overflow: 'hidden',
+          boxShadow: '0 12px 28px rgba(10,10,10,0.28)',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute', top: -40, right: -40, width: 180, height: 180,
+            background: 'radial-gradient(circle, rgba(212,168,95,0.45), transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'relative',
+            width: 48, height: 48, borderRadius: 14,
+            background: 'linear-gradient(135deg, #F0D097, #D4A85F)',
+            border: '1px solid rgba(255,255,255,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#1A1408',
+            boxShadow: '0 6px 18px rgba(212,168,95,0.45)',
+            flexShrink: 0,
+          }}
+        >
+          <Icon name="play" size={22} color="#1A1408" />
+        </div>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+          <span
+            className="aurora-eyebrow"
+            style={{ display: 'block', color: 'rgba(255,255,255,0.65)', marginBottom: 2 }}
+          >
+            ACTING COACH
+          </span>
+          <p style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+            Rehearse with an AI scene partner
+          </p>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', margin: '2px 0 0' }}>
+            Upload sides · get coaching notes
+          </p>
+        </div>
+      </button>
 
       {/* ── Tutorial + daily challenge — kept; Aurora glass treatment via wrapper ── */}
       <div style={{ marginBottom: 14 }}>
@@ -1074,6 +1531,44 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           ))}
         </div>
       )}
+
+      {/* ── V1FAB radial quick-actions ── */}
+      <V1FAB
+        actions={[
+          {
+            k: 'rec',
+            label: 'Record take',
+            short: 'REC',
+            color: '#D4A85F',
+            icon: <Icon name="mic" size={16} />,
+            onClick: () => setCurrentPanel('cd-sim'),
+          },
+          {
+            k: 'aud',
+            label: 'Log audition',
+            short: 'LOG',
+            color: '#A7D6FF',
+            icon: <Icon name="target" size={16} />,
+            onClick: () => setTab('auditions'),
+          },
+          {
+            k: 'find',
+            label: 'Find reader',
+            short: 'FIND',
+            color: '#FFC9A3',
+            icon: <Icon name="community" size={16} />,
+            onClick: () => setTab('find-a-reader'),
+          },
+          {
+            k: 'script',
+            label: 'Upload script',
+            short: 'SCRIPT',
+            color: '#9FE6B4',
+            icon: <Icon name="sparkle" size={16} />,
+            onClick: () => setCurrentPanel('scripts'),
+          },
+        ]}
+      />
     </div>
   );
 }
@@ -1171,7 +1666,7 @@ function AuditionsScreen() {
   ];
 
   return (
-    <div className="aurora-orbs" style={{ padding: "0 16px 24px", minHeight: '100%' }}>
+    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 16px 24px", minHeight: '100%' }}>
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
         <div>
           <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>AUDITION TRACKER</span>
@@ -1412,7 +1907,7 @@ function AuditionsScreen() {
           const active = filter === t.key;
           return (
             <button key={t.key} onClick={() => setFilter(t.key)} className="aurora-mono" style={{
-              padding: "7px 14px", borderRadius: 100, border: "none", cursor: "pointer", whiteSpace: "nowrap",
+              padding: "7px 14px", borderRadius: 100, cursor: "pointer", whiteSpace: "nowrap",
               fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
               background: active ? 'var(--aurora-text)' : 'var(--aurora-glass)',
               color: active ? 'var(--aurora-bg)' : 'var(--aurora-sub)',
@@ -1925,7 +2420,7 @@ function ProfileScreen({ setCurrentPanel }) {
   ];
 
   return (
-    <div className="aurora-orbs" style={{ padding: "0 16px 32px", minHeight: '100%' }}>
+    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 16px 32px", minHeight: '100%' }}>
       <div style={{ padding: "24px 0 28px", textAlign: "center" }}>
         {/* Eyebrow */}
         <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 14 }}>YOUR PROFILE</span>
@@ -2058,7 +2553,7 @@ function ProfileScreen({ setCurrentPanel }) {
 function MoreScreen({ setCurrentPanel }) {
   const dispatch = useDispatch();
   return (
-    <div className="aurora-orbs" style={{ padding: "0 16px 32px", minHeight: '100%' }}>
+    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 16px 32px", minHeight: '100%' }}>
       <div style={{ padding: "24px 0 22px" }}>
         <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>EXPLORE</span>
         <h1 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>More features</h1>
@@ -2170,7 +2665,7 @@ function PanelScreen({ panelId, onBack }) {
   }
 
   return (
-    <div className="aurora-orbs" style={{ padding: "0 0 24px", minHeight: '100%' }}>
+    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 0 24px", minHeight: '100%' }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 12, padding: "16px 16px 12px",
       }}>
@@ -2385,6 +2880,13 @@ export default function DrSelfTapeApp() {
     ),
     "green-room": (
       <PanelScreen panelId="green-room" onBack={() => handleSetTab("home")} />
+    ),
+    // Leaderboard tab — embedded mode so the close-X is hidden and the
+    // sticky your-rank bar sits above the floating tab bar.
+    leaderboard: (
+      <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>
+        <Leaderboard embedded />
+      </Suspense>
     ),
     profile: <ProfileScreen setCurrentPanel={setCurrentPanel} />,
     more: <MoreScreen setCurrentPanel={setCurrentPanel} />,
