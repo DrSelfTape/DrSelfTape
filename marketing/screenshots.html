@@ -131,6 +131,43 @@
     }
     .script { font-family: 'Caveat', cursive; font-weight: 700; }
 
+    /* Actor's margin notes — handwritten scrawls scattered around the
+       device like the notes a working actor writes on their printed
+       sides (ANGRY · Make big choices · What do they want? · LISTEN).
+       Slight rotation + ink-style color sells the "real prep" feel
+       without competing with the headline. */
+    .actor-note {
+      position: absolute;
+      font-family: 'Caveat', cursive;
+      font-weight: 700;
+      line-height: 0.95;
+      color: var(--cream);
+      text-shadow: 0 2px 18px rgba(0,0,0,0.5);
+      pointer-events: none;
+      z-index: 8;
+    }
+    .actor-note.ink { color: var(--ink); text-shadow: none; }
+    .actor-note.gold { color: var(--gold-soft); text-shadow: 0 2px 18px rgba(0,0,0,0.55); }
+    .actor-note.coral { color: var(--coral); text-shadow: 0 2px 18px rgba(0,0,0,0.55); }
+    .actor-note.deep-gold { color: var(--deep-gold); text-shadow: none; }
+    .actor-note .arrow {
+      display: inline-block;
+      width: 70px; height: 28px;
+      vertical-align: middle;
+      margin-left: 6px;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 70 28' fill='none'><path d='M2 14 Q 28 4, 60 14' stroke='currentColor' stroke-width='3' stroke-linecap='round' fill='none'/><path d='M52 8 L 62 14 L 54 22' stroke='currentColor' stroke-width='3' stroke-linecap='round' fill='none'/></svg>") center/contain no-repeat;
+      color: inherit;
+    }
+    .actor-note .arrow.left {
+      transform: scaleX(-1);
+      margin-left: 0; margin-right: 6px;
+    }
+    .actor-note .underline {
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 4px;
+    }
+
     /* Pills + badges */
     .pill {
       display: inline-flex; align-items: center; gap: 14px;
@@ -279,6 +316,17 @@
         <div class="quote">"Booked my first co-star in 6 weeks."</div>
         <div class="who">— Maya K. · NY actor</div>
       </div>
+
+      <!-- Actor margin notes — scrawled around the device -->
+      <div class="actor-note gold" style="top: 880px; right: 70px; font-size: 56px; transform: rotate(-8deg);">
+        Make BIG<br>choices
+      </div>
+      <div class="actor-note" style="top: 1220px; left: 30px; font-size: 44px; transform: rotate(6deg);">
+        <span class="underline">What</span> do<br>they want?
+      </div>
+      <div class="actor-note coral" style="top: 1740px; right: 50px; font-size: 38px; transform: rotate(-5deg);">
+        ✓ daily ritual
+      </div>
     </div>
 
     <!-- ─────── 2. AI COACH (Jericho) ─────── -->
@@ -305,6 +353,17 @@
 
       <div class="sticky mint" style="top: 1280px; right: 60px; transform: rotate(8deg); width: 270px; font-size: 28px;">
         Like having an acting coach in your pocket
+      </div>
+
+      <!-- Margin notes -->
+      <div class="actor-note gold" style="top: 820px; left: 40px; font-size: 52px; transform: rotate(-9deg);">
+        LISTEN<br><span style="font-size: 36px;">↓ before reacting</span>
+      </div>
+      <div class="actor-note" style="top: 1100px; left: 50px; font-size: 42px; transform: rotate(5deg);">
+        Less <span class="underline">is</span> more.
+      </div>
+      <div class="actor-note coral" style="top: 1900px; right: 70px; font-size: 38px; transform: rotate(-6deg);">
+        slower —<br>let it land
       </div>
     </div>
 
@@ -334,6 +393,18 @@
       <div class="sticky" style="top: 1280px; left: 80px; transform: rotate(-6deg); width: 260px; font-size: 28px;">
         6 genres · 6 tones · 3 levels
       </div>
+
+      <!-- Margin notes -->
+      <div class="actor-note" style="top: 980px; right: 60px; font-size: 50px; transform: rotate(-7deg);">
+        COLD<br>READ.
+      </div>
+      <div class="actor-note coral" style="top: 1660px; right: 80px; font-size: 42px; transform: rotate(8deg);">
+        <span class="arrow left"></span>
+        what's the<br>secret?
+      </div>
+      <div class="actor-note gold" style="top: 2240px; left: 80px; font-size: 38px; transform: rotate(-5deg);">
+        go BIG
+      </div>
     </div>
 
     <!-- ─────── 4. FIND A READER ─────── -->
@@ -360,6 +431,22 @@
       <div class="device" style="width: 820px; bottom: -100px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
         <img src="captures/06-swipe-card.png" alt="Find a Reader — D'Kia Anderson">
       </div>
+
+      <!-- Margin notes -->
+      <div class="actor-note gold" style="top: 1180px; left: 40px; font-size: 50px; transform: rotate(-10deg);">
+        run it<br>cold.
+      </div>
+      <div class="actor-note" style="top: 1880px; right: 60px; font-size: 42px; transform: rotate(7deg);">
+        twice<br>through.
+      </div>
+      <div class="actor-note coral" style="top: 2380px; left: 100px; font-size: 36px; transform: rotate(-4deg);">
+        + tape it
+      </div>
+
+      <!-- Sticky note -->
+      <div class="sticky mint" style="top: 980px; right: 50px; transform: rotate(8deg); width: 240px; font-size: 26px;">
+        Verified actors — no ghosts
+      </div>
     </div>
 
     <!-- ─────── 5. TRACKER ─────── -->
@@ -384,6 +471,17 @@
 
       <div class="award" style="position: absolute; top: 1280px; right: 60px; transform: rotate(-4deg); font-size: 22px; padding: 22px 30px;">
         <span class="laurel">🏆</span> First book — Third Shift
+      </div>
+
+      <!-- Margin notes -->
+      <div class="actor-note gold" style="top: 900px; left: 30px; font-size: 56px; transform: rotate(-8deg);">
+        BOOKED.
+      </div>
+      <div class="actor-note coral" style="top: 1860px; left: 50px; font-size: 38px; transform: rotate(6deg);">
+        callback<br>Tuesday
+      </div>
+      <div class="actor-note" style="top: 2360px; right: 80px; font-size: 36px; transform: rotate(-5deg);">
+        update<br>after every tape
       </div>
     </div>
 
@@ -413,6 +511,17 @@
       <div class="sticky" style="top: 1200px; left: 60px; transform: rotate(-6deg); width: 220px;">
         50 actors<br><span class="script">grinding with you</span>
       </div>
+
+      <!-- Margin notes — black ink on cream for contrast -->
+      <div class="actor-note ink" style="top: 920px; right: 60px; font-size: 52px; transform: rotate(7deg);">
+        show up<br><span class="underline">daily.</span>
+      </div>
+      <div class="actor-note deep-gold" style="top: 2200px; left: 50px; font-size: 44px; transform: rotate(-6deg);">
+        +10 XP / scene
+      </div>
+      <div class="actor-note ink" style="top: 2520px; right: 80px; font-size: 36px; transform: rotate(4deg);">
+        practice ≠<br>perfect
+      </div>
     </div>
 
     <!-- ─────── 7. PRIVACY / SIGN-IN ─────── -->
@@ -439,6 +548,14 @@
 
       <div style="position: absolute; bottom: 140px; left: 0; right: 0; text-align: center;">
         <div style="font-family: 'JetBrains Mono', monospace; font-size: 18px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--deep-gold);">From the App Store · Free</div>
+      </div>
+
+      <!-- Margin notes -->
+      <div class="actor-note ink" style="top: 1280px; left: 50px; font-size: 52px; transform: rotate(-9deg);">
+        Action.
+      </div>
+      <div class="actor-note deep-gold" style="top: 1800px; right: 60px; font-size: 40px; transform: rotate(6deg);">
+        from<br>anywhere
       </div>
     </div>
 
