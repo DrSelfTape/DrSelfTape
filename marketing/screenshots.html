@@ -73,9 +73,26 @@
     .sparkle.coral { background: var(--coral); box-shadow: 0 0 28px rgba(255,130,128,0.7); }
     .sparkle.mint { background: var(--mint); box-shadow: 0 0 24px rgba(167,236,218,0.7); }
 
+    /* Brand lockup — top-left of every panel.
+       Dark-backdrop screens use the .light modifier which lifts the
+       black PNG to cream via CSS filter. Sized to be present but
+       never compete with the headline. */
+    .brand {
+      position: absolute;
+      top: 90px; left: 70px;
+      width: 200px; height: 160px;
+      background: url('../public/logo-black.png') left center / contain no-repeat;
+      z-index: 6;
+      opacity: 0.92;
+    }
+    .brand.light {
+      filter: invert(98%) sepia(6%) saturate(0%) brightness(105%);
+      opacity: 0.95;
+    }
+
     .copy {
       position: absolute;
-      top: 110px; left: 80px; right: 80px;
+      top: 290px; left: 80px; right: 80px;
       z-index: 5;
     }
     .eyebrow {
@@ -312,6 +329,7 @@
     <div class="screen">
       <div class="backdrop" style="background-image: url('../public/photos/audition-wait-32.png')"></div>
       <div class="vignette"></div>
+      <div class="brand light"></div>
       <div class="sparkles">
         <div class="sparkle" style="top: 380px; right: 200px;"></div>
         <div class="sparkle lg coral" style="top: 580px; right: 90px;"></div>
@@ -414,6 +432,7 @@
     <div class="screen">
       <div class="backdrop" style="background-image: url('../public/photos/night-study.png')"></div>
       <div class="vignette"></div>
+      <div class="brand light"></div>
       <div class="sparkles">
         <div class="sparkle" style="top: 250px; right: 120px;"></div>
         <div class="sparkle mint" style="top: 480px; right: 320px;"></div>
@@ -534,6 +553,7 @@
     <div class="screen">
       <div class="backdrop" style="background-image: url('../public/photos/street-script.png')"></div>
       <div class="vignette"></div>
+      <div class="brand light"></div>
       <div class="sparkles">
         <div class="sparkle coral" style="top: 200px; right: 220px;"></div>
         <div class="sparkle" style="top: 320px; right: 80px;"></div>
@@ -594,6 +614,7 @@
     <div class="screen">
       <div class="backdrop" style="background-image: url('../public/photos/partners-table.png')"></div>
       <div class="vignette"></div>
+      <div class="brand light"></div>
       <div class="sparkles">
         <div class="sparkle mint" style="top: 280px; right: 180px;"></div>
         <div class="sparkle coral" style="top: 460px; right: 80px;"></div>
@@ -681,6 +702,7 @@
     <div class="screen">
       <div class="backdrop" style="background-image: url('../public/photos/audition-hall-hamlet.png')"></div>
       <div class="vignette"></div>
+      <div class="brand light"></div>
       <div class="sparkles">
         <div class="sparkle lg" style="top: 220px; right: 100px;"></div>
         <div class="sparkle" style="top: 420px; right: 180px;"></div>
@@ -750,6 +772,7 @@
       <div style="position: absolute; inset: 0; background: linear-gradient(160deg, #FBF4E2 0%, #F4E7D0 100%);"></div>
       <div style="position: absolute; top: 600px; left: 50%; transform: translateX(-50%); width: 1200px; height: 1200px; border-radius: 50%; background: radial-gradient(circle, rgba(212,168,95,0.18) 0%, rgba(167,236,218,0.12) 50%, transparent 80%); filter: blur(40px);"></div>
 
+      <div class="brand"></div>
       <div class="sparkles">
         <div class="sparkle" style="top: 280px; right: 220px;"></div>
         <div class="sparkle mint" style="top: 460px; left: 180px;"></div>
@@ -824,6 +847,7 @@
       <div style="position: absolute; inset: 0; background: linear-gradient(180deg, #FBF4E2 0%, #F2E7CC 100%);"></div>
       <div style="position: absolute; top: 400px; left: 50%; transform: translateX(-50%); width: 1000px; height: 1000px; border-radius: 50%; background: radial-gradient(circle, rgba(212,168,95,0.2) 0%, rgba(167,236,218,0.12) 50%, transparent 80%); filter: blur(50px);"></div>
 
+      <div class="brand"></div>
       <div class="sparkles">
         <div class="sparkle" style="top: 260px; right: 200px;"></div>
         <div class="sparkle mint" style="top: 360px; left: 220px;"></div>
