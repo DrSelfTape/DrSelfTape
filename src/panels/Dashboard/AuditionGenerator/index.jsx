@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import { useIsMobile } from '../../../hooks/useIsMobile';
+import useAIGate from '../../../components/AIConsent/useAIGate';
 
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS — Aurora light
@@ -113,6 +114,9 @@ function Badge({ text, color }) {
    MAIN
    ═══════════════════════════════════════════════════ */
 export default function AuditionGenerator() {
+  // Apple Guideline 5.1.1(i) — Generate calls the LLM with the user's
+  // genre / role / casting context.
+  useAIGate();
   const navigate = useNavigate();
 
   const [genre,      setGenre]      = useState('Drama');

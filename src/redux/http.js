@@ -44,6 +44,20 @@ axiosInstance.interceptors.response.use(
       window.dispatchEvent(new CustomEvent('insufficient_tokens'));
     }
 
+    // Apple Guideline 5.1.1(i) — if a panel slips past the AIGate and
+    // an AI request hits the BE without consent, the user gets a 403
+    // with detail='ai_consent_required'. Open the consent modal so the
+    // user can accept and retry, rather than dumping a raw HTTP error.
+    if (
+      error?.response?.status === 403 &&
+      (error?.response?.data?.detail === 'ai_consent_required' ||
+       error?.response?.data?.code === 'ai_consent_required' ||
+       (typeof error?.response?.data?.message === 'string' &&
+        error.response.data.message.toLowerCase().includes('ai features require')))
+    ) {
+      try { window.dispatchEvent(new CustomEvent('drst-open-ai-consent')); } catch { /* swallow */ }
+    }
+
     if (error?.response?.status === 401) {
       const requestUrl = error?.config?.url || '';
       const hadAuthHeader = !!error?.config?.headers?.Authorization;

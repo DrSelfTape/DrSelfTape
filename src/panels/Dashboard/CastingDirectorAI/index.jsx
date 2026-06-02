@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "../../../redux/http";
 import endPoints from "../../../redux/constant";
+import useAIGate from "../../../components/AIConsent/useAIGate";
 
 const MINT = "#A7ECDA";
 const MINT_DIM = "rgba(167,236,218,0.10)";
@@ -615,6 +616,9 @@ function RehearseScreen() {
    MAIN APP
    ═══════════════════════════════════════════════════ */
 export default function CastingDirectorAI() {
+  // Apple Guideline 5.1.1(i) — every CastingDirectorAI screen invokes
+  // the LLM via apps/ai/views.py.
+  useAIGate();
   const [mode, setMode] = useState(null);
 
   const screens = { breakdown: <BreakdownScreen />, rehearse: <RehearseScreen />, notes: <NotesScreen />, prep: <PrepScreen />, generate: <GeneratorScreen /> };

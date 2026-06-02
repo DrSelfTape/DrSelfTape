@@ -186,6 +186,12 @@ export const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
     },
+    // Apple guideline 5.1.1(i): once the user accepts the AI consent
+    // modal, the BE returns a timestamp we mirror on state.user so the
+    // gate stops triggering for the rest of the session.
+    setAiConsentAcceptedAt: (state, action) => {
+      if (state.user) state.user.ai_consent_accepted_at = action.payload || null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -384,7 +390,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const { logoutUser, clearTempSession } = authSlice.actions;
+export const { logoutUser, clearTempSession, setAiConsentAcceptedAt } = authSlice.actions;
 
 // Logout that ALSO clears persisted data slices (auditions, submissions,
 // scripts, etc.) so the next user on this device starts clean. Call this

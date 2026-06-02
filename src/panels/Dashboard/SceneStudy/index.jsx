@@ -10,6 +10,7 @@ import SelfTapeRecorder from './SelfTapeRecorder';
 import PostSessionJournal from '../../../components/Shared/PostSessionJournal';
 import FocusMode from '../../../components/Shared/FocusMode';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import useAIGate from '../../../components/AIConsent/useAIGate';
 
 const STEPS = ['upload', 'pick-role', 'practice'];
 const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice'];
@@ -82,6 +83,9 @@ function extractCharacters(lines) {
 }
 
 export default function SceneStudy() {
+  // Apple Guideline 5.1.1(i) — Practice mode pipes script text through
+  // Claude / GPT for scene partner replies + script formatting.
+  useAIGate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   // v2 is now the default; ?layout=v1 falls back to the legacy chrome.

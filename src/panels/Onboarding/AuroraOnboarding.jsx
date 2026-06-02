@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { updateProfileThunk, fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
@@ -127,7 +127,7 @@ function TopBar({ step, total, onBack, onSkip }) {
   );
 }
 
-function Field({ label, value, onChange, placeholder, type = 'text', multiline }) {
+function Field({ label, value, onChange, placeholder, type = 'text', multiline, disabled, hint }) {
   const C = multiline ? 'textarea' : 'input';
   return (
     <div>
@@ -142,17 +142,28 @@ function Field({ label, value, onChange, placeholder, type = 'text', multiline }
         placeholder={placeholder}
         type={type}
         rows={multiline ? 3 : undefined}
+        disabled={disabled}
+        readOnly={disabled}
         style={{
           width: '100%', marginTop: 6,
           border: '1.5px solid var(--aurora-line)',
           borderRadius: 14, padding: '14px 16px',
           fontFamily: "'Space Grotesk', sans-serif",
           fontSize: 16, color: 'var(--aurora-text)',
-          outline: 'none', background: 'rgba(255,255,255,0.7)',
+          outline: 'none',
+          background: disabled ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.7)',
           resize: multiline ? 'none' : undefined,
           lineHeight: multiline ? 1.5 : undefined,
+          cursor: disabled ? 'not-allowed' : 'text',
         }}
       />
+      {hint && (
+        <p style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+          letterSpacing: '0.1em', color: 'var(--aurora-dim)',
+          margin: '6px 0 0', textTransform: 'uppercase',
+        }}>{hint}</p>
+      )}
     </div>
   );
 }
@@ -220,19 +231,24 @@ function SelectRow({ label, sub, on, onClick, tint }) {
 
 /* ───── STEP COMPONENTS ───── */
 
-function Identity({ data, set, onNext }) {
+function Identity({ data, set, onNext, nameLocked }) {
   const valid = (data.first_name || '').trim() && (data.last_name || '').trim();
+  // When the name arrived from Sign in with Apple (or a prior signup), we
+  // lock the inputs read-only so Apple's Authentication Services framework
+  // remains the only source of name truth (Apple HIG: never re-ask for data
+  // SiwA already provided). The user can still change it later from Profile.
+  const nameHint = nameLocked ? 'SYNCED FROM YOUR ACCOUNT — EDIT FROM PROFILE LATER' : null;
   return (
     <div style={{ padding: '12px 26px 30px' }}>
       <h1 style={{
         fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 700,
         letterSpacing: '-0.6px', lineHeight: 1.02, margin: 0,
-      }}>Tell us<br />who you are.</h1>
+      }}>{nameLocked ? <>Welcome,<br />{(data.first_name || '').trim() || 'actor'}.</> : <>Tell us<br />who you are.</>}</h1>
       <div style={{ marginTop: 22 }}>
-        <Field label="FIRST NAME" value={data.first_name} onChange={(v) => set({ first_name: v })} placeholder="Maya" />
+        <Field label="FIRST NAME" value={data.first_name} onChange={(v) => set({ first_name: v })} placeholder="Maya" disabled={nameLocked} hint={nameHint} />
       </div>
       <div style={{ marginTop: 16 }}>
-        <Field label="LAST NAME" value={data.last_name} onChange={(v) => set({ last_name: v })} placeholder="Okonkwo" />
+        <Field label="LAST NAME" value={data.last_name} onChange={(v) => set({ last_name: v })} placeholder="Okonkwo" disabled={nameLocked} />
       </div>
       <div style={{ marginTop: 16 }}>
         <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>UNION STATUS</label>
@@ -763,18 +779,35 @@ function Welcome({ data, onDone }) {
 /* ───── ROOT ───── */
 export default function AuroraOnboarding({ onClose }) {
   const dispatch = useDispatch();
+  // Apple guideline 4 / Sign in with Apple HIG: if Authentication Services
+  // already provided the user's name, never re-ask. We seed the onboarding
+  // form from the logged-in user so the Identity step renders pre-filled
+  // and read-only when first_name + last_name are present.
+  const authUser = useSelector((s) => s?.auth?.user) || {};
   const [i, setI] = useState(() => {
     const saved = parseInt(typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_STEP) : null, 10);
     return Number.isFinite(saved) ? Math.min(saved, STEPS.length - 1) : 0;
   });
   const [data, setData] = useState(() => {
+    let saved = {};
     try {
       const raw = typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_DATA) : null;
-      return raw ? JSON.parse(raw) : {};
+      saved = raw ? JSON.parse(raw) : {};
     } catch {
-      return {};
+      saved = {};
     }
+    // Backfill name + city from the logged-in user record on first render.
+    // localStorage wins for anything the user has already typed in this
+    // onboarding session, but we never want an empty name input when SiwA
+    // already gave us one.
+    return {
+      first_name: saved.first_name || authUser.first_name || '',
+      last_name: saved.last_name || authUser.last_name || '',
+      city: saved.city || authUser.city || '',
+      ...saved,
+    };
   });
+  const nameLocked = !!(authUser.first_name && authUser.last_name);
 
   const step = STEPS[i];
   const go = (n) => {
@@ -862,7 +895,7 @@ export default function AuroraOnboarding({ onClose }) {
             // the keyboard, not pinned at the very top.
             scrollPaddingBottom: '120px',
           }}>
-            {step === 'identity' && <Identity data={data} set={set} onNext={next} />}
+            {step === 'identity' && <Identity data={data} set={set} onNext={next} nameLocked={nameLocked} />}
             {step === 'profile' && <ProfileStep data={data} set={set} onNext={next} />}
             {step === 'interests' && (
               <MultiPicker

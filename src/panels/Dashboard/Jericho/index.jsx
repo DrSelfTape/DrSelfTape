@@ -16,6 +16,7 @@ import {
   fetchRecentSessions,
   updateActorMemory,
 } from '../../../redux/features/jericho/jerichoSlice';
+import useAIGate from '../../../components/AIConsent/useAIGate';
 
 // ─── Performance DNA Metrics ───────────────────────────────────────────
 
@@ -151,6 +152,10 @@ function DNABars({ dna = {} }) {
 // ─── Main Component ────────────────────────────────────────────────────
 
 export default function JerichoDashboard() {
+  // Apple Guideline 5.1.1(i) — affirmative AI consent required before
+  // we fetch the actor-memory profile (which the BE then mixes into
+  // every AI prompt).
+  useAIGate();
   const dispatch = useDispatch();
   const {
     memory, memoryLoading,

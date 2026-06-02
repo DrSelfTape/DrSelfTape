@@ -11,6 +11,7 @@ import { identifySentryUser, clearSentryUser } from './utils/sentry';
 import { fetchUserSettings, resetSettings } from './redux/features/userSettings/userSettingsSlice';
 import { initPurchases } from './utils/purchases';
 import { resumeQueue } from './utils/uploadQueue';
+import AIConsentModal from './components/AIConsent/AIConsentModal';
 
 function App() {
   const dispatch = useDispatch();
@@ -53,6 +54,10 @@ function App() {
   return (
     <SocketProvider>
       <Router />
+      {/* Apple Guideline 5.1.1(i): mounted once so any AI feature can
+          `await requestAiConsent()` and get a single, consistent prompt
+          before sending user data to Anthropic / OpenAI / ElevenLabs. */}
+      <AIConsentModal />
     </SocketProvider>
   );
 }

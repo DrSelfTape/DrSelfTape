@@ -8,6 +8,7 @@ import CDReport from './CDReport';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
+import useAIGate from '../../../components/AIConsent/useAIGate';
 
 const STEPS = ['upload', 'role', 'voice', 'analyzing', 'report'];
 const STEP_LABELS = ['Upload Sides', 'Pick Role', 'Coach Style', 'Analyzing', 'Feedback'];
@@ -185,6 +186,9 @@ function AnalyzingPhase({ error, onRetry }) {
 }
 
 export default function CDSim() {
+  // Apple Guideline 5.1.1(i) — gate the entire panel behind the AI
+  // consent modal. Bounces back to /dashboard if the user declines.
+  useAIGate();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
