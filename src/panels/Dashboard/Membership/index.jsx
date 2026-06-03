@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { isNativeIOS, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor } from '../../../utils/purchases';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 const PLANS = [
   {
@@ -128,6 +129,12 @@ function ComparisonRings() {
 }
 
 export default function Membership({ onClose }) {
+  // Membership is full-screen with its own X close button; the persistent
+  // MobileApp top bar (Aurora wordmark + bell + avatar) overlaps the
+  // billing toggle row + RESTORE link otherwise. Hide it for the
+  // lifetime of this panel.
+  useHideMobileHeader(true);
+
   const dispatch = useDispatch();
   const [billing, setBilling] = useState('yearly'); // default yearly so free trial is featured
   const [selectedPlan, setSelectedPlan] = useState('plus'); // default to Plus (popular)
