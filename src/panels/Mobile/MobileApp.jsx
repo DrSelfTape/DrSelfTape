@@ -2844,6 +2844,31 @@ export default function DrSelfTapeApp() {
     }
   }, []);
 
+  // Force-hide the persistent top bar (logo + bell + avatar) whenever a
+  // modal is open. The mobile top bar lives at zIndex 50 in a flex
+  // column; modals portal to body at z-110 and SHOULD win, but the bell
+  // + avatar still bleed into the modal's title row (their fixed position
+  // collides with the modal's top padding). Modals fire
+  // `drst-modal-open` on mount and `drst-modal-closed` on unmount so the
+  // header slides out of the way for every modal we own.
+  useEffect(() => {
+    let count = 0;
+    const onOpen = () => {
+      count += 1;
+      setHeaderHidden(true);
+    };
+    const onClose = () => {
+      count = Math.max(0, count - 1);
+      if (count === 0) setHeaderHidden(false);
+    };
+    window.addEventListener('drst-modal-open', onOpen);
+    window.addEventListener('drst-modal-closed', onClose);
+    return () => {
+      window.removeEventListener('drst-modal-open', onOpen);
+      window.removeEventListener('drst-modal-closed', onClose);
+    };
+  }, []);
+
   useEffect(() => {
     const handler = () => setShowNoTokens(true);
     window.addEventListener('insufficient_tokens', handler);

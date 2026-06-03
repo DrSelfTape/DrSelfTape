@@ -332,6 +332,14 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
     }
   }, [audition, onClose]);
 
+  // Hide MobileApp's persistent top bar while the audition detail
+  // panel is open (same overlap problem as NewAuditionModal).
+  useEffect(() => {
+    if (!audition) return;
+    window.dispatchEvent(new CustomEvent('drst-modal-open'));
+    return () => window.dispatchEvent(new CustomEvent('drst-modal-closed'));
+  }, [audition]);
+
   if (!audition) return null;
 
   const handleSave = () => {
@@ -535,6 +543,15 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     project: '', role: '', casting_director: '', agency: '',
     project_type: 'film', callback_date: '', notes: '',
   });
+
+  // Tell MobileApp to slide its persistent top bar out of the way for
+  // the lifetime of this modal — otherwise the bell + avatar overlap
+  // the modal's title row and the X close button is hard to reach.
+  useEffect(() => {
+    if (!open) return;
+    window.dispatchEvent(new CustomEvent('drst-modal-open'));
+    return () => window.dispatchEvent(new CustomEvent('drst-modal-closed'));
+  }, [open]);
 
   if (!open) return null;
 
