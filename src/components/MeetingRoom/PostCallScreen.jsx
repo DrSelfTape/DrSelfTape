@@ -3,6 +3,7 @@ import { Star, Send, X, DollarSign } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import useHideMobileHeader from '../Shared/useHideMobileHeader';
+import { openExternal } from '../../utils/openExternal';
 
 const TIP_AMOUNTS = [5, 10, 15, 25];
 
@@ -28,7 +29,11 @@ export default function PostCallScreen({ partnerName, onClose }) {
         tip_amount: amount,
       });
       if (data?.data?.checkout_url) {
-        window.location.href = data.data.checkout_url;
+        // In-app Safari sheet — Apple Pay can render here (subject to
+        // Stripe domain verification). Replacing the WKWebView wholesale
+        // never showed Apple Pay and was disorienting on return.
+        await openExternal(data.data.checkout_url);
+        setSent(true);
         return;
       }
       setSent(true);

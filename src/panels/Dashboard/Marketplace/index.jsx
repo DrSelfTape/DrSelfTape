@@ -4,6 +4,7 @@ import { Star, Clock, X, ChevronDown } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
+import { openExternal } from '../../../utils/openExternal';
 
 const DURATIONS = [
   { value: 15, label: '15 min' },
@@ -252,7 +253,14 @@ export default function Marketplace() {
       });
       const checkoutUrl = data?.data?.checkout_url;
       if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+        // Open Stripe Checkout in an in-app Safari sheet (Capacitor
+        // Browser plugin → SFSafariViewController). That sheet is a
+        // real Safari context, so Apple Pay can appear if the domain
+        // is verified in Stripe → Apple Pay settings. Replacing the
+        // whole WKWebView via window.location.href makes the return
+        // trip rough and never shows Apple Pay anyway.
+        await openExternal(checkoutUrl);
+        setConfirmData(null);
       } else {
         setConfirmData(null);
       }
