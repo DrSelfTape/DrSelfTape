@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { Star, Send, X, DollarSign } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
+import useHideMobileHeader from '../Shared/useHideMobileHeader';
 
 const TIP_AMOUNTS = [5, 10, 15, 25];
 
 export default function PostCallScreen({ partnerName, onClose }) {
+  useHideMobileHeader(true);
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [tipAmount, setTipAmount] = useState(null);

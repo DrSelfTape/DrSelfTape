@@ -1,4 +1,7 @@
+import useHideMobileHeader from './Shared/useHideMobileHeader';
+
 export default function NoTokensModal({ onClose, onUpgrade }) {
+  useHideMobileHeader(true);
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" style={{
       background: 'rgba(10,10,10,0.45)',

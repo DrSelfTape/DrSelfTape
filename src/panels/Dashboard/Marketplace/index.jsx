@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Star, Clock, X, ChevronDown } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 const DURATIONS = [
   { value: 15, label: '15 min' },
@@ -154,9 +155,12 @@ function ReaderCard({ reader, onBook }) {
 
 function ConfirmModal({ reader, duration, onConfirm, onClose, booking }) {
   const price = reader?.rates?.[duration] ?? '—';
+  useHideMobileHeader(true);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
+    // z-[110] beats the persistent MobileApp top bar (z-50). The previous
+    // z-50 caused the bell + avatar to bleed onto the modal's title row.
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60">
       <div
         className="rounded-2xl p-6 w-full max-w-md border"
         style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
