@@ -18,6 +18,10 @@ export class ErrorBoundary extends Component {
       msg.includes('Loading chunk') ||
       msg.includes('Loading CSS chunk') ||
       msg.includes('ChunkLoadError') ||
+      // Chrome surfaces a stale chunk that 404s to the HTML fallback
+      // page (Vercel's 404 / Vite's index.html) as a MIME-type error.
+      // It's the same root cause — old client, new deploy.
+      msg.includes('is not a valid JavaScript MIME type') ||
       // Safari sometimes surfaces these as a network error on the import URL
       /Unable to preload CSS for/.test(msg);
 

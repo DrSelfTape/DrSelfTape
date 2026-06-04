@@ -917,6 +917,12 @@ function getMobileNextStep({ profile, stats, submissions, scripts }) {
   if (!hasSubs) {
     return { title: 'Practice with AI', desc: 'Run your scene with an AI partner and record a take.', cta: 'Start Practicing', icon: 'mic', action: 'live' };
   }
+  if (!hasAuditions) {
+    // Once the user has practiced, push them into the Tracker so they
+    // start logging real auditions. Current data: 1 audition logged
+    // across 57 users in 7 days — the Tracker needs an active CTA.
+    return { title: 'Log your last audition', desc: 'Start your pipeline — Snap a breakdown screenshot or add manually.', cta: 'Add Audition', icon: 'plus', action: 'audition' };
+  }
   return { title: 'Ready to work?', desc: 'Jump back into scene study or try the acting coach.', cta: 'Continue', icon: 'play', action: 'live' };
 }
 
@@ -1006,6 +1012,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     if (nextStep.action === 'profile') setCurrentPanel('dash-profile');
     else if (nextStep.action === 'generator') setCurrentPanel('generator');
     else if (nextStep.action === 'live') setTab('scenes');
+    else if (nextStep.action === 'audition') setTab('auditions');
   };
 
   const firstCallback = callbacks[0];

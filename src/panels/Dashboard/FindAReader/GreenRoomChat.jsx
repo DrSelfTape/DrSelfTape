@@ -172,6 +172,19 @@ const GreenRoomChat = (props = {}) => {
     } catch { /* local msg already shown */ } finally { setSending(false); }
   };
 
+  // Send a pre-written icebreaker on tap. Skips the input field so the
+  // user doesn't have to retype — the funnel data (6 matches → 8
+  // messages over 7d) said the cold-start barrier was the killer.
+  const sendIcebreaker = async (text) => {
+    if (sending) return;
+    sendLocalMsg(text);
+    setSending(true);
+    try {
+      await dispatch(sendGreenRoomMessage({ match_id: matchId, content: text })).unwrap();
+      dispatch(fetchGreenRoomMessages(matchId));
+    } catch { /* local msg already shown */ } finally { setSending(false); }
+  };
+
   const handleSidesUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -554,10 +567,42 @@ const GreenRoomChat = (props = {}) => {
         )}
 
         {!messagesLoading && greenRoomMessages.length === 0 && (
-          <div className="flex flex-col items-center text-center px-8 gap-3 mt-2">
+          <div className="flex flex-col items-center text-center px-6 gap-4 mt-2">
             <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>
-              Say hi, share your sides, then start a live rehearsal together — or practice with the AI first.
+              Say hi to {partnerName.split(' ')[0] || 'your partner'}, share your sides,
+              then start a live rehearsal — or practice with the AI first.
             </p>
+            {/* Tap-to-send icebreakers — addresses the 6 matches/7d that
+                produced 8 messages total. Most matches went silent after
+                the celebration screen because nobody made the first move. */}
+            <div className="aurora-eyebrow" style={{ color: 'var(--aurora-dim)', marginTop: 6 }}>
+              Break the ice
+            </div>
+            <div className="flex flex-wrap justify-center gap-2 w-full max-w-md">
+              {[
+                `Hey ${partnerName.split(' ')[0] || 'there'} — want to run sides this week?`,
+                `Down for a quick read whenever you're free.`,
+                `I'm prepping for an audition — wanna swap reads?`,
+                `Cold read sometime? I've got a few minutes today.`,
+              ].map((text) => (
+                <button
+                  key={text}
+                  type="button"
+                  onClick={() => sendIcebreaker(text)}
+                  disabled={sending}
+                  className="text-xs px-3.5 py-2 rounded-full transition"
+                  style={{
+                    background: 'rgba(212,168,95,0.14)',
+                    border: '1px solid rgba(212,168,95,0.35)',
+                    color: 'var(--aurora-heritage-gold-deep)',
+                    cursor: sending ? 'wait' : 'pointer',
+                    opacity: sending ? 0.6 : 1,
+                  }}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

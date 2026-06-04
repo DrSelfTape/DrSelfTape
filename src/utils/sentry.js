@@ -25,6 +25,9 @@ export function initSentry() {
       'Failed to fetch dynamically imported module',
       'Loading chunk',
       'Loading CSS chunk',
+      'is not a valid JavaScript MIME type',
+      'Importing a module script failed',
+      'Unable to preload CSS for',
     ],
   });
 }
