@@ -5,6 +5,7 @@ import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import PermissionsModal from '../../../components/PermissionsModal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
+import { isNativeIOS } from '../../../utils/purchases';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
 
 const SILENCE_TIMEOUT = 1500;
@@ -504,13 +505,26 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   /**
    * Start the live scene session.
    */
-  // Called after voice is picked — show mode picker
+  // Called after voice is picked — show mode picker.
+  // On iOS Capacitor, webkitSpeechRecognition is defined but doesn't
+  // actually transcribe (known WKWebView limitation), so skip the mode
+  // picker and auto-start in pre-timed mode. Pre-timed plays the AI's
+  // line, then pauses for the actor's beat, then auto-advances — same
+  // dramatic flow without the broken speech recognition path.
   const onVoiceSelected = useCallback((selectedVoice) => {
     setPendingVoice(selectedVoice);
     setVoice(selectedVoice);
     setShowVoicePicker(false);
-    setShowModePicker(true);
+    if (isNativeIOS()) {
+      // Default 3s pause after each AI line for the actor to deliver.
+      startPreTimedSceneRef.current?.(selectedVoice, 3);
+    } else {
+      setShowModePicker(true);
+    }
   }, []);
+  // Forward ref to startPreTimedScene — it's defined later in the file
+  // and useCallback deps would hit the TDZ if referenced directly.
+  const startPreTimedSceneRef = useRef(null);
 
   // Start voice-activated mode (original behavior)
   const startScene = useCallback(
@@ -589,6 +603,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     },
     [lines, userRole, playTTS, scrollToLine]
   );
+
+  // Bind the ref so onVoiceSelected (defined above) can call into the
+  // latest startPreTimedScene without taking it as a useCallback dep.
+  useEffect(() => {
+    startPreTimedSceneRef.current = startPreTimedScene;
+  }, [startPreTimedScene]);
 
   /**
    * Pause the live scene — stop recognition and audio, keep state.
