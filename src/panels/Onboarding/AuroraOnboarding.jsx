@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { updateProfileThunk, fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
+import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
 
 /* ── Aurora post-signup onboarding flow ────────────────────────────────
  * 8 steps: identity → profile → interests → goals → level → notif →
@@ -778,6 +779,11 @@ function Welcome({ data, onDone }) {
 
 /* ───── ROOT ───── */
 export default function AuroraOnboarding({ onClose }) {
+  // Onboarding is its own full-screen flow with its own progress bar
+  // at top; the persistent MobileApp top bar + bottom tab pill were
+  // showing through on every step (most visible on the headshot
+  // sheet, which also has a bottom action card the tab bar overlapped).
+  useHideMobileHeader(true);
   const dispatch = useDispatch();
   // Apple guideline 4 / Sign in with Apple HIG: if Authentication Services
   // already provided the user's name, never re-ask. We seed the onboarding
