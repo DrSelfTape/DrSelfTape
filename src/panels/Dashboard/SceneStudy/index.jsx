@@ -280,11 +280,8 @@ export default function SceneStudy() {
           onRecord={() => setStep('record')}
           onBack={() => setStep('pick-role')}
           onGoLive={() => setStep('live')}
-          onSelfTape={() => {
-            // Offer focus mode before self-tape recording
-            setShowFocusMode(true);
-            setPendingStep('self-tape');
-          }}
+          /* Self-Tape removed per product call — the recorder UX wasn't
+             strong enough to ship alongside Practice + AI Reader. */
         />
       )}
 
@@ -294,10 +291,6 @@ export default function SceneStudy() {
           userRole={selectedRole}
           onBack={() => setStep('pick-role')}
           onGoLive={() => setStep('live')}
-          onSelfTape={() => {
-            setShowFocusMode(true);
-            setPendingStep('self-tape');
-          }}
         />
       )}
 

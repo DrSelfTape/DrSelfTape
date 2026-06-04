@@ -952,9 +952,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const settingsLoaded = useSelector((state) => state.userSettings?.loaded);
 
   // Pull the snapshot used by the Home graph + cards. Re-fires when
-  // the app comes back to the foreground (visibilitychange) so closing
-  // and reopening — or switching apps and coming back — picks up any
-  // auditions / submissions added on web or from another device.
+  // the app comes back to the foreground (visibilitychange / focus) so
+  // a returning user picks up auditions / submissions added on web or
+  // from another device. Debounced so flipping focus rapidly during
+  // app-switch (which iOS does multiple times in <1s) doesn't fan out
+  // into 15 concurrent thunks racing each other.
   useEffect(() => {
     const refresh = () => {
       dispatch(fetchAuditionsThunk());
@@ -964,14 +966,16 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       dispatch(fetchMatchingStats());
     };
     refresh();
+    let pending = null;
     const onVisibility = () => {
-      if (document.visibilityState === 'visible') refresh();
+      if (document.visibilityState !== 'visible') return;
+      if (pending) clearTimeout(pending);
+      pending = setTimeout(() => { pending = null; refresh(); }, 400);
     };
     document.addEventListener('visibilitychange', onVisibility);
-    // Capacitor surfaces resume via window 'focus' on WKWebView; cover
-    // both so we don't miss either platform.
     window.addEventListener('focus', onVisibility);
     return () => {
+      if (pending) clearTimeout(pending);
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', onVisibility);
     };
