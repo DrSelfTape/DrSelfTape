@@ -2138,6 +2138,15 @@ function ScenesScreen({ setTab }) {
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null); // script object to confirm
 
+  // Slide the top bar + bottom tab bar out of the way while the
+  // bottom-sheet delete confirm is up so its action buttons aren't
+  // hidden behind the tab pill.
+  useEffect(() => {
+    if (!confirmDelete) return;
+    window.dispatchEvent(new CustomEvent('drst-modal-open'));
+    return () => window.dispatchEvent(new CustomEvent('drst-modal-closed'));
+  }, [confirmDelete]);
+
   useEffect(() => {
     dispatch(fetchScriptsThunk());
     dispatch(getScripts());
@@ -2844,22 +2853,32 @@ export default function DrSelfTapeApp() {
     }
   }, []);
 
-  // Force-hide the persistent top bar (logo + bell + avatar) whenever a
-  // modal is open. The mobile top bar lives at zIndex 50 in a flex
-  // column; modals portal to body at z-110 and SHOULD win, but the bell
-  // + avatar still bleed into the modal's title row (their fixed position
-  // collides with the modal's top padding). Modals fire
-  // `drst-modal-open` on mount and `drst-modal-closed` on unmount so the
-  // header slides out of the way for every modal we own.
+  // Bottom tab bar can collide with bottom-sheet modal action rows
+  // (Delete confirm, etc.) — same root cause as the top bar.
+  // tabBarHidden is driven by the same modal-open count so both bars
+  // slide away together for every modal we own.
+  const [tabBarHidden, setTabBarHidden] = useState(false);
+
+  // Force-hide the persistent top bar + bottom tab bar whenever a
+  // modal is open. Both bars live at zIndex 50; modals portal to body
+  // at z-100+ and SHOULD win on stacking, but their fixed position at
+  // top / bottom of the viewport collides with the modal's title row
+  // (top bar) and action button row (bottom bar) regardless of z.
+  // Modals fire `drst-modal-open` on mount and `drst-modal-closed` on
+  // unmount so both bars get out of the way.
   useEffect(() => {
     let count = 0;
     const onOpen = () => {
       count += 1;
       setHeaderHidden(true);
+      setTabBarHidden(true);
     };
     const onClose = () => {
       count = Math.max(0, count - 1);
-      if (count === 0) setHeaderHidden(false);
+      if (count === 0) {
+        setHeaderHidden(false);
+        setTabBarHidden(false);
+      }
     };
     window.addEventListener('drst-modal-open', onOpen);
     window.addEventListener('drst-modal-closed', onClose);
@@ -3071,7 +3090,9 @@ export default function DrSelfTapeApp() {
 
           {/* Bottom Tab Bar — floating glass pill w/ active-pill highlight.
            * Active tab = solid black pill containing icon + horizontal label.
-           * Inactive tabs = just the icon (no label). */}
+           * Inactive tabs = just the icon (no label).
+           * Slides down + fades when a modal is open so bottom-sheet
+           * action buttons (Cancel / Delete) aren't hidden behind it. */}
           <div style={{
             position: "fixed",
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
@@ -3083,10 +3104,13 @@ export default function DrSelfTapeApp() {
             border: '1px solid rgba(255, 255, 255, 0.55)',
             borderRadius: 28,
             boxShadow: "0 12px 40px rgba(10,10,10,0.10), inset 0 1px 0 rgba(255,255,255,0.7)",
-            transition: "background 0.3s, transform 0.2s",
+            transition: "background 0.3s, transform 260ms cubic-bezier(0.4, 0, 0.2, 1), opacity 220ms ease",
             display: "flex", justifyContent: "space-between", alignItems: "center",
             padding: '8px 10px',
             height: 64,
+            pointerEvents: tabBarHidden ? 'none' : 'auto',
+            opacity: tabBarHidden ? 0 : 1,
+            transform: tabBarHidden ? 'translateY(120%)' : 'translateY(0)',
           }}>
             {TABS.map(t => {
               const a = tab === t.id && !currentPanel;
