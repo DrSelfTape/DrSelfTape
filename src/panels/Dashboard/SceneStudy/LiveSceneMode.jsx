@@ -4,6 +4,7 @@ import ModePicker from './ModePicker';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import PermissionsModal from '../../../components/PermissionsModal';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
 
 const SILENCE_TIMEOUT = 1500;
@@ -147,6 +148,10 @@ const STATUS_MESSAGES = {
 };
 
 export default function LiveSceneMode({ lines, userRole, characters, initialVoice, onExit }) {
+  // Live Study Mode owns its own Pause / End Scene controls in the top
+  // banner — the persistent MobileApp top bar + bottom tab pill just
+  // crowd the script and the mic. Slide them both away.
+  useHideMobileHeader(true);
   const dispatch = useDispatch();
   const sceneStartTimeRef = useRef(null);
   const [status, setStatus] = useState('idle'); // idle | listening | thinking | playing | error
@@ -818,26 +823,33 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             {lines.map((line, i) => {
               const isUser = line.character === userRole;
               const isCurrent = i === currentLineIdx;
+              const isPast = i < currentLineIdx;
+              // Contrast tiers: PAST lines fade (opacity 65%) but stay
+              // legible; CURRENT line is full-strength ink with a tinted
+              // background; UPCOMING lines are slightly muted so the
+              // eye finds the current row instantly.
               return (
                 <div
                   key={i}
                   data-line-idx={i}
-                  className={`rounded-lg p-1.5 lg:p-2.5 transition-all duration-300 ${
+                  className={`rounded-lg p-2 lg:p-2.5 transition-all duration-300 ${
                     isCurrent
                       ? isUser
-                        ? 'bg-[#D4A85F]/15 border-l-2 border-[#D4A85F]'
-                        : 'bg-white/5 border-l-2 border-white/40'
-                      : 'opacity-40'
+                        ? 'bg-[#D4A85F]/20 border-l-4 border-[#D4A85F]'
+                        : 'bg-[#A7ECDA]/18 border-l-4 border-[#1AB680]'
+                      : isPast
+                        ? 'opacity-60'
+                        : 'opacity-85'
                   }`}
                 >
                   <span
                     className={`text-[10px] font-bold uppercase tracking-wider block mb-0.5 ${
-                      isUser ? 'text-[#7A5A18]' : 'text-[rgba(10,10,10,0.62)]'
+                      isUser ? 'text-[#7A5A18]' : 'text-[rgba(10,10,10,0.78)]'
                     }`}
                   >
                     {line.character}
                   </span>
-                  <p className={`text-xs leading-relaxed ${isCurrent ? 'text-gray-200' : 'text-[rgba(10,10,10,0.62)]'}`}>
+                  <p className={`text-sm leading-snug ${isCurrent ? 'text-[#0A0A0A] font-medium' : 'text-[rgba(10,10,10,0.82)]'}`}>
                     {line.dialogue}
                   </p>
                 </div>
@@ -906,7 +918,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             </div>
           )}
 
-          {/* AI Character Line Display */}
+          {/* AI Character Line Display — when listening, show the
+              user's UPCOMING line in big teleprompter type so they can
+              read it. When the AI is speaking, show the AI line. */}
           {(sceneStarted || status !== 'idle') && (
           <div className="text-center max-w-2xl w-full mb-2 lg:mb-4">
             {status === 'playing' || aiCurrentLine ? (
@@ -916,6 +930,15 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 </span>
                 <p className="text-[#0A0A0A] text-2xl md:text-3xl font-light leading-relaxed">
                   {aiCurrentLine}
+                </p>
+              </>
+            ) : status === 'listening' && lines[currentLineIdx]?.character === userRole ? (
+              <>
+                <span className="text-[#7A5A18] text-xs font-bold uppercase tracking-widest block mb-3">
+                  Your line · {userRole}
+                </span>
+                <p className="text-[#0A0A0A] text-2xl md:text-3xl font-light leading-relaxed px-2">
+                  &ldquo;{lines[currentLineIdx]?.dialogue}&rdquo;
                 </p>
               </>
             ) : status === 'listening' ? (
