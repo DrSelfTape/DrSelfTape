@@ -26,6 +26,20 @@ export const fetchAdminStats = createAsyncThunk(
   }
 );
 
+export const fetchAdminReports = createAsyncThunk(
+  'admin/fetchReports',
+  async (range = '30d', { rejectWithValue }) => {
+    try {
+      const res = await axios.get(`${baseURL}/v1/admin/reports/`, {
+        params: { range },
+      });
+      return res.data?.data || res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 /** Fetch admin users list (supports ?search=, ?role=, ?status= query params) */
 export const fetchAdminUsers = createAsyncThunk(
   'admin/fetchUsers',
@@ -166,6 +180,8 @@ const adminSlice = createSlice({
     messagesLoading: false,
     bannedUsers: [],
     bannedUsersLoading: false,
+    reports: null,
+    reportsLoading: false,
     error: null,
   },
   reducers: {
@@ -197,6 +213,19 @@ const adminSlice = createSlice({
       })
       .addCase(fetchAdminStats.rejected, (state, action) => {
         state.statsLoading = false;
+        state.error = action.payload;
+      })
+      // ── Fetch Reports ──
+      .addCase(fetchAdminReports.pending, (state) => {
+        state.reportsLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchAdminReports.fulfilled, (state, action) => {
+        state.reportsLoading = false;
+        state.reports = action.payload;
+      })
+      .addCase(fetchAdminReports.rejected, (state, action) => {
+        state.reportsLoading = false;
         state.error = action.payload;
       });
 
