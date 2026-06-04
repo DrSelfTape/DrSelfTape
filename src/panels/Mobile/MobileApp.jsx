@@ -951,18 +951,30 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const onboardingSeen = useSelector((state) => state.userSettings?.data?.reader_onboarding_seen);
   const settingsLoaded = useSelector((state) => state.userSettings?.loaded);
 
+  // Pull the snapshot used by the Home graph + cards. Re-fires when
+  // the app comes back to the foreground (visibilitychange) so closing
+  // and reopening — or switching apps and coming back — picks up any
+  // auditions / submissions added on web or from another device.
   useEffect(() => {
-    // fetchAuditionsThunk populates state.auditions.data — the flat list
-    // the home hero ring + pipeline bars + callback rate chart all read
-    // from. Without this, Home only sees an empty array even when the
-    // Tracker panel has populated state.auditions.tracker (different
-    // bucket-shaped endpoint). Symptom was Home showing 0/0/0/0 while
-    // the Tracker showed real auditions.
-    dispatch(fetchAuditionsThunk());
-    dispatch(fetchAuditionStatsThunk());
-    dispatch(getScripts());
-    dispatch(fetchSubmissionsThunk());
-    dispatch(fetchMatchingStats());
+    const refresh = () => {
+      dispatch(fetchAuditionsThunk());
+      dispatch(fetchAuditionStatsThunk());
+      dispatch(getScripts());
+      dispatch(fetchSubmissionsThunk());
+      dispatch(fetchMatchingStats());
+    };
+    refresh();
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') refresh();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    // Capacitor surfaces resume via window 'focus' on WKWebView; cover
+    // both so we don't miss either platform.
+    window.addEventListener('focus', onVisibility);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onVisibility);
+    };
   }, [dispatch]);
 
   useEffect(() => {
