@@ -127,7 +127,6 @@ function ComparisonRings() {
     </div>
   );
 }
-
 export default function Membership({ onClose }) {
   // Membership is full-screen with its own X close button; the persistent
   // MobileApp top bar (Aurora wordmark + bell + avatar) overlaps the
@@ -206,9 +205,28 @@ export default function Membership({ onClose }) {
         if (result.userCancelled) return;
 
         if (!result.ok) {
-          const msg = result.reason === 'no_package'
-            ? "This plan isn't available in the App Store right now. Please try again later."
-            : 'Purchase failed. Please try again.';
+          let msg;
+          if (result.reason === 'no_package') {
+            msg = `This plan isn't available in the App Store yet. ${result.detail || ''}`.trim();
+          } else if (result.reason === 'no_offerings') {
+            msg = 'Subscriptions are temporarily unavailable. We have been notified.';
+          } else if (result.reason === 'unavailable') {
+            msg = `In-App Purchase isn't ready yet. (${result.detail || 'unknown'})`;
+          } else if (result.reason === 'purchase_failed') {
+            msg = `Apple declined the purchase: ${result.error || 'please try again'}`;
+          } else {
+            msg = 'Purchase failed. Please try again.';
+          }
+          // Send the full failure shape to Sentry so we can diagnose
+          // RevenueCat dashboard config issues without needing the user
+          // to read us cryptic toast text over text message.
+          try {
+            const { Sentry } = await import('../../../utils/sentry');
+            Sentry.captureMessage(`IAP purchase failed: ${result.reason}`, {
+              level: 'warning',
+              extra: { ...result, planId, billing },
+            });
+          } catch { /* swallow */ }
           dispatch(showSnackbar({ message: msg, variant: 'error' }));
           return;
         }
@@ -281,12 +299,16 @@ export default function Membership({ onClose }) {
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'relative', minHeight: '100%',
-      padding: '0 0 calc(env(safe-area-inset-bottom, 0px) + 110px)',
+      padding: '0 0 calc(env(safe-area-inset-bottom, 0px) + 24px)',
     }}>
-      {/* Top bar: X / Restore */}
+      {/* Top bar: X / Restore — sticky with backdrop blur so the
+          comparison cards don't bleed through behind RESTORE. */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 20px 4px', position: 'sticky', top: 0, zIndex: 10,
+        padding: '12px 20px 8px', position: 'sticky', top: 0, zIndex: 10,
+        background: 'linear-gradient(to bottom, rgba(250,250,247,0.95) 70%, rgba(250,250,247,0))',
+        backdropFilter: 'blur(20px) saturate(1.4)',
+        WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
       }}>
         {onClose ? (
           <button onClick={onClose} aria-label="Close" style={{
@@ -302,12 +324,19 @@ export default function Membership({ onClose }) {
           </button>
         ) : <div style={{ width: 44 }} />}
         {isNativeIOS() && (
-          <button onClick={handleRestore} style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-            letterSpacing: '0.1em', color: 'var(--aurora-accent-deep)',
-            padding: '8px 12px',
-          }}>RESTORE</button>
+          <button
+            type="button"
+            onClick={handleRestore}
+            onTouchEnd={(e) => { e.preventDefault(); handleRestore(); }}
+            style={{
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+              letterSpacing: '0.1em', color: 'var(--aurora-accent-deep)',
+              padding: '8px 12px',
+            }}
+          >RESTORE</button>
         )}
       </div>
 
@@ -470,6 +499,83 @@ export default function Membership({ onClose }) {
           })}
         </div>
 
+        {/* Inline CTA — sits in the document flow, no position:fixed.
+            The earlier floating button hit iOS WKWebView stacking-context
+            bugs where the top bar / tab bar rendered above its tap area. */}
+        <div style={{ marginBottom: 22 }}>
+          {isCurrent ? (
+            <button
+              type="button"
+              onClick={handleManage}
+              onTouchEnd={(e) => { e.preventDefault(); handleManage(); }}
+              style={{
+                width: '100%', padding: '18px', borderRadius: 100, cursor: 'pointer',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
+                border: '2px solid var(--aurora-heritage-gold)',
+                background: 'transparent',
+                fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
+                color: 'var(--aurora-accent-deep)',
+              }}
+            >
+              Manage Plan
+              {isNativeIOS() && (
+                <span style={{ display: 'block', fontSize: 10, opacity: 0.7, marginTop: 4 }}>
+                  Opens Apple Settings · Subscriptions
+                </span>
+              )}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => !checkoutLoading && handleSubscribe(selectedPlan)}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                if (!checkoutLoading) handleSubscribe(selectedPlan);
+              }}
+              disabled={!!checkoutLoading || !selectedPlan}
+              style={{
+                width: '100%', padding: '18px 16px', borderRadius: 100, border: 'none',
+                cursor: checkoutLoading ? 'wait' : 'pointer',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
+                position: 'relative', overflow: 'hidden',
+                background: 'linear-gradient(135deg, #0E0D0A 0%, #1F1B12 100%)',
+                color: '#FFFFFF',
+                fontFamily: "'Space Grotesk', sans-serif",
+                boxShadow: '0 12px 30px rgba(10,10,10,0.30), inset 0 1px 0 rgba(255,255,255,0.08)',
+                opacity: checkoutLoading ? 0.7 : 1,
+              }}
+            >
+              {checkoutLoading === selectedPlan ? (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
+                  <span style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    border: '2px solid currentColor', borderTopColor: 'transparent',
+                    animation: 'drst-spin 0.7s linear infinite',
+                  }} />
+                  Opening checkout…
+                </span>
+              ) : (
+                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 3, lineHeight: 1.15 }}>
+                  {selIntro?.isFreeTrial && (
+                    <span style={{
+                      fontSize: 10, fontWeight: 500, letterSpacing: '0.14em',
+                      textTransform: 'uppercase', opacity: 0.78,
+                      fontFamily: 'JetBrains Mono, monospace',
+                    }}>
+                      {selIntroLabel} then
+                    </span>
+                  )}
+                  <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.2px' }}>
+                    Subscribe · ${ctaPrice}/{billing === 'monthly' ? 'mo' : 'yr'} →
+                  </span>
+                </span>
+              )}
+            </button>
+          )}
+        </div>
+
         {/* Feature ticks (Plus highlights) */}
         <div style={{ marginBottom: 16 }}>
           <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 10 }}>
@@ -550,79 +656,6 @@ export default function Membership({ onClose }) {
         </p>
       </div>
 
-      {/* Sticky bottom CTA */}
-      <div style={{
-        position: 'fixed', left: 0, right: 0,
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 86px)',
-        padding: '12px 22px',
-        background: 'linear-gradient(to top, rgba(250,250,247,1) 60%, rgba(250,250,247,0))',
-        zIndex: 20,
-        pointerEvents: 'none',
-      }}>
-        <div style={{ pointerEvents: 'auto' }}>
-          {isCurrent ? (
-            <button onClick={handleManage} className="aurora-glow" style={{
-              width: '100%', padding: '16px', borderRadius: 100, cursor: 'pointer',
-              border: '2px solid var(--aurora-heritage-gold)',
-              background: 'transparent',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
-              color: 'var(--aurora-accent-deep)',
-            }}>
-              Manage Plan
-              {isNativeIOS() && <span style={{ display: 'block', fontSize: 10, opacity: 0.7, marginTop: 4 }}>
-                Opens Apple Settings · Subscriptions
-              </span>}
-            </button>
-          ) : (
-            <button
-              onClick={() => handleSubscribe(selectedPlan)}
-              disabled={!!checkoutLoading}
-              className="aurora-glow"
-              style={{
-                width: '100%', padding: '16px', borderRadius: 100, border: 'none',
-                cursor: checkoutLoading ? 'wait' : 'pointer',
-                position: 'relative', overflow: 'hidden',
-                background: 'linear-gradient(135deg, #0E0D0A 0%, #1F1B12 100%)',
-                color: '#FFFFFF',
-                fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
-                letterSpacing: '-0.2px',
-                boxShadow: '0 12px 30px rgba(10,10,10,0.30), inset 0 1px 0 rgba(255,255,255,0.08)',
-                opacity: checkoutLoading ? 0.7 : 1,
-              }}
-            >
-              {checkoutLoading === selectedPlan ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{
-                    width: 14, height: 14, borderRadius: '50%',
-                    border: '2px solid currentColor', borderTopColor: 'transparent',
-                    animation: 'drst-spin 0.7s linear infinite',
-                  }} />
-                  Opening checkout…
-                </span>
-              ) : (
-                /* Apple guideline 3.1.2(c): the billed amount must be
-                   the most clear and conspicuous pricing element. Always
-                   lead with the price (large) and surface the trial
-                   eyebrow above it in smaller, subordinate type. */
-                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 2, lineHeight: 1.15 }}>
-                  {selIntro?.isFreeTrial && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 500, letterSpacing: '0.12em',
-                      textTransform: 'uppercase', opacity: 0.78,
-                      fontFamily: 'JetBrains Mono, monospace',
-                    }}>
-                      {selIntroLabel} then
-                    </span>
-                  )}
-                  <span style={{ fontSize: 17, fontWeight: 700, letterSpacing: '-0.3px' }}>
-                    ${ctaPrice}/{billing === 'monthly' ? 'month' : 'year'} →
-                  </span>
-                </span>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
     </div>
   );
 }

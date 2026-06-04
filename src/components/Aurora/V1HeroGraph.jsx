@@ -12,21 +12,39 @@ import { useState, useMemo } from 'react';
  *     Q: { label: 'BY QUARTER', ... },
  *   }
  */
-export default function V1HeroGraph({ data }) {
-  const [metric, setMetric] = useState('callback');
-  const [period, setPeriod] = useState('M');
-  const [idx, setIdx] = useState(11);
+export default function V1HeroGraph({ data, onSubmitFirst }) {
+  const [metric, setMetric] = useState('submitted');
+  const [period, setPeriod] = useState('D');
+  const [idx, setIdx] = useState(6); // last bucket of the default 7-day view
+
+  // A user with zero auditions sees the ring rendered with ghost dots
+  // and a confusing "0%" — which everyone reads as "the app is broken".
+  // Detect the true-empty case across ALL periods + metrics, and render
+  // a real empty state instead of pretending we have data to chart.
+  const hasAnyData = useMemo(() => {
+    if (!data) return false;
+    return Object.values(data).some((d) => {
+      if (!d) return false;
+      return ['submitted', 'callback', 'booked'].some((k) =>
+        (d[k] || []).some((v) => Number(v) > 0)
+      );
+    });
+  }, [data]);
 
   const dataset = data?.[period];
   const series = dataset?.[metric] || [];
   const labels = dataset?.labels || [];
   const max = Math.max(...series, 1);
   const min = Math.min(...series, 0);
-  const val = series[idx] || 0;
+  // Clamp idx — switching period (e.g. 12 → 7 buckets) can leave it OOB.
+  const safeIdx = series.length > 0 ? Math.min(idx, series.length - 1) : 0;
+  const val = series[safeIdx] || 0;
 
+  // Order matters — Object.entries iterates in insertion order and that
+  // controls the tab order rendered in the UI (SUB → CB → BK).
   const metricMeta = {
-    callback:  { tab: 'CB',  long: 'CALLBACK RATE', short: 'callback rate', color: 'var(--aurora-heritage-gold)', unit: '%', deltaUnit: 'pt' },
     submitted: { tab: 'SUB', long: 'SUBMISSIONS',   short: 'submissions',   color: 'var(--aurora-sky)',           unit: '',  deltaUnit: '' },
+    callback:  { tab: 'CB',  long: 'CALLBACK RATE', short: 'callback rate', color: 'var(--aurora-heritage-gold)', unit: '%', deltaUnit: 'pt' },
     booked:    { tab: 'BK',  long: 'BOOKED',        short: 'booked',        color: 'var(--aurora-mint)',          unit: '',  deltaUnit: '' },
   };
   const M = metricMeta[metric];
@@ -40,7 +58,7 @@ export default function V1HeroGraph({ data }) {
   const dashOffset = ringC * (1 - pct);
   const dotR = ringR + 16;
 
-  const prev = idx > 0 ? series[idx - 1] : val;
+  const prev = safeIdx > 0 ? series[safeIdx - 1] : val;
   const delta = val - prev;
   const deltaTxt = `${delta >= 0 ? '↑' : '↓'} ${Math.abs(delta)}${M.deltaUnit}`;
 
@@ -55,6 +73,77 @@ export default function V1HeroGraph({ data }) {
   const solidMint = '#9FE6B4';
   const solidPeach = '#FFC9A3';
   const metricSolid = metric === 'callback' ? solidGold : metric === 'submitted' ? solidSky : solidMint;
+
+  if (!hasAnyData) {
+    return (
+      <div
+        className="aurora-card"
+        style={{ padding: '20px 18px 18px', position: 'relative', overflow: 'hidden' }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+          <span className="aurora-eyebrow" style={{ color: 'var(--aurora-dim)' }}>CALLBACK RATE</span>
+          <span
+            style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: 10,
+              padding: '3px 8px',
+              borderRadius: 100,
+              background: 'rgba(10,10,10,0.05)',
+              color: 'var(--aurora-dim)',
+              letterSpacing: '0.05em',
+              fontWeight: 600,
+            }}
+          >
+            NO DATA
+          </span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '24px 6px 8px', textAlign: 'center' }}>
+          <div
+            style={{
+              width: 88,
+              height: 88,
+              borderRadius: '50%',
+              background: 'radial-gradient(circle at 50% 50%, rgba(212,168,95,0.18), rgba(212,168,95,0) 70%)',
+              border: '1px dashed rgba(212,168,95,0.45)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: 16,
+            }}
+          >
+            <span style={{ fontFamily: 'Playfair Display, serif', fontSize: 30, color: 'var(--aurora-heritage-gold-deep, #7A5A18)' }}>0%</span>
+          </div>
+          <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, lineHeight: 1.3, color: 'var(--aurora-text)', marginBottom: 6 }}>
+            Your ring starts with your first tape.
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--aurora-sub)', maxWidth: 280, lineHeight: 1.45, marginBottom: 16 }}>
+            Log a submission and we&apos;ll start tracking your callback rate, submissions, and bookings here.
+          </div>
+          {onSubmitFirst && (
+            <button
+              type="button"
+              onClick={onSubmitFirst}
+              style={{
+                padding: '11px 22px',
+                borderRadius: 100,
+                background: solidGold,
+                border: 'none',
+                color: '#0E0D0A',
+                fontFamily: 'Space Grotesk, system-ui, sans-serif',
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: '-0.1px',
+                cursor: 'pointer',
+                boxShadow: `0 6px 18px ${solidGold}55`,
+              }}
+            >
+              Log an audition
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -170,9 +259,9 @@ export default function V1HeroGraph({ data }) {
             const x = cx + dotR * Math.cos(angle);
             const y = cy + dotR * Math.sin(angle);
             const intensity = (max - min) ? (v - min) / (max - min) : 0.7;
-            const r = i === idx ? 5.5 : 2.4 + intensity * 2.0;
+            const r = i === safeIdx ? 5.5 : 2.4 + intensity * 2.0;
             const op = 0.32 + intensity * 0.68;
-            const active = i === idx;
+            const active = i === safeIdx;
             return (
               <g key={i}>
                 <circle
@@ -218,7 +307,7 @@ export default function V1HeroGraph({ data }) {
               animation: 'v1hg-num-in 0.42s cubic-bezier(.2,.7,.3,1)',
             }}
           >
-            {labels[idx]}
+            {labels[safeIdx]}
           </div>
           <div
             key={`${metric}-${period}-${idx}-v`}
@@ -257,7 +346,13 @@ export default function V1HeroGraph({ data }) {
               <button
                 key={k}
                 type="button"
-                onClick={() => { setPeriod(k); setIdx(11); }}
+                onClick={() => {
+                  setPeriod(k);
+                  // Land on the most-recent bucket of the new period
+                  // (7-day view has 7 buckets, others have 12).
+                  const len = (d?.[metric] || d?.submitted || []).length;
+                  setIdx(Math.max(0, len - 1));
+                }}
                 style={{
                   padding: '6px 12px',
                   borderRadius: 100,

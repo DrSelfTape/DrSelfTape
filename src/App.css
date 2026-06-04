@@ -269,6 +269,12 @@ h1, h2, h3, h4 {
 }
 button, a, [role="button"] {
   -webkit-touch-callout: none;
+  /* `manipulation` disables iOS's 300ms double-tap-zoom delay AND
+     makes WKWebView fire click events more reliably from a touch.
+     Combined with the global touchend → click delegate in App.jsx,
+     this eliminates the click-drop bug we hit on the Membership
+     Subscribe pill and other overlay buttons. */
+  touch-action: manipulation;
 }
 
 @theme {

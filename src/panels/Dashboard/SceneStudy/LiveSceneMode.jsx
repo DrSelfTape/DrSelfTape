@@ -7,6 +7,7 @@ import PermissionsModal from '../../../components/PermissionsModal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { isNativeIOS } from '../../../utils/purchases';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
+import { completeCraftNode } from '../../../redux/features/craftJourney/craftJourneySlice';
 
 const SILENCE_TIMEOUT = 1500;
 
@@ -148,7 +149,7 @@ const STATUS_MESSAGES = {
   error: 'Something went wrong',
 };
 
-export default function LiveSceneMode({ lines, userRole, characters, initialVoice, onExit }) {
+export default function LiveSceneMode({ lines, userRole, characters, initialVoice, craftSkill, onExit }) {
   // Live Study Mode owns its own Pause / End Scene controls in the top
   // banner — the persistent MobileApp top bar + bottom tab pill just
   // crowd the script and the mic. Slide them both away.
@@ -193,6 +194,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     conversationHistoryRef.current = conversationHistory;
   }, [conversationHistory]);
 
+  // Craft Journey completion — when the scene naturally finishes and the
+  // session was launched from a Craft Journey node, mark that node done
+  // on the BE and unlock the next one. Fires once per session.
+  useEffect(() => {
+    if (sceneComplete && craftSkill) {
+      dispatch(completeCraftNode({ node: craftSkill, stars: 2 }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sceneComplete]);
+
   // Fire practice_with_ai analytics event when the session opens.
   useEffect(() => {
     import('../../../utils/analytics').then(({ trackEvent, Events }) => {
@@ -201,18 +212,41 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Create AudioContext on mount — resumed on user gesture (not created inside it)
+  // iOS WKWebView refuses to play audio unless the AudioContext is created
+  // AND resumed inside a synchronous user-gesture handler. Creating on mount
+  // (the previous approach) left the context permanently suspended on iOS,
+  // so playTTS appeared silent. We now create it lazily via primeAudio()
+  // called from the Begin button's onClick — see line ~915.
   useEffect(() => {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (AC) {
-      audioContextRef.current = new AC();
-    }
     return () => {
       if (audioContextRef.current) {
         try { audioContextRef.current.close(); } catch(e) {}
         audioContextRef.current = null;
       }
     };
+  }, []);
+
+  // Must be called synchronously inside a user-gesture handler (e.g. Begin tap).
+  // Creates the AudioContext if needed and resumes it; on iOS this is the only
+  // way to unlock audio playback for the rest of the session.
+  const primeAudio = useCallback(() => {
+    try {
+      if (!audioContextRef.current) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        audioContextRef.current = new AC();
+      }
+      const ctx = audioContextRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+      // Play a 1-sample silent buffer to fully unlock the context on iOS
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch { /* swallow */ }
   }, []);
 
   // Determine partner character name
@@ -237,6 +271,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
    * Play TTS audio for the AI response.
    */
   const playTTS = useCallback(async (text, selectedVoice) => {
+    // Lazy fallback: if no gesture has fired yet (shouldn't happen on iOS
+    // since Begin / VoicePicker / Allow all prime), still try to create.
+    if (!audioContextRef.current) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        try { audioContextRef.current = new AC(); } catch { /* swallow */ }
+      }
+    }
     const ctx = audioContextRef.current;
     if (!ctx) {
       return;
@@ -244,7 +286,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
     // Resume if suspended
     if (ctx.state === 'suspended') {
-      await ctx.resume();
+      try { await ctx.resume(); } catch { /* swallow */ }
     }
 
     let response;
@@ -303,11 +345,20 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       source.buffer = audioBuffer;
       source.connect(ctx.destination);
       audioRef.current = source;
-      source.onended = () => {
+      // Watchdog: if iOS still has the context suspended (so source.start
+      // silently fails to fire onended), we'd hang runPreTimed forever.
+      // Cap the wait at the buffer's known duration + 1.5s slack.
+      const watchdogMs = Math.ceil((audioBuffer.duration + 1.5) * 1000);
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
         audioRef.current = null;
         resolve();
       };
-      source.start(0);
+      source.onended = finish;
+      setTimeout(finish, watchdogMs);
+      try { source.start(0); } catch { finish(); }
     });
   }, []);
 
@@ -512,6 +563,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   // line, then pauses for the actor's beat, then auto-advances — same
   // dramatic flow without the broken speech recognition path.
   const onVoiceSelected = useCallback((selectedVoice) => {
+    // Unlock audio INSIDE this user gesture — iOS pre-timed mode never
+    // reaches the Begin/Allow buttons, so this is our only chance to
+    // create + resume the AudioContext before runPreTimed → playTTS.
+    primeAudio();
     setPendingVoice(selectedVoice);
     setVoice(selectedVoice);
     setShowVoicePicker(false);
@@ -521,7 +576,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     } else {
       setShowModePicker(true);
     }
-  }, []);
+  }, [primeAudio]);
   // Forward ref to startPreTimedScene — it's defined later in the file
   // and useCallback deps would hit the TDZ if referenced directly.
   const startPreTimedSceneRef = useRef(null);
@@ -557,7 +612,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
   // Start pre-timed mode — AI reads, then pauses for actor, then auto-advances
   const startPreTimedScene = useCallback(
-    (selectedVoice, pauseSecs) => {
+    (selectedVoice, pauseSecs, startIdx = 0) => {
       setVoice(selectedVoice);
       setShowModePicker(false);
       setReaderMode('pretimed');
@@ -599,7 +654,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         }
       };
 
-      runPreTimed(0);
+      runPreTimed(startIdx);
     },
     [lines, userRole, playTTS, scrollToLine]
   );
@@ -642,6 +697,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       audioContextRef.current.resume();
     }
 
+    // Pre-timed (iOS-only path) needs to re-enter runPreTimed from the
+    // current line — startRecognition would drop the user into broken
+    // voice mode on iOS where webkitSpeechRecognition is non-functional.
+    if (readerMode === 'pretimed') {
+      startPreTimedSceneRef.current?.(voice, 3, currentLineIdxRef.current);
+      return;
+    }
+
     const currentLine = lines[currentLineIdxRef.current];
     if (currentLine && currentLine.character === userRole) {
       setStatus('listening');
@@ -649,7 +712,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     } else if (currentLine && currentLine.character !== userRole) {
       playAiLinesFrom(currentLineIdxRef.current, conversationHistoryRef.current);
     }
-  }, [lines, userRole, startRecognition, playAiLinesFrom]);
+  }, [lines, userRole, startRecognition, playAiLinesFrom, readerMode, voice]);
 
   /**
    * End the scene and clean up.
@@ -765,7 +828,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     : STATUS_MESSAGES[status];
 
   return (
-    <div className="fixed inset-0 z-[60] bg-transparent flex flex-col overflow-hidden">
+    <div
+      className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
+      style={{ background: 'var(--aurora-bg, #FAFAF7)' }}
+    >
       {/* Mic Permission Modal */}
       <PermissionsModal
         isOpen={showMicPermission}
@@ -773,10 +839,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         requireMic={true}
         context="Live Study Mode"
         onGranted={() => {
-          // Just resume the already-created AudioContext inside the user gesture
-          if (audioContextRef.current?.state === 'suspended') {
-            audioContextRef.current.resume();
-          }
+          // Belt + suspenders: prime audio again inside this gesture in case
+          // iOS suspended the context between Begin and Allow.
+          primeAudio();
           setShowMicPermission(false);
           setSceneStarted(true);
           startScene(voice);
@@ -901,7 +966,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 <span className="text-[#0A0A0A] font-semibold">{partnerName}</span>
               </p>
               <button
-                onClick={() => setShowMicPermission(true)}
+                onClick={() => {
+                  // Unlock audio inside the user gesture — iOS WKWebView
+                  // requires this BEFORE any later async playback.
+                  primeAudio();
+                  setShowMicPermission(true);
+                }}
                 className="w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-8 py-3.5 rounded-full font-semibold text-base transition-colors cursor-pointer flex items-center justify-center gap-2.5"
               >
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">

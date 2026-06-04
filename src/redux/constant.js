@@ -122,6 +122,10 @@ const endPoints = {
   aiEvolution: `${baseURL}/v1/ai/evolution/`,
   jerichoCoach: `${baseURL}/v1/ai/jericho/coach/`,
 
+  // Craft Journey — skill path progression
+  craftJourney: `${baseURL}/v1/ai/craft-journey/`,
+  craftJourneyComplete: `${baseURL}/v1/ai/craft-journey/complete/`,
+
   // Push Notifications
   pushSubscribe: `${baseURL}/v1/notifications/push/subscribe/`,
   pushVapidKey: `${baseURL}/v1/notifications/push/vapid-key/`,

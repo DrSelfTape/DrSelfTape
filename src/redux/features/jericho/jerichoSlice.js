@@ -126,6 +126,12 @@ const jerichoSlice = createSlice({
     // Actor's AI memory profile
     memory: null,
     memoryLoading: false,
+    // True once the first fetch has settled (fulfilled OR rejected).
+    // The dashboard needs this to distinguish "still loading" from
+    // "fetch failed → keep memory=null" so it doesn't flash the empty
+    // state on first paint or on a 401/403/network error.
+    memoryHasFetched: false,
+    memoryError: null,
 
     // Coaching insights derived from sessions
     insights: [],
@@ -164,14 +170,20 @@ const jerichoSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // ── Actor Memory ──
-      .addCase(fetchActorMemory.pending, (state) => { state.memoryLoading = true; })
+      .addCase(fetchActorMemory.pending, (state) => {
+        state.memoryLoading = true;
+        state.memoryError = null;
+      })
       .addCase(fetchActorMemory.fulfilled, (state, action) => {
         state.memoryLoading = false;
+        state.memoryHasFetched = true;
+        state.memoryError = null;
         state.memory = action.payload;
       })
       .addCase(fetchActorMemory.rejected, (state, action) => {
         state.memoryLoading = false;
-        // Don't set error — memory fetch failure shouldn't block UI
+        state.memoryHasFetched = true;
+        state.memoryError = action.payload || 'Failed to load profile';
       })
 
       .addCase(updateActorMemory.fulfilled, (state, action) => {

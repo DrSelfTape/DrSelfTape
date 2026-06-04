@@ -44,10 +44,16 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
       <div className="flex items-start justify-between mb-4">
         <h3 className="aurora-display text-xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.3px' }}>{label}</h3>
         <button
+          type="button"
           onClick={() => onPlayToggle(label, data)}
+          onTouchEnd={(e) => { e.preventDefault(); if (!isLoading) onPlayToggle(label, data); }}
           disabled={isLoading}
           className="flex items-center gap-1.5 text-sm font-medium shrink-0 ml-4 transition-colors disabled:opacity-50"
-          style={{ color: isPlaying ? 'var(--aurora-heritage-gold-deep)' : 'var(--aurora-heritage-gold)' }}
+          style={{
+            color: isPlaying ? 'var(--aurora-heritage-gold-deep)' : 'var(--aurora-heritage-gold)',
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
+          }}
         >
           {isLoading ? (
             <Loader2 size={16} className="animate-spin" />
@@ -109,6 +115,20 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       audioCtxRef.current.resume();
     }
     return audioCtxRef.current;
+  };
+
+  // Must be called synchronously inside the Listen button's onClick — iOS
+  // WKWebView only unlocks audio when create + resume happen in a real
+  // gesture, NOT after an async axios round-trip.
+  const primeAudio = () => {
+    try {
+      const ctx = getAudioCtx();
+      const buf = ctx.createBuffer(1, 1, 22050);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch { /* swallow */ }
   };
 
   const stopAudio = () => {
@@ -194,6 +214,8 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
   const handlePlayToggle = (label, data) => {
     const text = sectionToText(label, data);
     if (!text) return;
+    // Unlock audio inside the click gesture BEFORE the async TTS fetch.
+    primeAudio();
     fetchAndPlay(text, label);
   };
 
@@ -202,6 +224,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       sectionToText(s.label, report?.[s.key])
     ).filter(Boolean).join('. ');
     if (!fullText) return;
+    primeAudio();
     fetchAndPlay(fullText, 'ALL');
   };
 
@@ -223,7 +246,9 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
         <div className="flex flex-wrap gap-3">
           {/* Listen to full report */}
           <button
+            type="button"
             onClick={handleListenAll}
+            onTouchEnd={(e) => { e.preventDefault(); if (!isAllLoading) handleListenAll(); }}
             disabled={isAllLoading}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[#0A0A0A] text-sm font-semibold transition-all disabled:opacity-50"
             style={{
@@ -231,6 +256,8 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
                 ? 'linear-gradient(135deg, #7A5A18, #D4A85F)'
                 : 'linear-gradient(135deg, #D4A85F, #7A5A18)',
               boxShadow: '0 4px 15px rgba(212,168,95,0.35)',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
             }}
           >
             {isAllLoading ? (
@@ -244,8 +271,11 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
           </button>
 
           <button
+            type="button"
             onClick={onRunAgain}
+            onTouchEnd={(e) => { e.preventDefault(); onRunAgain?.(); }}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-white font-medium text-sm transition-colors"
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           >
             <RotateCcw size={16} />
             Run Again

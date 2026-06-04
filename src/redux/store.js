@@ -30,6 +30,7 @@ import communitySlice from './features/community/communitySlice';
 import submissionsSlice from './features/submissions/submissionsSlice';
 import readersMatchSlice from './features/readers/readersMatchSlice';
 import jerichoSlice from './features/jericho/jerichoSlice';
+import craftJourneySlice from './features/craftJourney/craftJourneySlice';
 
 // Admin panel slice
 import adminSlice from './features/admin/adminSlice';
@@ -80,6 +81,7 @@ const rootReducer = combineReducers({
   submissions: submissionsSlice,
   readersMatch: readersMatchSlice,
   jericho: jerichoSlice,
+  craftJourney: craftJourneySlice,
   // Admin panel reducer
   admin: adminSlice,
   // User settings (theme, tutorial, filters — synced across devices)

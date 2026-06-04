@@ -8,6 +8,7 @@ import CDReport from './CDReport';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
+import { completeCraftNode } from '../../../redux/features/craftJourney/craftJourneySlice';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 
 const STEPS = ['upload', 'role', 'voice', 'analyzing', 'report'];
@@ -200,12 +201,17 @@ export default function CDSim() {
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Set when this session was launched from a Craft Journey node — used
+  // to dispatch completeCraftNode when the CD report finishes generating.
+  const [craftSkill, setCraftSkill] = useState('');
 
   // Check for preloaded script from route state or sessionStorage
   useEffect(() => {
     const routeScript = location?.state?.scriptContent;
+    const routeCraftSkill = location?.state?.craft_skill;
     if (routeScript) {
       setScriptText(routeScript);
+      if (routeCraftSkill) setCraftSkill(routeCraftSkill);
       setStep('role');
       sessionStorage.removeItem('preloadedScript');
       return;
@@ -214,9 +220,10 @@ export default function CDSim() {
     const raw = sessionStorage.getItem('preloadedScript');
     if (raw) {
       try {
-        const { scriptContent } = JSON.parse(raw);
+        const { scriptContent, craft_skill } = JSON.parse(raw);
         if (scriptContent) {
           setScriptText(scriptContent);
+          if (craft_skill) setCraftSkill(craft_skill);
           setStep('role');
         }
       } catch { /* ignore */ }
@@ -249,6 +256,11 @@ export default function CDSim() {
           const reportData = res.data?.data || res.data;
           setReport(reportData);
           setStep('report');
+          // If this session was launched from a Craft Journey node, mark
+          // that node done on the BE — unlocks the next one in the path.
+          if (craftSkill) {
+            dispatch(completeCraftNode({ node: craftSkill, stars: 2 }));
+          }
           // Log session to Jericho memory (fire and forget)
           const duration = Math.round((Date.now() - (sessionStartRef.current || Date.now())) / 1000);
           dispatch(logSession({

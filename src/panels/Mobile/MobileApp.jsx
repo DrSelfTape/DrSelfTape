@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
@@ -190,6 +191,12 @@ function mapAudition(a) {
     status: a.status === "reviewed" ? "in_review" : a.status === "audition" ? "audition" : (a.status || "submitted"),
     callbackDate: a.callback_date || a.callbackDate || null,
     agency: a.agency || "",
+    // The Home hero ring / pipeline chart / callback-rate aggregator
+    // bucket by created_at. Previously mapAudition dropped that field
+    // and every audition got filtered out of the time series, so the
+    // pipeline read 0/0/0/0 even when the user had real entries.
+    createdAt: a.created_at || a.createdAt || a.submitted_at || a.submittedAt || null,
+    created_at: a.created_at || a.createdAt || a.submitted_at || a.submittedAt || null,
   };
 }
 
@@ -296,31 +303,40 @@ function buildHeroData(auditions) {
   const quarterOf = (d) => Math.floor(d.getMonth() / 3);
   const startOfQuarter = (d) => new Date(d.getFullYear(), quarterOf(d) * 3, 1);
 
+  const startOfDay = (d) => {
+    const x = new Date(d);
+    x.setHours(0, 0, 0, 0);
+    return x;
+  };
+
+  // 'D' = 7 daily buckets (one week), 'W' = 12 weekly buckets,
+  // 'Y' = 12 monthly buckets across the past year.
+  const bucketCountFor = (k) => (k === 'D' ? 7 : 12);
+
   const bucketsFor = (periodKey) => {
     const buckets = [];
-    for (let i = 11; i >= 0; i--) {
+    const count = bucketCountFor(periodKey);
+    for (let i = count - 1; i >= 0; i--) {
       const ref = new Date(now);
       let start, label;
-      if (periodKey === 'W') {
+      if (periodKey === 'D') {
+        ref.setDate(ref.getDate() - i);
+        start = startOfDay(ref);
+        label = start.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      } else if (periodKey === 'W') {
         ref.setDate(ref.getDate() - 7 * i);
         start = startOfWeek(ref);
         const wk = Math.ceil(((start - new Date(start.getFullYear(), 0, 1)) / 86400000 + 1) / 7);
         label = `W${wk}`;
-      } else if (periodKey === 'M') {
+      } else {
         ref.setMonth(ref.getMonth() - i);
         start = startOfMonth(ref);
         label = start.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
-      } else {
-        ref.setMonth(ref.getMonth() - i * 3);
-        start = startOfQuarter(ref);
-        const q = quarterOf(start) + 1;
-        const y = String(start.getFullYear()).slice(2);
-        label = `Q${q}·${y}`;
       }
       let end;
-      if (periodKey === 'W') { end = new Date(start); end.setDate(end.getDate() + 7); }
-      else if (periodKey === 'M') { end = new Date(start.getFullYear(), start.getMonth() + 1, 1); }
-      else { end = new Date(start.getFullYear(), start.getMonth() + 3, 1); }
+      if (periodKey === 'D') { end = new Date(start); end.setDate(end.getDate() + 1); }
+      else if (periodKey === 'W') { end = new Date(start); end.setDate(end.getDate() + 7); }
+      else { end = new Date(start.getFullYear(), start.getMonth() + 1, 1); }
       buckets.push({ label, start, end });
     }
     return buckets;
@@ -328,10 +344,11 @@ function buildHeroData(auditions) {
 
   const aggregate = (periodKey) => {
     const buckets = bucketsFor(periodKey);
+    const count = buckets.length;
     const labels = buckets.map(b => b.label);
-    const submitted = new Array(12).fill(0);
-    const callback = new Array(12).fill(0);
-    const booked = new Array(12).fill(0);
+    const submitted = new Array(count).fill(0);
+    const callback = new Array(count).fill(0);
+    const booked = new Array(count).fill(0);
 
     list.forEach((a) => {
       const created = a.createdAt || a.created_at || a.submittedAt;
@@ -350,14 +367,14 @@ function buildHeroData(auditions) {
     // existing dashboard headlines use ("callback rate").
     const callbackRate = submitted.map((s, i) => s > 0 ? Math.round((callback[i] / s) * 100) : 0);
 
-    const periodLabelMap = { W: '12 WEEKS', M: '12 MONTHS', Q: 'BY QUARTER' };
+    const periodLabelMap = { D: '7 DAYS', W: '12 WEEKS', Y: 'BY YEAR' };
     return { label: periodLabelMap[periodKey], labels, callback: callbackRate, submitted, booked };
   };
 
   return {
+    D: aggregate('D'),
     W: aggregate('W'),
-    M: aggregate('M'),
-    Q: aggregate('Q'),
+    Y: aggregate('Y'),
   };
 }
 
@@ -1088,7 +1105,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
       {/* ── Hero metric ring (V1HeroGraph) ── */}
       <div style={{ marginBottom: 18 }}>
-        <V1HeroGraph data={buildHeroData(auditions)} />
+        <V1HeroGraph
+          data={buildHeroData(auditions)}
+          onSubmitFirst={() => setTab('auditions')}
+        />
       </div>
 
       {/* ── Callback card (Aurora gold gradient) ── */}
@@ -1715,9 +1735,12 @@ function AuditionsScreen() {
         </button>
       </div>
 
-      {/* Add Audition Modal */}
-      {showAddForm && (
+      {/* Add Audition Modal — portaled to <body> so it escapes the
+          aurora-orbs `isolation: isolate` stacking context, which was
+          letting the z-50 top bar render over the modal's X button. */}
+      {showAddForm && createPortal(
         <div
+          onClick={() => setShowAddForm(false)}
           style={{
             position: "fixed", inset: 0, zIndex: 999,
             display: "flex", alignItems: "center", justifyContent: "center",
@@ -1728,7 +1751,9 @@ function AuditionsScreen() {
             padding: "16px 16px calc(96px + env(safe-area-inset-bottom, 0px)) 16px",
           }}
         >
-          <div style={{
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
             background: 'var(--aurora-surface-solid)',
             borderRadius: 24,
             border: '1px solid var(--aurora-line)',
@@ -1834,7 +1859,8 @@ function AuditionsScreen() {
               </button>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Tab row */}
@@ -2167,6 +2193,44 @@ function ScenesScreen({ setTab }) {
   const [selectedScript, setSelectedScript] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null); // script object to confirm
+
+  // Craft Journey (and other panels) dispatch this event to drop an
+  // AI-generated script directly into Scene Study without going
+  // through the upload flow.
+  useEffect(() => {
+    const handler = (e) => {
+      const { content, title } = e.detail || {};
+      if (!content) return;
+      setSelectedScript({
+        id: `virtual-${Date.now()}`,
+        title: title || 'Practice Scene',
+        content,
+      });
+    };
+    window.addEventListener('drst-load-virtual-script', handler);
+    return () => window.removeEventListener('drst-load-virtual-script', handler);
+  }, []);
+
+  // Also pick up an AI-generated script that landed in sessionStorage
+  // before this screen mounted (e.g. Craft Journey → drst-navigate to
+  // scenes tab fires the navigate before this component listens).
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('preloadedScript');
+      if (!raw) return;
+      const { scriptContent, scriptTitle, craft_skill } = JSON.parse(raw);
+      if (scriptContent) {
+        setSelectedScript({
+          id: `virtual-${Date.now()}`,
+          title: scriptTitle || 'Practice Scene',
+          content: scriptContent,
+          craft_skill,
+        });
+      }
+      // Leave the sessionStorage value in place — SceneStudy/index.jsx
+      // reads + removes it on its own mount to set up characters.
+    } catch { /* swallow */ }
+  }, []);
 
   // Slide the top bar + bottom tab bar out of the way while the
   // bottom-sheet delete confirm is up so its action buttons aren't
@@ -2845,27 +2909,19 @@ export default function DrSelfTapeApp() {
   const [isMobile, setIsMobile] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showNoTokens, setShowNoTokens] = useState(false);
-  // Scroll-driven top bar: hide while scrolling down, reveal on scroll up.
-  // headerHidden controls opacity + translate; lastScrollYRef avoids a
-  // setState on every scroll frame.
+  // Top bar is now pinned at the top — the previous scroll-driven hide
+  // confused users who tried to tap the bell / avatar after scrolling
+  // down. The bar still slides away for modals (driven by the modal-
+  // open event listener below), which is the one case it should disappear.
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollYRef = useRef(0);
   const handleContentScroll = (e) => {
-    const y = e.currentTarget.scrollTop;
-    const prev = lastScrollYRef.current;
-    if (y < 16) {
-      // Always show near the top.
-      if (headerHidden) setHeaderHidden(false);
-    } else if (y > prev + 6 && !headerHidden) {
-      setHeaderHidden(true);
-    } else if (y < prev - 6 && headerHidden) {
-      setHeaderHidden(false);
-    }
-    lastScrollYRef.current = y;
+    // Track scroll for any consumers that care, but no longer toggle
+    // headerHidden — the bar stays anchored to the top of the screen.
+    lastScrollYRef.current = e.currentTarget.scrollTop;
   };
-  // Resetting tabs/panels jumps scroll to the top — reveal the header
-  // so the user lands on a fresh screen with full chrome.
-  useEffect(() => { setHeaderHidden(false); lastScrollYRef.current = 0; }, [tab, currentPanel]);
+  // No-op kept so existing useEffect deps don't break.
+  useEffect(() => { lastScrollYRef.current = 0; }, [tab, currentPanel]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);

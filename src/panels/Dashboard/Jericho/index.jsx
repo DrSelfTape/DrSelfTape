@@ -158,7 +158,7 @@ export default function JerichoDashboard() {
   useAIGate();
   const dispatch = useDispatch();
   const {
-    memory, memoryLoading,
+    memory, memoryLoading, memoryHasFetched, memoryError,
     insights, insightsLoading,
     evolution, evolutionLoading,
     recentSessions, sessionsLoading,
@@ -174,7 +174,7 @@ export default function JerichoDashboard() {
     dispatch(fetchRecentSessions(10));
   }, [dispatch]);
 
-  const loading = memoryLoading && !memory;
+  const loading = !memoryHasFetched || (memoryLoading && !memory);
   const dna = memory?.performance_dna || {};
   const totalSessions = memory?.total_sessions || 0;
   const strengths = memory?.strengths || [];
@@ -182,8 +182,45 @@ export default function JerichoDashboard() {
   const growthAreas = memory?.growth_areas || [];
   const coachingStyle = memory?.coaching_style || 'balanced';
 
-  // ── Empty state (no sessions yet) ──
-  if (!loading && !memory && !memoryLoading) {
+  // ── Initial-load skeleton — keeps the screen from flashing the empty
+  // state on first paint or on a network blip. ──
+  if (loading) {
+    return (
+      <div className="min-h-screen px-4 py-6 sm:p-8 flex items-center justify-center" style={{ background: 'var(--aurora-bg)' }}>
+        <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
+      </div>
+    );
+  }
+
+  // ── Fetch failed — surface a retry so users don't think the screen is broken. ──
+  if (memoryError && !memory) {
+    return (
+      <div className="min-h-screen px-4 py-6 sm:p-8" style={{ background: 'var(--aurora-bg)' }}>
+        <div className="max-w-md mx-auto text-center py-20">
+          <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-6">
+            <Brain className="w-8 h-8 text-amber-500" />
+          </div>
+          <h2 className="text-xl font-bold text-[#0A0A0A] mb-2">Couldn&apos;t load Jericho</h2>
+          <p className="text-sm text-[rgba(10,10,10,0.62)] mb-6">{String(memoryError)}</p>
+          <button
+            onClick={() => {
+              dispatch(fetchActorMemory());
+              dispatch(fetchInsights());
+              dispatch(fetchEvolution());
+              dispatch(fetchRecentSessions(10));
+            }}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A]"
+            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Empty state (BE returned no sessions yet) ──
+  if (!memory || (memory.total_sessions || 0) === 0) {
     return (
       <div className="min-h-screen px-4 py-6 sm:p-8" style={{ background: 'var(--aurora-bg)' }}>
         <div className="max-w-2xl mx-auto text-center py-20">

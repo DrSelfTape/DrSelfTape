@@ -51,6 +51,75 @@ function App() {
     }
   }, [userId, dispatch]);
 
+  // ──────────────────────────────────────────────────────────────────
+  // iOS WKWebView click-drop rescue
+  //
+  // WKWebView occasionally fails to dispatch React's synthetic click
+  // event from a touch, especially on buttons inside
+  // `position: fixed` overlays or `isolation: isolate` stacking
+  // contexts (Aurora panels). We hit this on the Membership Subscribe
+  // pill, CD Coach Listen buttons, Add Audition modal X — each had to
+  // be manually patched with an onTouchEnd belt.
+  //
+  // Instead of patching every button, this global delegate fires
+  // target.click() on touchend for any unhandled tap on a button-like
+  // element. We track real clicks via the `click` listener and skip
+  // synthesizing if one fired naturally within the last 100ms.
+  // Multi-touch, scroll/swipe gestures, and disabled elements are
+  // ignored. Inputs (text/email/etc.) are also skipped so the
+  // keyboard logic isn't interrupted.
+  // ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoved = false;
+    let lastRealClickAt = 0;
+    let lastSyntheticTarget = null;
+
+    const onTouchStart = (e) => {
+      if (e.touches.length !== 1) { touchMoved = true; return; }
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchMoved = false;
+    };
+    const onTouchMove = (e) => {
+      if (!e.touches[0]) return;
+      const dx = Math.abs(e.touches[0].clientX - touchStartX);
+      const dy = Math.abs(e.touches[0].clientY - touchStartY);
+      if (dx > 10 || dy > 10) touchMoved = true;
+    };
+    const onTouchEnd = (e) => {
+      if (touchMoved) return;
+      if (e.defaultPrevented) return; // a button-local handler already handled it
+      const tappable = e.target.closest('button, [role="button"], a[href]');
+      if (!tappable) return;
+      if (tappable.disabled) return;
+      if (tappable.dataset?.notap === 'true') return;
+      // Skip if focus is going to enter a text input — keyboard logic owns this
+      if (e.target.matches('input, textarea, select')) return;
+      // Schedule the synthetic click. If a real click lands first,
+      // lastRealClickAt will be fresh and we skip.
+      lastSyntheticTarget = tappable;
+      setTimeout(() => {
+        if (Date.now() - lastRealClickAt < 90) return; // native click fired, all good
+        if (lastSyntheticTarget !== tappable) return;
+        try { tappable.click(); } catch { /* swallow */ }
+      }, 80);
+    };
+    const onClick = () => { lastRealClickAt = Date.now(); };
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: true });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+    document.addEventListener('click', onClick, { passive: true, capture: true });
+    return () => {
+      document.removeEventListener('touchstart', onTouchStart);
+      document.removeEventListener('touchmove', onTouchMove);
+      document.removeEventListener('touchend', onTouchEnd);
+      document.removeEventListener('click', onClick, { capture: true });
+    };
+  }, []);
+
   return (
     <SocketProvider>
       <Router />

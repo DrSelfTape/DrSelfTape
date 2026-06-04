@@ -98,17 +98,23 @@ export default function SceneStudy() {
   const [showJournal, setShowJournal] = useState(null); // null or session type string
   const [showFocusMode, setShowFocusMode] = useState(false);
   const [pendingStep, setPendingStep] = useState(null); // step to go to after focus mode
+  // Set when entering from Craft Journey — passed to LiveSceneMode so the
+  // session-complete handler can dispatch completeCraftNode and unlock
+  // the next node on the path.
+  const [craftSkill, setCraftSkill] = useState('');
 
   // Check for preloaded script from route state or sessionStorage
   useEffect(() => {
     // Priority 1: route state (passed via navigate)
     const routeScript = location?.state?.scriptContent;
     const routeCharacters = location?.state?.characters;
+    const routeCraftSkill = location?.state?.craft_skill;
     if (routeScript) {
       setScriptText(routeScript);
       if (Array.isArray(routeCharacters) && routeCharacters.length) {
         setCachedCharacters(routeCharacters);
       }
+      if (routeCraftSkill) setCraftSkill(routeCraftSkill);
       setStep('pick-role');
       // Clear sessionStorage if it was also set
       sessionStorage.removeItem('preloadedScript');
@@ -119,12 +125,13 @@ export default function SceneStudy() {
     const raw = sessionStorage.getItem('preloadedScript');
     if (raw) {
       try {
-        const { scriptContent, characters: preloadedCharacters } = JSON.parse(raw);
+        const { scriptContent, characters: preloadedCharacters, craft_skill } = JSON.parse(raw);
         if (scriptContent) {
           setScriptText(scriptContent);
           if (Array.isArray(preloadedCharacters) && preloadedCharacters.length) {
             setCachedCharacters(preloadedCharacters);
           }
+          if (craft_skill) setCraftSkill(craft_skill);
           setStep('pick-role');
         }
       } catch { /* ignore */ }
@@ -185,6 +192,7 @@ export default function SceneStudy() {
         userRole={selectedRole}
         characters={characters}
         initialVoice={selectedVoice}
+        craftSkill={craftSkill}
         onExit={() => { setShowJournal('live-scene'); setStep('practice'); }}
       />
     );

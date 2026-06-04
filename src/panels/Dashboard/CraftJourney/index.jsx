@@ -1,7 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Star, Flame, Sparkles as SparklesIcon, Check } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { X, Star, Flame, Sparkles as SparklesIcon, Check, Loader2 } from 'lucide-react';
 import { V1Sparkles } from '../../../components/Aurora';
+import axios from '../../../redux/http';
+import endPoints from '../../../redux/constant';
+import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
+import { fetchCraftJourney } from '../../../redux/features/craftJourney/craftJourneySlice';
 
 /* ──────────────────────────────────────────────────────────────────
    Craft Journey — Duolingo-style serpentine skill path.
@@ -79,36 +84,190 @@ function writeProgress(map) {
   } catch { /* swallow */ }
 }
 
+/* ──────────────────────────────────────────────────────────────────
+   Per-skill prompts for the AI scene generator. Tuned for short
+   single-scene practice — 1 page, 2 characters — and crafted to
+   exercise the specific muscle the node trains. Each skill also
+   declares which downstream practice tool the actor lands in.
+   ────────────────────────────────────────────────────────────── */
+const SKILL_PROMPTS = {
+  // ── Foundations ──
+  'Cold Reads': {
+    tool: 'scene-study',
+    genre: 'drama', tone: 'grounded', difficulty: 'medium',
+    prompt: 'Write a 1-page contemporary drama scene for a COLD READ exercise. 2 characters with naturalistic dialogue. Include 2-3 quick emotional shifts so the actor must react in real time. Avoid pre-scene context the actor needs to know — every line should land on its own. Proper screenplay format, character names in CAPS.',
+  },
+  'Objectives': {
+    tool: 'scene-study',
+    genre: 'drama', tone: 'tense', difficulty: 'medium',
+    prompt: 'Write a 1-page drama scene where ONE character wants something specific from the other — concrete, urgent, in-the-moment (apology, confession, permission, money, the truth). The other character has a clear opposing want. The scene escalates as each tries to win. 6-8 lines each. Proper screenplay format, character names in CAPS.',
+  },
+  'Beat Changes': {
+    tool: 'scene-study',
+    genre: 'drama', tone: 'shifting', difficulty: 'hard',
+    prompt: 'Write a 1-page drama scene with at least THREE distinct emotional beats — for example: small talk → confession → confrontation → reconciliation. Each beat should turn on a specific line. 2 characters, 6-8 lines each. Mark suggested beat transitions with a parenthetical if helpful. Proper screenplay format.',
+  },
+  'Listening': {
+    tool: 'scene-study',
+    genre: 'drama', tone: 'intimate', difficulty: 'medium',
+    prompt: 'Write a 1-page drama scene where ONE character does most of the talking and the OTHER reacts in short, loaded responses. The listener must show they\'re hearing something painful or unexpected. 70/30 dialogue split. Proper screenplay format, character names in CAPS.',
+  },
+  // ── Emotional Range ──
+  'Vulnerability': {
+    tool: 'scene-study',
+    genre: 'drama', tone: 'intimate', difficulty: 'hard',
+    prompt: 'Write a 1-page intimate two-person scene where ONE character opens up about something they\'ve never said out loud before — a fear, a shame, a love. The other listens with care. Quiet stakes, no shouting. Subtext is high. Proper screenplay format, character names in CAPS.',
+  },
+  'Anger Work': {
+    tool: 'scene-study',
+    genre: 'drama', tone: 'volatile', difficulty: 'hard',
+    prompt: 'Write a 1-page drama scene built around controlled, simmering anger that surfaces in the second half. Avoid screaming-match clichés; the rage is from love or loyalty betrayed. 2 characters with history. 6-8 lines each. Proper screenplay format.',
+  },
+  'Grief': {
+    tool: 'scene-study',
+    genre: 'drama', tone: 'tender', difficulty: 'hard',
+    prompt: 'Write a 1-page drama scene set days or weeks after a significant loss. Two characters — both grieving in different ways. They miscommunicate, then connect. Avoid melodrama; let silence do the work. Proper screenplay format, character names in CAPS.',
+  },
+  'Joy & Lightness': {
+    tool: 'scene-study',
+    genre: 'comedy', tone: 'warm', difficulty: 'medium',
+    prompt: 'Write a 1-page warm comedy scene between two characters who clearly love each other — old friends, siblings, partners. Genuine laughter, no irony, no put-downs. Banter that earns its joy. 6-8 lines each. Proper screenplay format.',
+  },
+  // ── On Camera (routes to CDSim) ──
+  'Eyeline': {
+    tool: 'cd-sim',
+    genre: 'drama', tone: 'grounded', difficulty: 'medium',
+    prompt: 'Write a 1-page contemporary drama scene designed for self-tape practice — 2 characters facing each other. Tight, dialogue-driven, no movement notes. The actor will record alone, so the off-camera role should be brief responses. Proper screenplay format.',
+  },
+  'Stillness': {
+    tool: 'cd-sim',
+    genre: 'drama', tone: 'restrained', difficulty: 'hard',
+    prompt: 'Write a 1-page two-person scene built for stillness — minimal stage business, the camera holds on the actor. Inner storm beneath a calm exterior. 6-8 lines each. Proper screenplay format.',
+  },
+  'Self-Tape Frame': {
+    tool: 'cd-sim',
+    genre: 'drama', tone: 'grounded', difficulty: 'medium',
+    prompt: 'Write a 1-page two-person scene optimized for self-tape — single location, simple eyeline, no large gestures. Strong emotional core. Proper screenplay format, character names in CAPS.',
+  },
+  'The Slate': {
+    tool: 'cd-sim',
+    genre: 'drama', tone: 'grounded', difficulty: 'hard',
+    prompt: 'Write a 1-page two-person scene appropriate for a final-callback self-tape submission. The actor will slate before the scene (name, height, agency). The scene itself should showcase range — start light, go deep. Proper screenplay format.',
+  },
+};
+
 export default function CraftJourney() {
   const navigate = useNavigate();
-  const [completed, setCompleted] = useState(() => readProgress());
+  const dispatch = useDispatch();
+  const skillProgress = useSelector((s) => s.craftJourney.skill_progress) || {};
+  const craftXp = useSelector((s) => s.craftJourney.craft_xp) || 0;
+  const cjLoading = useSelector((s) => s.craftJourney.loading);
+  const cjFetched = useSelector((s) => s.craftJourney.hasFetched);
   const [celebrate, setCelebrate] = useState(null);
+  const [generating, setGenerating] = useState(null); // node id while AI generates
+
+  // Pull live progress from the BE on mount. The skill_progress map
+  // overrides each node's seeded state/stars from the JOURNEY constant.
+  useEffect(() => {
+    dispatch(fetchCraftJourney());
+  }, [dispatch]);
 
   const total = useMemo(() => JOURNEY.reduce((n, s) => n + s.nodes.length, 0), []);
-  const seedDone = useMemo(
-    () => JOURNEY.reduce((n, s) => n + s.nodes.filter((x) => x.state === 'done').length, 0),
-    []
-  );
-  const seedStars = useMemo(
-    () => JOURNEY.reduce((n, s) => n + s.nodes.reduce((m, x) => m + x.stars, 0), 0),
-    []
-  );
 
-  const effState = (node) => (completed[node.id] != null ? 'done' : node.state);
-  const effStars = (node) => (completed[node.id] != null ? completed[node.id] : node.stars);
+  // BE map: { node_id: { state: 'locked'|'current'|'done', stars: 0-3 } }
+  // Falls back to the JOURNEY constant's seeded values while the fetch
+  // is in flight so the UI doesn't blink to all-locked on first paint.
+  const effState = (node) => skillProgress[node.id]?.state || node.state;
+  const effStars = (node) => skillProgress[node.id]?.stars ?? node.stars;
 
-  const liveDone = seedDone + Object.keys(completed).filter((k) => !JOURNEY.flatMap((s) => s.nodes).find((n) => n.id === k && n.state === 'done')).length;
-  const liveStars = JOURNEY.flatMap((s) => s.nodes).reduce((sum, n) => sum + effStars(n), 0);
+  const allNodes = useMemo(() => JOURNEY.flatMap((s) => s.nodes), []);
+  const liveDone = allNodes.filter((n) => effState(n) === 'done').length;
+  const liveStars = allNodes.reduce((sum, n) => sum + effStars(n), 0);
 
-  const nextNode = JOURNEY.flatMap((s) => s.nodes).find((n) => effState(n) !== 'done');
+  const nextNode = allNodes.find((n) => effState(n) === 'current')
+    || allNodes.find((n) => effState(n) !== 'done');
   const nextLabel = nextNode ? nextNode.label.toUpperCase() : '';
 
-  const handleStart = (node) => {
+  // Tap a node → generate a skill-specific scene → preload it into the
+  // matching practice tool → navigate. The user lands in Scene Study or
+  // Acting Coach with a fresh script tuned to the muscle they just
+  // tapped, instead of an empty upload screen.
+  const handleStart = async (node) => {
     if (effState(node) === 'locked') return;
-    // For v1: simulate finishing a practice rep with 2 or 3 stars.
-    // Production: tie to real practice scores (CD Sim feedback >= 8 = 3, 6-7 = 2, else 1).
-    const earned = 2 + (Math.random() < 0.5 ? 1 : 0);
-    setCelebrate({ node, stars: earned });
+    if (generating) return; // one at a time
+
+    const config = SKILL_PROMPTS[node.label];
+    if (!config) {
+      dispatch(showSnackbar({ message: 'This skill isn\'t wired up yet.', variant: 'info' }));
+      return;
+    }
+
+    setGenerating(node.id);
+    try {
+      const { data } = await axios.post(
+        endPoints.generateScene,
+        {
+          genre: config.genre,
+          tone: config.tone,
+          difficulty: config.difficulty,
+          character_type: 'actor',
+          free_prompt: config.prompt,
+        },
+        { timeout: 45000 }, // GPT-4o + Railway cold-start can take 15s+
+      );
+
+      const sceneText =
+        data?.data?.scene || data?.scene ||
+        data?.data?.feedback || data?.feedback || '';
+
+      if (!sceneText) throw new Error('No scene returned');
+
+      // Preload script into sessionStorage — both SceneStudy and CDSim
+      // read from this key on mount (same handoff pattern as the
+      // Audition Generator panel). craft_skill is the BE node label;
+      // when the practice tool's session ends, it dispatches
+      // completeCraftNode({node: craft_skill}) so the BE marks the
+      // node done and unlocks the next one in the path.
+      sessionStorage.setItem(
+        'preloadedScript',
+        JSON.stringify({
+          scriptContent: sceneText,
+          scriptTitle: `${node.label} · Craft Journey`,
+          craft_skill: node.label,
+        }),
+      );
+
+      // Mobile MobileApp uses tab/panel state, not react-router routes.
+      // Fire drst-navigate to switch tabs, then drst-load-virtual-script
+      // so ScenesScreen mounts the AI scene as a "virtual script" without
+      // the user having to wade through the upload step.
+      const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
+      const virtualTitle = `${node.label} · Craft Journey`;
+      if (isMobile) {
+        if (config.tool === 'cd-sim') {
+          window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'cd-sim' } }));
+        } else {
+          window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'scenes' } }));
+          // Slight delay so ScenesScreen has mounted its listener
+          // before we fire the script payload.
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('drst-load-virtual-script', {
+              detail: { content: sceneText, title: virtualTitle },
+            }));
+          }, 50);
+        }
+      } else {
+        const route = config.tool === 'cd-sim' ? '/dashboard/cd-sim' : '/dashboard/scene-study';
+        navigate(route, { state: { craft_skill: node.label, scriptContent: sceneText } });
+      }
+    } catch (err) {
+      const msg = err?.response?.status === 402
+        ? 'Out of AI tokens. Upgrade to keep practicing.'
+        : (err?.response?.data?.message || 'Couldn\'t generate that scene. Try again.');
+      dispatch(showSnackbar({ message: msg, variant: 'error' }));
+    } finally {
+      setGenerating(null);
+    }
   };
 
   const confirmComplete = () => {
@@ -140,6 +299,7 @@ export default function CraftJourney() {
         <button
           type="button"
           onClick={() => navigate(-1)}
+          onTouchEnd={(e) => { e.preventDefault(); navigate(-1); }}
           aria-label="Close Craft Journey"
           style={{
             width: 32, height: 32, borderRadius: '50%',
@@ -149,6 +309,8 @@ export default function CraftJourney() {
             color: 'var(--aurora-text)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer',
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
           }}
         >
           <X size={14} />
@@ -236,6 +398,54 @@ export default function CraftJourney() {
       {celebrate && (
         <Celebration node={celebrate.node} stars={celebrate.stars} onClose={confirmComplete} />
       )}
+
+      {/* AI-generation overlay — blocks input while the scene is being
+          written so users don't double-tap and queue up two generations
+          (each costs an AI token). */}
+      {generating && (() => {
+        const node = JOURNEY.flatMap((s) => s.nodes).find((n) => n.id === generating);
+        const config = node ? SKILL_PROMPTS[node.label] : null;
+        const tool = config?.tool === 'cd-sim' ? 'Acting Coach' : 'Scene Study';
+        return (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+            background: 'rgba(14,13,10,0.55)', backdropFilter: 'blur(12px)',
+          }}>
+            <div style={{
+              width: '100%', maxWidth: 320, padding: 28, borderRadius: 28,
+              background: 'var(--aurora-surface-solid)',
+              border: '1px solid var(--aurora-line)',
+              boxShadow: 'var(--aurora-shadow-modal, 0 24px 60px rgba(10,10,10,0.18))',
+              textAlign: 'center',
+            }}>
+              <div style={{
+                width: 56, height: 56, margin: '0 auto 16px',
+                borderRadius: 18, display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+                background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                color: '#FFFFFF',
+                boxShadow: '0 12px 30px rgba(212,168,95,0.45)',
+              }}>
+                <Loader2 size={26} className="animate-spin" />
+              </div>
+              <div className="aurora-eyebrow" style={{ color: 'var(--aurora-heritage-gold-deep)', marginBottom: 8 }}>
+                CRAFT JOURNEY
+              </div>
+              <div style={{
+                fontFamily: 'Playfair Display, serif', fontSize: 22,
+                color: 'var(--aurora-text)', lineHeight: 1.3, marginBottom: 8,
+              }}>
+                Writing your {node?.label} scene…
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--aurora-sub)', lineHeight: 1.5 }}>
+                Generating a 1-page scene tuned for this skill. You'll land in {tool} in a moment.
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -364,6 +574,7 @@ function Node({ node, dx, color, state, stars, onStart }) {
       <button
         type="button"
         onClick={() => !isLocked && onStart()}
+        onTouchEnd={(e) => { e.preventDefault(); if (!isLocked) onStart(); }}
         className={isCurrent ? 'craft-current' : ''}
         style={{
           width: size,
@@ -371,6 +582,8 @@ function Node({ node, dx, color, state, stars, onStart }) {
           borderRadius: node.boss ? 22 : '50%',
           border: 'none',
           cursor: isLocked ? 'default' : 'pointer',
+          touchAction: 'manipulation',
+          WebkitTapHighlightColor: 'transparent',
           position: 'relative',
           background: isLocked
             ? 'rgba(10,10,10,0.06)'
@@ -623,6 +836,7 @@ function Celebration({ node, stars, onClose }) {
         <button
           type="button"
           onClick={onClose}
+          onTouchEnd={(e) => { e.preventDefault(); onClose?.(); }}
           style={{
             marginTop: 16,
             width: '100%',
@@ -631,6 +845,8 @@ function Celebration({ node, stars, onClose }) {
             background: '#0E0D0A',
             color: '#FFFFFF',
             border: 'none',
+            touchAction: 'manipulation',
+            WebkitTapHighlightColor: 'transparent',
             fontFamily: 'Space Grotesk, system-ui, sans-serif',
             fontSize: 14,
             fontWeight: 600,

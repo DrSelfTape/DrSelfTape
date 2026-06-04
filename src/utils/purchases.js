@@ -77,16 +77,55 @@ export async function getPackageFor(plan, billing) {
  * branch on the outcome without relying on rejected promises.
  */
 export async function purchase(plan, billing) {
+  if (!isNativeIOS()) {
+    return { ok: false, reason: 'unavailable', detail: 'not_native_ios' };
+  }
+  if (!IOS_KEY) {
+    return { ok: false, reason: 'unavailable', detail: 'no_api_key' };
+  }
   const sdk = await loadSDK();
-  if (!sdk) return { ok: false, reason: 'unavailable' };
-  const pkg = await getPackageFor(plan, billing);
-  if (!pkg) return { ok: false, reason: 'no_package' };
+  if (!sdk) return { ok: false, reason: 'unavailable', detail: 'sdk_load_failed' };
+  // Force configure() in case initPurchases was never called (e.g., the
+  // user reached this screen before App.jsx's effect ran on a cold boot).
+  if (!configured) {
+    try {
+      await sdk.Purchases.configure({ apiKey: IOS_KEY });
+      configured = true;
+    } catch (e) {
+      return { ok: false, reason: 'unavailable', detail: 'configure_failed', error: String(e?.message || e) };
+    }
+  }
+  // Fetch offerings + diagnose which step failed so we can surface a
+  // useful message instead of a generic "Purchase failed".
+  let offerings;
+  try {
+    offerings = await sdk.Purchases.getOfferings();
+  } catch (e) {
+    return { ok: false, reason: 'no_offerings', error: String(e?.message || e) };
+  }
+  if (!offerings?.current) {
+    return { ok: false, reason: 'no_offerings', detail: 'rc_dashboard_has_no_current_offering' };
+  }
+  const packages = offerings.current.availablePackages || [];
+  if (packages.length === 0) {
+    return { ok: false, reason: 'no_package', detail: 'current_offering_has_zero_packages' };
+  }
+  const productId = `${plan}_${billing}`;
+  const pkg = packages.find((p) => p?.product?.identifier === productId);
+  if (!pkg) {
+    return {
+      ok: false,
+      reason: 'no_package',
+      detail: `no_package_for_${productId}`,
+      available: packages.map((p) => p?.product?.identifier).filter(Boolean),
+    };
+  }
   try {
     const { customerInfo } = await sdk.Purchases.purchasePackage({ aPackage: pkg });
     return { ok: true, customerInfo };
   } catch (e) {
     if (e?.userCancelled) return { ok: false, userCancelled: true };
-    return { ok: false, reason: 'purchase_failed', error: e };
+    return { ok: false, reason: 'purchase_failed', error: String(e?.message || e) };
   }
 }
 
