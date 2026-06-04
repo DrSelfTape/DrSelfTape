@@ -952,6 +952,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const settingsLoaded = useSelector((state) => state.userSettings?.loaded);
 
   useEffect(() => {
+    // fetchAuditionsThunk populates state.auditions.data — the flat list
+    // the home hero ring + pipeline bars + callback rate chart all read
+    // from. Without this, Home only sees an empty array even when the
+    // Tracker panel has populated state.auditions.tracker (different
+    // bucket-shaped endpoint). Symptom was Home showing 0/0/0/0 while
+    // the Tracker showed real auditions.
+    dispatch(fetchAuditionsThunk());
     dispatch(fetchAuditionStatsThunk());
     dispatch(getScripts());
     dispatch(fetchSubmissionsThunk());
