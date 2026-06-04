@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Mic, BookOpen, Video } from 'lucide-react';
 import Teleprompter from './Teleprompter';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 /**
  * Scene Study Practice — V2 layout (preview behind ?layout=v2).
@@ -21,6 +22,10 @@ export default function PracticeV2({
   onGoLive,
   onSelfTape,
 }) {
+  // Hide MobileApp's persistent top bar + bottom tab pill — Practice
+  // owns its own back button + role pill + mode tabs, the persistent
+  // chrome was eating the breathing room above the script.
+  useHideMobileHeader(true);
   // Active tab — Practice is the default since this is the Teleprompter view.
   // Live Study and Self-Tape tabs trigger their step transitions immediately.
   const [activeTab, setActiveTab] = useState('practice');
@@ -38,23 +43,24 @@ export default function PracticeV2({
   ];
 
   return (
-    <div className="flex flex-col aurora-orbs" style={{ height: 'calc(100dvh - 140px)', maxWidth: '44rem', margin: '0 auto', width: '100%' }}>
-      {/* ── Top row: back + role pill ── */}
-      <div className="flex items-center justify-between px-1 mb-3">
+    <div className="flex flex-col aurora-orbs" style={{ height: '100dvh', maxWidth: '44rem', margin: '0 auto', width: '100%', paddingTop: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}>
+      {/* ── Row 1: BACK on its own line, with the Playing role pill
+            tucked right. Generous padding so neither feels crowded. ── */}
+      <div className="flex items-center justify-between px-4 pb-3">
         <button
           onClick={onBack}
-          className="aurora-mono flex items-center gap-1.5 px-2 py-1.5 rounded-lg transition-colors cursor-pointer"
-          style={{ color: 'var(--aurora-sub)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase' }}
+          className="aurora-mono flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors cursor-pointer"
+          style={{ color: 'var(--aurora-sub)', fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
         >
-          <ArrowLeft size={14} />
+          <ArrowLeft size={16} />
           Back
         </button>
         {userRole && (
-          <div className="aurora-mono flex items-center gap-1.5 px-3 py-1 rounded-full" style={{
+          <div className="aurora-mono flex items-center gap-1.5 px-3.5 py-1.5 rounded-full" style={{
             background: 'color-mix(in oklch, var(--aurora-accent) 18%, transparent)',
             color: 'var(--aurora-accent)',
             border: '1px solid color-mix(in oklch, var(--aurora-accent) 40%, transparent)',
-            fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
+            fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase',
             backdropFilter: 'blur(12px)',
           }}>
             Playing <span style={{ fontWeight: 700 }}>{userRole}</span>
@@ -62,35 +68,37 @@ export default function PracticeV2({
         )}
       </div>
 
-      {/* ── Mode tabs ── */}
-      <div className="flex items-stretch gap-1 mb-3 px-1">
+      {/* ── Row 2: Mode tabs with proper breathing room. Each tab is
+            a comfortable touch target with the icon + label centered
+            and the NEW badge sitting cleanly above-right of the icon
+            (no longer overlapping the next tab). ── */}
+      <div className="grid grid-cols-3 gap-2 px-4 pb-3">
         {TABS.map((t) => {
           const active = activeTab === t.id;
           return (
             <button
               key={t.id}
               onClick={() => handleTab(t.id)}
-              className="aurora-mono flex-1 flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl transition-all cursor-pointer"
+              className="aurora-mono relative flex flex-col items-center justify-center gap-1.5 py-3 px-2 rounded-2xl transition-all cursor-pointer"
               style={{
                 background: active ? 'var(--aurora-accent)' : 'var(--aurora-glass)',
                 color: active ? '#fff' : 'var(--aurora-sub)',
                 border: active ? 'none' : '1px solid var(--aurora-glass-border)',
                 backdropFilter: active ? 'none' : 'blur(12px)',
-                fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
+                fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600,
                 boxShadow: active ? 'var(--aurora-shadow-coral)' : 'none',
+                minHeight: 64,
               }}
             >
-              <div className="relative">
-                <t.icon size={15} />
-                {t.badge && !active && (
-                  <span className="aurora-mono absolute -top-1.5 -right-3 px-1 rounded-full leading-tight" style={{
-                    background: 'var(--aurora-accent)', color: '#fff', fontSize: 8, fontWeight: 700,
-                  }}>
-                    {t.badge}
-                  </span>
-                )}
-              </div>
-              <span>{t.label}</span>
+              {t.badge && !active && (
+                <span className="aurora-mono absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded-full leading-none" style={{
+                  background: 'var(--aurora-accent)', color: '#fff', fontSize: 8, fontWeight: 700, letterSpacing: '0.04em',
+                }}>
+                  {t.badge}
+                </span>
+              )}
+              <t.icon size={18} />
+              <span style={{ whiteSpace: 'nowrap' }}>{t.label}</span>
             </button>
           );
         })}
