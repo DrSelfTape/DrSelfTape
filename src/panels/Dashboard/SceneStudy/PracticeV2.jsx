@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowLeft, Mic, BookOpen, Video } from 'lucide-react';
+import { ArrowLeft, Mic, BookOpen } from 'lucide-react';
 import Teleprompter from './Teleprompter';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
@@ -33,13 +33,15 @@ export default function PracticeV2({
   const handleTab = (id) => {
     if (id === 'practice') return setActiveTab('practice');
     if (id === 'live' && onGoLive) return onGoLive();
-    if (id === 'self-tape' && onSelfTape) return onSelfTape();
   };
 
+  // Self-Tape mode removed — the recorder UX wasn't strong enough to
+  // ship as a peer with Practice + AI Reader. Practice (silent
+  // teleprompter) + AI Reader (the AI partner reads back to you) is
+  // the focused pair for rehearsal.
   const TABS = [
-    { id: 'live', label: 'Live Study', icon: Mic, badge: 'NEW' },
     { id: 'practice', label: 'Practice', icon: BookOpen },
-    { id: 'self-tape', label: 'Self-Tape', icon: Video },
+    { id: 'live', label: 'AI Reader', icon: Mic, badge: 'NEW' },
   ];
 
   return (
@@ -72,7 +74,7 @@ export default function PracticeV2({
             a comfortable touch target with the icon + label centered
             and the NEW badge sitting cleanly above-right of the icon
             (no longer overlapping the next tab). ── */}
-      <div className="grid grid-cols-3 gap-2 px-4 pb-3">
+      <div className="grid grid-cols-2 gap-2 px-4 pb-3">
         {TABS.map((t) => {
           const active = activeTab === t.id;
           return (
