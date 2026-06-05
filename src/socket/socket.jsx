@@ -146,8 +146,19 @@ export const SocketProvider = ({ children }) => {
 
   const acceptCall = () => {
     if (!incomingCall) return;
-    const { matchId, roomUrl } = incomingCall;
-    const roomId = roomUrl.split('/').filter(Boolean).pop();
+    const { roomUrl } = incomingCall;
+    let roomId;
+    try {
+      const parsed = new URL(roomUrl);
+      roomId = parsed.pathname.split('/').filter(Boolean).pop();
+    } catch {
+      setIncomingCall(null);
+      return;
+    }
+    if (!roomId) {
+      setIncomingCall(null);
+      return;
+    }
     setIncomingCall(null);
     navigate(`/meeting/${roomId}`, { state: { roomUrl } });
   };

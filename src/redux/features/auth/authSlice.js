@@ -267,7 +267,7 @@ export const authSlice = createSlice({
           last_name: action.payload?.last_name,
           phone_no: action.payload?.phone_no,
           email: action.payload?.email,
-          token: action.payload?.token?.access,
+          token: action.payload?.token?.access || action.payload?.token,
           all_user_permissions: action.payload?.all_user_permissions,
           role: action.payload?.active_role || action.payload?.role, // Use active_role if available
           is_active: action.payload?.is_active,
@@ -299,7 +299,7 @@ export const authSlice = createSlice({
           last_name: action.payload?.last_name,
           phone_no: action.payload?.phone_no,
           email: action.payload?.email,
-          token: action.payload?.token?.access,
+          token: action.payload?.token?.access || action.payload?.token,
           all_user_permissions: action.payload?.all_user_permissions,
           role: action.payload?.active_role || action.payload?.role,
           is_active: action.payload?.is_active,

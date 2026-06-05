@@ -274,6 +274,14 @@ function ProfileStep({ data, set, onNext }) {
   const onFile = (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
+    if (!f.type || !f.type.startsWith('image/')) {
+      e.target.value = '';
+      return;
+    }
+    if (f.size > 12 * 1024 * 1024) {
+      e.target.value = '';
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => setCropImg(reader.result);
     reader.readAsDataURL(f);

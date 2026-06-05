@@ -235,7 +235,14 @@ const GreenRoomChat = (props = {}) => {
       });
       const checkoutUrl = data?.data?.checkout_url;
       if (checkoutUrl) {
-        window.location.href = checkoutUrl;
+        try {
+          const parsed = new URL(checkoutUrl);
+          if (parsed.hostname !== 'checkout.stripe.com') throw new Error('untrusted host');
+          window.location.href = checkoutUrl;
+        } catch {
+          setRehearsalError('Payment setup failed. Please try again.');
+          setShowBooking(false);
+        }
       } else {
         setRehearsalError('Payment setup failed. Please try again.');
         setShowBooking(false);
@@ -265,9 +272,17 @@ const GreenRoomChat = (props = {}) => {
       const roomUrl = data?.data?.room_url || data?.room_url || data?.data?.url || data?.url;
       if (!roomUrl) throw new Error('No room URL returned');
 
-      const roomId = roomUrl.split('/').filter(Boolean).pop();
+      let roomId;
+      try {
+        const parsed = new URL(roomUrl);
+        roomId = parsed.pathname.split('/').filter(Boolean).pop();
+      } catch {
+        throw new Error('Invalid room URL');
+      }
+      if (!roomId) throw new Error('Empty room id');
 
-      localStorage.setItem(`dr-self-tapes_meeting_host_${roomId}`, 'true');
+      const userId = currentUser?.id || 'anon';
+      localStorage.setItem(`dr-self-tapes_meeting_host_${userId}_${roomId}`, 'true');
 
       try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.START_REHEARSAL, { match_id: matchId, room_id: roomId }); } catch { /* swallow */ }
 

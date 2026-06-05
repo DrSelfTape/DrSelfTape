@@ -15,10 +15,9 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import axios from 'axios';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { baseURL } from '../../redux/constant';
+import axiosInstance from '../../redux/http';
 import { setAiConsentAcceptedAt } from '../../redux/features/auth/authSlice';
 import { openExternal } from '../../utils/openExternal';
 
@@ -133,12 +132,7 @@ export default function AIConsentModal() {
     setSubmitting(true);
     setError('');
     try {
-      const token = user?.token;
-      const { data } = await axios.post(
-        `${baseURL}/v1/users/ai-consent/`,
-        {},
-        { headers: token ? { Authorization: `Bearer ${token}` } : {} },
-      );
+      const { data } = await axiosInstance.post('/v1/users/ai-consent/', {});
       const stamp = data?.data?.ai_consent_accepted_at || data?.ai_consent_accepted_at || new Date().toISOString();
       dispatch(setAiConsentAcceptedAt(stamp));
       finish(true);
