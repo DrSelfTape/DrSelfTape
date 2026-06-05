@@ -252,7 +252,12 @@ export default function CraftJourney() {
           // before we fire the script payload.
           setTimeout(() => {
             window.dispatchEvent(new CustomEvent('drst-load-virtual-script', {
-              detail: { content: sceneText, title: virtualTitle },
+              // Pass the skill tag through the event so ScenesScreen's
+              // setSelectedScript call carries it forward — without it,
+              // the handler would clobber the sessionStorage-derived
+              // craft_skill and the End-Scene completion would silently
+              // no-op for users who launched a node from here.
+              detail: { content: sceneText, title: virtualTitle, craft_skill: node.label },
             }));
           }, 50);
         }

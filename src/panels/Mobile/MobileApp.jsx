@@ -2200,12 +2200,21 @@ function ScenesScreen({ setTab }) {
   // through the upload flow.
   useEffect(() => {
     const handler = (e) => {
-      const { content, title } = e.detail || {};
+      const { content, title, craft_skill } = e.detail || {};
       if (!content) return;
       setSelectedScript({
         id: `virtual-${Date.now()}`,
         title: title || 'Practice Scene',
         content,
+        // Carry craft_skill from the event detail. If it's missing,
+        // fall back to whatever was already in sessionStorage (Craft
+        // Journey writes there before firing this event).
+        craft_skill: craft_skill || (() => {
+          try {
+            const raw = sessionStorage.getItem('preloadedScript');
+            return raw ? (JSON.parse(raw).craft_skill || undefined) : undefined;
+          } catch { return undefined; }
+        })(),
       });
     };
     window.addEventListener('drst-load-virtual-script', handler);
