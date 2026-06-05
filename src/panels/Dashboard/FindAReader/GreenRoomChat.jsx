@@ -66,6 +66,22 @@ const GreenRoomChat = (props = {}) => {
   );
   const greenRoomMessages = Array.isArray(allMessages?.[matchId]) ? allMessages[matchId] : [];
 
+  // Blob URLs created locally when an upload fails — we render them as the
+  // file preview, but we own the lifecycle. Revoke on unmount so they don't
+  // leak file handles for the rest of the session.
+  const localBlobUrlsRef = useRef([]);
+  useEffect(() => () => {
+    localBlobUrlsRef.current.forEach((u) => {
+      try { URL.revokeObjectURL(u); } catch { /* already revoked */ }
+    });
+    localBlobUrlsRef.current = [];
+  }, []);
+  const trackBlobUrl = (file) => {
+    const u = URL.createObjectURL(file);
+    localBlobUrlsRef.current.push(u);
+    return u;
+  };
+
   const match = matches?.find((m) => String(m.id) === String(matchId));
   const partnerName = match?.reader?.name || match?.other_actor?.name || 'Your Reader';
   const partnerInitials = partnerName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
@@ -208,7 +224,7 @@ const GreenRoomChat = (props = {}) => {
       } else {
         sendLocalMsg(`📄 Sides shared: ${file.name}`, 'file', {
           fileName: file.name,
-          fileUrl: URL.createObjectURL(file),
+          fileUrl: trackBlobUrl(file),
           fileType: file.type,
         });
       }

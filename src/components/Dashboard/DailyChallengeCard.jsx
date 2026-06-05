@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Flame, Trophy, Check, ChevronRight, Zap } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
+import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 
 export default function DailyChallengeCard({ onNavigate }) {
+  const dispatch = useDispatch();
   const [challenge, setChallenge] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [streak, setStreak] = useState({ current: 0, longest: 0, total_xp: 0 });
@@ -34,7 +37,12 @@ export default function DailyChallengeCard({ onNavigate }) {
         total_xp: data?.data?.total_xp || streak.total_xp,
       });
       setTimeout(() => setJustCompleted(false), 3000);
-    } catch {}
+    } catch (err) {
+      dispatch(showSnackbar({
+        message: err?.response?.data?.message || "Couldn't mark challenge complete. Please try again.",
+        variant: 'error',
+      }));
+    }
     setCompleting(false);
   };
 

@@ -1,7 +1,22 @@
+import { useEffect } from 'react';
 import useHideMobileHeader from './Shared/useHideMobileHeader';
+import { trackEvent } from '../utils/analytics';
 
 export default function NoTokensModal({ onClose, onUpgrade }) {
   useHideMobileHeader(true);
+
+  useEffect(() => {
+    trackEvent('no_tokens_modal_shown', {});
+  }, []);
+
+  const handleUpgrade = () => {
+    trackEvent('no_tokens_upgrade_tapped', {});
+    onUpgrade?.();
+  };
+  const handleClose = () => {
+    trackEvent('no_tokens_modal_dismissed', {});
+    onClose?.();
+  };
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" style={{
       background: 'rgba(10,10,10,0.45)',
@@ -25,7 +40,7 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
           You've used all your AI tokens for this period. Upgrade your plan to get more.
         </p>
         <button
-          onClick={onUpgrade}
+          onClick={handleUpgrade}
           className="aurora-mono w-full py-3.5 rounded-full text-white text-sm mb-3"
           style={{
             background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
@@ -37,7 +52,7 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
           Upgrade Plan 👑
         </button>
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="w-full py-3 rounded-full text-sm font-semibold"
           style={{ color: 'var(--aurora-sub)' }}
         >
