@@ -42,6 +42,15 @@ axiosInstance.interceptors.response.use(
 
     if (error?.response?.status === 402 && error?.response?.data?.code === 'insufficient_tokens') {
       window.dispatchEvent(new CustomEvent('insufficient_tokens'));
+      // Fire the funnel entry event — paired with no_tokens_modal_shown
+      // (mount), no_tokens_upgrade_tapped, and no_tokens_modal_dismissed.
+      // Lazy import so analytics never delays a 402 response handling.
+      import('../utils/analytics').then(({ trackEvent }) => {
+        trackEvent('insufficient_tokens', {
+          path: error?.config?.url,
+          method: error?.config?.method,
+        });
+      }).catch(() => { /* swallow */ });
     }
 
     // Apple Guideline 5.1.1(i) — if a panel slips past the AIGate and

@@ -310,6 +310,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [saving, setSaving] = useState(false);
   const panelRef = useRef(null);
 
   useEffect(() => {
@@ -342,9 +343,15 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
 
   if (!audition) return null;
 
-  const handleSave = () => {
-    onSave(form);
-    setEditing(false);
+  const handleSave = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await onSave(form);
+      setEditing(false);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const inputStyle = {
@@ -418,10 +425,15 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
             {editing ? (
               <button
                 onClick={handleSave}
-                className="p-2 rounded-lg transition-colors"
+                disabled={saving}
+                className="p-2 rounded-lg transition-colors disabled:opacity-50"
                 style={{ background: 'var(--aurora-heritage-gold)', color: '#FFF' }}
               >
-                <Save size={16} />
+                {saving ? (
+                  <span className="block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                ) : (
+                  <Save size={16} />
+                )}
               </button>
             ) : (
               <button

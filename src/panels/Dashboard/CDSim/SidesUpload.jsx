@@ -275,6 +275,7 @@ export default function SidesUpload({ onSubmit }) {
         // Step 3: AI reformat into CHARACTER: dialogue format
         setPdfStatus('Formatting with AI...');
         let finalText = rawText;
+        let aiFormatFellBack = false;
         // Check cache first — avoids re-calling GPT on same PDF content
         const cacheKey = `fmtscript_${simpleHash(rawText)}`;
         const cached = sessionStorage.getItem(cacheKey);
@@ -286,15 +287,23 @@ export default function SidesUpload({ onSubmit }) {
             if (data?.success && data?.data?.formatted) {
               finalText = data.data.formatted;
               sessionStorage.setItem(cacheKey, finalText); // cache it
+            } else {
+              aiFormatFellBack = true;
             }
-          } catch { /* fall back to raw */ }
+          } catch {
+            aiFormatFellBack = true;
+          }
         }
 
         setScriptText(finalText);
         setPdfStatus('');
 
         const quality = detectScriptQuality(finalText);
-        if (quality.warning) setQualityWarning(quality.warning);
+        if (aiFormatFellBack) {
+          setQualityWarning('AI formatting unavailable — using raw text. Format may be inconsistent.');
+        } else if (quality.warning) {
+          setQualityWarning(quality.warning);
+        }
       } catch (err) {
         setPdfError(err?.message || 'Could not parse PDF — please paste your script manually.');
         setFileName('');
