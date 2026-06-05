@@ -16,6 +16,46 @@ import { initSentry } from './utils/sentry.js';
 // component mount. No-ops in dev (no DSN set).
 initSentry();
 
+// Stale-chunk auto-recovery. After we deploy a new build to Vercel, the
+// hashed chunk filenames change. Anyone with the prior index.html cached
+// still references the old chunk names; tapping a lazy() route then fails
+// with "Failed to fetch dynamically imported module" and the screen
+// freezes (Joseph saw this trying to start a peer-to-peer session). One
+// reload pulls the fresh index + chunks. The sessionStorage guard means
+// we don't reload-loop when the failure is something other than a stale
+// chunk (network down, etc.).
+(function installStaleChunkReloader() {
+  if (typeof window === 'undefined') return;
+  const STALE_PATTERNS = [
+    /Failed to fetch dynamically imported module/i,
+    /Importing a module script failed/i,
+    /error loading dynamically imported module/i,
+    /ChunkLoadError/i,
+  ];
+  const RELOAD_KEY = '__dst_reloaded_stale_chunk__';
+  const isStale = (msg) => STALE_PATTERNS.some((r) => r.test(String(msg || '')));
+  const reloadOnce = () => {
+    try {
+      if (sessionStorage.getItem(RELOAD_KEY)) return false;
+      sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+    } catch { /* storage unavailable — still try a reload */ }
+    window.location.reload();
+    return true;
+  };
+  window.addEventListener('error', (e) => {
+    if (isStale(e?.message) || isStale(e?.error?.message)) reloadOnce();
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    const msg = e?.reason?.message || e?.reason;
+    if (isStale(msg)) reloadOnce();
+  });
+  // Clear the guard once the new bundle has booted cleanly so the next
+  // future redeploy can also self-heal.
+  setTimeout(() => {
+    try { sessionStorage.removeItem(RELOAD_KEY); } catch { /* storage gone */ }
+  }, 5000);
+})();
+
 // Library Imports
 
 createRoot(document.getElementById('root')).render(

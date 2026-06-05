@@ -178,7 +178,18 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
         {!isOwn && message.senderName && (
           <p className="text-[10px] font-semibold mb-0.5 text-[#7A5A18]">{message.senderName}</p>
         )}
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>{text}</p>
+        <p
+          className="text-sm leading-relaxed break-words"
+          style={{
+            color: 'var(--text-primary)',
+            // overflow-wrap: anywhere lets unbroken strings (URLs, stack
+            // traces) wrap mid-token so they don't blow past max-w-[72%].
+            overflowWrap: 'anywhere',
+            wordBreak: 'break-word',
+          }}
+        >
+          {text}
+        </p>
         <p className={`text-[10px] mt-1 text-right ${isOwn ? 'text-white/60' : ''}`} style={!isOwn ? { color: 'var(--text-muted)' } : {}}>
           {time}
         </p>
