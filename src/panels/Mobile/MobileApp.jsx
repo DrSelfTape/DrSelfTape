@@ -2297,6 +2297,11 @@ function ScenesScreen({ setTab }) {
     sessionStorage.setItem('preloadedScript', JSON.stringify({
       scriptContent: selectedScript.content,
       characters: Array.isArray(selectedScript.characters) ? selectedScript.characters : undefined,
+      // Carry the Craft Journey skill tag through the rewrite so SceneStudy
+      // can pass it to LiveSceneMode; without this, the completion handler
+      // sees craftSkill='' and never fires completeCraftNode → progress
+      // mode looks frozen after a finished session.
+      craft_skill: selectedScript.craft_skill,
     }));
     return (
       <div style={{ height: "calc(100vh - 64px)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
