@@ -627,6 +627,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       setReaderMode('pretimed');
       setSceneStarted(true);
       isActiveRef.current = true;
+      // Stamp the start time so endScene's duration math actually works.
+      // Without this, every iOS session (which forces pre-timed mode) had
+      // duration=0 → practice-log skipped, Jericho session_log dur=0, and
+      // the Craft Journey End-Scene completion guard never fired.
+      sceneStartTimeRef.current = Date.now();
 
       const runPreTimed = async (idx) => {
         if (!isActiveRef.current) return;
