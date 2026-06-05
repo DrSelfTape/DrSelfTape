@@ -105,7 +105,10 @@ export default function AIConsentModal() {
       resolveRef.current(accepted);
       resolveRef.current = null;
     }
-    if (pendingResolve === resolveRef.current) pendingResolve = null;
+    // Clear the module-level pending slot unconditionally. The previous
+    // check (`=== resolveRef.current`) compared against the just-nulled
+    // ref, so it stayed pinned to the most-recent resolver across opens.
+    pendingResolve = null;
   }, []);
 
   useEffect(() => {

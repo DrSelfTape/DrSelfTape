@@ -50,7 +50,7 @@ const BADGES = [
     desc: 'Got your first callback',
     emoji: '📞',
     color: 'from-green-400 to-green-600',
-    check: (s) => (s.callbacks || s.total_callbacks || 0) >= 1,
+    check: (s) => (s.by_status?.callback || s.callbacks || 0) >= 1,
   },
   {
     id: 'five_callbacks',
@@ -58,7 +58,7 @@ const BADGES = [
     desc: '5 callbacks earned',
     emoji: '🏆',
     color: 'from-yellow-400 to-yellow-600',
-    check: (s) => (s.callbacks || s.total_callbacks || 0) >= 5,
+    check: (s) => (s.by_status?.callback || s.callbacks || 0) >= 5,
   },
   {
     id: 'first_booking',
@@ -66,7 +66,7 @@ const BADGES = [
     desc: 'Landed your first role',
     emoji: '🎉',
     color: 'from-pink-400 to-rose-600',
-    check: (s) => (s.booked || s.total_booked || 0) >= 1,
+    check: (s) => (s.by_status?.booked || s.booked || 0) >= 1,
   },
   {
     id: 'five_bookings',
@@ -74,15 +74,15 @@ const BADGES = [
     desc: '5 roles booked',
     emoji: '👑',
     color: 'from-amber-400 to-yellow-500',
-    check: (s) => (s.booked || s.total_booked || 0) >= 5,
+    check: (s) => (s.by_status?.booked || s.booked || 0) >= 5,
   },
   {
     id: 'hot_streak',
     name: 'Hot Streak',
-    desc: 'Callback rate above 20%',
+    desc: 'Booking rate above 20%',
     emoji: '🚀',
     color: 'from-red-400 to-orange-500',
-    check: (s) => (s.callback_rate || 0) >= 20,
+    check: (s) => (s.booked_rate || s.callback_rate || 0) >= 20,
   },
   {
     id: 'film_specialist',

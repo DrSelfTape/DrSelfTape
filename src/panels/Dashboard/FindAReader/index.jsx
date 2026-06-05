@@ -10,6 +10,7 @@ import {
   fetchAvailableReaders,
   swipeOnReader,
   setFiltersLocal,
+  fetchMatchingStats,
 } from '../../../redux/features/readers/readersMatchSlice';
 import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
@@ -90,6 +91,9 @@ const FindAReader = () => {
         const result = await dispatch(
           swipeOnReader({ reader_id: actor.id, action })
         ).unwrap();
+        // Refresh the dashboard pending-likes counter so the home-tab
+        // CTA isn't stale next time the user lands there.
+        dispatch(fetchMatchingStats());
         if (result?.match && result?.match_details?.id) {
           // Hold the user on the celebration overlay; navigation runs
           // when the burst finishes (MatchCelebration calls onDone).
