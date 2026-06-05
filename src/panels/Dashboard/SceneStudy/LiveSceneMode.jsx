@@ -589,9 +589,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   // Start voice-activated mode (original behavior)
   const startScene = useCallback(
     (selectedVoice) => {
-      if (!SpeechRecognition) {
-        setStatus('error');
-        setErrorMsg("Your browser doesn't support live mode. Try Chrome.");
+      // Defensive fallback: if SpeechRecognition isn't available (iOS
+      // WKWebView, older browsers), DON'T enter voice mode — the user
+      // would get stranded forever on "Your turn" because there's
+      // nothing listening. Fall back to pre-timed mode silently so
+      // every code path that lands here still produces a working scene.
+      if (!SpeechRecognition || isNativeIOS()) {
+        startPreTimedSceneRef.current?.(selectedVoice, 3);
         return;
       }
 
@@ -888,7 +892,15 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           primeAudio();
           setShowMicPermission(false);
           setSceneStarted(true);
-          startScene(voice);
+          // iOS WKWebView doesn't have a functional webkitSpeechRecognition,
+          // so voice-listening mode strands users on "Your turn" forever.
+          // Force pre-timed mode on iOS — same logic that runs from the
+          // VoicePicker iOS branch (onVoiceSelected at line 580).
+          if (isNativeIOS()) {
+            startPreTimedSceneRef.current?.(voice, 3);
+          } else {
+            startScene(voice);
+          }
         }}
         onDenied={() => {
           setShowMicPermission(false);
