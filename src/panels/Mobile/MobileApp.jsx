@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
+import UpdateBanner from "../../components/UpdateBanner";
 import { fetchAuditionsThunk, fetchAuditionStatsThunk, createAuditionThunk, updateAuditionThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
@@ -3025,6 +3026,7 @@ export default function DrSelfTapeApp() {
   return (
     <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: '-apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif', color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+      <UpdateBanner />
       {/* No tokens modal */}
       {showNoTokens && (
         <NoTokensModal
