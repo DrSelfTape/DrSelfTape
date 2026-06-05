@@ -112,8 +112,14 @@ export const forgotPassword = createAsyncThunk(
       const { data } = await axios.post(endPoints.forgotPassword, {
         ...values,
       });
+      import('../../../utils/analytics').then(({ trackEvent }) => {
+        trackEvent('forgot_password_requested', {});
+      }).catch(() => { /* swallow */ });
       return data;
     } catch (error) {
+      import('../../../utils/analytics').then(({ trackEvent }) => {
+        trackEvent('forgot_password_failed', { status: error?.response?.status });
+      }).catch(() => { /* swallow */ });
       return rejectWithValue(handleApiError(error));
     }
   }
@@ -127,8 +133,14 @@ export const resetPassword = createAsyncThunk(
       const { data } = await axios.post(endPoints.resetPassword, {
         ...values,
       });
+      import('../../../utils/analytics').then(({ trackEvent }) => {
+        trackEvent('password_reset_success', {});
+      }).catch(() => { /* swallow */ });
       return data;
     } catch (error) {
+      import('../../../utils/analytics').then(({ trackEvent }) => {
+        trackEvent('password_reset_failed', { status: error?.response?.status });
+      }).catch(() => { /* swallow */ });
       return rejectWithValue(handleApiError(error));
     }
   }
