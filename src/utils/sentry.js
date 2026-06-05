@@ -21,6 +21,8 @@ export function initSentry() {
     replaysSessionSampleRate: 0.0,
     replaysOnErrorSampleRate: 1.0,
     // Don't spam Sentry with the chunk-reload errors we already handle.
+    // Both `ignoreErrors` (SDK-level) and a regex sweep in beforeSend
+    // (catch-all for variants the substring match misses).
     ignoreErrors: [
       'Failed to fetch dynamically imported module',
       'Loading chunk',
@@ -28,7 +30,22 @@ export function initSentry() {
       'is not a valid JavaScript MIME type',
       'Importing a module script failed',
       'Unable to preload CSS for',
+      // Network blips that fire on background-tab tabs we can't help with.
+      'NetworkError when attempting to fetch resource',
+      'Load failed',
     ],
+    beforeSend(event, hint) {
+      const msg = hint?.originalException?.message
+        || event?.exception?.values?.[0]?.value
+        || event?.message
+        || '';
+      // Belt-and-suspenders chunk filter — covers iOS Safari + Chrome
+      // variants of the "stale entry HTML returned as JS" failure.
+      if (/MIME type|preload CSS|ChunkLoadError|dynamically imported|Importing a module script/i.test(msg)) {
+        return null;
+      }
+      return event;
+    },
   });
 }
 

@@ -217,16 +217,25 @@ export default function Membership({ onClose }) {
           } else {
             msg = 'Purchase failed. Please try again.';
           }
-          // Send the full failure shape to Sentry so we can diagnose
-          // RevenueCat dashboard config issues without needing the user
-          // to read us cryptic toast text over text message.
-          try {
-            const { Sentry } = await import('../../../utils/sentry');
-            Sentry.captureMessage(`IAP purchase failed: ${result.reason}`, {
-              level: 'warning',
-              extra: { ...result, planId, billing },
-            });
-          } catch { /* swallow */ }
+          // Only ping Sentry when the failure suggests a server-side or
+          // dashboard config issue we should investigate. Skip when it's
+          // a user-side decline (Apple sandbox, expired card, etc.) — those
+          // create noise without an action item.
+          const SERVER_SIDE_REASONS = new Set([
+            'no_offerings',
+            'no_package',
+            'configure_failed',
+            'sdk_load_failed',
+          ]);
+          if (SERVER_SIDE_REASONS.has(result.reason)) {
+            try {
+              const { Sentry } = await import('../../../utils/sentry');
+              Sentry.captureMessage(`IAP setup issue: ${result.reason}`, {
+                level: 'info',
+                extra: { ...result, planId, billing },
+              });
+            } catch { /* swallow */ }
+          }
           dispatch(showSnackbar({ message: msg, variant: 'error' }));
           return;
         }
