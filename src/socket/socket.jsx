@@ -105,9 +105,15 @@ export const SocketProvider = ({ children }) => {
             roomUrl: data.room_url,
             partnerName: data.partner_name || 'Your scene partner',
           });
+          // 60s gives the receiver enough time to finish typing / switch
+          // tabs / answer a different distraction before the modal
+          // auto-dismisses. The caller's Waiting state stays up regardless.
           setTimeout(() => setIncomingCall((prev) =>
             prev?.matchId === data.match_id ? null : prev
-          ), 30000);
+          ), 60000);
+          // Light haptic on iOS via the Vibration API (Capacitor maps
+          // this to real haptics where available; on Safari it no-ops).
+          try { navigator.vibrate?.([200, 80, 200]); } catch { /* no-op */ }
         }
         break;
 

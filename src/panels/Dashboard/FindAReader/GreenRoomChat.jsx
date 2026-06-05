@@ -321,15 +321,19 @@ const GreenRoomChat = (props = {}) => {
 
       navigate(`/meeting/${roomId}`, { state: { roomUrl } });
     } catch (err) {
-      const msg = err?.response?.data?.message || err?.message || 'Could not start rehearsal room';
+      // Old code fell into a demo-rehearsal URL when start-rehearsal/
+      // failed — that URL points at a Daily room that doesn't exist,
+      // so the user landed in a black screen with no way out. Now we
+      // surface the real error inline and let them retry. The Live
+      // Session button below shows the error banner; no fake room.
+      const msg =
+        err?.response?.data?.message
+        || err?.response?.data?.detail
+        || (err?.code === 'ECONNABORTED' || !err?.response
+            ? 'Could not reach our servers — check your connection and try again.'
+            : 'Could not start the rehearsal room. Please try again.');
       setRehearsalError(msg);
-
-      if (err?.response?.status === 404 || !err?.response) {
-        sendLocalMsg(`🎬 Starting virtual rehearsal session...`, 'system');
-        navigate(`/meeting/demo-rehearsal-${matchId}`, {
-          state: { roomUrl: `https://drselftape.daily.co/demo-rehearsal-${matchId}` }
-        });
-      }
+      sendLocalMsg(`Couldn't start the call: ${msg}`, 'system');
     } finally {
       setStartingRehearsal(false);
     }

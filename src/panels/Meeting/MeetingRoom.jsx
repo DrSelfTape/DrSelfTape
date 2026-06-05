@@ -43,9 +43,15 @@ export default function MeetingRoom() {
   const callRef = useRef(null);
   const cleanupRanRef = useRef(false);
 
-  const [status, setStatus] = useState('loading'); // 'loading' | 'in-call' | 'left' | 'error'
+  const [status, setStatus] = useState('loading'); // 'loading' | 'waiting' | 'in-call' | 'left' | 'error'
   const [error, setError] = useState('');
   const [partnerName, setPartnerName] = useState('Your scene partner');
+
+  // If the iframe never fires 'joined-meeting' within 30s, surface a
+  // real error so the user isn't stuck on the spinner. Daily.co usually
+  // joins in <5s; >30s means something is wrong (camera permission
+  // denied silently, network block, room expired).
+  const joinTimerRef = useRef(null);
 
   // Cleanup helper — destroys the Daily frame + clears the host flag.
   // Safe to call multiple times; guarded by cleanupRanRef so a quick
@@ -101,25 +107,48 @@ export default function MeetingRoom() {
     });
     callRef.current = call;
 
+    // Watchdog — fail loud if Daily never confirms join within 30s.
+    joinTimerRef.current = setTimeout(() => {
+      // Don't trip if we already moved past loading.
+      setStatus((s) => (s === 'loading' ? 'error' : s));
+      setError((e) => e || "Couldn't connect to the rehearsal room. Check your camera + mic permissions in Settings → Dr Self Tape and try again.");
+    }, 30000);
+
     call.on('joined-meeting', () => {
-      setStatus('in-call');
+      if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
+      // Joined the room — but we're still alone until the partner
+      // shows up. The 'participant-joined' event below flips us to
+      // 'in-call' the moment they connect.
+      setStatus('waiting');
     });
     call.on('participant-joined', (e) => {
       const name = e?.participant?.user_name;
       if (name) setPartnerName(name);
+      setStatus('in-call');
     });
     call.on('left-meeting', () => {
+      if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
       setStatus('left');
     });
     call.on('error', (e) => {
+      if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
       setStatus('error');
-      setError(e?.errorMsg || 'The call ended unexpectedly.');
+      // Daily error messages are usually technical — map the common
+      // ones to plainer copy.
+      const raw = e?.errorMsg || '';
+      const friendly = /not.*allowed|permission|nodevice|no.media/i.test(raw)
+        ? 'We need camera and microphone access. Open Settings → Dr Self Tape and turn them on, then try again.'
+        : /expired|invalid.*url|room.*not.*found/i.test(raw)
+        ? 'This rehearsal room is no longer available. Tap Back to start a new one.'
+        : raw || 'The call ended unexpectedly.';
+      setError(friendly);
     });
 
     // Kick off the join — Daily's prebuilt iframe handles the
     // permission prompts (camera/mic) inside the iframe so we don't
     // need a separate PreJoinScreen.
     call.join({ url: roomUrl, userName }).catch((err) => {
+      if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
       setStatus('error');
       setError(err?.message || 'Could not join the rehearsal room.');
     });
@@ -130,6 +159,7 @@ export default function MeetingRoom() {
     window.addEventListener('beforeunload', onUnload);
 
     return () => {
+      if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
       window.removeEventListener('beforeunload', onUnload);
       teardown();
     };
@@ -141,7 +171,16 @@ export default function MeetingRoom() {
   }, [roomUrl]);
 
   if (status === 'left') {
-    return <PostCallScreen partnerName={partnerName} onClose={() => navigate('/dashboard?rehearsal=ended')} />;
+    return (
+      <PostCallScreen
+        partnerName={partnerName}
+        // Route back to the green-room chat so the user lands where they
+        // started — the rating modal opens via ?rehearsal=ended on that
+        // screen. Without /green-room they were dumped onto /dashboard
+        // and the rating UX never appeared on mobile.
+        onClose={() => navigate(`/dashboard/green-room/${meetingId}?rehearsal=ended`)}
+      />
+    );
   }
 
   if (status === 'error') {
@@ -208,22 +247,75 @@ export default function MeetingRoom() {
             position: 'absolute',
             inset: 0,
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
+            gap: 18,
             color: '#FFFFFF',
             pointerEvents: 'none',
           }}
         >
-          <div
-            style={{
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: 11,
-              letterSpacing: '0.18em',
-              opacity: 0.7,
-            }}
-          >
-            JOINING THE ROOM…
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%',
+            border: '3px solid rgba(212,168,95,0.25)',
+            borderTopColor: '#D4A85F',
+            animation: 'meetingSpin 0.9s linear infinite',
+          }} />
+          <div style={{
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: 11,
+            letterSpacing: '0.18em',
+            opacity: 0.7,
+          }}>
+            CONNECTING…
           </div>
+          <div style={{ fontSize: 13, opacity: 0.55, maxWidth: 280, textAlign: 'center' }}>
+            Allow camera and microphone when prompted.
+          </div>
+          <style>{`@keyframes meetingSpin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+
+      {status === 'waiting' && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 16,
+            color: '#FFFFFF',
+            background: 'rgba(12,14,20,0.72)',
+            pointerEvents: 'none',
+          }}
+        >
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%',
+            background: 'rgba(212,168,95,0.18)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 34,
+            animation: 'waitPulse 1.6s ease-in-out infinite',
+          }}>
+            📞
+          </div>
+          <div style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 22, fontWeight: 600,
+            letterSpacing: '-0.3px',
+          }}>
+            Waiting for {partnerName}…
+          </div>
+          <div style={{ fontSize: 13, opacity: 0.65, maxWidth: 280, textAlign: 'center' }}>
+            We let {partnerName.split(' ')[0]} know you're ready. They'll see an Incoming Scene Request notification.
+          </div>
+          <style>{`
+            @keyframes waitPulse {
+              0%, 100% { transform: scale(1); opacity: 0.85; }
+              50%      { transform: scale(1.08); opacity: 1; }
+            }
+          `}</style>
         </div>
       )}
     </div>
