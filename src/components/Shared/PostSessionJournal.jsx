@@ -83,19 +83,45 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
   }
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60">
-      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 mx-0 sm:mx-4" style={{ background: 'var(--bg-surface, #1E1E1E)', border: '1px solid var(--border-active, #3A3A3A)' }}>
+    <div
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60"
+      onClick={onClose}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl px-5 pt-5 mx-0 sm:mx-4 overflow-y-auto"
+        style={{
+          background: 'var(--bg-surface, #1E1E1E)',
+          border: '1px solid var(--border-active, #3A3A3A)',
+          // Cap modal height so it never spills off-screen on small iPhones;
+          // safe-area-inset-bottom keeps the bottom buttons clear of the
+          // home-indicator on iOS. Internal scroll picks up overflow.
+          maxHeight: 'calc(100dvh - 80px)',
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
+        }}
+      >
         {/* Header */}
         <div className="flex items-center justify-between mb-1">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-[#7A5A18]" />
             <h2 className="text-lg font-bold text-[#0A0A0A]">How'd that go?</h2>
           </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#F4F4EE] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            onTouchEnd={(e) => { e.preventDefault(); onClose?.(); }}
+            className="p-2 -mr-2 rounded-full hover:bg-[#F4F4EE] transition-colors"
+            style={{
+              color: 'var(--text-muted, #666)',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+            aria-label="Close"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-sm mb-5" style={{ color: 'var(--text-muted, #666)' }}>
+        <p className="text-sm mb-4" style={{ color: 'var(--text-muted, #666)' }}>
           Quick check-in after your {sessionType === 'self-tape' ? 'self-tape' : sessionType === 'cd-coach' ? 'coaching' : 'practice'} session
         </p>
 
@@ -164,17 +190,28 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
           <button
             type="button"
             onClick={onClose}
+            onTouchEnd={(e) => { e.preventDefault(); onClose?.(); }}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-colors"
-            style={{ border: '1px solid var(--border-active, #3A3A3A)', color: 'var(--text-secondary, #999)' }}
+            style={{
+              border: '1px solid var(--border-active, #3A3A3A)',
+              color: 'var(--text-secondary, #999)',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+            }}
           >
             Skip
           </button>
           <button
             type="button"
             onClick={handleSave}
+            onTouchEnd={(e) => { e.preventDefault(); if (!saving) handleSave(); }}
             disabled={saving}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-bold text-[#0A0A0A] transition-all disabled:opacity-50"
-            style={{ background: '#7A5A18' }}
+            style={{
+              background: '#7A5A18',
+              touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent',
+            }}
           >
             {saving ? 'Saving...' : 'Save'}
           </button>
