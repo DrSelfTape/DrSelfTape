@@ -323,6 +323,13 @@ export default function Leaderboard({ embedded = false } = {}) {
   const firstName = profile?.first_name || 'You';
   const M = META[metric];
   const isEmpty = !loading && ranked.length === 0;
+  // Render the sticky "your rank" bar even when the user isn't in the
+  // visible top-N (you === undefined). We still know their rank from the
+  // separate live-rank API call; fall back to neutral display values for
+  // the trend / score columns so the bar doesn't crash on missing fields.
+  const showYouBar = !!you || youRank > 0;
+  const youTrend = you?.trend ?? 0;
+  const youMetricValue = you ? you[metric] : (you?.[metric] ?? 0);
 
   return (
     <div
@@ -548,8 +555,10 @@ export default function Leaderboard({ embedded = false } = {}) {
       )}
 
       {/* sticky your-rank — in embedded mode, sits higher to stay above the
-          floating tab bar (which is already at ~96px from the bottom) */}
-      {you && (
+          floating tab bar (which is already at ~96px from the bottom). Also
+          renders when the user is outside the visible top-N but we still
+          know their server-side rank via liveYourRank. */}
+      {showYouBar && (
         <div
           style={{
             position: 'fixed',
@@ -599,7 +608,7 @@ export default function Leaderboard({ embedded = false } = {}) {
                 flexShrink: 0,
               }}
             >
-              <PhotoOrAvatar leader={you} />
+              <PhotoOrAvatar leader={you || { photo: profile?.user_image, name: firstName }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 14, fontWeight: 700, letterSpacing: '-0.2px' }}>You · {firstName}</div>
@@ -611,7 +620,7 @@ export default function Leaderboard({ embedded = false } = {}) {
                   opacity: 0.75,
                 }}
               >
-                {you.trend > 0 ? `▲ UP ${you.trend} THIS WEEK` : you.trend < 0 ? `▼ DOWN ${-you.trend}` : 'HOLDING STEADY'}
+                {youTrend > 0 ? `▲ UP ${youTrend} THIS WEEK` : youTrend < 0 ? `▼ DOWN ${-youTrend}` : 'HOLDING STEADY'}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
@@ -623,7 +632,7 @@ export default function Leaderboard({ embedded = false } = {}) {
                   letterSpacing: '-0.5px',
                 }}
               >
-                {M.fmt(you[metric])}
+                {M.fmt(youMetricValue)}
               </div>
               <div
                 style={{
