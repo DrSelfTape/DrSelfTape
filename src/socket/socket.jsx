@@ -124,8 +124,32 @@ export const SocketProvider = ({ children }) => {
     // to localhost in a shipped iOS bundle.
     const wsHost = baseURL.replace(/^https?:\/\//, '').replace(/\/api$/, '');
     const wsProto = baseURL.startsWith('https') ? 'wss' : 'ws';
-    const wsUrl = `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
-    const ws = new ReconnectingWebSocket(wsUrl);
+
+    // Build the WS URL on demand — for new BE deploys we exchange the JWT
+    // for a short-lived single-use ticket, so the token never appears in
+    // the URL (which would otherwise leak into browser history / proxy
+    // access logs). For BE deploys that don't have the ticket endpoint
+    // yet, fall back to the legacy ?token=… form.
+    let cancelled = false;
+    const urlProvider = async () => {
+      try {
+        const res = await fetch(`${baseURL}/v1/users/ws-ticket/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        if (res.ok) {
+          const body = await res.json();
+          if (body?.ticket) return `${wsProto}://${wsHost}/ws/notifications/?ticket=${body.ticket}`;
+        }
+      } catch { /* network down or endpoint missing — use legacy form */ }
+      return `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
+    };
+
+    if (cancelled) return;
+    const ws = new ReconnectingWebSocket(urlProvider);
     socketRef.current = ws;
 
     ws.onopen = () => setIsSocketReady(true);
@@ -148,6 +172,7 @@ export const SocketProvider = ({ children }) => {
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
+      cancelled = true;
       document.removeEventListener('visibilitychange', handleVisibility);
       ws.close();
       setIsSocketReady(false);
