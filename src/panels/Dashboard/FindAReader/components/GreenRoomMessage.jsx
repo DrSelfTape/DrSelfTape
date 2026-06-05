@@ -47,6 +47,22 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
   const text = message.text || message.content || '';
   const type = message.message_type || message.type || 'text';
 
+  // Only allow file-message URLs that point at the same origin as our API
+  // (BE-served files) or that are blob URLs we ourselves created. Anything
+  // else is rejected — the chat is a potential phishing vector if a
+  // compromised payload sneaks an attacker-controlled href onto the page.
+  const isTrustedFileUrl = (raw) => {
+    if (!raw) return false;
+    if (raw.startsWith('blob:')) return true;
+    try {
+      const parsed = new URL(raw, baseURL);
+      const expected = new URL(baseURL);
+      return parsed.origin === expected.origin;
+    } catch {
+      return false;
+    }
+  };
+
   // Tiny flag affordance shown on partner messages. Inline (not a hover
   // state) so the surface is reachable on touch devices too.
   const flagBtn = (!isOwn && type !== 'system') ? (
@@ -105,9 +121,18 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
             <p className="text-[10px] font-semibold mb-1 text-[#7A5A18]">{message.senderName}</p>
           )}
           <a
-            href={fileUrl}
+            href={isTrustedFileUrl(fileUrl) ? fileUrl : undefined}
             target="_blank"
-            rel="noreferrer"
+            rel="noreferrer noopener"
+            onClick={(e) => {
+              if (!isTrustedFileUrl(fileUrl)) {
+                e.preventDefault();
+                dispatch(showSnackbar({
+                  message: "Can't open this file — link looks untrusted.",
+                  variant: 'error',
+                }));
+              }
+            }}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${isOwn ? 'bg-white/20' : 'bg-[#D4A85F]/20'}`}>

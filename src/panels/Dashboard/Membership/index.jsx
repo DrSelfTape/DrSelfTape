@@ -306,13 +306,20 @@ export default function Membership({ onClose }) {
   const handleRestore = async () => {
     if (!isNativeIOS()) return;
     const result = await restorePurchases();
-    if (result.ok) {
+    if (result.ok && result.hasActive) {
       dispatch(showSnackbar({ message: 'Purchases restored.', variant: 'success' }));
       setTimeout(() => {
         axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
       }, 1500);
+    } else if (result.ok) {
+      dispatch(showSnackbar({ message: 'No purchases found on this Apple ID.', variant: 'info' }));
+    } else if (result.reason === 'unavailable') {
+      dispatch(showSnackbar({ message: 'In-App Purchase is unavailable right now.', variant: 'error' }));
     } else {
-      dispatch(showSnackbar({ message: 'No purchases to restore.', variant: 'info' }));
+      dispatch(showSnackbar({
+        message: 'Could not reach the App Store to restore. Please try again.',
+        variant: 'error',
+      }));
     }
   };
 

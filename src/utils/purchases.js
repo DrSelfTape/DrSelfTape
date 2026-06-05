@@ -146,15 +146,24 @@ export async function getIntroOfferFor(plan, billing) {
   };
 }
 
-/** Restore previous purchases (App Store guideline 3.1.1 requires this UI). */
+/** Restore previous purchases (App Store guideline 3.1.1 requires this UI).
+ *
+ * Distinguishes:
+ *   - {ok: false, reason: 'unavailable'} — RC SDK not loaded
+ *   - {ok: false, reason: 'restore_failed', error} — network / RC error
+ *   - {ok: true, hasActive: false} — restore succeeded, user has no purchases
+ *   - {ok: true, hasActive: true, customerInfo} — restore succeeded, has active subs
+ */
 export async function restorePurchases() {
   const sdk = await loadSDK();
   if (!sdk) return { ok: false, reason: 'unavailable' };
   try {
     const customerInfo = await sdk.Purchases.restorePurchases();
-    return { ok: true, customerInfo };
+    const active = customerInfo?.activeSubscriptions || customerInfo?.entitlements?.active || {};
+    const hasActive = Array.isArray(active) ? active.length > 0 : Object.keys(active).length > 0;
+    return { ok: true, hasActive, customerInfo };
   } catch (e) {
-    return { ok: false, error: e };
+    return { ok: false, reason: 'restore_failed', error: e };
   }
 }
 

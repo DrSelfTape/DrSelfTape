@@ -135,7 +135,10 @@ const GreenRoomChat = (props = {}) => {
     if (!matchId) return undefined;
     const refresh = (e) => {
       const payloadMatchId = e?.detail?.match_id || e?.detail?.matchId;
-      if (!payloadMatchId || String(payloadMatchId) === String(matchId)) {
+      // Only refresh when the push payload is *for* this thread. Previously
+      // a missing match_id triggered a refresh on every chat, even for
+      // unrelated pushes (likes, system broadcasts).
+      if (payloadMatchId && String(payloadMatchId) === String(matchId)) {
         dispatch(fetchGreenRoomMessages(matchId));
       }
     };

@@ -584,8 +584,20 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.project_title.trim() || submitting) return;
+    // Coerce any partial / invalid callback_date input to null rather than
+    // sending a string the BE can't parse. The datetime-local input is the
+    // primary defense; this is the belt around it.
+    let payload = { ...form };
+    if (payload.callback_date) {
+      const ts = new Date(payload.callback_date).getTime();
+      if (Number.isNaN(ts)) {
+        payload.callback_date = null;
+      }
+    } else {
+      payload.callback_date = null;
+    }
     setSubmitting(true);
-    const result = await onSubmit(form);
+    const result = await onSubmit(payload);
     setSubmitting(false);
     if (result && result.ok === false) return;
     resetForm();
