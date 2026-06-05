@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Trophy, Star, X } from 'lucide-react';
+import { trackEvent, Events } from '../../utils/analytics';
 
 export default function TutorialAchievement({ show, onClose }) {
   const [visible, setVisible] = useState(false);
@@ -9,9 +10,11 @@ export default function TutorialAchievement({ show, onClose }) {
     if (show && !hasRun.current) {
       hasRun.current = true;
       setVisible(true);
+      trackEvent(Events.TUTORIAL_COMPLETE, { surface: 'achievement_modal' });
       // Auto-close after 8 seconds
       const timer = setTimeout(() => {
         setVisible(false);
+        trackEvent('tutorial_achievement_dismissed', { reason: 'auto' });
         if (onClose) onClose();
       }, 8000);
       return () => clearTimeout(timer);
@@ -20,10 +23,13 @@ export default function TutorialAchievement({ show, onClose }) {
 
   if (!visible) return null;
 
-  const handleClose = () => {
+  const dismissWith = (reason) => () => {
     setVisible(false);
+    trackEvent('tutorial_achievement_dismissed', { reason });
     if (onClose) onClose();
   };
+  const handleClose = dismissWith('close_button');
+  const handleCta = dismissWith('cta_button');
 
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/80 backdrop-blur-sm">
@@ -105,7 +111,7 @@ export default function TutorialAchievement({ show, onClose }) {
         <p className="text-xs text-[#888] font-medium">7 of 7 — 100% Complete</p>
 
         <button
-          onClick={handleClose}
+          onClick={handleCta}
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF8280] to-[#A7ECDA] text-white font-bold text-sm transition-all hover:shadow-lg"
         >
           Let's Go!

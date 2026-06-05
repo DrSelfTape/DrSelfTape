@@ -398,8 +398,15 @@ const readersMatchSlice = createSlice({
       })
 
       // fetchMatchingStats
+      .addCase(fetchMatchingStats.pending, (state) => {
+        state.matchingStatsError = null;
+      })
       .addCase(fetchMatchingStats.fulfilled, (state, action) => {
         state.matchingStats = action.payload;
+        state.matchingStatsError = null;
+      })
+      .addCase(fetchMatchingStats.rejected, (state, action) => {
+        state.matchingStatsError = action.payload || 'Could not load match stats.';
       })
 
       // toggleAvailability

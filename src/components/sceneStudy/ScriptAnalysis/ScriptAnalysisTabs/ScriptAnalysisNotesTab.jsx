@@ -35,9 +35,13 @@ export const ScriptAnalysisNotesTab = ({ value, index, sceneAnalysisData }) => {
   const refreshNotes = async () => {
     if (!sceneAnalysisData?.analysisID) return;
     try {
-      await dispatch(getNotes(sceneAnalysisData.analysisID));
+      const result = await dispatch(getNotes(sceneAnalysisData.analysisID));
+      if (result?.meta?.requestStatus === 'rejected') {
+        toast.error(result?.payload || 'Could not load notes.');
+      }
     } catch (err) {
       console.error('Failed to refresh notes:', err);
+      toast.error('Could not load notes.');
     }
   };
 

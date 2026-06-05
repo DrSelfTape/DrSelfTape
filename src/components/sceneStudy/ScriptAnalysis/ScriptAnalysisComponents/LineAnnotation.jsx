@@ -13,9 +13,11 @@ import {
   updateLineAnnotation,
 } from '../../../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice';
 import { PenNotebookIcon } from '../../../../assets/icons';
+import { useSnackbar } from '../../../../hooks/useSnackbar';
 
 export const LineAnnotation = ({ versionId, lineId }) => {
   const dispatch = useDispatch();
+  const { toast } = useSnackbar();
   const {
     annotations,
     annotationLoading,
@@ -48,16 +50,19 @@ export const LineAnnotation = ({ versionId, lineId }) => {
     const payload = { note };
 
     try {
-      if (annotation) {
-        await dispatch(updateLineAnnotation({ versionId, lineId, payload }));
-        console.log('Annotation updated');
+      const action = annotation
+        ? updateLineAnnotation({ versionId, lineId, payload })
+        : createLineAnnotation({ versionId, lineId, payload });
+      const result = await dispatch(action);
+      if (result?.meta?.requestStatus === 'fulfilled') {
+        toast.success(`Note ${annotation ? 'updated' : 'saved'}`);
+        setIsEditing(false);
       } else {
-        await dispatch(createLineAnnotation({ versionId, lineId, payload }));
-        console.log('Annotation created');
+        toast.error(result?.payload || `Failed to ${annotation ? 'update' : 'save'} note`);
       }
-      setIsEditing(false);
     } catch (error) {
       console.error('Failed to save annotation:', error);
+      toast.error('Something went wrong while saving the note.');
     }
   };
 
@@ -66,11 +71,16 @@ export const LineAnnotation = ({ versionId, lineId }) => {
     if (!annotation) return;
 
     try {
-      await dispatch(deleteLineAnnotation({ versionId, lineId }));
-      setNote('');
-      console.log('Annotation deleted');
+      const result = await dispatch(deleteLineAnnotation({ versionId, lineId }));
+      if (result?.meta?.requestStatus === 'fulfilled') {
+        toast.success('Note deleted');
+        setNote('');
+      } else {
+        toast.error(result?.payload || 'Failed to delete note');
+      }
     } catch (error) {
       console.error('Failed to delete annotation:', error);
+      toast.error('Something went wrong while deleting the note.');
     }
   };
 
