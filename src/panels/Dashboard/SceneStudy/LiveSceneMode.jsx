@@ -183,6 +183,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const isActiveRef = useRef(false);
   const isProcessingRef = useRef(false);
   const scriptPanelRef = useRef(null);
+  // Stores the resolver for the actor-line wait so the manual "Next"
+  // button can short-circuit the auto-advance setTimeout in pre-timed
+  // mode. iOS WKWebView doesn't support real speech recognition, so
+  // we rely on the actor tapping when they're done.
+  const actorAdvanceRef = useRef(null);
   const [sceneStarted, setSceneStarted] = useState(false);
   const [sceneComplete, setSceneComplete] = useState(false);
   const [showMicPermission, setShowMicPermission] = useState(false);
@@ -643,12 +648,24 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           await new Promise((res) => setTimeout(res, pauseSecs * 1000));
           runPreTimed(idx + 1);
         } else {
-          // Actor's line — show it highlighted, wait for manual "Next" tap
+          // Actor's line — show it highlighted and wait. We give the
+          // actor two ways forward: tap the "Next →" button when they
+          // finish the line (preferred), or let the auto-advance
+          // safety timer fire after pauseSecs*2 seconds (so an idle
+          // session still moves along instead of hanging on the
+          // "Your line" state — the bug Joseph hit on TestFlight).
           setStatus('listening'); // repurpose as "your turn"
           setAiCurrentLine('');
-          // Auto-advance after actor has time to deliver their line (pauseSecs * 2)
           if (isActiveRef.current) {
-            await new Promise((res) => setTimeout(res, pauseSecs * 2000));
+            await new Promise((res) => {
+              actorAdvanceRef.current = res;
+              setTimeout(() => {
+                // Only fire the safety timer if no manual tap landed first.
+                if (actorAdvanceRef.current === res) res();
+              }, pauseSecs * 2000);
+            });
+            actorAdvanceRef.current = null;
+            if (!isActiveRef.current) return;
             runPreTimed(idx + 1);
           }
         }
@@ -668,6 +685,19 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   /**
    * Pause the live scene — stop recognition and audio, keep state.
    */
+  /**
+   * Advance past the current actor line manually. Resolves the
+   * actor-wait Promise inside runPreTimed so the scene moves on
+   * without waiting for the auto-advance timer.
+   */
+  const advanceLine = useCallback(() => {
+    const resolve = actorAdvanceRef.current;
+    if (resolve) {
+      actorAdvanceRef.current = null;
+      resolve();
+    }
+  }, []);
+
   const pauseScene = useCallback(() => {
     isPausedRef.current = true;
     setIsPaused(true);
@@ -682,6 +712,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     }
     if (audioContextRef.current?.state === 'running') {
       audioContextRef.current.suspend();
+    }
+    // Resolve any pending actor-line wait so the pre-timed Promise
+    // doesn't dangle forever. runPreTimed's post-await `isActiveRef`
+    // check will then bail cleanly.
+    const resolve = actorAdvanceRef.current;
+    if (resolve) {
+      actorAdvanceRef.current = null;
+      resolve();
     }
     setStatus('idle');
   }, []);
@@ -720,6 +758,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const endScene = useCallback(() => {
     isActiveRef.current = false;
     isPausedRef.current = false;
+    // Resolve any pending actor-line wait so runPreTimed bails cleanly.
+    const resolve = actorAdvanceRef.current;
+    if (resolve) {
+      actorAdvanceRef.current = null;
+      resolve();
+    }
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
     }
@@ -889,12 +933,24 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       </div>
 
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
-        {/* Mobile "your turn" indicator — only shows on mobile when it's actor's line */}
+        {/* Mobile "your turn" indicator + manual Next button — only on
+            actor lines. iOS WKWebView can't actually listen to the
+            actor's voice, so tapping Next is how the scene advances
+            once they finish delivering the line. A safety timer
+            (pauseSecs * 2) still fires as a fallback. */}
         {status === 'listening' && lines[currentLineIdx]?.character === userRole && (
-          <div className="lg:hidden flex items-center justify-center gap-2 py-1.5 bg-[#D4A85F]/20 border-b border-[#D4A85F]/30 text-[#7A5A18] text-xs font-bold uppercase tracking-wider">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#D4A85F] animate-pulse" />
-            Your line
-          </div>
+          <button
+            type="button"
+            onClick={advanceLine}
+            className="lg:hidden w-full flex items-center justify-center gap-2 py-3 bg-[#D4A85F] active:bg-[#C09850] text-[#0A0A0A] font-bold text-sm tracking-wide cursor-pointer transition-colors"
+            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-[#7A5A18] animate-pulse" />
+            Your line — tap when done
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M5 12h14M13 5l7 7-7 7" />
+            </svg>
+          </button>
         )}
         {/* Left: Script Panel */}
         <div
