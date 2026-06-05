@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
-import { NavLink, Outlet, useLocation, Navigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { NavLink, Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Clapperboard,
   LayoutDashboard,
@@ -9,7 +9,9 @@ import {
   MessageSquare,
   ShieldBan,
   BarChart3,
+  LogOut,
 } from 'lucide-react';
+import { performLogout } from '../../redux/features/auth/authSlice';
 
 const navItems = [
   { label: 'Dashboard', to: '/admin/dashboard', icon: LayoutDashboard },
@@ -36,8 +38,15 @@ function getInitials(name = '') {
 
 export default function AdminLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const user = useSelector((state) => state.auth?.user);
   const pageTitle = getPageTitle(location.pathname);
+
+  const handleLogout = () => {
+    dispatch(performLogout());
+    navigate('/login', { replace: true });
+  };
 
   // Hard gate: admin routes require Django staff/superuser status.
   // The BE permission also blocks unauthorized API calls (IsAdminUser
@@ -85,7 +94,7 @@ export default function AdminLayout() {
 
         {/* User Footer */}
         <div className="px-4 py-4 border-t border-[#1E1E1E]">
-          <div className="flex items-center gap-3 px-2">
+          <div className="flex items-center gap-3 px-2 mb-3">
             <div className="w-9 h-9 rounded-full bg-[#D4A85F]/20 text-[#7A5A18] flex items-center justify-center text-xs font-bold">
               {getInitials(user?.name || user?.first_name || 'A')}
             </div>
@@ -96,6 +105,14 @@ export default function AdminLayout() {
               <p className="text-[#999999] text-xs truncate">{user?.email || 'admin@drselftape.com'}</p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[#999999] hover:text-white hover:bg-[#1E1E1E] transition-colors"
+          >
+            <LogOut size={16} />
+            Sign out
+          </button>
         </div>
       </aside>
 
