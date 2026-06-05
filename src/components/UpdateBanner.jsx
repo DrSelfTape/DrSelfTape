@@ -28,6 +28,7 @@ function versionGt(a, b) {
 
 export default function UpdateBanner() {
   const [latest, setLatest] = useState(null);
+  const [opening, setOpening] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +50,8 @@ export default function UpdateBanner() {
   if (dismissedFor === latest) return null;
 
   const handleUpdate = () => {
+    if (opening) return;
+    setOpening(true);
     trackEvent("update_banner_tapped", { from: BUNDLE_VERSION, to: latest });
     openExternal(APP_STORE_URL);
   };
@@ -89,7 +92,7 @@ export default function UpdateBanner() {
       <button
         type="button"
         onClick={handleUpdate}
-        onTouchEnd={(e) => { e.preventDefault(); handleUpdate(); }}
+        disabled={opening}
         style={{
           background: "#0a1a14",
           color: "#5ee6b8",
@@ -101,6 +104,7 @@ export default function UpdateBanner() {
           touchAction: "manipulation",
           WebkitTapHighlightColor: "transparent",
           cursor: "pointer",
+          opacity: opening ? 0.6 : 1,
         }}
       >
         Update
@@ -109,7 +113,6 @@ export default function UpdateBanner() {
         type="button"
         aria-label="Dismiss"
         onClick={handleDismiss}
-        onTouchEnd={(e) => { e.preventDefault(); handleDismiss(); }}
         style={{
           background: "transparent",
           color: "#0a1a14",
