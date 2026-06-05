@@ -245,13 +245,25 @@ const GreenRoomChat = (props = {}) => {
   };
 
   const handleBookSession = async () => {
+    if (bookingLoading) return;
     setBookingLoading(true);
+    // Generate an idempotency key per booking attempt. If the user
+    // double-taps (or the network hiccup retries the request), the BE
+    // returns the same booking + Stripe URL instead of creating duplicates.
+    const idempotencyKey =
+      (typeof crypto !== 'undefined' && crypto.randomUUID)
+        ? crypto.randomUUID()
+        : `book-${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
     try {
-      const { data } = await axios.post(`${baseURL}/v1/growth/marketplace/book/`, {
-        reader_id: otherActor.id,
-        duration: selectedDuration,
-        match_id: matchId,
-      });
+      const { data } = await axios.post(
+        `${baseURL}/v1/growth/marketplace/book/`,
+        {
+          reader_id: otherActor.id,
+          duration: selectedDuration,
+          match_id: matchId,
+        },
+        { headers: { 'Idempotency-Key': idempotencyKey } },
+      );
       const checkoutUrl = data?.data?.checkout_url;
       if (checkoutUrl) {
         try {
