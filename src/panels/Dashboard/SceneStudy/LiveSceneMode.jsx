@@ -795,8 +795,17 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       axios.post('/v1/growth/practice/log/', { seconds: duration }).catch(() => {});
       sceneStartTimeRef.current = null; // don't double-log on unmount
     }
+    // Craft Journey early-out: tapping "End Scene" after a meaningful
+    // session (≥15s) should still count the skill as practiced. Without
+    // this, the only completion path was getting all the way through
+    // every line — most users tap End Scene first and were left stuck
+    // on the same node forever. The BE complete_node is idempotent, so
+    // re-firing on a session the user already finished is harmless.
+    if (craftSkill && duration >= 15) {
+      dispatch(completeCraftNode({ node: craftSkill, stars: 2 }));
+    }
     onExit();
-  }, [onExit, dispatch, lines, userRole]);
+  }, [onExit, dispatch, lines, userRole, craftSkill]);
 
   // Cleanup on unmount
   useEffect(() => {
