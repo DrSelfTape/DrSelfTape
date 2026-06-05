@@ -70,20 +70,6 @@ function shade(hex, amt) {
   return `#${adj(r).toString(16).padStart(2, '0')}${adj(g).toString(16).padStart(2, '0')}${adj(b).toString(16).padStart(2, '0')}`;
 }
 
-function readProgress() {
-  try {
-    const raw = localStorage.getItem('dst_craft_journey');
-    if (raw) return JSON.parse(raw);
-  } catch { /* swallow */ }
-  return {};
-}
-
-function writeProgress(map) {
-  try {
-    localStorage.setItem('dst_craft_journey', JSON.stringify(map));
-  } catch { /* swallow */ }
-}
-
 /* ──────────────────────────────────────────────────────────────────
    Per-skill prompts for the AI scene generator. Tuned for short
    single-scene practice — 1 page, 2 characters — and crafted to
@@ -163,7 +149,6 @@ export default function CraftJourney() {
   const craftXp = useSelector((s) => s.craftJourney.craft_xp) || 0;
   const cjLoading = useSelector((s) => s.craftJourney.loading);
   const cjFetched = useSelector((s) => s.craftJourney.hasFetched);
-  const [celebrate, setCelebrate] = useState(null);
   const [generating, setGenerating] = useState(null); // node id while AI generates
 
   // Pull live progress from the BE on mount. The skill_progress map
@@ -273,14 +258,6 @@ export default function CraftJourney() {
     } finally {
       setGenerating(null);
     }
-  };
-
-  const confirmComplete = () => {
-    if (!celebrate) return;
-    const next = { ...completed, [celebrate.node.id]: celebrate.stars };
-    setCompleted(next);
-    writeProgress(next);
-    setCelebrate(null);
   };
 
   return (
@@ -399,10 +376,6 @@ export default function CraftJourney() {
           </div>
         </div>
       </div>
-
-      {celebrate && (
-        <Celebration node={celebrate.node} stars={celebrate.stars} onClose={confirmComplete} />
-      )}
 
       {/* AI-generation overlay — blocks input while the scene is being
           written so users don't double-tap and queue up two generations

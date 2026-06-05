@@ -132,6 +132,9 @@ export const SocketProvider = ({ children }) => {
     // yet, fall back to the legacy ?token=… form.
     let cancelled = false;
     const urlProvider = async () => {
+      // Bail without minting a ticket if the effect was torn down — avoids
+      // burning a one-shot ticket on a connection nobody's going to use.
+      if (cancelled) return `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
       try {
         const res = await fetch(`${baseURL}/v1/users/ws-ticket/`, {
           method: 'POST',
@@ -140,6 +143,7 @@ export const SocketProvider = ({ children }) => {
             'Authorization': `Bearer ${token}`,
           },
         });
+        if (cancelled) return `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
         if (res.ok) {
           const body = await res.json();
           if (body?.ticket) return `${wsProto}://${wsHost}/ws/notifications/?ticket=${body.ticket}`;

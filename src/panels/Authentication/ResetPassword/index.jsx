@@ -21,7 +21,7 @@ export const ResetPassword = () => {
   const searchParams = new URLSearchParams(window.location.search);
   const token = searchParams.get('token');
   const email = searchParams.get('email');
-  const linkIsValid = !!(token && email);
+  const linkIsValid = !!(token && token.trim() && email && email.trim());
 
   const [formData, setFormData] = useState({
     newPassword: '',

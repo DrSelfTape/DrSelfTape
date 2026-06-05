@@ -7,7 +7,7 @@ import PermissionsModal from '../../../components/PermissionsModal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { isNativeIOS } from '../../../utils/purchases';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
-import { completeCraftNode } from '../../../redux/features/craftJourney/craftJourneySlice';
+import { completeCraftNode, fetchCraftJourney } from '../../../redux/features/craftJourney/craftJourneySlice';
 
 const SILENCE_TIMEOUT = 1500;
 
@@ -201,10 +201,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
   // Craft Journey completion — when the scene naturally finishes and the
   // session was launched from a Craft Journey node, mark that node done
-  // on the BE and unlock the next one. Fires once per session.
+  // on the BE and unlock the next one. Fires once per session. Also
+  // re-fetches the journey map so any other open mount (Home widget,
+  // Craft Journey panel) sees the new state without a navigate cycle.
   useEffect(() => {
     if (sceneComplete && craftSkill) {
-      dispatch(completeCraftNode({ node: craftSkill, stars: 2 }));
+      dispatch(completeCraftNode({ node: craftSkill, stars: 2 }))
+        .then(() => dispatch(fetchCraftJourney()));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sceneComplete]);
@@ -807,7 +810,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // on the same node forever. The BE complete_node is idempotent, so
     // re-firing on a session the user already finished is harmless.
     if (craftSkill && duration >= 15) {
-      dispatch(completeCraftNode({ node: craftSkill, stars: 2 }));
+      dispatch(completeCraftNode({ node: craftSkill, stars: 2 }))
+        .then(() => dispatch(fetchCraftJourney()));
     }
     onExit();
   }, [onExit, dispatch, lines, userRole, craftSkill]);
