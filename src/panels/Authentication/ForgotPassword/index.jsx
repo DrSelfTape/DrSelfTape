@@ -82,7 +82,7 @@ export const ForgotPassword = () => {
           Forgot your password?
         </h2>
         <p className="mt-2 text-sm" style={{ color: 'var(--aurora-sub)' }}>
-          Enter your email address and we'll send you a verification code
+          Enter your email address and we'll send you a password reset link
         </p>
 
         <div className="mt-8">
@@ -125,7 +125,7 @@ export const ForgotPassword = () => {
                   },
                 }}
               >
-                Send Verification Code
+                Send Reset Link
               </CustomButton>
 
               <p className="text-sm text-center" style={{ color: 'var(--aurora-sub)' }}>

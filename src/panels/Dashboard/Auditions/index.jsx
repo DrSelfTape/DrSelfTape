@@ -543,6 +543,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     project_title: '', character: '', casting_director: '', agency: '',
     project_type: 'film', callback_date: '', notes: '',
   });
+  const [submitting, setSubmitting] = useState(false);
 
   // Tell MobileApp to slide its persistent top bar out of the way for
   // the lifetime of this modal — otherwise the bell + avatar overlap
@@ -568,10 +569,13 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     setPasteText(''); setMode('manual'); setParseError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.project_title.trim()) return;
-    onSubmit(form);
+    if (!form.project_title.trim() || submitting) return;
+    setSubmitting(true);
+    const result = await onSubmit(form);
+    setSubmitting(false);
+    if (result && result.ok === false) return;
     resetForm();
     onClose();
   };
@@ -1035,11 +1039,13 @@ export default function DashboardAuditions() {
         dispatch(fetchTrackerThunk());
         dispatch(fetchAuditionStatsThunk());
         markStep('track_audition');
+        return { ok: true };
       } catch (e) {
         dispatch(showSnackbar({
           message: e?.message || e?.detail || "Couldn't add audition. Please try again.",
           variant: 'error',
         }));
+        return { ok: false };
       }
     },
     [dispatch]

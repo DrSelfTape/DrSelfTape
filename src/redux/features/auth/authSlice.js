@@ -425,6 +425,13 @@ export const { logoutUser, clearTempSession, setAiConsentAcceptedAt } = authSlic
 // instead of `logoutUser` at user-facing sign-out points.
 export const performLogout = () => async (dispatch) => {
   dispatch(logoutUser());
+  // Strip onboarding progress + dismissed banner version — none of these are
+  // user-scoped, so leaving them carries another user's state forward.
+  try {
+    window.localStorage.removeItem('dst_onb_step');
+    window.localStorage.removeItem('dst_onb_data');
+    window.localStorage.removeItem('updateBannerDismissed');
+  } catch { /* storage unavailable */ }
   // Import lazily to avoid a circular dependency with redux/store.js.
   const { persistor } = await import('../../store');
   await persistor.purge();
