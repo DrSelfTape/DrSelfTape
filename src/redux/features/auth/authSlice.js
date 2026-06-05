@@ -144,7 +144,7 @@ export const updatePassword = createAsyncThunk(
       });
       return data;
     } catch (error) {
-      return rejectWithValue(error);
+      return rejectWithValue(handleApiError(error));
     }
   }
 );

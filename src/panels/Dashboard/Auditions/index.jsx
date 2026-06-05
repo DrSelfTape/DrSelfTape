@@ -540,7 +540,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
   const fileInputRef = useRef(null);
   const screenshotInputRef = useRef(null);
   const [form, setForm] = useState({
-    project: '', role: '', casting_director: '', agency: '',
+    project_title: '', character: '', casting_director: '', agency: '',
     project_type: 'film', callback_date: '', notes: '',
   });
 
@@ -564,13 +564,13 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
   const inputCls = 'w-full text-sm px-3 py-2.5 outline-none transition-all focus:border-[color:var(--aurora-heritage-gold)]';
 
   const resetForm = () => {
-    setForm({ project: '', role: '', casting_director: '', agency: '', project_type: 'film', callback_date: '', notes: '' });
+    setForm({ project_title: '', character: '', casting_director: '', agency: '', project_type: 'film', callback_date: '', notes: '' });
     setPasteText(''); setMode('manual'); setParseError('');
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!form.project.trim()) return;
+    if (!form.project_title.trim()) return;
     onSubmit(form);
     resetForm();
     onClose();
@@ -587,8 +587,8 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       const parsed = data?.data || {};
       setForm((prev) => ({
         ...prev,
-        project: parsed.project || prev.project,
-        role: parsed.role || prev.role,
+        project_title: parsed.project || parsed.project_title || prev.project_title,
+        character: parsed.role || parsed.character || prev.character,
         casting_director: parsed.casting_director || prev.casting_director,
         agency: parsed.agency || prev.agency,
         project_type: parsed.project_type || prev.project_type,
@@ -824,7 +824,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
 
             {mode === 'manual' && (
               <form onSubmit={handleSubmit} className="space-y-3 mt-2">
-                {(form.project || form.role) && (
+                {(form.project_title || form.character) && (
                   <div
                     className="rounded-lg px-3 py-2 flex items-center gap-2"
                     style={{ background: 'rgba(159,230,180,0.15)', border: '1px solid rgba(159,230,180,0.35)' }}
@@ -833,8 +833,8 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                     <p className="text-xs" style={{ color: '#1A6A38' }}>Fields populated from breakdown — review and edit below</p>
                   </div>
                 )}
-                <input placeholder="Project name *" value={form.project} onChange={(e) => setForm({ ...form, project: e.target.value })} className={inputCls} style={inputStyle} required />
-                <input placeholder="Role / Character" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputCls} style={inputStyle} />
+                <input placeholder="Project name *" value={form.project_title} onChange={(e) => setForm({ ...form, project_title: e.target.value })} className={inputCls} style={inputStyle} required />
+                <input placeholder="Role / Character" value={form.character} onChange={(e) => setForm({ ...form, character: e.target.value })} className={inputCls} style={inputStyle} />
                 <input placeholder="Casting Director" value={form.casting_director} onChange={(e) => setForm({ ...form, casting_director: e.target.value })} className={inputCls} style={inputStyle} />
                 <input placeholder="Agency / Production Company" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} className={inputCls} style={inputStyle} />
                 <select value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} className={inputCls} style={inputStyle}>
@@ -985,8 +985,6 @@ export default function DashboardAuditions() {
 
   const handleSave = useCallback(
     async (form) => {
-      // All editable fields must be in the payload — earlier version
-      // silently dropped project_title / character / casting_director.
       const payload = {
         project_title: form.project_title || '',
         character: form.character || '',
@@ -996,30 +994,53 @@ export default function DashboardAuditions() {
         callback_date: form.callback_date || null,
         notes: form.notes || '',
       };
-      await dispatch(updateAuditionThunk({ id: form.id, data: payload })).unwrap();
-      dispatch(fetchTrackerThunk());
-      dispatch(fetchAuditionStatsThunk());
-      setSelectedAudition(null);
+      try {
+        await dispatch(updateAuditionThunk({ id: form.id, data: payload })).unwrap();
+        dispatch(fetchTrackerThunk());
+        dispatch(fetchAuditionStatsThunk());
+        setSelectedAudition(null);
+      } catch (e) {
+        dispatch(showSnackbar({
+          message: e?.message || e?.detail || "Couldn't save audition. Please try again.",
+          variant: 'error',
+        }));
+        dispatch(fetchTrackerThunk());
+      }
     },
     [dispatch]
   );
 
   const handleDelete = useCallback(
     async (id) => {
-      await dispatch(deleteAuditionThunk(id)).unwrap();
-      dispatch(fetchTrackerThunk());
-      dispatch(fetchAuditionStatsThunk());
-      setSelectedAudition(null);
+      try {
+        await dispatch(deleteAuditionThunk(id)).unwrap();
+        dispatch(fetchTrackerThunk());
+        dispatch(fetchAuditionStatsThunk());
+        setSelectedAudition(null);
+      } catch (e) {
+        dispatch(showSnackbar({
+          message: e?.message || e?.detail || "Couldn't delete audition. Please try again.",
+          variant: 'error',
+        }));
+        dispatch(fetchTrackerThunk());
+      }
     },
     [dispatch]
   );
 
   const handleCreate = useCallback(
     async (form) => {
-      await dispatch(createAuditionThunk(form)).unwrap();
-      dispatch(fetchTrackerThunk());
-      dispatch(fetchAuditionStatsThunk());
-      markStep('track_audition');
+      try {
+        await dispatch(createAuditionThunk(form)).unwrap();
+        dispatch(fetchTrackerThunk());
+        dispatch(fetchAuditionStatsThunk());
+        markStep('track_audition');
+      } catch (e) {
+        dispatch(showSnackbar({
+          message: e?.message || e?.detail || "Couldn't add audition. Please try again.",
+          variant: 'error',
+        }));
+      }
     },
     [dispatch]
   );

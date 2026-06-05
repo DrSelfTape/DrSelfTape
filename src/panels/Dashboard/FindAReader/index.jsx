@@ -12,6 +12,7 @@ import {
   setFiltersLocal,
 } from '../../../redux/features/readers/readersMatchSlice';
 import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice';
+import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
@@ -52,6 +53,11 @@ const FindAReader = () => {
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type?.startsWith('image/')) {
+      dispatch(showSnackbar({ message: 'Please choose an image file.', variant: 'error' }));
+      e.target.value = '';
+      return;
+    }
     setUploading(true);
     try {
       const fd = new FormData();
@@ -63,6 +69,10 @@ const FindAReader = () => {
       markStep('headshot');
     } catch (err) {
       console.error('Failed to upload photo:', err);
+      dispatch(showSnackbar({
+        message: err?.response?.data?.message || "Couldn't upload photo. Please try again.",
+        variant: 'error',
+      }));
     }
     setUploading(false);
   };
@@ -86,14 +96,26 @@ const FindAReader = () => {
           setCelebrating({ matchId: result.match_details.id });
           return;
         }
-      } catch {
-        // error handled in slice
+      } catch (err) {
+        dispatch(showSnackbar({
+          message: err?.message || err?.detail || "Swipe didn't go through. Please try again.",
+          variant: 'error',
+        }));
       }
       setCurrentIndex((prev) => prev + 1);
       setSwiping(false);
     },
     [currentIndex, readers, dispatch, swiping]
   );
+
+  // Reset the carousel cursor when the reader list shrinks below it
+  // (filters changed, list refetched). Without this, we silently land
+  // on "no more readers" when there are actually fresh cards available.
+  useEffect(() => {
+    if (currentIndex >= readers.length && readers.length > 0) {
+      setCurrentIndex(0);
+    }
+  }, [readers.length, currentIndex]);
 
   const onCelebrationDone = useCallback(() => {
     const id = celebrating?.matchId;

@@ -26,6 +26,12 @@ export const SocketProvider = ({ children }) => {
   const [isSocketReady, setIsSocketReady] = useState(false);
   const [notifications, setNotifications] = useState([]);
 
+  // De-dup repeated socket events — both for matches and for incoming calls.
+  // Sockets sometimes deliver the same notification twice on reconnect or
+  // when the BE re-publishes; without this, the user gets a double navigate
+  // or a duplicate ringing modal.
+  const lastMatchRef = useRef({ id: null, at: 0 });
+
   // Incoming call state
   const [incomingCall, setIncomingCall] = useState(null); // { matchId, roomUrl, partnerName }
 
@@ -56,18 +62,23 @@ export const SocketProvider = ({ children }) => {
         break;
 
       // Mutual match — refresh matches + activity feed + navigate to "It's a Scene"
-      case 'scene_partner_match':
+      case 'scene_partner_match': {
+        const now = Date.now();
+        const sameMatch = lastMatchRef.current.id === data?.match_id;
+        const within = now - lastMatchRef.current.at < 5000;
+        if (sameMatch && within) break;
+        lastMatchRef.current = { id: data?.match_id || null, at: now };
         dispatch(fetchMatches());
         dispatch(fetchActivityFeed());
         if (data?.match_id) {
           if (isMobile()) {
-            // Use custom event for mobile tab navigation
             window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
           } else {
             navigate(`/dashboard/its-a-scene/${data.match_id}`);
           }
         }
         break;
+      }
 
       // Admin broadcast — show toast (bell already refreshed above)
       case 'admin_broadcast':

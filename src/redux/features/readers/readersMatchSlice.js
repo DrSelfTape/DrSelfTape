@@ -264,7 +264,8 @@ const readersMatchSlice = createSlice({
     },
     appendMessage: (state, action) => {
       const msg = action.payload;
-      const key = msg.matchId;
+      const key = msg?.matchId || msg?.match_id;
+      if (key == null) return;
       if (!Array.isArray(state.greenRoomMessages[key])) {
         state.greenRoomMessages[key] = [];
       }

@@ -41,11 +41,5 @@ export function useTokenBalance() {
     return () => window.removeEventListener('insufficient_tokens', handler);
   }, [refresh]);
 
-  // After spending a token, invalidate cache
-  const invalidate = useCallback(() => {
-    cachedBalance = null;
-    lastFetch = 0;
-  }, []);
-
-  return { balance, loading, refresh, invalidate };
+  return { balance, loading, refresh };
 }

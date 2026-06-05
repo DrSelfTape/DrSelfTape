@@ -244,11 +244,17 @@ export default function CDSim() {
     sessionStartRef.current = Date.now();
 
     const payload = { script: scriptText, role: selectedRole, voice: selectedVoice };
+    const AI_TIMEOUT_MS = 90000;
 
-    // Try Jericho enriched endpoint first, fallback to standard cd-feedback
+    // Try Jericho enriched endpoint first, fallback to standard cd-feedback.
+    // Re-throw 402 (no credits) so the outer handler can show the upgrade
+    // path — falling back to cd-feedback hides the credits prompt.
     const tryJericho = axios
-      .post(`${baseURL}/v1/ai/jericho/coach/`, { ...payload, session_type: 'cd_coach' })
-      .catch(() => axios.post(`${baseURL}/v1/ai/cd-feedback/`, payload));
+      .post(`${baseURL}/v1/ai/jericho/coach/`, { ...payload, session_type: 'cd_coach' }, { timeout: AI_TIMEOUT_MS })
+      .catch((err) => {
+        if (err?.response?.status === 402) throw err;
+        return axios.post(`${baseURL}/v1/ai/cd-feedback/`, payload, { timeout: AI_TIMEOUT_MS });
+      });
 
     tryJericho
       .then((res) => {

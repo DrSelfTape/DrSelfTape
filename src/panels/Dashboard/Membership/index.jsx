@@ -159,12 +159,25 @@ export default function Membership({ onClose }) {
     const params = new URLSearchParams(window.location.search);
     if (params.get('subscribed') === 'true') {
       dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+      import('../../../utils/analytics').then(({ trackEvent, Events }) => {
+        trackEvent(Events.PURCHASE, {
+          status: 'success',
+          platform: 'stripe_web',
+          plan: params.get('plan') || undefined,
+        });
+      }).catch(() => { /* swallow */ });
       setTimeout(() => {
         axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
       }, 1500);
       window.history.replaceState({}, '', window.location.pathname);
     } else if (params.get('canceled') === 'true') {
       dispatch(showSnackbar({ message: 'Checkout canceled — no changes to your subscription.', variant: 'info' }));
+      import('../../../utils/analytics').then(({ trackEvent, Events }) => {
+        trackEvent(Events.PURCHASE, {
+          status: 'cancelled',
+          platform: 'stripe_web',
+        });
+      }).catch(() => { /* swallow */ });
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, [dispatch]);
@@ -188,13 +201,12 @@ export default function Membership({ onClose }) {
     // funnel relies on this. Dynamic import keeps the analytics bundle
     // out of the critical path; failure swallowed so a missing PostHog
     // key never blocks a real subscription attempt.
-    import('../../../utils/analytics').then(({ trackEvent, Events }) => {
-      trackEvent(Events.PURCHASE, {
-        plan: planId,
-        billing,
-        platform: isNativeIOS() ? 'ios_iap' : 'stripe_web',
-      });
-    }).catch(() => { /* swallow */ });
+    const platform = isNativeIOS() ? 'ios_iap' : 'stripe_web';
+    const trackPurchase = (props) =>
+      import('../../../utils/analytics').then(({ trackEvent, Events }) => {
+        trackEvent(Events.PURCHASE, { plan: planId, billing, platform, ...props });
+      }).catch(() => { /* swallow */ });
+    trackPurchase({ status: 'initiated' });
 
     if (isNativeIOS()) {
       try {
@@ -202,7 +214,10 @@ export default function Membership({ onClose }) {
         clearWatchdog();
         setCheckoutLoading(null);
 
-        if (result.userCancelled) return;
+        if (result.userCancelled) {
+          trackPurchase({ status: 'cancelled' });
+          return;
+        }
 
         if (!result.ok) {
           let msg;
@@ -237,10 +252,12 @@ export default function Membership({ onClose }) {
             } catch { /* swallow */ }
           }
           dispatch(showSnackbar({ message: msg, variant: 'error' }));
+          trackPurchase({ status: 'failed', reason: result.reason });
           return;
         }
 
         dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+        trackPurchase({ status: 'success' });
         setTimeout(() => {
           axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
         }, 2000);
@@ -254,6 +271,7 @@ export default function Membership({ onClose }) {
           message: 'In-App Purchase is unavailable. Please try again or restart the app.',
           variant: 'error',
         }));
+        trackPurchase({ status: 'failed', reason: 'iap_threw' });
       }
       return;
     }
@@ -266,6 +284,7 @@ export default function Membership({ onClose }) {
       clearWatchdog();
       const message = err?.response?.data?.error || 'Something went wrong starting checkout. Please try again.';
       dispatch(showSnackbar({ message, variant: 'error' }));
+      trackPurchase({ status: 'failed', reason: 'checkout_session_failed' });
       setCheckoutLoading(null);
     }
   };

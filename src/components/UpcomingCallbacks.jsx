@@ -29,10 +29,11 @@ const TYPE_DOT = {
 
 function dayLabel(dateStr) {
   const d = new Date(dateStr);
-  const now = new Date();
-  const diff = Math.round(
-    (d.setHours(0, 0, 0, 0) - now.setHours(0, 0, 0, 0)) / 86400000
-  );
+  const dMid = new Date(d);
+  dMid.setHours(0, 0, 0, 0);
+  const nowMid = new Date();
+  nowMid.setHours(0, 0, 0, 0);
+  const diff = Math.round((dMid - nowMid) / 86400000);
   if (diff === 0) return { text: 'Today', urgent: true };
   if (diff === 1) return { text: 'Tomorrow', urgent: true };
   return {
@@ -55,8 +56,9 @@ export default function UpcomingCallbacks() {
 
   const upcoming = useMemo(() => {
     const data = tracker?.data || {};
-    const now = new Date();
-    const weekFromNow = new Date(now.getTime() + 7 * 86400000);
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const weekFromNow = new Date(todayStart.getTime() + 7 * 86400000);
     const all = [];
 
     // Collect from all columns
@@ -64,7 +66,7 @@ export default function UpcomingCallbacks() {
       for (const item of colItems) {
         if (!item.callback_date) continue;
         const cbDate = new Date(item.callback_date);
-        if (cbDate >= new Date(now.setHours(0, 0, 0, 0)) && cbDate <= weekFromNow) {
+        if (cbDate >= todayStart && cbDate <= weekFromNow) {
           all.push(item);
         }
       }

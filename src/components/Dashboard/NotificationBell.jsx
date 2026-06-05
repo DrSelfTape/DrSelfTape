@@ -76,11 +76,12 @@ export default function NotificationBell({ onNavigate }) {
     if (!notif.is_read) dispatch(markNotificationRead(notif.id));
     setTimeout(() => {
       setOpen(false);
+      const matchId = notif.data?.match_id;
       const route =
         notif.type === 'scene_partner_like' ? '/dashboard/who-wants-to-read' :
-        notif.type === 'scene_partner_match' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
-        notif.type === 'rehearsal_started' ? `/dashboard/green-room/${notif.data?.match_id || ''}` :
-        notif.type === 'new_message' ? `/dashboard/green-room/${notif.data?.match_id || ''}` : null;
+        notif.type === 'scene_partner_match' && matchId ? `/dashboard/green-room/${matchId}` :
+        notif.type === 'rehearsal_started' && matchId ? `/dashboard/green-room/${matchId}` :
+        notif.type === 'new_message' && matchId ? `/dashboard/green-room/${matchId}` : null;
       if (route) {
         if (isMobile && onNavigate) {
           onNavigate({ panel: notif.type === 'scene_partner_like' ? 'who-wants-to-read' : 'green-room' });
