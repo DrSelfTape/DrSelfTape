@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import axiosInstance from '../redux/http';
 
-// Module-level cache — shared across all hook instances, avoids per-component fetches
+// Module-level cache — shared across all hook instances, avoids per-component fetches.
+// 10s is short enough that a token spent in one place reflects almost immediately
+// in another. Hard invalidation happens on the `insufficient_tokens` window event,
+// so the cache never hides a real "you're out" state.
 let cachedBalance = null;
 let lastFetch = 0;
-const CACHE_TTL = 30000; // 30 seconds
+const CACHE_TTL = 10000;
 
 export function useTokenBalance() {
   const [balance, setBalance] = useState(cachedBalance);

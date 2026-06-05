@@ -104,6 +104,13 @@ const auditionsSlice = createSlice({
     stats: { data: null, loading: false, error: null },
     // Kanban tracker
     tracker: { data: null, loading: false, error: null },
+    // Per-mutation flags so UIs can show per-row spinners + retry hooks
+    createLoading: false,
+    createError: null,
+    updateLoading: false,
+    updateError: null,
+    deleteLoading: false,
+    deleteError: null,
     // General loading/error
     loading: false,
     error: null,
@@ -150,20 +157,44 @@ const auditionsSlice = createSlice({
 
     // ── Create ──
     builder
-      .addCase(createAuditionThunk.fulfilled, (state, action) => {
-        // Will be re-fetched via fetchTrackerThunk dispatch after create
+      .addCase(createAuditionThunk.pending, (state) => {
+        state.createLoading = true;
+        state.createError = null;
+      })
+      .addCase(createAuditionThunk.fulfilled, (state) => {
+        state.createLoading = false;
+      })
+      .addCase(createAuditionThunk.rejected, (state, action) => {
+        state.createLoading = false;
+        state.createError = action.payload;
       });
 
     // ── Update ──
     builder
-      .addCase(updateAuditionThunk.fulfilled, (state, action) => {
-        // Will be re-fetched via fetchTrackerThunk dispatch after update
+      .addCase(updateAuditionThunk.pending, (state) => {
+        state.updateLoading = true;
+        state.updateError = null;
+      })
+      .addCase(updateAuditionThunk.fulfilled, (state) => {
+        state.updateLoading = false;
+      })
+      .addCase(updateAuditionThunk.rejected, (state, action) => {
+        state.updateLoading = false;
+        state.updateError = action.payload;
       });
 
     // ── Delete ──
     builder
-      .addCase(deleteAuditionThunk.fulfilled, (state, action) => {
-        // Will be re-fetched via fetchTrackerThunk dispatch after delete
+      .addCase(deleteAuditionThunk.pending, (state) => {
+        state.deleteLoading = true;
+        state.deleteError = null;
+      })
+      .addCase(deleteAuditionThunk.fulfilled, (state) => {
+        state.deleteLoading = false;
+      })
+      .addCase(deleteAuditionThunk.rejected, (state, action) => {
+        state.deleteLoading = false;
+        state.deleteError = action.payload;
       });
   },
 });
