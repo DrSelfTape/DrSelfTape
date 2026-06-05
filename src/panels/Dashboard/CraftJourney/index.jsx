@@ -6,7 +6,7 @@ import { V1Sparkles } from '../../../components/Aurora';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
-import { fetchCraftJourney } from '../../../redux/features/craftJourney/craftJourneySlice';
+import { fetchCraftJourney, clearLastResult } from '../../../redux/features/craftJourney/craftJourneySlice';
 
 /* ──────────────────────────────────────────────────────────────────
    Craft Journey — Duolingo-style serpentine skill path.
@@ -146,10 +146,39 @@ export default function CraftJourney() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const skillProgress = useSelector((s) => s.craftJourney.skill_progress) || {};
+  const lastResult = useSelector((s) => s.craftJourney.lastResult);
+  // Celebration is driven by Redux lastResult — set by completeCraftNode
+  // fulfilled handler. Watching it here means any session (Cold Reads,
+  // CDSim, etc.) that completes a node lights this up on the next render
+  // of CraftJourney, no matter which surface fired the dispatch.
+  const [celebrate, setCelebrate] = useState(null);
   const craftXp = useSelector((s) => s.craftJourney.craft_xp) || 0;
   const cjLoading = useSelector((s) => s.craftJourney.loading);
   const cjFetched = useSelector((s) => s.craftJourney.hasFetched);
   const [generating, setGenerating] = useState(null); // node id while AI generates
+
+  // When BE confirms a node completion, fire the celebration overlay. We
+  // only celebrate first-time completions (xp_awarded > 0); re-runs of the
+  // same node return already_done=true and we skip the burst.
+  useEffect(() => {
+    if (!lastResult) return;
+    if (lastResult.already_done) {
+      dispatch(clearLastResult());
+      return;
+    }
+    const nid = lastResult.node_id;
+    const node = JOURNEY.flatMap((s) => s.nodes).find((n) => n.id === nid);
+    if (!node) {
+      dispatch(clearLastResult());
+      return;
+    }
+    setCelebrate({ node, stars: lastResult.stars || 2 });
+  }, [lastResult, dispatch]);
+
+  const closeCelebration = () => {
+    setCelebrate(null);
+    dispatch(clearLastResult());
+  };
 
   // Pull live progress from the BE on mount. The skill_progress map
   // overrides each node's seeded state/stars from the JOURNEY constant.
@@ -376,6 +405,11 @@ export default function CraftJourney() {
           </div>
         </div>
       </div>
+
+      {/* Celebration overlay — fires when BE confirms a node completion. */}
+      {celebrate && (
+        <Celebration node={celebrate.node} stars={celebrate.stars} onClose={closeCelebration} />
+      )}
 
       {/* AI-generation overlay — blocks input while the scene is being
           written so users don't double-tap and queue up two generations
