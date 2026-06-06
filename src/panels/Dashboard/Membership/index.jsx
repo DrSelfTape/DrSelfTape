@@ -336,14 +336,14 @@ export default function Membership({ onClose }) {
       position: 'relative', minHeight: '100%',
       padding: '0 0 calc(env(safe-area-inset-bottom, 0px) + 24px)',
     }}>
-      {/* Top bar: X / Restore — sticky with backdrop blur so the
-          comparison cards don't bleed through behind RESTORE. */}
+      {/* Top bar: X / Restore — solid pinned bar matching MobileApp's
+          top chrome so it reads as part of the build, not a floating
+          glass pill. Subtle hairline below it. */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 20px 8px', position: 'sticky', top: 0, zIndex: 10,
-        background: 'linear-gradient(to bottom, rgba(250,250,247,0.95) 70%, rgba(250,250,247,0))',
-        backdropFilter: 'blur(20px) saturate(1.4)',
-        WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
+        background: 'var(--aurora-surface-solid)',
+        borderBottom: '1px solid var(--aurora-line)',
       }}>
         {onClose ? (
           <button onClick={onClose} aria-label="Close" style={{
