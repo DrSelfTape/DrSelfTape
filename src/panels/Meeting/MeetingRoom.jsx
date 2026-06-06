@@ -92,19 +92,34 @@ export default function MeetingRoom() {
       user?.email ||
       'Actor';
 
-    const call = DailyIframe.createFrame(containerRef.current, {
-      url: roomUrl,
-      iframeStyle: {
-        width: '100%',
-        height: '100%',
-        border: '0',
-        background: PRIMARY_BG,
-      },
-      showLeaveButton: true,
-      showFullscreenButton: true,
-      // Daily's prebuilt UI handles its own theming; we just tint the
-      // outer container so the page never shows a flash of wrong color.
-    });
+    let call;
+    try {
+      call = DailyIframe.createFrame(containerRef.current, {
+        url: roomUrl,
+        iframeStyle: {
+          width: '100%',
+          height: '100%',
+          border: '0',
+          background: PRIMARY_BG,
+        },
+        showLeaveButton: true,
+        showFullscreenButton: true,
+        // Daily's prebuilt UI handles its own theming; we just tint the
+        // outer container so the page never shows a flash of wrong color.
+      });
+    } catch (err) {
+      // DailyIframe.createFrame can throw synchronously if another frame
+      // already exists in this container, or if the SDK fails to load.
+      // Without catching here, the React tree crashes and the user gets
+      // bounced back to the chat with no visible explanation.
+      setStatus('error');
+      setError(
+        (err && err.message)
+          ? `Couldn't initialize the call: ${err.message}`
+          : "Couldn't initialize the call. Please try again."
+      );
+      return undefined;
+    }
     callRef.current = call;
 
     // Watchdog — fail loud if Daily never confirms join within 30s.

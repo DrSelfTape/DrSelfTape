@@ -33,8 +33,22 @@ initSentry();
     /error loading dynamically imported module/i,
     /ChunkLoadError/i,
   ];
+  // Only reload on OUR bundle's chunk failures. Third-party SDKs (Daily.co,
+  // Stripe, RevenueCat) routinely load their own dynamic modules; if one
+  // hiccups, reloading the whole app is catastrophic — Joseph reported
+  // tapping Live Session and the screen "loading then exiting" because
+  // Daily's iframe init was tripping this handler.
+  const OURS_PATTERNS = [
+    /\/assets\//i,                          // Vite's hashed bundle path
+    /capacitor:\/\/localhost/i,             // Capacitor's own scheme
+    /drselftape\.app/i,                     // Web origin
+  ];
   const RELOAD_KEY = '__dst_reloaded_stale_chunk__';
   const isStale = (msg) => STALE_PATTERNS.some((r) => r.test(String(msg || '')));
+  const isOurs  = (msg) => {
+    const s = String(msg || '');
+    return OURS_PATTERNS.some((r) => r.test(s));
+  };
   const reloadOnce = () => {
     try {
       if (sessionStorage.getItem(RELOAD_KEY)) return false;
@@ -44,11 +58,12 @@ initSentry();
     return true;
   };
   window.addEventListener('error', (e) => {
-    if (isStale(e?.message) || isStale(e?.error?.message)) reloadOnce();
+    const msg = e?.message || e?.error?.message;
+    if (isStale(msg) && isOurs(msg)) reloadOnce();
   });
   window.addEventListener('unhandledrejection', (e) => {
     const msg = e?.reason?.message || e?.reason;
-    if (isStale(msg)) reloadOnce();
+    if (isStale(msg) && isOurs(msg)) reloadOnce();
   });
   // Clear the guard once the new bundle has booted cleanly so the next
   // future redeploy can also self-heal.
