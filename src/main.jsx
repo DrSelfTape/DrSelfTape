@@ -11,6 +11,7 @@ import { Toastbar } from './components/Shared/Toastbar/index.jsx';
 import { ErrorBoundary } from './ErrorBoundary.jsx';
 import { ThemeProvider } from './utils/theme.jsx';
 import { initSentry } from './utils/sentry.js';
+import ForceUpdateGate from './components/ForceUpdateGate.jsx';
 
 // Init Sentry before render so it captures errors from the very first
 // component mount. No-ops in dev (no DSN set).
@@ -69,8 +70,10 @@ createRoot(document.getElementById('root')).render(
         <ThemeProvider>
           <BrowserRouter>
             <ErrorBoundary>
-              <App />
-              <Toastbar />
+              <ForceUpdateGate>
+                <App />
+                <Toastbar />
+              </ForceUpdateGate>
             </ErrorBoundary>
           </BrowserRouter>
         </ThemeProvider>
