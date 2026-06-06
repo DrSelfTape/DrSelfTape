@@ -334,14 +334,18 @@ export default function Membership({ onClose }) {
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'relative', minHeight: '100%',
-      padding: '0 0 calc(env(safe-area-inset-bottom, 0px) + 24px)',
+      // Reserve space at the top for the fixed X / Restore bar so the
+      // content doesn't render under it.
+      padding: 'calc(env(safe-area-inset-top, 0px) + 60px) 0 calc(env(safe-area-inset-bottom, 0px) + 24px)',
     }}>
-      {/* Top bar: X / Restore — solid pinned bar matching MobileApp's
-          top chrome so it reads as part of the build, not a floating
-          glass pill. Subtle hairline below it. */}
+      {/* Top bar: X / Restore — truly fixed at the very top of the
+          viewport so it never moves as the user scrolls. position:sticky
+          inside this nested container hierarchy was failing intermittently
+          (the bar drifted into mid-page); position:fixed locks it. */}
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: '12px 20px 8px', position: 'sticky', top: 0, zIndex: 10,
+        padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 20px 12px',
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
         background: 'var(--aurora-surface-solid)',
         borderBottom: '1px solid var(--aurora-line)',
       }}>
