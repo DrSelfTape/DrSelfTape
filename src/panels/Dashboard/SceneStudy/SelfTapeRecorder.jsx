@@ -3,6 +3,7 @@ import { Video, Square, X, Download, Send, RotateCcw, Volume2 } from 'lucide-rea
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import endPoints from '../../../redux/constant';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 // Helper: pick a supported video mimeType (MP4 for Safari/iOS, WebM otherwise)
 function getSupportedMimeType() {
@@ -45,6 +46,7 @@ function unlockOrientation() {
 }
 
 export default function SelfTapeRecorder({ lines, userRole, onClose }) {
+  useHideMobileHeader(true);
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);

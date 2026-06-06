@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { X, Play } from 'lucide-react';
+import useHideMobileHeader from './useHideMobileHeader';
 
 const TOTAL_SECONDS = 60;
 const INHALE = 4;
@@ -15,6 +16,7 @@ const CYCLE = INHALE + HOLD + EXHALE;
  *   onComplete — called when exercise finishes or user skips
  */
 export default function FocusMode({ onComplete }) {
+  useHideMobileHeader(true);
   const [started, setStarted] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(TOTAL_SECONDS);
   const [phase, setPhase] = useState('inhale'); // inhale | hold | exhale

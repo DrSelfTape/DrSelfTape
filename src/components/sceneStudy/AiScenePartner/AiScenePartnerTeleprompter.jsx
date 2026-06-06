@@ -1,5 +1,6 @@
 // Library imports
 import { Button } from '@mui/material';
+import useHideMobileHeader from '../../Shared/useHideMobileHeader';
 
 /**
  * Teleprompter View Component
@@ -43,6 +44,7 @@ const AiScenePartnerTeleprompter = ({
   reviewStartIndexRef,
   stopRecording,
 }) => {
+  useHideMobileHeader(true);
   const current = scriptLines[currentLineIndex] || {};
   const userLine = current ? isUserLine(current) : false;
   const recordingDone = hasRecording(currentLineIndex);

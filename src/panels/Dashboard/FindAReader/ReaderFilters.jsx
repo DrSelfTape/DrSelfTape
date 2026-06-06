@@ -8,6 +8,7 @@ import {
   setFiltersLocal,
 } from '../../../redux/features/readers/readersMatchSlice';
 import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 const GENRES = [
   'Drama',
@@ -51,6 +52,7 @@ const AVAILABILITY_OPTIONS = ['Online Now', 'Any'];
 const GENDER_OPTIONS = ['Male', 'Female', 'Non-Binary', 'Any'];
 
 const ReaderFilters = ({ onClose }) => {
+  useHideMobileHeader(true);
   const dispatch = useDispatch();
   const savedFilters = useSelector((state) => state.readersMatch.filters);
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Star, X } from 'lucide-react';
+import useHideMobileHeader from './useHideMobileHeader';
 
 /**
  * Post-session modal for rating a reader partner.
@@ -17,6 +18,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
   const [review, setReview] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  useHideMobileHeader(true);
 
   const handleSubmit = async () => {
     if (rating === 0 || submitting) return;
@@ -35,7 +37,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
   if (submitted) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
-        <div className="rounded-2xl p-8 text-center w-full max-w-sm mx-4" style={{ background: 'var(--bg-surface, #1E1E1E)' }}>
+        <div className="rounded-2xl p-8 text-center w-full max-w-sm mx-4" style={{ background: 'var(--bg-surface, #FFFFFF)' }}>
           <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-4">
             <Star className="w-8 h-8 text-emerald-400 fill-emerald-400" />
           </div>
@@ -48,11 +50,11 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/60">
-      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 mx-0 sm:mx-4" style={{ background: 'var(--bg-surface, #1E1E1E)', border: '1px solid var(--border-active, #3A3A3A)' }}>
+      <div className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-6 mx-0 sm:mx-4" style={{ background: 'var(--bg-surface, #FFFFFF)', border: '1px solid var(--border-active, rgba(10,10,10,0.14))' }}>
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold text-[#0A0A0A]">How was {firstName}?</h2>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#F4F4EE] transition-colors" style={{ color: 'var(--text-muted, #666)' }}>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-[#F4F4EE] transition-colors" style={{ color: 'var(--text-muted, rgba(10,10,10,0.40))' }}>
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -79,7 +81,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
         </div>
 
         {/* Rating label */}
-        <p className="text-center text-sm mb-4" style={{ color: 'var(--text-secondary, #999)' }}>
+        <p className="text-center text-sm mb-4" style={{ color: 'var(--text-secondary, rgba(10,10,10,0.62))' }}>
           {rating === 0 && 'Tap a star to rate'}
           {rating === 1 && 'Needs improvement'}
           {rating === 2 && 'Below average'}
@@ -98,9 +100,9 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
             rows={3}
             className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#D4A85F]"
             style={{
-              background: 'var(--bg-input, #2A2A2A)',
-              border: '1px solid var(--border-active, #3A3A3A)',
-              color: 'var(--text-primary, #fff)',
+              background: 'var(--bg-input, #FFFFFF)',
+              border: '1px solid var(--border-active, rgba(10,10,10,0.14))',
+              color: 'var(--text-primary, #0A0A0A)',
             }}
           />
         )}
@@ -111,7 +113,7 @@ export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onCl
             type="button"
             onClick={onClose}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-colors"
-            style={{ border: '1px solid var(--border-active, #3A3A3A)', color: 'var(--text-secondary, #999)' }}
+            style={{ border: '1px solid var(--border-active, rgba(10,10,10,0.14))', color: 'var(--text-secondary, rgba(10,10,10,0.62))' }}
           >
             Skip
           </button>

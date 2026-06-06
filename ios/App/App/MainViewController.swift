@@ -1,38 +1,40 @@
 import Capacitor
 import UIKit
 import WebKit
+import os.log
 
-/// Custom Capacitor bridge view controller that grants WKWebView iframe
-/// media-capture permission so Daily.co's prebuilt iframe can access the
-/// camera + microphone for peer-to-peer rehearsal calls.
+/// Grants WKWebView iframe media-capture permission so Daily.co's prebuilt
+/// iframe can access the camera + microphone.
 ///
-/// Without this delegate, WKWebView silently denies any
-/// getUserMedia()/getDisplayMedia() request that originates from a
-/// cross-origin iframe (Daily.co is loaded from drselftape.daily.co
-/// inside an iframe inside our app's WebView). The iframe then renders
-/// "no camera available" and the join attempt fails before the user
-/// ever sees the call UI — matches Joseph's "crashing before the
-/// session even starts" report.
+/// Capacitor 8's WebViewDelegationHandler already grants unconditionally,
+/// but its lifecycle vs. ours has been fragile — in Build 62 Joseph still
+/// hit Daily's "Unblock your camera and microphone" gate with both OS
+/// toggles on. We override the uiDelegate after Capacitor has bound its
+/// own, and grant unconditionally for ALL frames.
 ///
-/// We restrict the auto-grant to known-trusted hosts so the WebView
-/// can't be hijacked into approving an attacker's getUserMedia call.
-/// The iOS NSCameraUsageDescription / NSMicrophoneUsageDescription
-/// strings in Info.plist still gate the OUTER permission prompt — this
-/// only delegates the IFRAME-level decision when the user has already
-/// approved at the OS level.
+/// Conditional host allowlists turned out to be a regression vs. the
+/// Capacitor default: Daily's inner call-machine iframes can present an
+/// origin host that's empty/null/unexpected (sandbox quirks), and the
+/// allowlist then falls through to .deny. iOS hardware access is still
+/// gated by NSCameraUsageDescription / NSMicrophoneUsageDescription in
+/// Info.plist + the user's per-app toggles in Settings, so the unconditional
+/// .grant here only relaxes the iframe-delegation layer.
 class MainViewController: CAPBridgeViewController, WKUIDelegate {
 
-    private let trustedMediaHosts: Set<String> = [
-        "drselftape.daily.co",
-        "daily.co",
-    ]
+    private let log = OSLog(subsystem: "com.drselftapes.app", category: "MediaPermission")
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // The bridge's webView is created in super.viewDidLoad. We hook
-        // the UI delegate immediately after so iframe permission requests
-        // route through our handler.
         if let webView = self.webView {
+            webView.uiDelegate = self
+        }
+    }
+
+    // Re-assert ownership in case Capacitor or a plugin reassigns the
+    // uiDelegate during its own viewDidAppear / first-load pass.
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if let webView = self.webView, webView.uiDelegate !== self {
             webView.uiDelegate = self
         }
     }
@@ -44,18 +46,20 @@ class MainViewController: CAPBridgeViewController, WKUIDelegate {
         type: WKMediaCaptureType,
         decisionHandler: @escaping (WKPermissionDecision) -> Void
     ) {
-        let host = origin.host
-        // The main app frame requesting media is fine — that's our own
-        // code. For sub-frames (iframes), only auto-grant trusted hosts.
-        if frame.isMainFrame {
-            decisionHandler(.grant)
-            return
-        }
-        if trustedMediaHosts.contains(host)
-            || trustedMediaHosts.contains(where: { host.hasSuffix(".\($0)") }) {
-            decisionHandler(.grant)
-            return
-        }
-        decisionHandler(.deny)
+        os_log(
+            "media capture request: host=%{public}@ scheme=%{public}@ mainFrame=%{public}d type=%d → grant",
+            log: log, type: .info,
+            origin.host, origin.protocol, frame.isMainFrame ? 1 : 0, type.rawValue
+        )
+        decisionHandler(.grant)
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        requestDeviceOrientationAndMotionPermissionFor origin: WKSecurityOrigin,
+        initiatedByFrame frame: WKFrameInfo,
+        decisionHandler: @escaping (WKPermissionDecision) -> Void
+    ) {
+        decisionHandler(.grant)
     }
 }

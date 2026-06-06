@@ -5,6 +5,7 @@ import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import { updateSessionLog } from '../../redux/features/jericho/jerichoSlice';
 import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
+import useHideMobileHeader from './useHideMobileHeader';
 
 const MOOD_OPTIONS = [
   { emoji: '🔥', label: 'Nailed it' },
@@ -23,6 +24,7 @@ const MOOD_OPTIONS = [
  *   onClose     — dismiss
  */
 export default function PostSessionJournal({ sessionType, scriptTitle, onClose }) {
+  useHideMobileHeader(true);
   const dispatch = useDispatch();
   const lastSessionLogId = useSelector((s) => s.jericho?.lastSessionLogId);
   const [mood, setMood] = useState(null);
@@ -71,7 +73,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
   if (saved) {
     return (
       <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
-        <div className="rounded-2xl p-8 text-center w-full max-w-sm mx-4" style={{ background: 'var(--bg-surface, #1E1E1E)' }}>
+        <div className="rounded-2xl p-8 text-center w-full max-w-sm mx-4" style={{ background: 'var(--bg-surface, #FFFFFF)' }}>
           <div className="w-16 h-16 rounded-full bg-[#D4A85F]/10 flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-[#7A5A18]" />
           </div>
@@ -91,8 +93,8 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
         onClick={(e) => e.stopPropagation()}
         className="w-full max-w-sm rounded-t-2xl sm:rounded-2xl px-5 pt-5 mx-0 sm:mx-4 overflow-y-auto"
         style={{
-          background: 'var(--bg-surface, #1E1E1E)',
-          border: '1px solid var(--border-active, #3A3A3A)',
+          background: 'var(--bg-surface, #FFFFFF)',
+          border: '1px solid var(--border-active, rgba(10,10,10,0.14))',
           // Cap modal height so it never spills off-screen on small iPhones;
           // safe-area-inset-bottom keeps the bottom buttons clear of the
           // home-indicator on iOS. Internal scroll picks up overflow.
@@ -112,7 +114,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
             onTouchEnd={(e) => { e.preventDefault(); onClose?.(); }}
             className="p-2 -mr-2 rounded-full hover:bg-[#F4F4EE] transition-colors"
             style={{
-              color: 'var(--text-muted, #666)',
+              color: 'var(--text-muted, rgba(10,10,10,0.40))',
               touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
             }}
@@ -121,7 +123,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
             <X className="w-5 h-5" />
           </button>
         </div>
-        <p className="text-sm mb-4" style={{ color: 'var(--text-muted, #666)' }}>
+        <p className="text-sm mb-4" style={{ color: 'var(--text-muted, rgba(10,10,10,0.40))' }}>
           Quick check-in after your {sessionType === 'self-tape' ? 'self-tape' : sessionType === 'cd-coach' ? 'coaching' : 'practice'} session
         </p>
 
@@ -134,12 +136,12 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
               onClick={() => setMood(mood?.label === m.label ? null : m)}
               className="flex flex-col items-center gap-1.5 rounded-xl py-3 px-2 flex-1 transition-all"
               style={{
-                background: mood?.label === m.label ? 'rgba(212,168,95,0.18)' : 'var(--bg-input, #2A2A2A)',
+                background: mood?.label === m.label ? 'rgba(212,168,95,0.18)' : 'var(--bg-input, #FFFFFF)',
                 border: mood?.label === m.label ? '1.5px solid #D4A85F' : '1px solid transparent',
               }}
             >
               <span className="text-2xl">{m.emoji}</span>
-              <span className="text-[10px] font-medium" style={{ color: mood?.label === m.label ? '#7A5A18' : 'var(--text-muted, #666)' }}>
+              <span className="text-[10px] font-medium" style={{ color: mood?.label === m.label ? '#7A5A18' : 'var(--text-muted, rgba(10,10,10,0.40))' }}>
                 {m.label}
               </span>
             </button>
@@ -148,7 +150,7 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
 
         {/* Self-rating */}
         <div className="mb-4">
-          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary, #999)' }}>Rate your performance</p>
+          <p className="text-xs font-medium mb-2" style={{ color: 'var(--text-secondary, rgba(10,10,10,0.62))' }}>Rate your performance</p>
           <div className="flex justify-center gap-1">
             {[1, 2, 3, 4, 5].map((star) => {
               const active = star <= (hoveredStar || rating);
@@ -179,9 +181,9 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
           rows={3}
           className="w-full rounded-xl px-4 py-3 text-sm outline-none resize-none mb-4 transition-colors focus:border-[#D4A85F]"
           style={{
-            background: 'var(--bg-input, #2A2A2A)',
-            border: '1px solid var(--border-active, #3A3A3A)',
-            color: 'var(--text-primary, #fff)',
+            background: 'var(--bg-input, #FFFFFF)',
+            border: '1px solid var(--border-active, rgba(10,10,10,0.14))',
+            color: 'var(--text-primary, #0A0A0A)',
           }}
         />
 
@@ -193,8 +195,8 @@ export default function PostSessionJournal({ sessionType, scriptTitle, onClose }
             onTouchEnd={(e) => { e.preventDefault(); onClose?.(); }}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-medium transition-colors"
             style={{
-              border: '1px solid var(--border-active, #3A3A3A)',
-              color: 'var(--text-secondary, #999)',
+              border: '1px solid var(--border-active, rgba(10,10,10,0.14))',
+              color: 'var(--text-secondary, rgba(10,10,10,0.62))',
               touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
             }}

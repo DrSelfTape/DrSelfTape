@@ -65,7 +65,7 @@ export default function MeetingChat({ messages, onSend, unreadCount, onOpen }) {
                   {!msg.isMine && (
                     <p className="text-[10px] font-semibold text-[#A7ECDA] mb-0.5">{msg.sender}</p>
                   )}
-                  <p className="text-sm text-white leading-relaxed">{msg.text}</p>
+                  <p className="text-sm text-white leading-relaxed" style={{ overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{msg.text}</p>
                   <p className={`text-[10px] mt-1 text-right ${msg.isMine ? 'text-white/50' : 'text-white/30'}`}>
                     {msg.time}
                   </p>
