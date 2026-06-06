@@ -3126,10 +3126,13 @@ export default function DrSelfTapeApp() {
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
           {/* Top Bar — Aurora style: logo badge + mono wordmark, streak + bell + avatar.
-              Fades + slides up while the content scrolls down; reappears on scroll up. */}
+              Solid pinned bar with a subtle bottom hairline so the chrome
+              reads as part of the build, not floating elements over the
+              page gradient. Still slides up when a modal opens. */}
           <div style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-            background: "transparent",
+            background: "var(--aurora-surface-solid)",
+            borderBottom: "1px solid var(--aurora-line)",
             padding: "calc(env(safe-area-inset-top, 0px) + 4px) 16px 0",
             display: "flex", alignItems: "center", justifyContent: "space-between",
             height: "calc(54px + env(safe-area-inset-top, 0px))",
