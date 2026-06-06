@@ -334,50 +334,27 @@ export default function Membership({ onClose }) {
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'relative', minHeight: '100%',
-      // Reserve space at the top for the fixed X / Restore bar so the
-      // content doesn't render under it.
-      padding: 'calc(env(safe-area-inset-top, 0px) + 60px) 0 calc(env(safe-area-inset-bottom, 0px) + 24px)',
+      padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 0 calc(env(safe-area-inset-bottom, 0px) + 24px)',
     }}>
-      {/* Top bar: X / Restore — truly fixed at the very top of the
-          viewport so it never moves as the user scrolls. position:sticky
-          inside this nested container hierarchy was failing intermittently
-          (the bar drifted into mid-page); position:fixed locks it. */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 20px 12px',
-        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 10,
-        background: 'var(--aurora-surface-solid)',
-        borderBottom: '1px solid var(--aurora-line)',
-      }}>
-        {onClose ? (
-          <button onClick={onClose} aria-label="Close" style={{
-            // Apple HIG accessibility: minimum 44×44 tap target.
-            width: 44, height: 44, borderRadius: 100, border: 'none',
-            background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(20px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', boxShadow: '0 4px 12px rgba(10,10,10,0.06)',
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        ) : <div style={{ width: 44 }} />}
-        {isNativeIOS() && (
-          <button
-            type="button"
-            onClick={handleRestore}
-            onTouchEnd={(e) => { e.preventDefault(); handleRestore(); }}
-            style={{
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              touchAction: 'manipulation',
-              WebkitTapHighlightColor: 'transparent',
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-              letterSpacing: '0.1em', color: 'var(--aurora-accent-deep)',
-              padding: '8px 12px',
-            }}
-          >RESTORE</button>
-        )}
-      </div>
+      {/* X close button only — small floating affordance at top-left. The
+          RESTORE link lives at the bottom next to Terms · Privacy Policy
+          (per Joseph's 2026-06-06 ask — top bar felt floaty, RESTORE
+          belongs in the legal footer where iOS apps usually park it). */}
+      {onClose && (
+        <button onClick={onClose} aria-label="Close" style={{
+          position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 16,
+          zIndex: 10,
+          // Apple HIG accessibility: minimum 44×44 tap target.
+          width: 44, height: 44, borderRadius: 100, border: 'none',
+          background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', boxShadow: '0 4px 12px rgba(10,10,10,0.06)',
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      )}
 
       <div style={{ padding: '0 22px' }}>
         {/* Serif headline */}
@@ -692,6 +669,23 @@ export default function Membership({ onClose }) {
           <a href="/privacy" target="_blank" rel="noopener noreferrer" className="aurora-link" style={{ fontSize: 11 }}>
             Privacy Policy
           </a>
+          {isNativeIOS() && (
+            <>
+              {' · '}
+              <button
+                type="button"
+                onClick={handleRestore}
+                onTouchEnd={(e) => { e.preventDefault(); handleRestore(); }}
+                className="aurora-link"
+                style={{
+                  background: 'transparent', border: 'none', padding: 0,
+                  font: 'inherit', cursor: 'pointer', fontSize: 11,
+                  touchAction: 'manipulation',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >Restore Purchases</button>
+            </>
+          )}
         </p>
       </div>
 
