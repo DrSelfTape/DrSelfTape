@@ -2723,6 +2723,11 @@ function MoreScreen({ setCurrentPanel }) {
 // their own page layout, Jericho is a complex growth panel deferred for
 // later Aurora reskin.
 const DARK_PANELS = new Set(["find-a-reader", "green-room", "who-wants-to-read", "jericho"]);
+// Panels that own their own full-bleed chrome (X close, sticky header)
+// and should NOT be wrapped in PanelScreen's aurora-card with horizontal
+// margins — otherwise their sticky bars look like floating pills inside
+// the card instead of edge-to-edge ingrained chrome.
+const FULL_BLEED_PANELS = new Set(["membership"]);
 
 // Wrapper to inject matchId into GreenRoomChat without React Router params.
 // onBack lets the mobile sub-panel intercept the back action instead of the
@@ -2763,6 +2768,7 @@ function PanelScreen({ panelId, onBack }) {
   if (!PanelComponent) return null;
 
   const isDark = DARK_PANELS.has(panelId);
+  const isFullBleed = FULL_BLEED_PANELS.has(panelId);
 
   // If we're in a sub-panel (e.g. GreenRoomChat or ItsAScene), render that instead.
   // GreenRoomChat owns its own header (back chevron + partner avatar + name +
@@ -2811,7 +2817,7 @@ function PanelScreen({ panelId, onBack }) {
           <div style={{ fontSize: 13, color: 'var(--aurora-sub)' }}>Loading...</div>
         </div>
       }>
-        {isDark ? (
+        {(isDark || isFullBleed) ? (
           <PanelComponent
             onSelectMatch={panelId === 'green-room' ? (matchId) => setSubPanel({ id: 'green-room-chat', matchId }) : undefined}
             onMatchNavigate={panelId === 'who-wants-to-read' ? (matchId) => setSubPanel({ id: 'its-a-scene', matchId }) : undefined}
