@@ -18,6 +18,7 @@ import PasswordRequirements from '../../../components/Shared/PasswordRequirments
 import { registerUser } from '../../../redux/features/auth/authSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import AppleSignInButton from '../../../components/Auth/AppleSignInButton';
+import { Capacitor } from '@capacitor/core';
 
 export const Signup = () => {
   const navigate = useNavigate();
@@ -265,16 +266,21 @@ export const Signup = () => {
                   Get Started
                 </CustomButton>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0' }}>
-                  <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
-                  <span style={{
-                    fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                    color: 'var(--aurora-dim)', letterSpacing: '0.15em',
-                  }}>OR</span>
-                  <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
-                </div>
+                {/* Divider + Apple Sign In — hidden on Android (no SiwA there) */}
+                {Capacitor.getPlatform() !== 'android' && (
+                  <>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0' }}>
+                      <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
+                      <span style={{
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                        color: 'var(--aurora-dim)', letterSpacing: '0.15em',
+                      }}>OR</span>
+                      <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
+                    </div>
 
-                <AppleSignInButton onError={(msg) => toast.error(msg)} />
+                    <AppleSignInButton onError={(msg) => toast.error(msg)} />
+                  </>
+                )}
 
                 <p className='text-sm text-center' style={{ color: 'var(--aurora-sub)' }}>
                   Already have an account?{' '}
