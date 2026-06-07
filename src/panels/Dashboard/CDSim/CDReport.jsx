@@ -1,7 +1,9 @@
 import { useRef, useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Volume2, Download, RotateCcw, Square, Loader2 } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 
 const SECTIONS = [
   { key: 'interpretation', label: 'Scene Interpretation & Tone' },
@@ -67,16 +69,16 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
       </div>
 
       {data && typeof data === 'object' && (
-        <div className="space-y-4">
+        <div className="space-y-7">
           {Object.entries(data).map(([key, value]) => {
             if (!value) return null;
             const fieldLabel = key.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
             return (
-              <div key={key} style={{ borderLeft: '2px solid rgba(212,168,95,0.30)', paddingLeft: 12 }}>
-                <p className="aurora-eyebrow mb-1" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>
+              <div key={key} style={{ borderLeft: '2px solid rgba(212,168,95,0.30)', paddingLeft: 14 }}>
+                <p className="aurora-eyebrow mb-2.5" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>
                   {fieldLabel}
                 </p>
-                <p className="text-sm leading-relaxed" style={{ color: 'var(--aurora-text)' }}>{value}</p>
+                <p className="text-base leading-relaxed" style={{ color: 'var(--aurora-text)', lineHeight: 1.65 }}>{value}</p>
               </div>
             );
           })}
@@ -87,6 +89,7 @@ function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playin
 }
 
 export default function CDReport({ report, onRunAgain, selectedVoice }) {
+  const dispatch = useDispatch();
   const audioRef = useRef(null);
   const audioCtxRef = useRef(null);
   const sourceRef = useRef(null);
@@ -208,12 +211,28 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       console.error('TTS error:', err);
       setPlayingSection(null);
       setPlayingLabel(null);
+      // Surface the failure — silent setState left the user staring at a
+      // dead button with no feedback. 402 'insufficient_tokens' is caught
+      // by the axios interceptor and dispatches its own paywall event, so
+      // skip our own snackbar in that case to avoid double-messaging.
+      const status = err?.response?.status;
+      const isTokenGate = status === 402 && err?.response?.data?.code === 'insufficient_tokens';
+      if (!isTokenGate) {
+        dispatch(showSnackbar({
+          message: err?.response?.data?.message
+            || (status === 429 ? 'Too many TTS requests — please slow down.' : 'Couldn\'t generate the audio. Please try again.'),
+          variant: 'error',
+        }));
+      }
     }
   };
 
   const handlePlayToggle = (label, data) => {
     const text = sectionToText(label, data);
-    if (!text) return;
+    if (!text) {
+      dispatch(showSnackbar({ message: 'No text to read for this section yet.', variant: 'info' }));
+      return;
+    }
     // Unlock audio inside the click gesture BEFORE the async TTS fetch.
     primeAudio();
     fetchAndPlay(text, label);
@@ -223,7 +242,10 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
     const fullText = SECTIONS.map((s) =>
       sectionToText(s.label, report?.[s.key])
     ).filter(Boolean).join('. ');
-    if (!fullText) return;
+    if (!fullText) {
+      dispatch(showSnackbar({ message: 'Report is still loading — try again in a moment.', variant: 'info' }));
+      return;
+    }
     primeAudio();
     fetchAndPlay(fullText, 'ALL');
   };
