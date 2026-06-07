@@ -52,3 +52,4 @@ android/app/release/
 # iOS build artifacts (the .xcarchive workspace)
 ios/App/build/
 ios/App/build-archive/
+android/key.properties
