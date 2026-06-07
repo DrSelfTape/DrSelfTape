@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Dr Self Tape</string>
+    <string name="title_activity_main">Dr Self Tape</string>
+    <string name="package_name">com.drselftape.app</string>
+    <string name="custom_url_scheme">com.drselftape.app</string>
+</resources>
