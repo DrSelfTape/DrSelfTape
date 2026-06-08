@@ -40,6 +40,16 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Self-tape recording + live rehearsals use the WebView's getUserMedia
+         (SelfTapeRecorder). Android needs these declared for the Capacitor
+         WebChromeClient to grant camera/mic at runtime; iOS declares the
+         equivalent NSCamera/NSMicrophone usage strings. -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
+
     <!-- Android push is not used in v1 (iOS APNs only). Strip FCM permissions
          injected by @capacitor/push-notifications so Play review sees a clean set. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
