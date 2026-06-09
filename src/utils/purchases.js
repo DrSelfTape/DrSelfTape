@@ -1,27 +1,56 @@
-// RevenueCat / Apple IAP wrapper. iOS-only — on web we keep using Stripe
-// Checkout. The same UserSubscription row on the backend is the source
-// of truth for both platforms; RevenueCat's webhook updates it the same
+// RevenueCat IAP wrapper for the native apps (iOS Apple IAP + Android
+// Google Play Billing). On web we keep using Stripe Checkout. The same
+// UserSubscription row on the backend is the source of truth for all
+// platforms; RevenueCat's (store-agnostic) webhook updates it the same
 // way Stripe's webhook does, so the rest of the app sees one model.
 //
-// Required env: VITE_REVENUECAT_IOS_KEY (the public iOS API key from
-// the RevenueCat dashboard). Without it, this module no-ops and the
-// iOS app falls back to "manage on web" behaviour.
+// Required env (public RevenueCat SDK keys from the dashboard):
+//   VITE_REVENUECAT_IOS_KEY      — appl_… key, iOS
+//   VITE_REVENUECAT_ANDROID_KEY  — goog_… key, Android
+// Without the key for the current platform this module no-ops and the
+// app falls back to "manage on web" behaviour.
 
 import { Capacitor } from '@capacitor/core';
 
 const IOS_KEY = import.meta.env.VITE_REVENUECAT_IOS_KEY || '';
+const ANDROID_KEY = import.meta.env.VITE_REVENUECAT_ANDROID_KEY || '';
 
 let configured = false;
 let purchasesPromise = null;
 
+// True ONLY on native iOS — kept for genuinely iOS-specific behaviour
+// (e.g. webkitSpeechRecognition gating) that must NOT apply to Android.
 export function isNativeIOS() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
+}
+
+// The RevenueCat public key for the current native platform, or '' on
+// web / unsupported platforms.
+function platformKey() {
+  if (!Capacitor.isNativePlatform()) return '';
+  const p = Capacitor.getPlatform();
+  if (p === 'ios') return IOS_KEY;
+  if (p === 'android') return ANDROID_KEY;
+  return '';
+}
+
+// True on any native store (iOS or Android) where we have an API key —
+// i.e. native in-app purchasing is available. Use this for the
+// IAP-vs-Stripe decision; use isNativeIOS() only for Apple-specific quirks.
+export function isNativeStore() {
+  return Capacitor.isNativePlatform() && !!platformKey();
+}
+
+// 'ios' | 'android' on a native store with a key, else null. Handy for
+// analytics labels and store-specific copy ("Apple" vs "Google Play").
+export function storePlatform() {
+  return isNativeStore() ? Capacitor.getPlatform() : null;
 }
 
 // We need to dynamic-import the SDK so the bundle stays slim on web,
 // where RevenueCat is never used.
 function loadSDK() {
-  if (!isNativeIOS() || !IOS_KEY) return null;
+  if (!isNativeStore()) return null;
   if (!purchasesPromise) {
     purchasesPromise = import('@revenuecat/purchases-capacitor').then((m) => m);
   }
@@ -31,15 +60,15 @@ function loadSDK() {
 /**
  * Initialise RevenueCat with the user's stable backend ID so purchases
  * and entitlements are tied to the same identity across devices.
- * Safe to call on any platform — no-ops off iOS or without an API key.
+ * Safe to call on any platform — no-ops off a native store or without an API key.
  */
 export async function initPurchases(userId) {
-  if (!isNativeIOS() || !IOS_KEY || configured) return;
+  if (!isNativeStore() || configured) return;
   const sdk = await loadSDK();
   if (!sdk) return;
   try {
     await sdk.Purchases.configure({
-      apiKey: IOS_KEY,
+      apiKey: platformKey(),
       appUserID: userId ? String(userId) : null,
     });
     configured = true;
@@ -77,11 +106,8 @@ export async function getPackageFor(plan, billing) {
  * branch on the outcome without relying on rejected promises.
  */
 export async function purchase(plan, billing) {
-  if (!isNativeIOS()) {
-    return { ok: false, reason: 'unavailable', detail: 'not_native_ios' };
-  }
-  if (!IOS_KEY) {
-    return { ok: false, reason: 'unavailable', detail: 'no_api_key' };
+  if (!isNativeStore()) {
+    return { ok: false, reason: 'unavailable', detail: 'not_native_store' };
   }
   const sdk = await loadSDK();
   if (!sdk) return { ok: false, reason: 'unavailable', detail: 'sdk_load_failed' };
@@ -89,7 +115,7 @@ export async function purchase(plan, billing) {
   // user reached this screen before App.jsx's effect ran on a cold boot).
   if (!configured) {
     try {
-      await sdk.Purchases.configure({ apiKey: IOS_KEY });
+      await sdk.Purchases.configure({ apiKey: platformKey() });
       configured = true;
     } catch (e) {
       return { ok: false, reason: 'unavailable', detail: 'configure_failed', error: String(e?.message || e) };

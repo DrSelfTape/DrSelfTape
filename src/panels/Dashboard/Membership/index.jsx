@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
-import { isNativeIOS, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor } from '../../../utils/purchases';
+import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor } from '../../../utils/purchases';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 const PLANS = [
@@ -148,7 +148,7 @@ export default function Membership({ onClose }) {
       .catch(() => setStatus({ balance: 0, plan: null, status: 'unknown' }))
       .finally(() => setLoading(false));
 
-    if (isNativeIOS()) {
+    if (isNativeStore()) {
       const combos = ['basic', 'plus', 'premium'].flatMap((p) => ['monthly', 'yearly'].map((b) => [p, b]));
       Promise.all(combos.map(async ([p, b]) => {
         const offer = await getIntroOfferFor(p, b).catch(() => null);
@@ -201,14 +201,14 @@ export default function Membership({ onClose }) {
     // funnel relies on this. Dynamic import keeps the analytics bundle
     // out of the critical path; failure swallowed so a missing PostHog
     // key never blocks a real subscription attempt.
-    const platform = isNativeIOS() ? 'ios_iap' : 'stripe_web';
+    const platform = isNativeStore() ? `${storePlatform()}_iap` : 'stripe_web';
     const trackPurchase = (props) =>
       import('../../../utils/analytics').then(({ trackEvent, Events }) => {
         trackEvent(Events.PURCHASE, { plan: planId, billing, platform, ...props });
       }).catch(() => { /* swallow */ });
     trackPurchase({ status: 'initiated' });
 
-    if (isNativeIOS()) {
+    if (isNativeStore()) {
       try {
         const result = await iapPurchase(planId, billing);
         clearWatchdog();
@@ -290,7 +290,7 @@ export default function Membership({ onClose }) {
   };
 
   const handleManage = async () => {
-    if (isNativeIOS()) {
+    if (isNativeStore()) {
       await manageSubscriptions();
       return;
     }
@@ -304,7 +304,7 @@ export default function Membership({ onClose }) {
   };
 
   const handleRestore = async () => {
-    if (!isNativeIOS()) return;
+    if (!isNativeStore()) return;
     const result = await restorePurchases();
     if (result.ok && result.hasActive) {
       dispatch(showSnackbar({ message: 'Purchases restored.', variant: 'success' }));
@@ -535,9 +535,9 @@ export default function Membership({ onClose }) {
               }}
             >
               Manage Plan
-              {isNativeIOS() && (
+              {isNativeStore() && (
                 <span style={{ display: 'block', fontSize: 10, opacity: 0.7, marginTop: 4 }}>
-                  Opens Apple Settings · Subscriptions
+                  {isNativeIOS() ? 'Opens Apple Settings · Subscriptions' : 'Opens Google Play · Subscriptions'}
                 </span>
               )}
             </button>
@@ -669,7 +669,7 @@ export default function Membership({ onClose }) {
           <a href="/privacy" target="_blank" rel="noopener noreferrer" className="aurora-link" style={{ fontSize: 11 }}>
             Privacy Policy
           </a>
-          {isNativeIOS() && (
+          {isNativeStore() && (
             <>
               {' · '}
               <button
