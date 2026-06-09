@@ -38,8 +38,11 @@ export default function ForceUpdateGate({ children }) {
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
-    // Web → bypass entirely. The Vercel deploy IS the update.
-    if (!Capacitor.isNativePlatform()) return;
+    // iOS-only: this gate checks min_ios and links to the App Store. Web
+    // auto-updates via Vercel, and Android has no update channel yet
+    // (no min_android, no Play link) — gating it here avoids trapping
+    // Android users on a blocking modal with a dead itms-apps:// button.
+    if (Capacitor.getPlatform() !== 'ios') return;
     let cancelled = false;
     (async () => {
       try {

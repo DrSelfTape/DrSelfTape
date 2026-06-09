@@ -1,6 +1,7 @@
 // Library imports
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Capacitor } from '@capacitor/core';
 
 // Local imports
 import './App.css';
@@ -20,6 +21,25 @@ function App() {
 
   useEffect(() => {
     initAnalytics();
+  }, []);
+
+  // Android hardware/gesture back button. Without a listener, Capacitor's
+  // default exits the app from ANY screen — a guaranteed Play-review flag
+  // and bad UX. Navigate back through history; only exit at a root route.
+  // No-op off native (web + iOS have their own back affordances).
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let removeListener;
+    import('@capacitor/app').then(({ App: CapApp }) => {
+      CapApp.addListener('backButton', ({ canGoBack }) => {
+        if (canGoBack || window.history.length > 1) {
+          window.history.back();
+        } else {
+          CapApp.exitApp();
+        }
+      }).then((handle) => { removeListener = handle.remove; });
+    });
+    return () => { if (removeListener) removeListener(); };
   }, []);
 
   useEffect(() => {

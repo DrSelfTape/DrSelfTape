@@ -4,6 +4,7 @@ import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import endPoints from '../../../redux/constant';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
+import { saveBlobUrl } from '../../../utils/saveMedia';
 
 // Helper: pick a supported video mimeType (MP4 for Safari/iOS, WebM otherwise)
 function getSupportedMimeType() {
@@ -259,13 +260,15 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     setSaving(false);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!recordedUrl) return;
-    const a = document.createElement('a');
-    a.href = recordedUrl;
     const ext = getFileExt(mimeTypeRef.current);
-    a.download = `DrSelfTape-${new Date().toISOString().slice(0, 16)}.${ext}`;
-    a.click();
+    const filename = `DrSelfTape-${new Date().toISOString().slice(0, 16)}.${ext}`;
+    // saveBlobUrl handles the platform split: a real download on web, and a
+    // Filesystem-write + native share sheet on iOS/Android (the Android
+    // WebView ignores <a download>, so the old code silently failed there).
+    const res = await saveBlobUrl(recordedUrl, filename);
+    if (!res.ok) alert('Failed to save. Please try again.');
   };
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;

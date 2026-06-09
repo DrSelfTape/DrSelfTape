@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
+import { Capacitor } from '@capacitor/core';
 import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor } from '../../../utils/purchases';
+import { openExternal } from '../../../utils/openExternal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 const PLANS = [
@@ -279,7 +281,13 @@ export default function Membership({ onClose }) {
     try {
       const res = await axiosInstance.post('/v1/subscriptions/checkout/', { plan: planId, billing });
       clearWatchdog();
-      window.location.href = res.data.data.checkout_url;
+      const checkoutUrl = res.data.data.checkout_url;
+      // Native (Android here — iOS uses IAP and never reaches this branch):
+      // open Stripe in an in-app browser (Custom Tab) instead of navigating
+      // the WebView away, which destroys the SPA and strands the user with
+      // no route back. Web keeps the standard same-tab redirect.
+      if (Capacitor.isNativePlatform()) await openExternal(checkoutUrl);
+      else window.location.href = checkoutUrl;
     } catch (err) {
       clearWatchdog();
       const message = err?.response?.data?.error || 'Something went wrong starting checkout. Please try again.';

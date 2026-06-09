@@ -4,6 +4,7 @@ import { createAuditionThunk } from '../../../redux/features/auditions/auditions
 import VideoTrimmer from './VideoTrimmer';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import { saveBlobUrl } from '../../../utils/saveMedia';
 
 // Pick a supported video mimeType (MP4 for Safari/iOS, WebM otherwise)
 function getSupportedMimeType() {
@@ -124,13 +125,11 @@ export default function RecordTake({ onBack }) {
     fallbackDownload(url, filename);
   };
 
-  const fallbackDownload = (url, filename) => {
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+  const fallbackDownload = async (url, filename) => {
+    // Web → download; native (iOS/Android) → Filesystem + native share sheet.
+    // The bare <a download> never worked inside the Android WebView.
+    const res = await saveBlobUrl(url, filename);
+    if (!res.ok) alert('Failed to save. Please try again.');
   };
 
   const handleSave = async () => {

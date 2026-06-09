@@ -16,6 +16,8 @@ import ReaderRatingModal from '../../../components/Shared/ReaderRatingModal';
 import ReportBlockMenu from '../../../components/Shared/ReportBlockMenu';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import { Capacitor } from '@capacitor/core';
+import { openExternal } from '../../../utils/openExternal';
 
 /**
  * Keyword-matching smart-reply suggestions. v1 rule-based; production
@@ -269,7 +271,10 @@ const GreenRoomChat = (props = {}) => {
         try {
           const parsed = new URL(checkoutUrl);
           if (parsed.hostname !== 'checkout.stripe.com') throw new Error('untrusted host');
-          window.location.href = checkoutUrl;
+          // Native (Android): in-app browser so the WebView/SPA survives the
+          // round-trip. Web keeps the standard same-tab redirect.
+          if (Capacitor.isNativePlatform()) await openExternal(checkoutUrl);
+          else window.location.href = checkoutUrl;
         } catch {
           setRehearsalError('Payment setup failed. Please try again.');
           setShowBooking(false);

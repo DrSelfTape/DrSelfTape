@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import axiosInstance from "../redux/http";
 import { openExternal } from "../utils/openExternal";
 import { trackEvent } from "../utils/analytics";
@@ -42,6 +43,9 @@ export default function UpdateBanner() {
     return () => { cancelled = true; };
   }, []);
 
+  // iOS-only — links to the App Store (itms-apps://). Web auto-updates via
+  // Vercel; Android has no update channel yet, so don't show a dead CTA.
+  if (Capacitor.getPlatform() !== 'ios') return null;
   if (!latest) return null;
   if (!versionGt(latest, BUNDLE_VERSION)) return null;
 
