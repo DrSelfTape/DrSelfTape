@@ -8,7 +8,7 @@ const VERSION_ENDPOINT = '/v1/notifications/system/latest-version/';
 // Keep in lockstep with UpdateBanner.BUNDLE_VERSION and the iOS pbxproj
 // MARKETING_VERSION. The gate trips when this is BELOW the BE's reported
 // min_ios.
-const BUNDLE_VERSION = '1.0.4';
+const BUNDLE_VERSION = '1.0.5';
 
 function versionLt(a, b) {
   const pa = String(a || '0').split('.').map((n) => parseInt(n, 10) || 0);

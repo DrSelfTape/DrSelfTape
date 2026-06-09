@@ -10,7 +10,7 @@ const APP_STORE_URL = "itms-apps://itunes.apple.com/app/id6770320460";
 // iOS pbxproj MARKETING_VERSION every time we ship a new build. The banner
 // only fires when the BE-reported live version is GREATER than this constant,
 // so users on the latest bundle never see a stale "update" nag.
-const BUNDLE_VERSION = "1.0.4";
+const BUNDLE_VERSION = "1.0.5";
 
 const LS_DISMISSED = "updateBannerDismissed";
 const VERSION_ENDPOINT = "/v1/notifications/system/latest-version/";
