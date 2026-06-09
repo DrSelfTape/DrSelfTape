@@ -45,7 +45,10 @@ export default function MeetingRoom() {
 
   const [status, setStatus] = useState('loading'); // 'loading' | 'waiting' | 'in-call' | 'left' | 'error'
   const [error, setError] = useState('');
-  const [partnerName, setPartnerName] = useState('Your scene partner');
+  // Lowercase so it reads naturally inside "Waiting for …" / "session with …"
+  // before a real participant name arrives via setPartnerName().
+  const DEFAULT_PARTNER = 'your scene partner';
+  const [partnerName, setPartnerName] = useState(DEFAULT_PARTNER);
 
   // If the iframe never fires 'joined-meeting' within 30s, surface a
   // real error so the user isn't stuck on the spinner. Daily.co usually
@@ -323,7 +326,7 @@ export default function MeetingRoom() {
             Waiting for {partnerName}…
           </div>
           <div style={{ fontSize: 13, opacity: 0.65, maxWidth: 280, textAlign: 'center' }}>
-            We let {partnerName.split(' ')[0]} know you're ready. They'll see an Incoming Scene Request notification.
+            We let {partnerName === DEFAULT_PARTNER ? 'them' : partnerName.split(' ')[0]} know you're ready. They'll see an Incoming Scene Request notification.
           </div>
           <style>{`
             @keyframes waitPulse {
