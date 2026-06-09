@@ -69,91 +69,123 @@ export default function ForceUpdateGate({ children }) {
         position: 'fixed',
         inset: 0,
         zIndex: 99999,
-        background: '#0a1a14',
-        color: '#FFFFFF',
+        background: 'linear-gradient(160deg, #FBF6EC 0%, #F4E7CB 52%, #E7D3A6 100%)',
+        color: '#2A2418',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '32px 24px',
+        padding: '40px 28px',
         textAlign: 'center',
         fontFamily: "-apple-system, BlinkMacSystemFont, 'Space Grotesk', 'Poppins', sans-serif",
-        paddingTop: 'calc(32px + env(safe-area-inset-top))',
-        paddingBottom: 'calc(32px + env(safe-area-inset-bottom))',
+        paddingTop: 'calc(40px + env(safe-area-inset-top))',
+        paddingBottom: 'calc(40px + env(safe-area-inset-bottom))',
+        animation: 'updGateIn 0.5s ease-out both',
       }}
     >
+      {/* logo in a soft floating card for depth */}
       <div
         style={{
-          width: 80,
-          height: 80,
-          borderRadius: '50%',
-          background: 'rgba(94,230,184,0.16)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 38,
-          marginBottom: 24,
+          background: '#FFFFFF',
+          borderRadius: 28,
+          padding: '26px 30px',
+          marginBottom: 30,
+          boxShadow: '0 18px 50px rgba(150,116,40,0.20)',
+          animation: 'updGateFloat 4s ease-in-out infinite',
         }}
       >
-        ⬆️
+        <img
+          src="/logo-black.png"
+          alt="Dr Self Tape"
+          style={{ width: 168, height: 'auto', display: 'block' }}
+        />
+      </div>
+
+      <div
+        style={{
+          fontSize: 12,
+          fontWeight: 700,
+          letterSpacing: '0.18em',
+          color: '#A9842E',
+          textTransform: 'uppercase',
+          marginBottom: 10,
+        }}
+      >
+        New version available
       </div>
       <h1
         style={{
           fontFamily: "'Playfair Display', serif",
-          fontSize: 28,
+          fontSize: 30,
           fontWeight: 700,
-          letterSpacing: '-0.5px',
+          letterSpacing: '-0.4px',
+          lineHeight: 1.15,
           margin: 0,
-          marginBottom: 12,
+          marginBottom: 14,
+          color: '#231E12',
         }}
       >
-        Update Required
+        Time for an update
       </h1>
       <p
         style={{
-          fontSize: 15,
-          lineHeight: 1.5,
-          opacity: 0.78,
+          fontSize: 15.5,
+          lineHeight: 1.55,
+          color: '#6B5E42',
           margin: 0,
-          marginBottom: 28,
-          maxWidth: 320,
+          marginBottom: 32,
+          maxWidth: 300,
         }}
       >
-        A newer version of Dr Self Tape is available. To keep using the app,
-        please update from the App Store — it only takes a moment.
+        You're on an older version. Update to the latest Dr Self Tape for a
+        smoother, more reliable studio.
       </p>
       <button
         type="button"
         onClick={handleUpdate}
+        onTouchEnd={(e) => { e.preventDefault(); handleUpdate(); }}
         disabled={opening}
         style={{
-          background: 'linear-gradient(90deg, #5ee6b8 0%, #A7ECDA 100%)',
-          color: '#0a1a14',
+          background: 'linear-gradient(135deg, #E9C879 0%, #C9A24E 100%)',
+          color: '#2A2114',
           border: 'none',
           borderRadius: 999,
-          padding: '14px 32px',
-          fontSize: 15,
+          padding: '16px 36px',
+          fontSize: 16,
           fontWeight: 700,
+          letterSpacing: '0.01em',
+          boxShadow: '0 10px 26px rgba(201,162,78,0.42)',
           touchAction: 'manipulation',
           WebkitTapHighlightColor: 'transparent',
           cursor: 'pointer',
           opacity: opening ? 0.7 : 1,
-          minWidth: 240,
+          minWidth: 260,
         }}
       >
-        {opening ? 'Opening App Store…' : 'Open App Store'}
+        {opening ? 'Opening App Store…' : 'Update now  →'}
       </button>
       <p
         style={{
-          fontSize: 11,
-          opacity: 0.45,
-          marginTop: 24,
+          fontSize: 11.5,
+          color: 'rgba(60,52,32,0.45)',
+          marginTop: 22,
           marginBottom: 0,
-          letterSpacing: '0.04em',
+          letterSpacing: '0.03em',
         }}
       >
-        Your version: {BUNDLE_VERSION} · Required: {minIos}
+        You have v{BUNDLE_VERSION}{minIos ? ` · latest v${minIos}` : ''}
       </p>
+
+      <style>{`
+        @keyframes updGateIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes updGateFloat {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-7px); }
+        }
+      `}</style>
     </div>
   );
 }
