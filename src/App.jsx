@@ -11,6 +11,7 @@ import { initAnalytics, identifyUser } from './utils/analytics';
 import { identifySentryUser, clearSentryUser } from './utils/sentry';
 import { fetchUserSettings, resetSettings } from './redux/features/userSettings/userSettingsSlice';
 import { initPurchases } from './utils/purchases';
+import { openExternal } from './utils/openExternal';
 import { resumeQueue } from './utils/uploadQueue';
 import AIConsentModal from './components/AIConsent/AIConsentModal';
 
@@ -40,6 +41,25 @@ function App() {
       }).then((handle) => { removeListener = handle.remove; });
     });
     return () => { if (removeListener) removeListener(); };
+  }, []);
+
+  // Tapping an "app update" push should jump straight to the App Store update
+  // page. iOS opens the app first (a notification can't deep-link to the store
+  // itself), so we route from here when the tapped notification is an update
+  // broadcast. Keyed on the broadcast's data.type, with a title fallback so it
+  // still works if the payload type is generic. iOS-only — the update broadcast
+  // targets iOS devices, and itms-apps:// is the App Store scheme.
+  useEffect(() => {
+    if (Capacitor.getPlatform() !== 'ios') return;
+    const onTap = (e) => {
+      const notif = e.detail || {};
+      const data = notif.data || {};
+      const type = String(data.type || '').toLowerCase();
+      const isUpdate = type === 'app_update' || /\bupdate\b/i.test(notif.title || data.title || '');
+      if (isUpdate) openExternal('itms-apps://itunes.apple.com/app/id6770320460');
+    };
+    window.addEventListener('drst-push-tap', onTap);
+    return () => window.removeEventListener('drst-push-tap', onTap);
   }, []);
 
   useEffect(() => {
