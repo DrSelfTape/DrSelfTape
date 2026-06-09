@@ -54,4 +54,9 @@
          injected by @capacitor/push-notifications so Play review sees a clean set. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" tools:node="remove" />
+
+    <!-- The app does not use the advertising ID (no ad/attribution SDKs).
+         Explicitly remove the AD_ID permission a dependency might inject so the
+         Play "Advertising ID" declaration ("No") is provably correct. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
 </manifest>
