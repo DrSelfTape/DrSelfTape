@@ -48,12 +48,6 @@ export default function AppleSignInButton({ disabled, onError, label = 'Continue
   const [busy, setBusy] = useState(false);
   const native = Capacitor.isNativePlatform();
 
-  // Sign in with Apple is iOS + web only. On Android the @capawesome
-  // plugin throws and the button looks broken — render nothing instead.
-  // The parent (LoginPage / SignUp) also hides the surrounding OR divider
-  // by checking Capacitor.getPlatform() so we don't leave a lonely "OR".
-  if (Capacitor.getPlatform() === 'android') return null;
-
   // Pre-load the JS SDK on web so the first tap doesn't wait on a script
   // download (the user expects an instant popup).
   useEffect(() => {
@@ -127,6 +121,12 @@ export default function AppleSignInButton({ disabled, onError, label = 'Continue
       setBusy(false);
     }
   }, [busy, native, handleNative, handleWeb]);
+
+  // Sign in with Apple is iOS + web only. On Android the @capawesome plugin
+  // throws and the button looks broken — render nothing. Placed AFTER all
+  // hooks so hook order stays stable (rules of hooks). The parent (LoginPage)
+  // also hides the surrounding OR divider via Capacitor.getPlatform().
+  if (Capacitor.getPlatform() === 'android') return null;
 
   return (
     <button

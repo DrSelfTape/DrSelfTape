@@ -2,6 +2,20 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { sentryVitePlugin } from "@sentry/vite-plugin";
+import fs from "node:fs";
+import path from "node:path";
+
+// Recursively delete *.map files under a directory.
+function deleteSourceMaps(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  let n = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, entry.name);
+    if (entry.isDirectory()) n += deleteSourceMaps(p);
+    else if (entry.name.endsWith(".map")) { fs.rmSync(p); n += 1; }
+  }
+  return n;
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -24,6 +38,19 @@ export default defineConfig(({ mode }) => ({
       },
       telemetry: false,
     }),
+    // When Sentry is NOT uploading (any local/mobile build — no auth token),
+    // the .map files would otherwise survive in dist/ and get copied into the
+    // native app bundle by `cap sync`, shipping full unminified source inside
+    // the IPA/AAB. Strip them after the bundle is written so neither store
+    // build ever leaks source. (When the token IS set, the Sentry plugin's
+    // filesToDeleteAfterUpload handles it after upload — so this no-ops there.)
+    mode === 'production' && !process.env.SENTRY_AUTH_TOKEN && {
+      name: 'strip-orphan-sourcemaps',
+      closeBundle() {
+        const removed = deleteSourceMaps('dist');
+        if (removed) this.warn(`stripped ${removed} source map(s) from dist/ (no Sentry upload this build)`);
+      },
+    },
   ].filter(Boolean),
   // Strip console.* and debugger statements from production bundles only.
   // Sentry captures real exceptions via ErrorBoundary; the remaining
