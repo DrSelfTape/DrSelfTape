@@ -76,3 +76,20 @@ try {
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
 }
+
+// --- Google Play publishing (gradle-play-publisher) ---
+// Activates ONLY when the service-account key is present in ~/.dst-signing
+// (kept out of the repo with the other signing secrets). Until then, normal
+// builds are completely unaffected. Once the key exists + the service account
+// is granted release access in the Play Console, upload with:
+//     ./gradlew :app:publishReleaseBundle      # uploads signed AAB to internal
+def playCredsFile = new File(System.getProperty("user.home"), ".dst-signing/play-service-account.json")
+if (playCredsFile.exists()) {
+    apply plugin: 'com.github.triplet.play'
+    play {
+        serviceAccountCredentials.set(playCredsFile)
+        track.set("internal")
+        defaultToAppBundles.set(true)
+        releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.COMPLETED)
+    }
+}
