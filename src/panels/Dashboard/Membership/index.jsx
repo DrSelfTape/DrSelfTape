@@ -629,7 +629,7 @@ export default function Membership({ onClose }) {
               'Unlimited audition tracking',
               'AI scene coaching feedback',
               'Find a Reader matching + Green Room chat',
-              'GPT-4o weekly craft readout',
+              'Jericho weekly craft readout',
             ].map((feat) => (
               <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <span style={{

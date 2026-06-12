@@ -190,7 +190,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
                 <Loader2 size={26} color="#A7ECDA" style={{ animation: 'spin 1s linear infinite' }} />
               </div>
               <p style={{ color: '#f2f0ed', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Parsing {fileName}...</p>
-              <p style={{ color: '#8a9a96', fontSize: 13, margin: 0 }}>GPT-4o is reading your report</p>
+              <p style={{ color: '#8a9a96', fontSize: 13, margin: 0 }}>Jericho is reading your report</p>
             </div>
           )}
 

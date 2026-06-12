@@ -571,7 +571,7 @@ function Notif({ onAllow, onSkip }) {
           Turn on notifications and we'll ping you about:
         </p>
         <div style={{ marginTop: 12 }}>
-          {['Callback invites & self-tape deadlines', 'When a reader matches with you', 'Your weekly GPT-4o craft readout'].map((t) => (
+          {['Callback invites & self-tape deadlines', 'When a reader matches with you', 'Your weekly Jericho craft readout'].map((t) => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0' }}>
               <span style={{
                 width: 20, height: 20, borderRadius: 100,
