@@ -14,6 +14,9 @@ import { compareTakes, clearCompare } from '../../../redux/features/jericho/jeri
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 const GOLD = '#D4A85F';
+// Keep each take phone-friendly to upload (the BE caps at 200MB/take too). A
+// real self-tape of one scene exports well under this.
+const MAX_TAKE_MB = 200;
 
 const PERF_FIELDS = [
   { key: 'emotional_arc', label: 'Emotional arc' },
@@ -48,7 +51,18 @@ export default function CompareTakes() {
   const [sides, setSides] = useState('');
   const [showOptional, setShowOptional] = useState(false);
   const [expanded, setExpanded] = useState(null); // take number whose full notes are open
+  const [sizeError, setSizeError] = useState('');
   const inputRefs = useRef({});
+
+  const pickFile = (i, file) => {
+    if (!file) return;
+    if (file.size > MAX_TAKE_MB * 1024 * 1024) {
+      setSizeError(`Take ${i + 1} is ${(file.size / 1048576).toFixed(0)}MB — keep each take under ${MAX_TAKE_MB}MB (a single-scene take exports small).`);
+      return;
+    }
+    setSizeError('');
+    setSlot(i, file);
+  };
 
   const setSlot = (i, file) => setSlots((s) => s.map((v, idx) => (idx === i ? file : v)));
   const addSlot = () => setSlots((s) => (s.length >= 4 ? s : [...s, null]));
@@ -248,7 +262,7 @@ export default function CompareTakes() {
               <input
                 ref={(el) => (inputRefs.current[i] = el)}
                 type="file" accept="video/*" className="hidden"
-                onChange={(e) => { const v = e.target.files?.[0]; if (v) setSlot(i, v); }}
+                onChange={(e) => pickFile(i, e.target.files?.[0])}
               />
             </div>
           ))}
@@ -258,6 +272,12 @@ export default function CompareTakes() {
           <button onClick={addSlot} className="w-full mt-2.5 inline-flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-[#7A5A18] hover:bg-[#D4A85F]/5 rounded-lg transition-colors">
             <Plus size={14} /> Add another take
           </button>
+        )}
+        <p className="text-[11px] text-[rgba(10,10,10,0.4)] text-center mt-1.5">
+          Best with short takes of one scene — they upload fast and compare cleanly.
+        </p>
+        {sizeError && (
+          <p className="text-xs text-red-500 mt-2 text-center">{sizeError}</p>
         )}
 
         {/* Optional context (shared across takes) */}
@@ -299,10 +319,12 @@ export default function CompareTakes() {
           className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
         >
-          <Trophy size={15} /> Rank my {files.length >= 2 ? files.length : ''} takes
+          <Trophy size={15} /> {files.length >= 2 ? `Rank my ${files.length} takes` : 'Rank my takes'}
         </button>
         <p className="text-[10px] text-[rgba(10,10,10,0.35)] text-center mt-2">
-          Uses 1 token per take · each take gets full notes too
+          {files.length >= 2
+            ? `Uses ${files.length} tokens (1 per take) · each take gets full notes too`
+            : 'Uses 1 token per take · each take gets full notes too'}
         </p>
       </div>
     </div>

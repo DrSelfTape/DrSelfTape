@@ -5,6 +5,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from '../../http';
 import endPoints from '../../constant';
+import { trackEvent, Events } from '../../../utils/analytics';
+
+// Map an AI-feature request error to a clear, actionable message. 402 = out of
+// tokens, 403 = AI consent not granted, 400 = the file(s) couldn't be read.
+function aiErrorMessage(err, fallback) {
+  const st = err?.response?.status;
+  const msg = err?.response?.data?.message || err?.response?.data?.detail;
+  if (st === 402) return "You're out of AI tokens — top up to keep going.";
+  if (st === 403) return 'Turn on AI features in Settings to use this.';
+  if (st === 413) return 'That file is too large — try a shorter / smaller export.';
+  if (st === 400) return msg || "Those files couldn't be read — try exporting as mp4 or mov.";
+  return msg || fallback;
+}
 
 // ─── Thunks ────────────────────────────────────────────────────────────
 
@@ -121,9 +134,10 @@ export const reviewTape = createAsyncThunk(
         // default instance timeout would abort a healthy analysis.
         timeout: 120000,
       });
+      trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role });
       return data?.data || data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Tape review failed');
+      return rejectWithValue(aiErrorMessage(err, 'Tape review failed'));
     }
   }
 );
@@ -143,9 +157,10 @@ export const compareTakes = createAsyncThunk(
         // Several takes analyzed (concurrently) + a ranking pass — give it room.
         timeout: 180000,
       });
+      trackEvent(Events.COMPARE_TAKES, { count: takes.length });
       return data?.data || data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || 'Take comparison failed');
+      return rejectWithValue(aiErrorMessage(err, 'Take comparison failed'));
     }
   }
 );

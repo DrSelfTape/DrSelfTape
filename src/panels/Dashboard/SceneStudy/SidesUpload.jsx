@@ -2,6 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axiosInstance from '../../../redux/http';
 import endPoints from '../../../redux/constant';
+import { requestAiConsent } from '../../../components/AIConsent/AIConsentModal';
+import { trackEvent, Events } from '../../../utils/analytics';
 
 /**
  * SidesUpload — "Bring your own sides."
@@ -77,11 +79,15 @@ export default function SidesUpload({ onReady }) {
       }
       setScene(parsed);
       setRole(parsed.role || parsed.characters?.[0] || '');
+      trackEvent(Events.SIDES_UPLOADED, { role: parsed.role || '', scenes: parsed.scenes?.length || 0 });
     } catch (err) {
       const sc = err?.response?.status;
       if (sc === 402) setError("You're out of AI tokens — top up to read your sides.");
-      else if (sc === 403) setError('Enable AI features in settings to use the reader.');
-      else setError("Couldn't read those sides. Make sure it's a text PDF (not a photo) and try again.");
+      else if (sc === 403) {
+        // Open the consent modal inline instead of dead-ending.
+        requestAiConsent();
+        setError('Turn on AI features to read your sides, then upload again.');
+      } else setError("Couldn't read those sides. Make sure it's a text PDF (not a photo) and try again.");
     } finally {
       setLoading(false);
       if (inputRef.current) inputRef.current.value = '';

@@ -13,6 +13,7 @@ import {
 import { reviewTape, clearTapeReview } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
+import useAIGate from '../../../components/AIConsent/useAIGate';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 
@@ -55,6 +56,11 @@ function ScoreBar({ label, value, color = '#D4A85F' }) {
 }
 
 export default function TapeReview() {
+  // Apple 5.1.1(i) — the analyzer pipes video frames + audio through Claude /
+  // Whisper. Gate here too: on mobile this screen mounts standalone (not inside
+  // the Jericho panel that already gates), so without this the consent prompt
+  // would be skipped and the API would hard-403.
+  useAIGate();
   const dispatch = useDispatch();
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError } = useSelector((s) => s.jericho);
 
