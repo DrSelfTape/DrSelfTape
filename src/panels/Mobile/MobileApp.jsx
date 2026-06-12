@@ -3122,10 +3122,10 @@ export default function DrSelfTapeApp() {
     <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: '-apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif', color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
       <UpdateBanner />
-      {/* What's New — auto after an update (gated off during onboarding), or
-          manually from the More menu via the drst-whats-new event. */}
+      {/* What's New — auto after an update, or manually from the More menu via
+          the drst-whats-new event. (WhatsNewModal shows once on its own; new
+          users just get it as feature discovery.) */}
       <WhatsNewModal
-        enabled={!showOnboarding}
         forceOpen={whatsNewForce}
         onClose={() => setWhatsNewForce(false)}
       />
