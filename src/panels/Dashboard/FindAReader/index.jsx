@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import { Filter, Loader2, Users, Camera } from 'lucide-react';
 import SwipeCard from './components/SwipeCard';
 import SwipeActions from './components/SwipeActions';
+import SwipeTutorial from './components/SwipeTutorial';
+import SessionRecap from './components/SessionRecap';
 import MatchCelebration from './components/MatchCelebration';
 import ReaderFilters from './ReaderFilters';
 import {
@@ -17,14 +19,16 @@ import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlic
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { tapPrimary } from '../../../utils/haptics';
 
 const FindAReader = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { readers = [], readersLoading, onlineCount } = useSelector(
+  const { readers = [], readersLoading, onlineCount, matchingStats } = useSelector(
     (state) => state.readersMatch || {}
   );
+  const pendingLikes = matchingStats?.pending_likes_count || 0;
   const profile = useSelector((state) => state.profile?.profile);
   const hasPhoto = !!(profile?.actor_profile?.headshot || profile?.user_image);
   const savedFilters = useSelector((s) => s.userSettings?.data?.reader_filters);
@@ -37,8 +41,21 @@ const FindAReader = () => {
 
   useEffect(() => {
     dispatch(fetchProfileThunk());
+    dispatch(fetchMatchingStats());
     markStep('find_reader');
   }, [dispatch]);
+
+  // The Hinge "likes-you" tease — surface REAL incoming interest (people who
+  // already swiped right on you). Honest, never fabricated. Taps through to
+  // the "Who Wants to Read" list.
+  const goToLikes = useCallback(() => {
+    tapPrimary();
+    if (window.innerWidth < 768) {
+      window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'who-wants-to-read' } }));
+    } else {
+      navigate('/dashboard/who-wants-to-read');
+    }
+  }, [navigate]);
 
   // Hydrate saved filters from userSettings once it has loaded, then fetch.
   useEffect(() => {
@@ -80,6 +97,13 @@ const FindAReader = () => {
 
   const [swiping, setSwiping] = useState(false);
   const [celebrating, setCelebrating] = useState(null); // null | { matchId }
+  // Swipes made this browsing session — drives the Session-Complete recap
+  // shown when the deck runs out. Reset on a fresh load-more.
+  const [sessionSwipes, setSessionSwipes] = useState([]); // [{ actor, action, matched }]
+  // Brief, HONEST per-swipe payoff chip. Right = "you're on their list"
+  // (a real status — they'll see it); left = an occasional deck-tuning note.
+  // Never fabricated interest.
+  const [swipeToast, setSwipeToast] = useState(null); // null | { text, gold }
 
   const handleSwipe = useCallback(
     async (action) => {
@@ -94,11 +118,24 @@ const FindAReader = () => {
         // Refresh the dashboard pending-likes counter so the home-tab
         // CTA isn't stale next time the user lands there.
         dispatch(fetchMatchingStats());
+        // Record the swipe for the end-of-session recap.
+        setSessionSwipes((s) => [...s, { actor, action, matched: !!result?.match }]);
         if (result?.match && result?.match_details?.id) {
           // Hold the user on the celebration overlay; navigation runs
           // when the burst finishes (MatchCelebration calls onDone).
           setCelebrating({ matchId: result.match_details.id });
           return;
+        }
+        // Per-swipe payoff chip — honest, never fabricated. Right/star =
+        // the real status ("you're on their list"); left = an occasional,
+        // quiet deck-tuning note (the left payoff is mostly the glide itself).
+        const first = (actor?.name || 'them').replace(/\bNone\b/g, '').trim().split(' ')[0] || 'them';
+        if (action !== 'left') {
+          setSwipeToast({ text: `You're on ${first}'s list to read`, gold: true });
+          setTimeout(() => setSwipeToast(null), 1500);
+        } else if (Math.random() < 0.34) {
+          setSwipeToast({ text: 'Tuning your deck', gold: false });
+          setTimeout(() => setSwipeToast(null), 1300);
         }
       } catch (err) {
         dispatch(showSnackbar({
@@ -268,7 +305,17 @@ const FindAReader = () => {
           </div>
         )}
 
-        {!readersLoading && noMore && (
+        {/* Session-Complete recap — once the deck runs out AND the user
+            actually swiped this session. Otherwise fall through to the plain
+            "You're caught up" empty state below. */}
+        {!readersLoading && noMore && sessionSwipes.length > 0 && (
+          <SessionRecap
+            swipes={sessionSwipes}
+            onRefresh={() => { setSessionSwipes([]); setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
+          />
+        )}
+
+        {!readersLoading && noMore && sessionSwipes.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
@@ -300,6 +347,8 @@ const FindAReader = () => {
 
         {!readersLoading && currentActor && (
           <>
+            {/* First-visit swipe coach (shows once) */}
+            <SwipeTutorial />
             {/* Back card (slightly behind) */}
             {nextActor && (
               <div
@@ -343,6 +392,50 @@ const FindAReader = () => {
 
       {/* Match celebration — fixed overlay; holds nav until burst finishes */}
       {celebrating && <MatchCelebration onDone={onCelebrationDone} />}
+
+      {/* "Readers want to read with you" tease — REAL incoming interest (mobile) */}
+      {pendingLikes > 0 && !celebrating && (
+        <button
+          className="md:hidden"
+          onClick={goToLikes}
+          style={{
+            position: 'fixed', left: '50%', transform: 'translateX(-50%)',
+            top: 'calc(54px + env(safe-area-inset-top, 0px) + 16px)',
+            zIndex: 45,
+            display: 'flex', alignItems: 'center', gap: 7,
+            padding: '8px 14px 8px 11px', borderRadius: 100, border: 'none', cursor: 'pointer',
+            background: 'linear-gradient(120deg, #D4A85F, #7A5A18)',
+            color: '#0E0D0A', fontSize: 12.5, fontWeight: 800, letterSpacing: '-0.01em',
+            boxShadow: '0 8px 24px rgba(122,90,24,0.42)',
+            animation: 'drst-likes-pulse 2.6s ease-in-out infinite',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          <span style={{ fontSize: 15 }}>🎬</span>
+          {pendingLikes} reader{pendingLikes !== 1 ? 's' : ''} want to read with you
+          <span style={{ opacity: 0.65 }}>→</span>
+        </button>
+      )}
+
+      {/* Per-swipe payoff chip — brief, honest status reward */}
+      {swipeToast && (
+        <div style={{
+          position: 'fixed', left: '50%', transform: 'translateX(-50%)',
+          bottom: 'calc(104px + env(safe-area-inset-bottom, 0px))',
+          zIndex: 60, pointerEvents: 'none',
+          padding: '9px 16px', borderRadius: 100,
+          background: swipeToast.gold ? 'rgba(212,168,95,0.97)' : 'rgba(20,18,14,0.9)',
+          color: swipeToast.gold ? '#0E0D0A' : '#fff',
+          fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em',
+          boxShadow: '0 8px 26px rgba(10,10,10,0.3)',
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          display: 'flex', alignItems: 'center', gap: 6,
+          animation: 'drst-swipe-toast 0.24s cubic-bezier(0.34,1.56,0.64,1)',
+        }}>
+          {swipeToast.gold && <span>🎬</span>}{swipeToast.text}
+        </div>
+      )}
+      <style>{`@keyframes drst-swipe-toast { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.92); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } } @keyframes drst-likes-pulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.045); } }`}</style>
     </div>
   );
 };

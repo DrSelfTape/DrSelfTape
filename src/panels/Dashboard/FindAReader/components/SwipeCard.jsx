@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { tapSelect } from '../../../../utils/haptics';
+import { tapSelect, tapPrimary } from '../../../../utils/haptics';
 import { ReaderPortrait } from '../../../../components/Aurora';
 
 const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
@@ -18,6 +18,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   const [transform, setTransform] = useState('');
   const [slateOpacity, setSlateOpacity] = useState(0);
   const [passOpacity, setPassOpacity] = useState(0);
+  const [flyDir, setFlyDir] = useState(null); // 'right' = energetic gold-trail exit
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -26,6 +27,16 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+  // When this slot promotes to a new actor (deck advances), start clean so a
+  // freshly-promoted card never inherits the previous card's fly-off/glow.
+  useEffect(() => {
+    setTransform('');
+    setFlyDir(null);
+    setSlateOpacity(0);
+    setPassOpacity(0);
+    dragState.current = { startX: 0, isDragging: false, currentX: 0, crossedDir: null };
+  }, [actor?.id]);
 
   // Strip "None" artifact when backend serializes a null last_name as the
   // Python string "None" (e.g. "Courtney Richards None"). Also collapse
@@ -45,7 +56,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
 
   const handleDragStart = (clientX) => {
     if (!isTop) return;
-    dragState.current = { startX: clientX, isDragging: true, currentX: 0 };
+    dragState.current = { startX: clientX, isDragging: true, currentX: 0, crossedDir: null };
   };
 
   const handleDragMove = (clientX) => {
@@ -62,6 +73,20 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       setPassOpacity(Math.min(-delta / threshold, 1));
       setSlateOpacity(0);
     }
+    // Dopamine in the gesture: fire the commit haptic the MOMENT the stamp
+    // locks in (threshold-cross), not on release — so the body learns where
+    // "commit" lives. RIGHT ("read with") = a meatier medium tap; LEFT
+    // ("not now") = a quiet light tick. Re-arms if they pull back below.
+    const COMMIT = 100;
+    if (delta > COMMIT && dragState.current.crossedDir !== 'right') {
+      dragState.current.crossedDir = 'right';
+      tapPrimary();
+    } else if (delta < -COMMIT && dragState.current.crossedDir !== 'left') {
+      dragState.current.crossedDir = 'left';
+      tapSelect();
+    } else if (Math.abs(delta) < COMMIT && dragState.current.crossedDir) {
+      dragState.current.crossedDir = null;
+    }
   };
 
   const handleDragEnd = () => {
@@ -69,17 +94,20 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     dragState.current.isDragging = false;
     const delta = dragState.current.currentX;
     if (delta > 100) {
-      tapSelect(); // tactile slate
-      setTransform('translateX(150%) rotate(25deg)');
+      // RIGHT — "read with": energetic, higher-spin exit + a gold trail. This
+      // is the rewarded act (seeking a partner), so it gets the satisfying beat.
+      setFlyDir('right');
+      setTransform('translateX(165%) rotate(32deg) scale(1.03)');
       setTimeout(() => onSwipeRight?.(), 280);
     } else if (delta < -100) {
-      tapSelect(); // tactile pass
-      setTransform('translateX(-150%) rotate(-25deg)');
+      // LEFT — "not now": a quiet, lower-energy glide. No flourish, no penalty.
+      setTransform('translateX(-135%) rotate(-16deg)');
       setTimeout(() => onSwipeLeft?.(), 280);
     } else {
       setTransform('');
       setSlateOpacity(0);
       setPassOpacity(0);
+      dragState.current.crossedDir = null;
     }
   };
 
@@ -97,11 +125,13 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     borderRadius: 28,
     overflow: 'hidden',
     transform,
-    transition: dragState.current.isDragging ? 'none' : 'transform 0.3s ease',
+    transition: dragState.current.isDragging ? 'none' : 'transform 0.3s ease, box-shadow 0.3s ease',
     cursor: isTop ? 'grab' : 'default',
     background: '#0a0a0f',
     touchAction: 'none',
-    boxShadow: '0 16px 50px rgba(10,10,10,0.18)',
+    boxShadow: flyDir === 'right'
+      ? '0 18px 64px rgba(212,168,95,0.7), 0 0 0 2px rgba(252,224,114,0.55)'
+      : '0 16px 50px rgba(10,10,10,0.18)',
   } : {
     // Desktop card style
     position: 'relative',
@@ -176,30 +206,30 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         {actor?.is_paid_reader ? `$${actor.session_rate || ''}/SESSION` : 'FREE'}
       </div>
 
-      {/* ── SLATE stamp (swipe right) */}
+      {/* ── READ WITH stamp (swipe right) — warm gold, the rewarded act */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, left: 20,
         border: '2.5px solid #FCE072', color: '#FCE072',
-        fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
-        padding: '4px 14px', borderRadius: 6,
+        fontSize: isMobile ? 21 : 17, fontWeight: 900, letterSpacing: 1.5,
+        padding: '5px 14px', borderRadius: 6,
         opacity: slateOpacity,
-        transform: 'rotate(-12deg)',
+        transform: `rotate(-12deg) scale(${0.9 + slateOpacity * 0.18})`,
         pointerEvents: 'none',
-        textShadow: '0 0 20px rgba(252,224,114,0.55)',
+        textShadow: '0 0 22px rgba(252,224,114,0.6)',
         fontFamily: '"Space Grotesk", sans-serif',
-      }}>SLATE</div>
+      }}>READ WITH</div>
 
-      {/* ── PASS stamp (swipe left) */}
+      {/* ── NOT NOW stamp (swipe left) — neutral slate, never a red rejection */}
       <div style={{
         position: 'absolute', top: isMobile ? 80 : 24, right: 20,
         border: '2.5px solid rgba(255,255,255,0.4)', color: 'rgba(255,255,255,0.7)',
-        fontSize: isMobile ? 24 : 20, fontWeight: 900, letterSpacing: 2,
-        padding: '4px 14px', borderRadius: 6,
+        fontSize: isMobile ? 21 : 17, fontWeight: 900, letterSpacing: 1.5,
+        padding: '5px 14px', borderRadius: 6,
         opacity: passOpacity,
         transform: 'rotate(12deg)',
         pointerEvents: 'none',
         fontFamily: '"Space Grotesk", sans-serif',
-      }}>PASS</div>
+      }}>NOT NOW</div>
 
       {/* ── Actor info — bottom */}
       <div style={{
@@ -295,8 +325,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
           <div style={{ display: 'flex', gap: 18, justifyContent: 'center', paddingTop: 12, paddingBottom: 8, alignItems: 'center' }}>
             {/* Pass */}
             <button
-              onTouchEnd={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
-              onClick={(e) => { e.stopPropagation(); onSwipeLeft?.(); }}
+              onTouchEnd={(e) => { e.stopPropagation(); tapSelect(); onSwipeLeft?.(); }}
+              onClick={(e) => { e.stopPropagation(); tapSelect(); onSwipeLeft?.(); }}
               style={{
                 width: 56, height: 56, borderRadius: '50%',
                 background: 'rgba(255,255,255,0.12)',
@@ -327,8 +357,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
 
             {/* Slate */}
             <button
-              onTouchEnd={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
-              onClick={(e) => { e.stopPropagation(); onSwipeRight?.(); }}
+              onTouchEnd={(e) => { e.stopPropagation(); tapPrimary(); onSwipeRight?.(); }}
+              onClick={(e) => { e.stopPropagation(); tapPrimary(); onSwipeRight?.(); }}
               style={{
                 width: 64, height: 64, borderRadius: '50%',
                 background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
