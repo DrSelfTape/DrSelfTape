@@ -5,6 +5,7 @@ import { usePushNotifications } from "../../hooks/usePushNotifications";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
 import UpdateBanner from "../../components/UpdateBanner";
+import WhatsNewModal from "../../components/WhatsNewModal";
 import { fetchAuditionsThunk, fetchAuditionStatsThunk, createAuditionThunk, updateAuditionThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
@@ -897,6 +898,7 @@ const MORE_FEATURES = [
   { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA" },
   { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072" },
   { id: "self-tapes", label: "Self-Tapes", desc: "Record and submit auditions", emoji: "📹", color: "#FFB49A" },
+  { id: "whats-new", label: "What's New", desc: "See the latest features and updates", emoji: "🆕", color: "#A7ECDA" },
 ];
 
 const PANEL_COMPONENTS = {
@@ -2727,7 +2729,7 @@ function MoreScreen({ setCurrentPanel }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {MORE_FEATURES.map(f => (
-          <button key={f.id} onClick={() => setCurrentPanel(f.id)} className="aurora-glass" style={{
+          <button key={f.id} onClick={() => f.id === 'whats-new' ? window.dispatchEvent(new CustomEvent('drst-whats-new')) : setCurrentPanel(f.id)} className="aurora-glass" style={{
             padding: "18px 16px", cursor: "pointer", textAlign: "left",
             transition: "transform 0.15s, box-shadow 0.2s",
             borderRadius: 18,
@@ -2978,6 +2980,7 @@ export default function DrSelfTapeApp() {
   const [isMobile, setIsMobile] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showNoTokens, setShowNoTokens] = useState(false);
+  const [whatsNewForce, setWhatsNewForce] = useState(false);
   // Top bar is now pinned at the top — the previous scroll-driven hide
   // confused users who tried to tap the bell / avatar after scrolling
   // down. The bar still slides away for modals (driven by the modal-
@@ -3064,6 +3067,13 @@ export default function DrSelfTapeApp() {
     return () => window.removeEventListener('drst-navigate', handler);
   }, []);
 
+  // Manual "What's New" open from the More menu.
+  useEffect(() => {
+    const handler = () => setWhatsNewForce(true);
+    window.addEventListener('drst-whats-new', handler);
+    return () => window.removeEventListener('drst-whats-new', handler);
+  }, []);
+
   const handleSetTab = (id) => {
     setTab(id);
     setCurrentPanel(null);
@@ -3112,6 +3122,13 @@ export default function DrSelfTapeApp() {
     <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: '-apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif', color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
       <UpdateBanner />
+      {/* What's New — auto after an update (gated off during onboarding), or
+          manually from the More menu via the drst-whats-new event. */}
+      <WhatsNewModal
+        enabled={!showOnboarding}
+        forceOpen={whatsNewForce}
+        onClose={() => setWhatsNewForce(false)}
+      />
       {/* No tokens modal */}
       {showNoTokens && (
         <NoTokensModal
