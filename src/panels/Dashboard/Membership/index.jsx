@@ -45,15 +45,16 @@ const PLANS = [
     id: 'premium',
     name: 'Premium',
     tokens: 50,
+    unlimited: true,
     monthly: 24.99,
     yearly: 249.99,
     yearlySaving: '2 months free',
     features: [
-      '50 AI tokens / month',
-      'Rollover unused tokens',
+      'Unlimited AI — no token limits',
+      'Tape Review + Compare Takes',
+      'Bring your own audition sides',
       'Everything in Plus',
       'Early access to new features',
-      'Dedicated actor profile badge',
     ],
     rollover: true,
   },
@@ -521,7 +522,11 @@ export default function Membership({ onClose }) {
                     <div style={{
                       fontSize: 12, color: 'var(--aurora-sub)', marginTop: 4, lineHeight: 1.4,
                     }}>
-                      <span style={{ fontWeight: 600, color: 'var(--aurora-mint)' }}>{plan.tokens}</span> AI tokens · {plan.rollover ? 'rollover' : 'no rollover'}
+                      {plan.unlimited ? (
+                        <><span style={{ fontWeight: 600, color: 'var(--aurora-mint)' }}>Unlimited</span> AI · every feature included</>
+                      ) : (
+                        <><span style={{ fontWeight: 600, color: 'var(--aurora-mint)' }}>{plan.tokens}</span> AI tokens · {plan.rollover ? 'rollover' : 'no rollover'}</>
+                      )}
                     </div>
                     {planIntroLabel && !hasActivePlan && (
                       <div style={{
