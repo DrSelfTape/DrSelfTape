@@ -9,6 +9,7 @@ import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
 import DeleteAccountModal from '../../../components/Dashboard/DeleteAccountModal';
+import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 import AuditionBadges, { BADGES } from '../../../components/AuditionBadges';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
 
@@ -148,14 +149,29 @@ export default function Profile() {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const [cropState, setCropState] = useState(null); // { src, setPreview, setFile }
+
   const handleFilePreview = (file, setPreview, setFile) => {
     if (!file) return;
-    setFile(file);
+    // Route face photos through the cropper so they're framed perfectly in
+    // the circle/card before upload.
     if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = (e) => setPreview(e.target.result);
-      reader.readAsDataURL(file);
+      setCropState({ src: URL.createObjectURL(file), setPreview, setFile });
+      return;
     }
+    setFile(file);
+  };
+
+  const onCropDone = (blob) => {
+    const cs = cropState;
+    setCropState(null);
+    if (cs?.src) URL.revokeObjectURL(cs.src);
+    if (!blob || !cs) return;
+    const file = new File([blob], 'photo.jpg', { type: 'image/jpeg' });
+    cs.setFile(file);
+    const reader = new FileReader();
+    reader.onload = (e) => cs.setPreview(e.target.result);
+    reader.readAsDataURL(file);
   };
 
   const [validationPopup, setValidationPopup] = useState(null);
@@ -240,6 +256,13 @@ export default function Profile() {
 
   return (
     <div className="px-4 py-6 max-w-6xl mx-auto aurora-page-in">
+      {cropState && (
+        <HeadshotCropper
+          imageSrc={cropState.src}
+          onCancel={() => { URL.revokeObjectURL(cropState.src); setCropState(null); }}
+          onComplete={onCropDone}
+        />
+      )}
       <div className="mb-5">
         <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>YOU</span>
         <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>My Profile</h1>
