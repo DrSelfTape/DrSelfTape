@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Bell, HeartHandshake, Clapperboard, MessageSquare, X, Megaphone, CheckCheck } from 'lucide-react';
+import { Bell, HeartHandshake, Clapperboard, MessageSquare, X, Megaphone } from 'lucide-react';
 import { getNotifications, markNotificationRead } from '../../redux/features/notifications/notificationsSlice';
 import useNotificationActions from '../../hooks/useNotificationActions';
 import { useIsMobile } from '../../hooks/useIsMobile';
@@ -32,6 +32,18 @@ function timeAgo(dateStr) {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// Darken/lighten a #RRGGBB hex by `pct`% — powers the Aurora glyph-badge gradient.
+function shade(hex, pct) {
+  const n = parseInt(String(hex).replace('#', ''), 16);
+  if (Number.isNaN(n)) return hex;
+  const amt = Math.round(2.55 * pct);
+  const clamp = (v) => Math.max(0, Math.min(255, v));
+  const r = clamp((n >> 16) + amt);
+  const g = clamp(((n >> 8) & 0xff) + amt);
+  const b = clamp((n & 0xff) + amt);
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 export default function NotificationBell({ onNavigate }) {
@@ -77,6 +89,18 @@ export default function NotificationBell({ onNavigate }) {
     setTimeout(() => {
       setOpen(false);
       const matchId = notif.data?.match_id;
+
+      // Live scene request → jump straight into the partner's EXISTING
+      // Daily room (room_url is in the payload), mirroring socket.jsx.
+      // Otherwise we'd route to the green-room chat whose only CTA
+      // re-mints a new room and strands the two users (session-loop bug).
+      const liveRoomUrl = notif.data?.room_url;
+      if (notif.type === 'rehearsal_started' && liveRoomUrl) {
+        let roomId = '';
+        try { roomId = new URL(liveRoomUrl).pathname.split('/').filter(Boolean).pop() || ''; } catch { roomId = ''; }
+        if (roomId) { navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl } }); return; }
+      }
+
       const route =
         notif.type === 'scene_partner_like' ? '/dashboard/who-wants-to-read' :
         notif.type === 'scene_partner_match' && matchId ? `/dashboard/green-room/${matchId}` :
@@ -112,11 +136,10 @@ export default function NotificationBell({ onNavigate }) {
                 } finally { setMarkingAll(false); }
               }}
               disabled={markingAll}
-              className="text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors flex items-center gap-1"
-              style={{ color: '#FF8280', background: 'rgba(255, 130, 128,0.08)' }}
+              className="aurora-mono transition-opacity"
+              style={{ color: '#7A5A18', background: 'transparent', border: 'none', fontSize: 10, fontWeight: 600, letterSpacing: '0.1px', cursor: 'pointer', opacity: markingAll ? 0.5 : 1 }}
             >
-              <CheckCheck className="w-3 h-3" />
-              {markingAll ? 'Marking...' : unread.length === 1 ? 'Mark read' : 'Mark all read'}
+              {markingAll ? 'MARKING…' : unread.length === 1 ? 'MARK READ' : 'MARK ALL READ'}
             </button>
           )}
           <button onClick={() => setOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(10,10,10,0.04)', color: 'var(--aurora-sub)' }}>
@@ -143,26 +166,33 @@ export default function NotificationBell({ onNavigate }) {
         )}
         {!loading && sorted.map((notif) => {
           const Icon = NOTIF_ICONS[notif.type] || Bell;
-          const color = NOTIF_COLORS[notif.type] || 'var(--text-secondary)';
+          const color = NOTIF_COLORS[notif.type] || '#D4A85F';
           const isUnread = !notif.is_read;
           return (
             <div key={notif.id} onClick={() => handleClick(notif)}
-              className="flex items-start gap-3 px-5 py-4 cursor-pointer transition-colors"
-              style={{ background: isUnread ? 'rgba(255, 130, 128,0.04)' : 'transparent', borderBottom: '1px solid var(--aurora-line)' }}
+              className="flex gap-3 cursor-pointer transition-colors"
+              style={{ padding: '13px 18px', background: isUnread ? 'rgba(212,168,95,0.09)' : 'transparent', borderBottom: '1px solid var(--aurora-line-soft, rgba(10,10,10,0.045))' }}
             >
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${color}15` }}>
-                <Icon className="w-5 h-5" style={{ color }} />
+              {/* Aurora glyph badge — dark icon on a color gradient */}
+              <div className="flex items-center justify-center shrink-0" style={{
+                width: 36, height: 36, borderRadius: 12,
+                background: `linear-gradient(135deg, ${color}, ${shade(color, -20)})`,
+                color: '#0E0D0A',
+                border: '1px solid rgba(255,255,255,0.5)',
+                boxShadow: `0 4px 10px ${color}55`,
+              }}>
+                <Icon className="w-[17px] h-[17px]" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <p className={`text-sm leading-snug ${isUnread ? 'font-semibold' : 'font-medium'}`} style={{ color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="leading-snug" style={{ fontSize: 13.5, fontWeight: isUnread ? 700 : 600, color: isUnread ? 'var(--text-primary)' : 'var(--text-secondary)', letterSpacing: '-0.15px' }}>
                     {notif.title}
                   </p>
-                  {isUnread && <span className="w-2.5 h-2.5 rounded-full bg-[#D4A85F] shrink-0 mt-1.5" />}
+                  <span className="aurora-mono shrink-0" style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: '0.1px' }}>{timeAgo(notif.created_at)}</span>
                 </div>
-                {notif.message && <p className="text-xs mt-1 line-clamp-2 leading-relaxed" style={{ color: 'var(--text-muted)' }}>{notif.message}</p>}
-                <p className="text-[11px] mt-1.5 font-medium" style={{ color: 'var(--text-dim)' }}>{timeAgo(notif.created_at)}</p>
+                {notif.message && <p className="line-clamp-2 leading-relaxed" style={{ fontSize: 11.5, marginTop: 3, color: 'var(--text-muted)' }}>{notif.message}</p>}
               </div>
+              {isUnread && <span className="shrink-0" style={{ width: 7, height: 7, marginTop: 6, borderRadius: 100, background: '#D4A85F', boxShadow: '0 0 6px #D4A85F' }} />}
             </div>
           );
         })}
