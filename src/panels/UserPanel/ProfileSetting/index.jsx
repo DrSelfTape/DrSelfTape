@@ -1,6 +1,7 @@
 // Library imports
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 
 // Local Imports
 import {
@@ -125,6 +126,7 @@ const Profile = () => {
   
   // Ref to store headshot preview URL for cleanup
   const headshotPreviewUrlRef = useRef(null);
+  const [cropTarget, setCropTarget] = useState(null); // { field, src } being positioned
 
   // Change Password Form State
   const [passwordFormData, setPasswordFormData] = useState({
@@ -213,7 +215,20 @@ const Profile = () => {
 
     if (type === 'file') {
       value = files[0] || null;
-      
+
+      // Face photos (headshot + profile avatar) route through the cropper so
+      // they're framed perfectly in the circle/card before upload.
+      if ((name === 'headshot' || name === 'userImage') && value) {
+        if (!value.type?.startsWith('image/')) {
+          setPersonalErrors((prev) => ({ ...prev, [name]: 'Please choose an image file.' }));
+          e.target.value = '';
+          return;
+        }
+        setCropTarget({ field: name, src: URL.createObjectURL(value) });
+        e.target.value = '';
+        return;
+      }
+
       // Create preview URL for headshot when a new file is selected
       if (name === 'headshot' && value) {
         // Clean up previous preview URL if it exists
@@ -663,8 +678,32 @@ const Profile = () => {
       );
     }
   };
+  const onCropDone = (blob) => {
+    const target = cropTarget;
+    setCropTarget(null);
+    if (target?.src) URL.revokeObjectURL(target.src);
+    if (!blob || !target) return;
+    const file = new File([blob], `${target.field}.jpg`, { type: 'image/jpeg' });
+    const previewUrl = URL.createObjectURL(file);
+    if (target.field === 'headshot') {
+      if (headshotPreviewUrlRef.current) URL.revokeObjectURL(headshotPreviewUrlRef.current);
+      headshotPreviewUrlRef.current = previewUrl;
+      setPersonalFormData((prev) => ({ ...prev, headshot: file, headshotUrl: previewUrl }));
+    } else {
+      setPersonalFormData((prev) => ({ ...prev, userImage: file, userImageUrl: previewUrl }));
+    }
+    setPersonalErrors((prev) => ({ ...prev, [target.field]: '' }));
+  };
+
   return (
     <div className='w-full'>
+      {cropTarget && (
+        <HeadshotCropper
+          imageSrc={cropTarget.src}
+          onCancel={() => { URL.revokeObjectURL(cropTarget.src); setCropTarget(null); }}
+          onComplete={onCropDone}
+        />
+      )}
       {/* Section 1: Personal Information */}
       <div className='card-section m-[10px]'>
         <h2 className='text-xl md:2xl font-semibold mb-6'>

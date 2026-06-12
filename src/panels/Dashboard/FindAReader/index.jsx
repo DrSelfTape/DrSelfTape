@@ -20,6 +20,7 @@ import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { tapPrimary } from '../../../utils/haptics';
+import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 
 const FindAReader = () => {
   const dispatch = useDispatch();
@@ -37,6 +38,7 @@ const FindAReader = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [cropSrc, setCropSrc] = useState(null); // object URL being positioned
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -68,18 +70,28 @@ const FindAReader = () => {
     }
   }, [settingsLoaded, savedFilters, dispatch]);
 
-  const handlePhotoUpload = async (e) => {
+  // Pick a file → open the cropper so they frame their face perfectly.
+  const handlePhotoUpload = (e) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
     if (!file.type?.startsWith('image/')) {
       dispatch(showSnackbar({ message: 'Please choose an image file.', variant: 'error' }));
-      e.target.value = '';
       return;
     }
+    setCropSrc(URL.createObjectURL(file));
+  };
+
+  // Upload the positioned/cropped square headshot.
+  const uploadCroppedHeadshot = async (blob) => {
+    const src = cropSrc;
+    setCropSrc(null);
+    if (src) URL.revokeObjectURL(src);
+    if (!blob) return;
     setUploading(true);
     try {
       const fd = new FormData();
-      fd.append('headshot', file);
+      fd.append('headshot', blob, 'headshot.jpg');
       await axios.patch(`${baseURL}/v1/users/profile/`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
@@ -422,6 +434,15 @@ const FindAReader = () => {
           actor={celebrating.actor}
           onConnect={onCelebrationDone}
           onDismiss={onMatchDismiss}
+        />
+      )}
+
+      {/* Headshot cropper — position your face in the circle before uploading */}
+      {cropSrc && (
+        <HeadshotCropper
+          imageSrc={cropSrc}
+          onCancel={() => { URL.revokeObjectURL(cropSrc); setCropSrc(null); }}
+          onComplete={uploadCroppedHeadshot}
         />
       )}
 
