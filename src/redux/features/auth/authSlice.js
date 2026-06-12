@@ -232,6 +232,11 @@ export const authSlice = createSlice({
     setAiConsentAcceptedAt: (state, action) => {
       if (state.user) state.user.ai_consent_accepted_at = action.payload || null;
     },
+    // Terms §1 / COPPA: once the age gate captures a birthdate, mirror it
+    // onto state.user so the gate stops re-triggering for the session.
+    setDateOfBirth: (state, action) => {
+      if (state.user) state.user.date_of_birth = action.payload || null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -255,6 +260,7 @@ export const authSlice = createSlice({
           is_active: src?.is_active,
           is_reset_password: src?.is_reset_password,
           is_staff: src?.is_staff,
+          date_of_birth: src?.date_of_birth,
         };
         state.loading = false;
         state.user = src?.is_reset_password ? null : userData;
@@ -285,6 +291,7 @@ export const authSlice = createSlice({
           is_active: action.payload?.is_active,
           is_reset_password: action.payload?.is_reset_password,
           is_staff: action.payload?.is_staff,
+          date_of_birth: action.payload?.date_of_birth,
         };
         state.user = action.payload?.is_reset_password ? null : userData;
         state.error = null;
@@ -317,6 +324,7 @@ export const authSlice = createSlice({
           is_active: action.payload?.is_active,
           is_reset_password: action.payload?.is_reset_password,
           is_staff: action.payload?.is_staff,
+          date_of_birth: action.payload?.date_of_birth,
         };
         state.user = userData;
         state.error = null;
@@ -430,7 +438,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const { logoutUser, clearTempSession, setAiConsentAcceptedAt } = authSlice.actions;
+export const { logoutUser, clearTempSession, setAiConsentAcceptedAt, setDateOfBirth } = authSlice.actions;
 
 // Logout that ALSO clears persisted data slices (auditions, submissions,
 // scripts, etc.) so the next user on this device starts clean. Call this

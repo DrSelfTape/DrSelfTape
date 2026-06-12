@@ -6,6 +6,9 @@ import endPoints from '../../../redux/constant';
 import PermissionsModal from '../../../components/PermissionsModal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { isNativeIOS } from '../../../utils/purchases';
+import { SpeechRecognition as NativeSpeech } from '@capgo/capacitor-speech-recognition';
+import { cueProgress, tok as cueTokens } from '../../../utils/cueMatch';
+import { resetAudioToPlayback } from '../../../utils/audioSession';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
 import { completeCraftNode, fetchCraftJourney } from '../../../redux/features/craftJourney/craftJourneySlice';
 
@@ -183,6 +186,28 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   const isActiveRef = useRef(false);
   const isProcessingRef = useRef(false);
   const scriptPanelRef = useRef(null);
+  // Live mirror of `status` for the SpeechRecognition onerror/onend handlers,
+  // which are registered once and otherwise close over a stale `status` —
+  // making them drop or wrongly auto-restart listening (#11).
+  const statusRef = useRef('idle');
+  useEffect(() => { statusRef.current = status; }, [status]);
+  // ── Native "listen" mode (iOS default) — SFSpeechRecognizer via the Capgo
+  // plugin + known-line endpointing (cueMatch). Refs avoid stale closures in
+  // the per-partial handler + the silence-deadlock ticker.
+  const readerModeRef = useRef(null);
+  const liveTranscriptRef = useRef('');
+  const nativeListenersRef = useRef([]);
+  const nativeLastSpeechRef = useRef(0);
+  const nativeLastChangeRef = useRef(0);
+  const nativeConfirmRef = useRef(null);
+  const nativeFiredRef = useRef(false);
+  const nativeTickRef = useRef(null);
+  // Forward refs (these functions are defined below; calling sites above use
+  // the ref to dodge the TDZ, same pattern as startPreTimedSceneRef).
+  const beginListeningRef = useRef(null);
+  const startListenSceneRef = useRef(null);
+  const switchToPretimedRef = useRef(null);
+  useEffect(() => { readerModeRef.current = readerMode; }, [readerMode]);
   // Stores the resolver for the actor-line wait so the manual "Next"
   // button can short-circuit the auto-advance setTimeout in pre-timed
   // mode. iOS WKWebView doesn't support real speech recognition, so
@@ -336,11 +361,20 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         audioRef.current = audio;
         await audio.play();
         await new Promise((resolve) => {
-          audio.onended = () => {
-            URL.revokeObjectURL(blobUrl);
+          let done = false;
+          const cleanup = () => {
+            if (done) return;
+            done = true;
+            try { URL.revokeObjectURL(blobUrl); } catch { /* noop */ }
             audioRef.current = null;
             resolve();
           };
+          audio.onended = cleanup;
+          // Without these the scene hangs forever if the blob fails to play
+          // or never fires 'ended'. Watchdog = clip duration + 2s slack,
+          // falling back to 60s before metadata loads.
+          audio.onerror = cleanup;
+          setTimeout(cleanup, ((audio.duration || 58) + 2) * 1000);
         });
       } catch (fallbackErr) {
         // fallback playback failed
@@ -351,7 +385,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     return new Promise((resolve) => {
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
-      source.connect(ctx.destination);
+      // Boost the reader's voice — TTS output + the post-recording speaker route
+      // can be quiet. >1 gain amplifies above the raw buffer level.
+      const gain = ctx.createGain();
+      gain.gain.value = 3.5;
+      source.connect(gain);
+      gain.connect(ctx.destination);
       audioRef.current = source;
       // Watchdog: if iOS still has the context suspended (so source.start
       // silently fails to fire onended), we'd hang runPreTimed forever.
@@ -380,6 +419,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
     }
+    // Route audio to the loud playback speaker before the reader speaks — the
+    // native recognizer otherwise leaves the session on a quiet record route.
+    await resetAudioToPlayback();
 
     while (idx < lines.length && lines[idx].character !== userRole) {
       if (!isActiveRef.current) return;
@@ -431,7 +473,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     setCurrentLine(idx);
     scrollToLine(idx);
     setStatus('listening');
-    startRecognition();
+    beginListeningRef.current?.();
   }, [lines, userRole, voice, playTTS, scrollToLine, setCurrentLine]);  // eslint-disable-line
 
   /**
@@ -450,16 +492,33 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       setLiveTranscript('');
 
       // Use ref for current index — always up to date
-      let nextIdx = currentLineIdxRef.current;
-      // Move past the current user line(s) to find the next AI line
-      while (nextIdx < lines.length && lines[nextIdx].character === userRole) {
-        nextIdx++;
+      // Listen mode advances ONE line at a time (consecutive same-character
+      // lines are separate beats). Voice mode keeps skip-to-next-AI.
+      let nextIdx;
+      if (readerModeRef.current === 'listen') {
+        nextIdx = currentLineIdxRef.current + 1;
+      } else {
+        nextIdx = currentLineIdxRef.current;
+        while (nextIdx < lines.length && lines[nextIdx].character === userRole) {
+          nextIdx++;
+        }
       }
 
       if (nextIdx >= lines.length) {
         setStatus('idle');
         setAiCurrentLine('🎬 Scene complete!');
         isProcessingRef.current = false;
+        return;
+      }
+
+      // The next line is ALSO the actor's (listen mode) → advance the
+      // teleprompter and listen for it; don't hand off to the reader yet.
+      if (readerModeRef.current === 'listen' && lines[nextIdx].character === userRole) {
+        setCurrentLine(nextIdx);
+        scrollToLine(nextIdx);
+        setStatus('listening');
+        isProcessingRef.current = false;
+        beginListeningRef.current?.();
         return;
       }
 
@@ -536,7 +595,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       } else if (event.error !== 'aborted') {
         // Auto-restart on non-fatal errors
         setTimeout(() => {
-          if (isActiveRef.current && status === 'listening') {
+          if (isActiveRef.current && statusRef.current === 'listening') {
             startRecognition();
           }
         }, 500);
@@ -561,6 +620,151 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     }
   }, [SpeechRecognition, handleActorLineComplete, status]);
 
+  // ── Native "listen" mode (iOS default): SFSpeechRecognizer via the Capgo
+  // plugin + known-line endpointing. The actor's expected turn is KNOWN, so we
+  // fire on CONTENT (they reached the line's end), holding through dramatic
+  // pauses; silence is only a deadlock fallback. See cueMatch.js.
+
+  // The actor's expected turn = consecutive actor lines from the current index
+  // (a turn can span multiple script lines).
+  const expectedActorTurn = useCallback(() => {
+    // Listen for the CURRENT line only — progress one beat at a time, matching
+    // the teleprompter and pre-timed mode. (Consecutive same-character lines are
+    // separate beats, NOT one turn — treating them as one made the reader wait
+    // for a line the teleprompter never showed.)
+    return lines[currentLineIdxRef.current]?.dialogue || '';
+  }, [lines]);
+
+  const stopNativeListen = useCallback(async () => {
+    if (nativeConfirmRef.current) { clearTimeout(nativeConfirmRef.current); nativeConfirmRef.current = null; }
+    if (nativeTickRef.current) { clearInterval(nativeTickRef.current); nativeTickRef.current = null; }
+    try { await NativeSpeech.stop(); } catch { /* not running */ }
+    try { await NativeSpeech.removeAllListeners(); } catch { /* none */ }
+    nativeListenersRef.current = [];
+  }, []);
+
+  const startNativeListen = useCallback(async () => {
+    const expected = expectedActorTurn();
+    nativeFiredRef.current = false;
+    nativeLastSpeechRef.current = Date.now();
+    nativeLastChangeRef.current = Date.now();
+    liveTranscriptRef.current = '';
+    setLiveTranscript('');
+    await stopNativeListen();
+
+    const fire = async (text) => {
+      if (nativeFiredRef.current) return;
+      nativeFiredRef.current = true;
+      // FULLY stop recognition first — iOS holds the AVAudioSession in record
+      // mode while listening, which leaves the reader's TTS silent (the scene
+      // "advances" but you hear nothing). Await the stop, give the session a
+      // beat to hand back to playback, then re-arm the AudioContext.
+      await stopNativeListen();
+      // The real fix: the recognizer left the AVAudioSession in `.measurement`
+      // mode + `.duckOthers` (silences TTS). Restore the playback session
+      // natively before the reader speaks.
+      await resetAudioToPlayback();
+      await new Promise((r) => setTimeout(r, 120));
+      try {
+        const ctx = audioContextRef.current;
+        if (ctx && ctx.state === 'suspended') await ctx.resume();
+        primeAudio(); // silent-buffer kick to re-wake playback after recording
+      } catch { /* swallow */ }
+      if (isActiveRef.current) handleActorLineComplete(text || expected);
+    };
+
+    // Content-match is the primary trigger; this ticker catches the very common
+    // case where iOS DROPS THE LAST WORD when you stop talking.
+    nativeTickRef.current = setInterval(() => {
+      if (!isActiveRef.current || isPausedRef.current) return;
+      const t = liveTranscriptRef.current;
+      if (!t || nativeConfirmRef.current || nativeFiredRef.current) return;
+      const stable = Date.now() - nativeLastChangeRef.current; // transcript settled
+      const p = cueProgress(expected, t);
+      // Deadlock insurance only — the anchor (above) handles normal completion.
+      // If recognition was rough and never hit the anchor, but they've said most
+      // of the line and the transcript has settled, advance so it never stalls.
+      if (p.covered >= p.total - 2 && stable > 1600) fire(t);
+    }, 200);
+
+    try {
+      const avail = await NativeSpeech.available();
+      if (!avail?.available) { switchToPretimedRef.current?.(); return; }
+      await NativeSpeech.requestPermissions();
+      const h = await NativeSpeech.addListener('partialResults', (e) => {
+        if (!isActiveRef.current || isPausedRef.current) return;
+        const t = (e?.matches && e.matches[0]) || '';
+        if (!t) return;
+        nativeLastSpeechRef.current = Date.now();
+        // Track when the TEXT actually changes (not just when a partial fires) —
+        // a settled transcript is the real "they're done" signal.
+        if (t !== liveTranscriptRef.current) {
+          liveTranscriptRef.current = t;
+          nativeLastChangeRef.current = Date.now();
+          setLiveTranscript(t);
+        }
+        const p = cueProgress(expected, t);
+        // Fire when they reach the line's last MEANINGFUL word (the cue). We do
+        // NOT reset this on later partials — trailing laughter or a fumbled
+        // final syllable is expected and shouldn't delay the reader. A clean
+        // full-line match fires a touch faster.
+        if (p.anchorReached && !nativeConfirmRef.current) {
+          const wait = p.complete ? 350 : 600;
+          nativeConfirmRef.current = setTimeout(() => fire(liveTranscriptRef.current), wait);
+        }
+      });
+      nativeListenersRef.current = [h];
+      await NativeSpeech.start({
+        language: 'en-US',
+        partialResults: true,
+        contextualStrings: cueTokens(expected),  // bias toward the scripted words
+        maxResults: 3,
+      });
+    } catch (err) {
+      // Native recognition failed → fall back to pre-timed so the scene works.
+      switchToPretimedRef.current?.();
+    }
+  }, [expectedActorTurn, stopNativeListen, handleActorLineComplete]);
+
+  // Route "now listen for the actor" to the right engine for the current mode.
+  const beginListening = useCallback(() => {
+    if (readerModeRef.current === 'listen') startNativeListen();
+    else startRecognition();
+  }, [startNativeListen, startRecognition]);
+  useEffect(() => { beginListeningRef.current = beginListening; }, [beginListening]);
+
+  // Start the scene in LISTEN mode (the iOS default).
+  const startListenScene = useCallback((selectedVoice) => {
+    setVoice(selectedVoice);
+    setShowVoicePicker(false);
+    setShowModePicker(false);
+    setReaderMode('listen');
+    readerModeRef.current = 'listen';   // sync now so beginListening routes right
+    setSceneStarted(true);
+    isActiveRef.current = true;
+    sceneStartTimeRef.current = Date.now();
+    const firstLine = lines[0];
+    if (firstLine && firstLine.character !== userRole) {
+      playAiLinesFrom(0, []);
+    } else {
+      setCurrentLine(0);
+      scrollToLine(0);
+      setStatus('listening');
+      beginListeningRef.current?.();
+    }
+  }, [lines, userRole, playAiLinesFrom, scrollToLine, setCurrentLine]);
+  useEffect(() => { startListenSceneRef.current = startListenScene; }, [startListenScene]);
+
+  // Fallback: if listening misbehaves (noisy room, hard delivery), drop to the
+  // reliable pre-timed flow from the current line.
+  const switchToPretimed = useCallback(() => {
+    stopNativeListen();
+    setReaderMode('pretimed');
+    readerModeRef.current = 'pretimed';
+    startPreTimedSceneRef.current?.(voice, prePauseSeconds, currentLineIdxRef.current);
+  }, [stopNativeListen, voice, prePauseSeconds]);
+  useEffect(() => { switchToPretimedRef.current = switchToPretimed; }, [switchToPretimed]);
+
   /**
    * Start the live scene session.
    */
@@ -579,8 +783,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     setVoice(selectedVoice);
     setShowVoicePicker(false);
     if (isNativeIOS()) {
-      // Default 3s pause after each AI line for the actor to deliver.
-      startPreTimedSceneRef.current?.(selectedVoice, 3);
+      // Listen mode is the iOS default: the reader hears the actor finish their
+      // line and responds on their cue. If recognition misbehaves it auto-falls
+      // back to pre-timed (and the actor can switch manually mid-scene).
+      startListenSceneRef.current?.(selectedVoice);
     } else {
       setShowModePicker(true);
     }
@@ -710,6 +916,19 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     }
   }, []);
 
+  // Manual "I'm done" — works in every mode. In listen mode it skips ahead with
+  // whatever was heard (escape hatch if recognition whiffs); in pre-timed it
+  // resolves the actor-wait Promise.
+  const forceAdvanceActor = useCallback(() => {
+    if (readerModeRef.current === 'listen') {
+      stopNativeListen();
+      const text = liveTranscriptRef.current || expectedActorTurn();
+      if (isActiveRef.current) handleActorLineComplete(text);
+    } else {
+      advanceLine();
+    }
+  }, [stopNativeListen, expectedActorTurn, handleActorLineComplete, advanceLine]);
+
   const pauseScene = useCallback(() => {
     isPausedRef.current = true;
     setIsPaused(true);
@@ -717,6 +936,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
     }
+    stopNativeListen();
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (audioRef.current) {
       try { audioRef.current.stop(); } catch(e) {}
@@ -758,7 +978,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     const currentLine = lines[currentLineIdxRef.current];
     if (currentLine && currentLine.character === userRole) {
       setStatus('listening');
-      startRecognition();
+      beginListeningRef.current?.();
     } else if (currentLine && currentLine.character !== userRole) {
       playAiLinesFrom(currentLineIdxRef.current, conversationHistoryRef.current);
     }
@@ -779,6 +999,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     if (recognitionRef.current) {
       try { recognitionRef.current.stop(); } catch {}
     }
+    stopNativeListen();
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (audioRef.current) {
       try { audioRef.current.stop(); } catch(e) {}
@@ -823,6 +1044,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch {}
       }
+      try { NativeSpeech.stop(); } catch { /* not running */ }
+      try { NativeSpeech.removeAllListeners(); } catch { /* none */ }
+      if (nativeTickRef.current) clearInterval(nativeTickRef.current);
+      if (nativeConfirmRef.current) clearTimeout(nativeConfirmRef.current);
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       if (audioRef.current) {
         try { audioRef.current.stop(); } catch(e) {}
@@ -887,7 +1112,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     );
   }
 
-  const statusLabel = readerMode === 'pretimed' && status === 'listening'
+  const statusLabel = status === 'listening' && readerMode === 'listen'
+    ? '🎧 Your line — I\'m listening'
+    : status === 'listening' && readerMode === 'pretimed'
     ? '🎬 Your line — deliver it now'
     : status === 'thinking'
     ? `${partnerName} ${STATUS_MESSAGES.thinking}`
@@ -915,7 +1142,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           // Force pre-timed mode on iOS — same logic that runs from the
           // VoicePicker iOS branch (onVoiceSelected at line 580).
           if (isNativeIOS()) {
-            startPreTimedSceneRef.current?.(voice, 3);
+            startListenSceneRef.current?.(voice);
           } else {
             startScene(voice);
           }
@@ -937,6 +1164,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           {readerMode === 'voice' && (
             <span className="text-xs bg-[#A7ECDA]/15 text-[#A7ECDA] border border-[#A7ECDA]/20 px-2 py-0.5 rounded-full font-semibold ml-2">
               🎙 Voice
+            </span>
+          )}
+          {readerMode === 'listen' && (
+            <span className="text-xs bg-[#A7ECDA]/15 text-[#7A5A18] border border-[#A7ECDA]/30 px-2 py-0.5 rounded-full font-semibold ml-2">
+              🎧 Listening
             </span>
           )}
         </div>
@@ -969,24 +1201,39 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             once they finish delivering the line. A safety timer
             (pauseSecs * 2) still fires as a fallback. */}
         {status === 'listening' && lines[currentLineIdx]?.character === userRole && (
-          <button
-            type="button"
-            onClick={advanceLine}
-            className="lg:hidden w-full flex items-center justify-center gap-2 py-3 bg-[#D4A85F] active:bg-[#C09850] text-[#0A0A0A] font-bold text-sm tracking-wide cursor-pointer transition-colors"
-            style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-[#7A5A18] animate-pulse" />
-            Your line — tap when done
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M13 5l7 7-7 7" />
-            </svg>
-          </button>
+          <div className="lg:hidden w-full">
+            <button
+              type="button"
+              onClick={forceAdvanceActor}
+              className="w-full flex items-center justify-center gap-2 py-3 bg-[#D4A85F] active:bg-[#C09850] text-[#0A0A0A] font-bold text-sm tracking-wide cursor-pointer transition-colors"
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#7A5A18] animate-pulse" />
+              {readerMode === 'listen' ? 'Listening — say your line (tap to skip)' : 'Your line — tap when done'}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M13 5l7 7-7 7" />
+              </svg>
+            </button>
+            {readerMode === 'listen' && liveTranscript && (
+              <div className="w-full px-4 py-1.5 text-center text-xs text-[#7A5A18]/80 italic truncate">“{liveTranscript}”</div>
+            )}
+            {readerMode === 'listen' && (
+              <button
+                type="button"
+                onClick={() => switchToPretimedRef.current?.()}
+                className="w-full text-center py-2 text-xs text-[#7A5A18]/70 underline cursor-pointer"
+                style={{ touchAction: 'manipulation' }}
+              >
+                Trouble hearing you? Switch to timed mode
+              </button>
+            )}
+          </div>
         )}
         {/* Left: Script Panel */}
         <div
           ref={scriptPanelRef}
           className="lg:w-80 lg:h-auto lg:border-r lg:border-b-0 border-b border-[#1a1a2e] overflow-y-auto p-3 block"
-          style={{ height: 'var(--script-panel-h, 45vh)' }}
+          style={{ height: 'var(--script-panel-h, 38vh)' }}
         >
           <style>{`@media (min-width: 1024px) { :root { --script-panel-h: 100%; } }`}</style>
           <h3 className="text-[rgba(10,10,10,0.62)] text-xs font-bold uppercase tracking-wider mb-4">Script</h3>
@@ -1030,7 +1277,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         </div>
 
         {/* Main Stage */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 lg:px-6 min-h-0">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 lg:px-6 min-h-0 overflow-y-auto relative z-10 bg-[var(--aurora-bg,#FAFAF7)]">
 
           {/* START SCREEN — shown before scene begins */}
           {status === 'idle' && !sceneStarted && (
@@ -1104,7 +1351,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 <span className="text-[#7A5A18] text-xs font-bold uppercase tracking-widest block mb-3">
                   {partnerName}
                 </span>
-                <p className="text-[#0A0A0A] text-2xl md:text-3xl font-light leading-relaxed">
+                <p className="text-[#0A0A0A] text-xl md:text-3xl font-light leading-relaxed">
                   {aiCurrentLine}
                 </p>
               </>
@@ -1113,7 +1360,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 <span className="text-[#7A5A18] text-xs font-bold uppercase tracking-widest block mb-3">
                   Your line · {userRole}
                 </span>
-                <p className="text-[#0A0A0A] text-2xl md:text-3xl font-light leading-relaxed px-2">
+                <p className="text-[#0A0A0A] text-xl md:text-3xl font-light leading-relaxed px-2">
                   &ldquo;{lines[currentLineIdx]?.dialogue}&rdquo;
                 </p>
               </>

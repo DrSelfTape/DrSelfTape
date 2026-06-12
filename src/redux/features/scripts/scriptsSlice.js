@@ -89,8 +89,16 @@ const scriptsSlice = createSlice({
         state.error = action.payload;
       })
       // Delete
+      .addCase(deleteScriptThunk.pending, (state) => {
+        state.error = null;
+      })
       .addCase(deleteScriptThunk.fulfilled, (state, action) => {
         state.scripts = state.scripts.filter((s) => s.id !== action.payload);
+      })
+      .addCase(deleteScriptThunk.rejected, (state, action) => {
+        // Surface delete failures instead of leaving the card stuck in its
+        // confirm state with no feedback (the "delete does nothing" report).
+        state.error = action.payload || 'Failed to delete script.';
       });
   },
 });

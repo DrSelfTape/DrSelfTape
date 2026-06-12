@@ -178,9 +178,29 @@ function WarmupAndRuler({ mission, setMission, len, setLen }) {
         </div>
         <div
           ref={railRef}
-          onPointerDown={(e) => { setDrag(true); e.currentTarget.setPointerCapture(e.pointerId); pick(e.clientX); }}
+          onPointerDown={(e) => {
+            setDrag(true);
+            // setPointerCapture throws InvalidStateError/NotFoundError on
+            // iOS WKWebView when a prior gesture ended with pointercancel
+            // (capture never cleanly released). An uncaught throw here aborts
+            // the handler — pick() never runs and the slider wedges after one
+            // move. Guard it so the drag still works without capture.
+            try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* iOS capture quirk */ }
+            pick(e.clientX);
+          }}
           onPointerMove={(e) => drag && pick(e.clientX)}
-          onPointerUp={() => setDrag(false)}
+          onPointerUp={(e) => {
+            setDrag(false);
+            try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+          }}
+          // WKWebView ends a touch-action:none capture gesture with
+          // pointercancel (not pointerup) when the element re-renders mid-drag
+          // — which this slider does every tick. Without this, `drag` stays
+          // stuck true and the dangling capture swallows the next tap.
+          onPointerCancel={(e) => {
+            setDrag(false);
+            try { e.currentTarget.releasePointerCapture(e.pointerId); } catch { /* already released */ }
+          }}
           style={{
             position: 'relative', height: 56, cursor: 'pointer',
             touchAction: 'none', userSelect: 'none',
@@ -254,6 +274,14 @@ export default function SidesUpload({ onSubmit }) {
     setFileName(file.name);
 
     if (name.endsWith('.pdf')) {
+      // Cap size up front — the raw-stats pass below parses the whole PDF
+      // with no bound, so a huge file could hang the main thread before the
+      // extractor's own guard runs.
+      if (file.size > MAX_PDF_BYTES) {
+        const mb = (file.size / 1024 / 1024).toFixed(1);
+        setPdfError(`PDF is ${mb}MB — please use a smaller file (max 5MB) or paste your sides.`);
+        return;
+      }
       setPdfLoading(true);
       setQualityWarning('');
       try {
@@ -283,7 +311,10 @@ export default function SidesUpload({ onSubmit }) {
           finalText = cached;
         } else {
           try {
-            const { data } = await axiosInstance.post(endPoints.formatScript, { text: rawText });
+            // 30s timeout — without it a slow/hung BE leaves the "Formatting
+            // with AI..." spinner stuck forever (the "upload sides freezes"
+            // report). On timeout we reject → fall back to the raw text.
+            const { data } = await axiosInstance.post(endPoints.formatScript, { text: rawText }, { timeout: 30000 });
             if (data?.success && data?.data?.formatted) {
               finalText = data.data.formatted;
               sessionStorage.setItem(cacheKey, finalText); // cache it

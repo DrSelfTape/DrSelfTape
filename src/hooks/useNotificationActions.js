@@ -81,6 +81,27 @@ export const useNotificationActions = () => {
   const handleNotificationClick = useCallback(async (notification, options = {}) => {
     const { onBeforeNavigate } = options;
     const { notification_type: type } = notification;
+
+    // Live scene request → JOIN the partner's existing Daily room. The
+    // room_url rides in the notification payload (BE StartRehearsalView),
+    // so we jump straight into /meeting like socket.jsx's incoming-call
+    // modal does. Without this, rehearsal_started fell through to the
+    // green-room CHAT route, where the only CTA re-runs Start Rehearsal
+    // and mints a NEW room — stranding the two users in different rooms
+    // (the "loop of new sessions" bug). Falls through to the normal route
+    // if there's no room_url (old/expired notification).
+    const liveRoomUrl = notification?.data?.room_url;
+    if (type === 'rehearsal_started' && liveRoomUrl) {
+      let roomId = '';
+      try { roomId = new URL(liveRoomUrl).pathname.split('/').filter(Boolean).pop() || ''; } catch { roomId = ''; }
+      if (roomId) {
+        if (!notification.is_read) markAsRead(notification.id);
+        if (onBeforeNavigate) onBeforeNavigate();
+        navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl } });
+        return;
+      }
+    }
+
     const config = NOTIFICATION_CONFIG[type];
 
     // Handle unknown notification types

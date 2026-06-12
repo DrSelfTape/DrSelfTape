@@ -902,9 +902,23 @@ export const useScriptAudioPlayer = ({
     };
 
     audio.onpause = () => {
-      setIsPlaying(false);
-      // Clear highlighting when audio is paused
-      setHighlightedWordIndex(-1);
+      // Clear THIS line's end-poll on pause so a pause within ENDED_THRESHOLD
+      // of the end can't let the poll fire handleAudioEnded → spuriously
+      // auto-advance while the user has paused (#1). onplay re-arms polling on
+      // resume because checkInterval is null again.
+      if (checkInterval) {
+        clearInterval(checkInterval);
+        checkInterval = null;
+        delete pollingIntervals.current[lineIndex];
+      }
+      // Only mutate playback/highlight state if THIS element is still the
+      // active one — async pause events from superseded elements
+      // (stopAllPlayback, playLine pause loops) must not stomp a freshly
+      // started line (#8).
+      if (activeLineIndexRef.current === lineIndex && activeAudioRef.current === audio) {
+        setIsPlaying(false);
+        setHighlightedWordIndex(-1);
+      }
     };
 
     audio.onended = () => {
@@ -1051,11 +1065,13 @@ export const useScriptAudioPlayer = ({
         }
         
         let resolved = false;
-        
+        let loadTimeoutId = null;
+
         // Wait for canplay or loadeddata event (canplay fires earlier)
         const onCanPlay = () => {
           if (resolved) return;
           resolved = true;
+          clearTimeout(loadTimeoutId);
           audio.removeEventListener('canplay', onCanPlay);
           audio.removeEventListener('loadeddata', onLoadedData);
           audio.removeEventListener('error', onError);
@@ -1065,6 +1081,7 @@ export const useScriptAudioPlayer = ({
         const onLoadedData = () => {
           if (resolved) return;
           resolved = true;
+          clearTimeout(loadTimeoutId);
           audio.removeEventListener('canplay', onCanPlay);
           audio.removeEventListener('loadeddata', onLoadedData);
           audio.removeEventListener('error', onError);
@@ -1074,6 +1091,7 @@ export const useScriptAudioPlayer = ({
         const onError = (e) => {
           if (resolved) return;
           resolved = true;
+          clearTimeout(loadTimeoutId);
           audio.removeEventListener('canplay', onCanPlay);
           audio.removeEventListener('loadeddata', onLoadedData);
           audio.removeEventListener('error', onError);
@@ -1086,9 +1104,10 @@ export const useScriptAudioPlayer = ({
         audio.addEventListener('error', onError, { once: true });
         
         // Timeout after 5 seconds
-        setTimeout(() => {
+        loadTimeoutId = setTimeout(() => {
           if (resolved) return;
           resolved = true;
+          clearTimeout(loadTimeoutId);
           audio.removeEventListener('canplay', onCanPlay);
           audio.removeEventListener('loadeddata', onLoadedData);
           audio.removeEventListener('error', onError);

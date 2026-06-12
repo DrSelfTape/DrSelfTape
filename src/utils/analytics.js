@@ -53,6 +53,14 @@ export async function identifyUser(user) {
   } catch {}
 }
 
+// App event → Meta standard conversion event. These are the optimization
+// targets Meta campaigns bid toward; everything else fires as a custom event so
+// it's still usable for retargeting / lookalike audiences.
+const META_STD = {
+  user_signup: 'CompleteRegistration',
+  purchase: 'Subscribe',
+};
+
 export function trackEvent(event, properties = {}) {
   // PostHog (lazy — only if a key is configured)
   if (POSTHOG_KEY) {
@@ -60,6 +68,15 @@ export function trackEvent(event, properties = {}) {
       try { posthog?.capture(event, properties); } catch {}
     });
   }
+
+  // Meta Pixel (web only — initialised in index.html for non-native platforms).
+  try {
+    if (typeof window !== 'undefined' && window.fbq) {
+      const std = META_STD[event];
+      if (std) window.fbq('track', std, properties);
+      else window.fbq('trackCustom', event, properties);
+    }
+  } catch { /* pixel not loaded */ }
 
   // Also send to our backend for server-side logging. Reuse the same
   // baseURL the rest of the app uses so we can't accidentally diverge.

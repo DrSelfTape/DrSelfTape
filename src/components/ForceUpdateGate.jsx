@@ -4,11 +4,18 @@ import axiosInstance from '../redux/http';
 import { openExternal } from '../utils/openExternal';
 
 const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.drselftape.app';
 const VERSION_ENDPOINT = '/v1/notifications/system/latest-version/';
 // Keep in lockstep with UpdateBanner.BUNDLE_VERSION and the iOS pbxproj
-// MARKETING_VERSION. The gate trips when this is BELOW the BE's reported
-// min_ios.
-const BUNDLE_VERSION = '1.0.5';
+// MARKETING_VERSION / Android versionName. The gate trips when this is BELOW
+// the BE's reported min version for the current platform.
+const BUNDLE_VERSION = '1.0.7';
+
+// The right store per platform — itms-apps:// is dead on Android and the Play
+// https link is wrong on iOS, so the "Update now" CTA must choose by platform.
+function storeUrl() {
+  return Capacitor.getPlatform() === 'android' ? PLAY_STORE_URL : APP_STORE_URL;
+}
 
 function versionLt(a, b) {
   const pa = String(a || '0').split('.').map((n) => parseInt(n, 10) || 0);
@@ -34,33 +41,35 @@ function versionLt(a, b) {
  * blip should never lock everyone out.
  */
 export default function ForceUpdateGate({ children }) {
-  const [minIos, setMinIos] = useState(null);
+  const [minVersion, setMinVersion] = useState(null);
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
-    // iOS-only: this gate checks min_ios and links to the App Store. Web
-    // auto-updates via Vercel, and Android has no update channel yet
-    // (no min_android, no Play link) — gating it here avoids trapping
-    // Android users on a blocking modal with a dead itms-apps:// button.
-    if (Capacitor.getPlatform() !== 'ios') return;
+    // Native only (web auto-updates via Vercel). Use the CURRENT platform's
+    // min version — min_ios on iOS, min_android on Android — both fail-open:
+    // the BE defaults them to 0.0.0, so this modal never traps anyone until
+    // we explicitly set the env var. The CTA links to the correct store.
+    const platform = Capacitor.getPlatform();
+    if (platform !== 'ios' && platform !== 'android') return;
     let cancelled = false;
     (async () => {
       try {
         const { data } = await axiosInstance.get(VERSION_ENDPOINT);
-        if (!cancelled && data?.min_ios) setMinIos(data.min_ios);
+        const min = platform === 'android' ? data?.min_android : data?.min_ios;
+        if (!cancelled && min) setMinVersion(min);
       } catch { /* fail open — don't lock users out on a network blip */ }
     })();
     return () => { cancelled = true; };
   }, []);
 
-  const blocked = !!(minIos && versionLt(BUNDLE_VERSION, minIos));
+  const blocked = !!(minVersion && versionLt(BUNDLE_VERSION, minVersion));
 
   if (!blocked) return children;
 
   const handleUpdate = () => {
     if (opening) return;
     setOpening(true);
-    openExternal(APP_STORE_URL);
+    openExternal(storeUrl());
   };
 
   return (
@@ -162,7 +171,7 @@ export default function ForceUpdateGate({ children }) {
           minWidth: 260,
         }}
       >
-        {opening ? 'Opening App Store…' : 'Update now  →'}
+        {opening ? `Opening ${Capacitor.getPlatform() === 'android' ? 'Play Store' : 'App Store'}…` : 'Update now  →'}
       </button>
       <p
         style={{

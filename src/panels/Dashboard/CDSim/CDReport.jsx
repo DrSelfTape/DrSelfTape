@@ -13,13 +13,20 @@ const SECTIONS = [
   { key: 'framing', label: 'Framing & Camera Recommendations' },
 ];
 
-// Map voice picker names to backend voice keys
+// Map the voice identifier to a backend TTS voice key. VoicePicker emits
+// `v.key` (snake_case) — keying only on display names meant every lookup
+// missed and every coach fell back to the default female voice.
 const VOICE_KEY_MAP = {
+  // Keys actually emitted by VoicePicker (onSelect(v.key))
+  classic_director: 'cd_male',
+  method_coach: 'cd_male',
+  commercial_queen: 'cd_female',
+  the_auteur: 'cd_male',
+  // Display names + legacy keys, kept for any old persisted reports
   'The Traditionalist': 'cd_male',
   'The Method Coach': 'cd_male',
   'The Commercial Pro': 'cd_female',
   'The Artistic Eye': 'cd_male',
-  // Legacy keys for existing reports
   'Classic Director': 'cd_male',
   'Commercial Queen': 'cd_female',
   'The Auteur': 'cd_male',

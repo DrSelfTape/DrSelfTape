@@ -2,7 +2,10 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import ReconnectingWebSocket from "reconnecting-websocket";
-import { HeartHandshake } from "lucide-react";
+import { HeartHandshake, Video, PhoneOff } from "lucide-react";
+import { Haptics } from "@capacitor/haptics";
+import { Capacitor } from "@capacitor/core";
+import { VoipCall, isVoipNative, registerVoip } from "../utils/voipCall";
 import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats, fetchGreenRoomMessages, fetchActivityFeed } from "../redux/features/readers/readersMatchSlice";
 import { getNotifications } from "../redux/features/notifications/notificationsSlice";
 import { baseURL } from "../redux/constant";
@@ -100,20 +103,26 @@ export const SocketProvider = ({ children }) => {
       case 'rehearsal_started':
         dispatch(fetchActivityFeed());
         if (data?.room_url && data?.match_id) {
-          setIncomingCall({
-            matchId: data.match_id,
-            roomUrl: data.room_url,
-            partnerName: data.partner_name || 'Your scene partner',
-          });
-          // 60s gives the receiver enough time to finish typing / switch
-          // tabs / answer a different distraction before the modal
-          // auto-dismisses. The caller's Waiting state stays up regardless.
-          setTimeout(() => setIncomingCall((prev) =>
-            prev?.matchId === data.match_id ? null : prev
-          ), 60000);
-          // Light haptic on iOS via the Vibration API (Capacitor maps
-          // this to real haptics where available; on Safari it no-ops).
-          try { navigator.vibrate?.([200, 80, 200]); } catch { /* no-op */ }
+          const partner = data.partner_name || 'Your scene partner';
+          if (isVoipNative()) {
+            // Native iOS → real system CallKit incoming-call UI. (Level 2's
+            // killed-app ring comes from the BE VoIP push, handled natively.)
+            VoipCall.showIncomingCall({
+              callId: String(data.match_id),
+              callerName: partner,
+              roomUrl: data.room_url,
+              hasVideo: true,
+            }).catch(() => {
+              setIncomingCall({ matchId: data.match_id, roomUrl: data.room_url, partnerName: partner });
+            });
+          } else {
+            // Web → in-app full-screen modal (60s auto-dismiss).
+            setIncomingCall({ matchId: data.match_id, roomUrl: data.room_url, partnerName: partner });
+            setTimeout(() => setIncomingCall((prev) =>
+              prev?.matchId === data.match_id ? null : prev
+            ), 60000);
+            try { navigator.vibrate?.([200, 80, 200]); } catch { /* no-op */ }
+          }
         }
         break;
 
@@ -190,26 +199,59 @@ export const SocketProvider = ({ children }) => {
     };
   }, [currentUser, token, handleIncomingMessage]);
 
+  // Parse a Daily room URL → in-app meeting route, and navigate.
+  const joinRoom = useCallback((roomUrl) => {
+    if (!roomUrl) return;
+    let roomId;
+    try { roomId = new URL(roomUrl).pathname.split('/').filter(Boolean).pop(); } catch { return; }
+    if (roomId) navigate(`/meeting/${roomId}`, { state: { roomUrl } });
+  }, [navigate]);
+
   const acceptCall = () => {
     if (!incomingCall) return;
     const { roomUrl } = incomingCall;
-    let roomId;
-    try {
-      const parsed = new URL(roomUrl);
-      roomId = parsed.pathname.split('/').filter(Boolean).pop();
-    } catch {
-      setIncomingCall(null);
-      return;
-    }
-    if (!roomId) {
-      setIncomingCall(null);
-      return;
-    }
     setIncomingCall(null);
-    navigate(`/meeting/${roomId}`, { state: { roomUrl } });
+    joinRoom(roomUrl);
   };
 
   const declineCall = () => setIncomingCall(null);
+
+  // ── Native CallKit (iOS) — Level 1 (app alive, via showIncomingCall) AND
+  // Level 2 (app killed/locked, via PushKit VoIP push). One native CXProvider;
+  // the answer event carries the room URL, so JS just joins.
+  useEffect(() => {
+    if (!isVoipNative()) return;
+    let subs = [];
+    (async () => {
+      try {
+        registerVoip(); // register for VoIP pushes + report token to BE
+        subs.push(await VoipCall.addListener('callAnswered', (e) => {
+          if (e?.roomUrl) joinRoom(e.roomUrl);
+          // End the CallKit call immediately — the real call lives in the Daily
+          // room, so leaving it "active" would show a lingering iOS call bar.
+          if (e?.callId) { try { VoipCall.endCall({ callId: e.callId }); } catch { /* noop */ } }
+        }));
+        // Cold launch: the app was opened by answering a CallKit call before JS
+        // was listening — drain the stashed answer.
+        const pending = await VoipCall.getPendingAnswer();
+        if (pending?.roomUrl) joinRoom(pending.roomUrl);
+      } catch { /* plugin unavailable */ }
+    })();
+    return () => { subs.forEach((s) => { try { s.remove(); } catch { /* noop */ } }); };
+  }, [joinRoom]);
+
+  // Pulse a ringing haptic while the full-screen incoming-call alert is up.
+  useEffect(() => {
+    if (!incomingCall) return;
+    let active = true;
+    (async () => {
+      while (active) {
+        try { await Haptics.vibrate({ duration: 700 }); } catch { /* web / no haptics */ }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+    })();
+    return () => { active = false; };
+  }, [incomingCall]);
 
   const handleLikeToastTap = () => {
     setLikeToast(null);
@@ -257,45 +299,63 @@ export const SocketProvider = ({ children }) => {
         </div>
       )}
 
-      {/* ── Incoming Call Modal ───────────────────────────────────────── */}
+      {/* ── Full-screen Incoming Video Call (FaceTime-style) ──────────────── */}
       {incomingCall && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-[#1A1A2E] border border-[#FF8280]/40 rounded-2xl px-8 py-8 flex flex-col items-center gap-5 shadow-2xl max-w-sm w-full mx-4"
-            style={{ animation: 'badgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
-          >
-            {/* Pulsing avatar */}
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#FF8280] to-[#7B2FBE] flex items-center justify-center">
-                <span className="text-2xl">🎬</span>
+        <div
+          className="fixed inset-0 flex flex-col items-center justify-between"
+          style={{
+            zIndex: 2147483600,
+            background: 'linear-gradient(180deg, #1A1726 0%, #0A0A0F 100%)',
+            padding: 'calc(env(safe-area-inset-top, 0px) + 72px) 28px calc(env(safe-area-inset-bottom, 0px) + 56px)',
+          }}
+        >
+          {/* Caller */}
+          <div className="flex flex-col items-center" style={{ marginTop: 24 }}>
+            <div className="relative mb-8">
+              <div
+                className="rounded-full flex items-center justify-center text-5xl"
+                style={{ width: 132, height: 132, background: 'linear-gradient(135deg, #FF8280, #7B2FBE)', boxShadow: '0 0 70px rgba(255,130,128,0.45)' }}
+              >
+                {(incomingCall.partnerName || '🎬').trim()[0]?.toUpperCase() || '🎬'}
               </div>
-              <div className="absolute inset-0 rounded-full bg-[#FF8280]/30 animate-ping" />
+              <div className="absolute inset-0 rounded-full animate-ping" style={{ border: '2px solid rgba(255,130,128,0.45)' }} />
             </div>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[#FF8280] mb-3">Incoming video call</p>
+            <h2 className="text-white font-bold text-center" style={{ fontSize: 30, letterSpacing: '-0.5px' }}>{incomingCall.partnerName || 'Scene Partner'}</h2>
+            <p className="text-white/50 mt-2 text-base">Live scene reading…</p>
+          </div>
 
-            <div className="text-center">
-              <p className="text-xs font-semibold uppercase tracking-widest text-[#FF8280] mb-1">Incoming Scene Request</p>
-              <h2 className="text-xl font-bold text-white">{incomingCall.partnerName}</h2>
-              <p className="text-sm text-[#999] mt-1">is inviting you to a live read</p>
-            </div>
-
-            <div className="flex gap-3 w-full">
+          {/* FaceTime-style controls */}
+          <div className="flex items-start justify-between w-full" style={{ maxWidth: 300 }}>
+            <div className="flex flex-col items-center gap-3">
               <button
                 onClick={declineCall}
-                className="flex-1 py-2.5 rounded-xl border border-[#3A3A3A] text-[#999] text-sm font-semibold hover:bg-[#2A2A2A] transition-colors"
+                onTouchEnd={(e) => { e.preventDefault(); declineCall(); }}
+                aria-label="Decline"
+                className="rounded-full flex items-center justify-center active:scale-95 transition-transform"
+                style={{ width: 76, height: 76, background: '#FF3B30', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               >
-                Decline
+                <PhoneOff size={30} color="#fff" />
               </button>
+              <span className="text-sm text-white/70">Decline</span>
+            </div>
+            <div className="flex flex-col items-center gap-3">
               <button
                 onClick={acceptCall}
-                className="flex-1 py-2.5 rounded-xl bg-[#FF8280] text-white text-sm font-semibold hover:bg-[#A040C8] transition-colors"
+                onTouchEnd={(e) => { e.preventDefault(); acceptCall(); }}
+                aria-label="Connect"
+                className="rounded-full flex items-center justify-center active:scale-95 transition-transform"
+                style={{ width: 76, height: 76, background: '#34C759', boxShadow: '0 0 28px rgba(52,199,89,0.5)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', animation: 'callPulse 1.4s ease-in-out infinite' }}
               >
-                Join Scene 🎬
+                <Video size={32} color="#fff" />
               </button>
+              <span className="text-sm text-white/70">Connect</span>
             </div>
           </div>
           <style>{`
-            @keyframes badgePop {
-              from { opacity:0; transform:scale(0.7) translateY(20px); }
-              to   { opacity:1; transform:scale(1) translateY(0); }
+            @keyframes callPulse {
+              0%,100% { transform: scale(1); box-shadow: 0 0 28px rgba(52,199,89,0.5); }
+              50%     { transform: scale(1.08); box-shadow: 0 0 44px rgba(52,199,89,0.8); }
             }
           `}</style>
         </div>

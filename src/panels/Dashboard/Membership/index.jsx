@@ -281,7 +281,22 @@ export default function Membership({ onClose }) {
     try {
       const res = await axiosInstance.post('/v1/subscriptions/checkout/', { plan: planId, billing });
       clearWatchdog();
-      const checkoutUrl = res.data.data.checkout_url;
+      const data = res.data?.data || {};
+      const checkoutUrl = data.checkout_url;
+      // No checkout_url → the user already had an active subscription and the
+      // BE changed the plan IN PLACE with Stripe proration (charged only the
+      // prorated difference). Surface the result + refresh status instead of
+      // redirecting to a checkout page.
+      if (!checkoutUrl) {
+        setCheckoutLoading(null);
+        dispatch(showSnackbar({
+          message: data.message || (data.changed ? 'Plan updated.' : "You're already on this plan."),
+          variant: 'success',
+        }));
+        trackPurchase({ status: data.changed ? 'completed' : 'noop' });
+        axiosInstance.get('/v1/subscriptions/status/').then((r) => setStatus(r.data.data)).catch(() => {});
+        return;
+      }
       // Native (Android here — iOS uses IAP and never reaches this branch):
       // open Stripe in an in-app browser (Custom Tab) instead of navigating
       // the WebView away, which destroys the SPA and strands the user with
@@ -332,6 +347,10 @@ export default function Membership({ onClose }) {
   };
 
   const currentPlan = status?.plan;
+  // Once a user has an active plan the free trial / intro offer is gone for
+  // every plan — the stores already block a re-used trial, so hide the badge
+  // to match (showing "1 week free" to an existing subscriber is misleading).
+  const hasActivePlan = status?.status === 'active';
   const tokenBalance = status?.balance ?? 0;
   const sel = PLANS.find((p) => p.id === selectedPlan);
   const selIntro = introOffers[`${selectedPlan}_${billing}`];
@@ -504,7 +523,7 @@ export default function Membership({ onClose }) {
                     }}>
                       <span style={{ fontWeight: 600, color: 'var(--aurora-mint)' }}>{plan.tokens}</span> AI tokens · {plan.rollover ? 'rollover' : 'no rollover'}
                     </div>
-                    {planIntroLabel && (
+                    {planIntroLabel && !hasActivePlan && (
                       <div style={{
                         display: 'inline-block', marginTop: 8,
                         padding: '4px 10px', borderRadius: 100,
@@ -582,7 +601,7 @@ export default function Membership({ onClose }) {
                 </span>
               ) : (
                 <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 3, lineHeight: 1.15 }}>
-                  {selIntro?.isFreeTrial && (
+                  {selIntro?.isFreeTrial && !hasActivePlan && (
                     <span style={{
                       fontSize: 10, fontWeight: 500, letterSpacing: '0.14em',
                       textTransform: 'uppercase', opacity: 0.78,
@@ -592,7 +611,7 @@ export default function Membership({ onClose }) {
                     </span>
                   )}
                   <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.2px' }}>
-                    Subscribe · ${ctaPrice}/{billing === 'monthly' ? 'mo' : 'yr'} →
+                    {hasActivePlan ? 'Switch' : 'Subscribe'} · ${ctaPrice}/{billing === 'monthly' ? 'mo' : 'yr'} →
                   </span>
                 </span>
               )}

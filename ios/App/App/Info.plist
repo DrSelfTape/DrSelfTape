@@ -51,6 +51,8 @@
 	<string>Dr Self Tape needs camera access for video rehearsals and self-tape recording.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Dr Self Tape needs microphone access for live scene readings and voice rehearsals.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Dr Self Tape listens to your lines so the AI reader can respond on your cue, like a real scene partner.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Dr Self Tape needs photo access to upload your headshot.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
@@ -61,14 +63,10 @@
 	     restore the string AND update the Privacy survey to declare tracking. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<!-- UIBackgroundModes intentionally omitted. We don't currently
-	     register for native APNs (the Capacitor PushNotifications
-	     plugin is installed but unused on the JS side). Declaring
-	     `remote-notification` without wiring it gives Apple reviewers
-	     a "feature claimed but not implemented" rejection vector.
-	     When native push ships, add back:
-	         <key>UIBackgroundModes</key>
-	         <array><string>remote-notification</string></array>
-	-->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>voip</string>
+		<string>audio</string>
+	</array>
 </dict>
 </plist>

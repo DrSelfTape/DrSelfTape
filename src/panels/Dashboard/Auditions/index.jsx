@@ -635,19 +635,12 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     setParsing(true);
     setParseError('');
     try {
-      const pdfjsLib = await import('pdfjs-dist');
-      const { default: PdfWorker } = await import('pdfjs-dist/build/pdf.worker.min.mjs?worker');
-      pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
+      // Shared extractor — reconstructs real line breaks. The old inline
+      // `items.map(str).join(' ')` collapsed each page to one line, the
+      // same bug that broke Scripts uploads.
+      const { extractPdfText } = await import('../../../utils/pdfText');
       const { cleanScriptText } = await import('../../../utils/scriptCleaner');
-      const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-      const pages = [];
-      for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const content = await page.getTextContent();
-        pages.push(content.items.map((item) => item.str).join(' '));
-      }
-      const text = cleanScriptText(pages.join('\n'));
+      const text = cleanScriptText(await extractPdfText(file));
       await parseWithAI(text);
     } catch {
       setParseError('Could not read PDF — try pasting the text instead.');

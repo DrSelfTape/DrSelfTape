@@ -5,12 +5,18 @@ import { openExternal } from "../utils/openExternal";
 import { trackEvent } from "../utils/analytics";
 
 const APP_STORE_URL = "itms-apps://itunes.apple.com/app/id6770320460";
+const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.drselftape.app";
+
+// The right store per platform — itms-apps:// is dead on Android.
+function storeUrl() {
+  return Capacitor.getPlatform() === 'android' ? PLAY_STORE_URL : APP_STORE_URL;
+}
 
 // The marketing version baked into THIS FE bundle. Bump in lockstep with the
-// iOS pbxproj MARKETING_VERSION every time we ship a new build. The banner
-// only fires when the BE-reported live version is GREATER than this constant,
-// so users on the latest bundle never see a stale "update" nag.
-const BUNDLE_VERSION = "1.0.5";
+// iOS pbxproj MARKETING_VERSION / Android versionName every time we ship. The
+// banner only fires when the BE-reported live version is GREATER than this, so
+// users on the latest bundle never see a stale "update" nag.
+const BUNDLE_VERSION = "1.0.7";
 
 const LS_DISMISSED = "updateBannerDismissed";
 const VERSION_ENDPOINT = "/v1/notifications/system/latest-version/";
@@ -36,16 +42,17 @@ export default function UpdateBanner() {
     (async () => {
       try {
         const { data } = await axiosInstance.get(VERSION_ENDPOINT);
-        const reported = data?.ios;
+        // Read the live version for THIS platform (ios / android).
+        const reported = Capacitor.getPlatform() === 'android' ? data?.android : data?.ios;
         if (!cancelled && reported) setLatest(reported);
       } catch { /* network down — banner stays hidden */ }
     })();
     return () => { cancelled = true; };
   }, []);
 
-  // iOS-only — links to the App Store (itms-apps://). Web auto-updates via
-  // Vercel; Android has no update channel yet, so don't show a dead CTA.
-  if (Capacitor.getPlatform() !== 'ios') return null;
+  // Native only — links to the right store per platform. Web auto-updates via
+  // Vercel, so no nag there.
+  if (!Capacitor.isNativePlatform()) return null;
   if (!latest) return null;
   if (!versionGt(latest, BUNDLE_VERSION)) return null;
 
@@ -57,7 +64,7 @@ export default function UpdateBanner() {
     if (opening) return;
     setOpening(true);
     trackEvent("update_banner_tapped", { from: BUNDLE_VERSION, to: latest });
-    openExternal(APP_STORE_URL);
+    openExternal(storeUrl());
   };
 
   const handleDismiss = () => {

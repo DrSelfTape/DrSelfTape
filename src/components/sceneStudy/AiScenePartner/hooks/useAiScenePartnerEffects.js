@@ -535,6 +535,13 @@ export const useAiScenePartnerEffects = ({
     return () => clearInterval(interval);
   }, [pendingSession, versionId, dispatch, setPendingSession, state]);
 
+  // Keep a live ref to recordings so the unmount cleanup revokes the blob
+  // URLs that actually exist at teardown. The previous []-deps cleanup closed
+  // over the INITIAL (empty) recordings array, so every blob URL created
+  // mid-session was leaked (never revoked) when leaving the scene partner.
+  const recordingsRef = useRef(recordings);
+  useEffect(() => { recordingsRef.current = recordings; }, [recordings]);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -545,7 +552,7 @@ export const useAiScenePartnerEffects = ({
       if (mediaStreamRef?.current) {
         mediaStreamRef.current.getTracks().forEach((t) => t.stop());
       }
-      recordings.forEach((r) => {
+      recordingsRef.current.forEach((r) => {
         if (r.url) URL.revokeObjectURL(r.url);
       });
     };

@@ -454,6 +454,7 @@ function GeneratorScreen() {
   const [generated, setGenerated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sceneText, setSceneText] = useState("");
+  const [genError, setGenError] = useState("");
 
   const genres = ["Drama", "Comedy", "Thriller", "Sci-Fi", "Romance", "Horror"];
   const tones = ["Intense", "Tender", "Dark", "Playful", "Urgent", "Dry"];
@@ -461,18 +462,26 @@ function GeneratorScreen() {
 
   const handleGenerate = async () => {
     setLoading(true);
+    setGenError('');
     try {
+      // 60s timeout — without it a slow/hung BE leaves the spinner stuck
+      // forever with no feedback (the request would never reject).
       const response = await axios.post(endPoints.cdFeedback, {
         line: `Write a 1-page dramatic ${genre} scene with ${tone} tone. Format as screenplay with character names in CAPS. Make it emotionally rich. 2 characters, 6-8 lines each.`,
         type: "scene_gen",
         character: genre,
         script_context: tone,
-      });
+      }, { timeout: 60000 });
       const text = response.data?.data?.feedback || response.data?.feedback || "";
       setSceneText(text);
       if (text) setGenerated(true);
+      else setGenError("The generator didn't return a scene. Please try again.");
     } catch (err) {
-      // error handled by UI state
+      setGenError(
+        err?.code === 'ECONNABORTED'
+          ? "This is taking too long — please try again."
+          : "Couldn't generate a scene right now. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -528,6 +537,9 @@ function GeneratorScreen() {
             background: loading ? `${CORAL}80` : `linear-gradient(135deg, ${CORAL_SOFT}, ${CORAL})`, color: "#fff",
             fontSize: 15, fontWeight: 700, opacity: loading ? 0.7 : 1,
           }}>{loading ? "Generating..." : "Generate scene"}</button>
+          {genError && (
+            <p style={{ fontSize: 13, color: CORAL, marginTop: 10, textAlign: "center" }}>{genError}</p>
+          )}
         </>
       ) : (
         <div>

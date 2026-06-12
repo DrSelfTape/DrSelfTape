@@ -14,6 +14,7 @@ import {
   Textarea,
 } from '../../../components/Shared';
 import { validateEmail, validatePassword } from '../../../utils/utils';
+import { MIN_SIGNUP_AGE, calculateAge } from '../../../utils/age';
 import PasswordRequirements from '../../../components/Shared/PasswordRequirments';
 import { registerUser } from '../../../redux/features/auth/authSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
@@ -31,6 +32,7 @@ export const Signup = () => {
     confirmPassword: '',
     accountType: { label: 'Actor', value: 'actor' },
     phoneNo: '',
+    dateOfBirth: '',
   });
   const fieldRefs = {
     email: useRef(null),
@@ -75,6 +77,19 @@ export const Signup = () => {
       newErrors.confirmPassword = 'Passwords do not match';
     }
 
+    // Age gate (Terms §1 / COPPA). The server re-validates in
+    // apps/users/age.py — this is the friendly pre-flight guard.
+    if (!formData?.dateOfBirth) {
+      newErrors.dateOfBirth = 'Please enter your date of birth';
+    } else {
+      const age = calculateAge(formData.dateOfBirth);
+      if (new Date(formData.dateOfBirth).getTime() > Date.now()) {
+        newErrors.dateOfBirth = 'Date of birth cannot be in the future';
+      } else if (Number.isNaN(age) || age < MIN_SIGNUP_AGE) {
+        newErrors.dateOfBirth = `You must be at least ${MIN_SIGNUP_AGE} to join Dr Self Tape`;
+      }
+    }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       const firstErrorField = Object.keys(newErrors)[0];
@@ -92,6 +107,7 @@ export const Signup = () => {
     registrationPayload.append('password', formData?.password);
     registrationPayload.append('first_name', formData?.firstName?.trim());
     registrationPayload.append('role', 'actor');
+    registrationPayload.append('date_of_birth', formData?.dateOfBirth);
 
     try {
       setLoading(true);
@@ -106,6 +122,7 @@ export const Signup = () => {
           confirmPassword: '',
           accountType: { label: 'Actor', value: 'actor' },
           phoneNo: '',
+          dateOfBirth: '',
         });
         setLoading(false);
       } else if (data?.meta?.requestStatus === 'rejected') {
@@ -197,6 +214,17 @@ export const Signup = () => {
                 errorMsg={errors.confirmPassword}
                 ref={fieldRefs.confirmPassword}
               />
+
+              <CustomInput
+                label='Date of Birth'
+                name='dateOfBirth'
+                type='date'
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                error={!!errors.dateOfBirth}
+                errorMsg={errors.dateOfBirth}
+                required
+              />
             </div>
 
             <div className='space-y-5 mt-6'>
@@ -239,6 +267,7 @@ export const Signup = () => {
                     !formData.email ||
                     !formData.password ||
                     !formData.confirmPassword ||
+                    !formData.dateOfBirth ||
                     !isPasswordValid ||
                     !agreeTerms
                   }

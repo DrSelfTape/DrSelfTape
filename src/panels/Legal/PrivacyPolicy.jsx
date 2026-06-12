@@ -19,6 +19,11 @@ export default function PrivacyPolicy() {
         number, role (actor / casting director / coach / agent), and password (stored as a
         cryptographic hash — we never see your raw password).</p>
 
+        <p><strong>Date of birth.</strong> We collect your date of birth solely to verify that you
+        meet our minimum age requirement (you must be at least 13 years old to create an account).
+        We store it to confirm eligibility and do not use it for advertising or share it for
+        marketing.</p>
+
         <p><strong>Profile content.</strong> Headshots, bio, union status, genres, years of
         experience, and other details you choose to add to your profile.</p>
 

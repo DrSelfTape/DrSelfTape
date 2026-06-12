@@ -201,6 +201,10 @@ export default function CDSim() {
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Bumped by the Retry button to force the coach-request effect to re-run
+  // even though `step` is already 'analyzing' (otherwise Retry was a no-op
+  // and the error screen stranded the user).
+  const [retryNonce, setRetryNonce] = useState(0);
   // Set when this session was launched from a Craft Journey node — used
   // to dispatch completeCraftNode when the CD report finishes generating.
   const [craftSkill, setCraftSkill] = useState('');
@@ -260,6 +264,15 @@ export default function CDSim() {
       .then((res) => {
         if (!cancelled) {
           const reportData = res.data?.data || res.data;
+          // Don't log / show a partial or fallback payload as a real coach
+          // report — strand it on the error screen (Retry) instead of saving
+          // a junk session to Jericho memory.
+          const isValidReport = reportData && typeof reportData === 'object'
+            && (reportData.interpretation || reportData.performance);
+          if (!isValidReport) {
+            setError("The coach didn't return a complete report. Please try again.");
+            return;
+          }
           setReport(reportData);
           setStep('report');
           // If this session was launched from a Craft Journey node, mark
@@ -304,7 +317,7 @@ export default function CDSim() {
     return () => {
       cancelled = true;
     };
-  }, [step, scriptText, selectedRole, selectedVoice]);
+  }, [step, scriptText, selectedRole, selectedVoice, retryNonce]);
 
   const currentStepIdx = STEPS.indexOf(step);
 
@@ -374,7 +387,7 @@ export default function CDSim() {
       )}
 
       {step === 'analyzing' && (
-        <AnalyzingPhase error={error} onRetry={() => { setError(''); setStep('analyzing'); }} />
+        <AnalyzingPhase error={error} onRetry={() => { setError(''); setRetryNonce((n) => n + 1); }} />
       )}
 
       {step === 'report' && report && (

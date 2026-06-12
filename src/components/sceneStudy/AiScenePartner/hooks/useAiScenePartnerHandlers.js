@@ -382,6 +382,7 @@ export const useAiScenePartnerHandlers = ({
     scriptData,
     checkIsUserLine, // Add checkIsUserLine to dependencies
     tone,
+    scriptAnalysis,
     state.sessionId,
     versionId,
     setSessionStarted,
@@ -413,7 +414,13 @@ export const useAiScenePartnerHandlers = ({
       console.log('=== [handlePlayNonUserLine] END (no audioPlayer) ===');
       return;
     }
-    
+
+    // Declared up-front: the paused-resume branch below reads `line` (via
+    // getLineAudio(line)) BEFORE it was previously declared further down,
+    // throwing a TDZ ReferenceError that killed every resume-on-tap of a
+    // paused partner line. Hoisting the declaration fixes that.
+    const line = scriptLines[index];
+
     // If forcePlay is true (e.g., from playNextPartnerAfter), always play fresh
     // Skip pause/resume logic and go straight to playing
     if (!callOptions.forcePlay) {
@@ -475,7 +482,7 @@ export const useAiScenePartnerHandlers = ({
     
     // Case 3: Different line or no line playing - stop current (if any) and play new line
     // Check if line exists and has audio (same as main screen logic)
-    const line = scriptLines[index];
+    // (`line` is declared at the top of this callback — see TDZ note above.)
     console.log('[handlePlayNonUserLine] Line exists:', !!line, 'line text:', line?.line?.substring(0, 50));
     if (!line) {
       console.log('[handlePlayNonUserLine] ERROR: No line found at index:', index);

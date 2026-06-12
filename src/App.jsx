@@ -14,6 +14,7 @@ import { initPurchases } from './utils/purchases';
 import { openExternal } from './utils/openExternal';
 import { resumeQueue } from './utils/uploadQueue';
 import AIConsentModal from './components/AIConsent/AIConsentModal';
+import AgeGateModal from './components/AgeGate/AgeGateModal';
 
 function App() {
   const dispatch = useDispatch();
@@ -143,6 +144,13 @@ function App() {
       setTimeout(() => {
         if (Date.now() - lastRealClickAt < 90) return; // native click fired, all good
         if (lastSyntheticTarget !== tappable) return;
+        // The first tap may have re-rendered and REPLACED its own element
+        // (a Trash→Confirm swap, a CDSim wizard step transition, etc.). The
+        // captured `tappable` is then a detached node: firing click() on it
+        // does nothing AND consumes the tap, so the control looks dead after
+        // one interaction. Only rescue a node that's still in the live DOM —
+        // a genuinely-dropped click on a stable element still gets rescued.
+        if (!tappable.isConnected) return;
         try { tappable.click(); } catch { /* swallow */ }
       }, 80);
     };
@@ -167,6 +175,9 @@ function App() {
           `await requestAiConsent()` and get a single, consistent prompt
           before sending user data to Anthropic / OpenAI / ElevenLabs. */}
       <AIConsentModal />
+      {/* Terms §1 / COPPA: opens for any authenticated user with no
+          birthdate on file (Sign-in-with-Apple + pre-DOB accounts). */}
+      <AgeGateModal />
     </SocketProvider>
   );
 }

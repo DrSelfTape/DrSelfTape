@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Play, Upload, Send, X, Film, Calendar, Clock, Check,
-  Loader2, AlertCircle, HardDriveDownload,
+  Loader2, AlertCircle, HardDriveDownload, Pencil, Trash2,
 } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -469,10 +469,27 @@ function SyncChip({ syncState, progress, onRetry }) {
   return null;
 }
 
+// iOS WKWebView tap belt — onTouchEnd + preventDefault + touch-action so
+// these small icon buttons don't depend on the flaky global click rescue.
+const _iconBtn = {
+  background: 'transparent', border: 'none', padding: 4, cursor: 'pointer',
+  touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+};
+
 function TapeCard({
   tape, onPlay, onSubmitCasting, syncState, syncProgress, onRetry, onFreeUpSpace,
+  onDelete, onRename,
 }) {
   const isLocalOnly = !tape.id && !!tape.localId;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [draftTitle, setDraftTitle] = useState(tape.title || '');
+  const saveRename = () => {
+    const t = draftTitle.trim();
+    setEditing(false);
+    if (t && t !== tape.title) onRename?.(tape, t);
+    else setDraftTitle(tape.title || '');
+  };
   return (
     <div
       className="rounded-2xl border overflow-hidden"
@@ -512,9 +529,53 @@ function TapeCard({
 
       {/* Details */}
       <div className="p-4">
-        <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>
-          {tape.title}
-        </h3>
+        {editing ? (
+          <div className="flex items-center gap-1.5">
+            <input
+              autoFocus
+              value={draftTitle}
+              onChange={(e) => setDraftTitle(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') saveRename(); if (e.key === 'Escape') { setEditing(false); setDraftTitle(tape.title || ''); } }}
+              className="flex-1 text-sm font-semibold px-2 py-1 rounded-md outline-none"
+              style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-default)' }}
+            />
+            <button type="button" title="Save" onClick={saveRename} onTouchEnd={(e) => { e.preventDefault(); saveRename(); }} style={_iconBtn}>
+              <Check className="w-4 h-4" style={{ color: '#7A5A18' }} />
+            </button>
+            <button type="button" title="Cancel" onClick={() => { setEditing(false); setDraftTitle(tape.title || ''); }} onTouchEnd={(e) => { e.preventDefault(); setEditing(false); setDraftTitle(tape.title || ''); }} style={_iconBtn}>
+              <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-start justify-between gap-2">
+            <h3 className="text-sm font-semibold truncate flex-1" style={{ color: 'var(--text-primary)' }}>
+              {tape.title}
+            </h3>
+            {!isLocalOnly && (
+              <div className="flex items-center gap-0.5 shrink-0">
+                <button type="button" title="Rename" onClick={() => setEditing(true)} onTouchEnd={(e) => { e.preventDefault(); setEditing(true); }} style={_iconBtn}>
+                  <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                </button>
+                <button type="button" title="Delete" onClick={() => setConfirmDelete(true)} onTouchEnd={(e) => { e.preventDefault(); setConfirmDelete(true); }} style={_iconBtn}>
+                  <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        {confirmDelete && (
+          <div className="flex items-center gap-2 mt-2">
+            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Delete this tape?</span>
+            <button type="button" onClick={() => { setConfirmDelete(false); onDelete?.(tape); }} onTouchEnd={(e) => { e.preventDefault(); setConfirmDelete(false); onDelete?.(tape); }}
+              className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: 'var(--aurora-coral, #FF8280)', color: '#fff', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', border: 'none' }}>
+              Delete
+            </button>
+            <button type="button" onClick={() => setConfirmDelete(false)} onTouchEnd={(e) => { e.preventDefault(); setConfirmDelete(false); }}
+              className="text-xs px-2 py-1" style={{ color: 'var(--text-muted)', background: 'transparent', border: 'none', touchAction: 'manipulation' }}>
+              Cancel
+            </button>
+          </div>
+        )}
 
         {tape.project_name && (
           <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
@@ -702,6 +763,30 @@ export default function SelfTapes() {
     });
   };
 
+  const handleDeleteTape = async (tape) => {
+    if (!tape.id) return; // local-only rows are handled by free-up-space
+    const prev = tapes;
+    setTapes((cur) => cur.filter((t) => t.id !== tape.id)); // optimistic
+    try {
+      const res = await axios.delete(`${baseURL}/v1/growth/self-tapes/${tape.id}/`);
+      if (res?.data?.data?.quota) setQuota(res.data.data.quota);
+    } catch {
+      setTapes(prev); // restore on failure
+      fetchTapes();
+    }
+  };
+
+  const handleRenameTape = async (tape, newTitle) => {
+    const title = (newTitle || '').trim();
+    if (!tape.id || !title || title === tape.title) return;
+    setTapes((cur) => cur.map((t) => (t.id === tape.id ? { ...t, title } : t))); // optimistic
+    try {
+      await axios.patch(`${baseURL}/v1/growth/self-tapes/${tape.id}/`, { title });
+    } catch {
+      fetchTapes(); // reconcile on failure
+    }
+  };
+
   // Merge local-pending tapes (not yet on the server) above the server
   // tapes for rendering. Local rows have a synthetic shape mirroring
   // what the server returns, with `localId` flagging them as such.
@@ -804,6 +889,8 @@ export default function SelfTapes() {
                 onSubmitCasting={setSubmitTape}
                 onRetry={() => handleRetry(localId)}
                 onFreeUpSpace={handleFreeUpSpace}
+                onDelete={handleDeleteTape}
+                onRename={handleRenameTape}
               />
             );
           })}
