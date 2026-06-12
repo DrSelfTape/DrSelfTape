@@ -112,6 +112,7 @@ const endPoints = {
   parseBreakdown: `${baseURL}/v1/ai/parse-breakdown/`,
   formatScript: `${baseURL}/v1/ai/format-script/`,
   parseSides: `${baseURL}/v1/ai/parse-sides/`,
+  feedback: `${baseURL}/v1/users/feedback/`,
   scenePartner: `${baseURL}/v1/ai/scene-partner/`,
   transcribe: `${baseURL}/v1/ai/transcribe/`,
   tts: `${baseURL}/v1/ai/tts/`,

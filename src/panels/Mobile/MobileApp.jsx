@@ -6,6 +6,7 @@ import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
 import UpdateBanner from "../../components/UpdateBanner";
 import WhatsNewModal from "../../components/WhatsNewModal";
+import ReportProblemModal from "../../components/ReportProblemModal";
 import { fetchAuditionsThunk, fetchAuditionStatsThunk, createAuditionThunk, updateAuditionThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
@@ -899,6 +900,7 @@ const MORE_FEATURES = [
   { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072" },
   { id: "self-tapes", label: "Self-Tapes", desc: "Record and submit auditions", emoji: "📹", color: "#FFB49A" },
   { id: "whats-new", label: "What's New", desc: "See the latest features and updates", emoji: "🆕", color: "#A7ECDA" },
+  { id: "report-problem", label: "Report a Problem", desc: "Something not working? Tell us", emoji: "🐞", color: "#FF8280" },
 ];
 
 const PANEL_COMPONENTS = {
@@ -2729,7 +2731,11 @@ function MoreScreen({ setCurrentPanel }) {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {MORE_FEATURES.map(f => (
-          <button key={f.id} onClick={() => f.id === 'whats-new' ? window.dispatchEvent(new CustomEvent('drst-whats-new')) : setCurrentPanel(f.id)} className="aurora-glass" style={{
+          <button key={f.id} onClick={() => {
+            if (f.id === 'whats-new') return window.dispatchEvent(new CustomEvent('drst-whats-new'));
+            if (f.id === 'report-problem') return window.dispatchEvent(new CustomEvent('drst-report-problem'));
+            setCurrentPanel(f.id);
+          }} className="aurora-glass" style={{
             padding: "18px 16px", cursor: "pointer", textAlign: "left",
             transition: "transform 0.15s, box-shadow 0.2s",
             borderRadius: 18,
@@ -2981,6 +2987,7 @@ export default function DrSelfTapeApp() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [showNoTokens, setShowNoTokens] = useState(false);
   const [whatsNewForce, setWhatsNewForce] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   // Top bar is now pinned at the top — the previous scroll-driven hide
   // confused users who tried to tap the bell / avatar after scrolling
   // down. The bar still slides away for modals (driven by the modal-
@@ -3074,6 +3081,13 @@ export default function DrSelfTapeApp() {
     return () => window.removeEventListener('drst-whats-new', handler);
   }, []);
 
+  // "Report a Problem" open from the More menu.
+  useEffect(() => {
+    const handler = () => setShowReport(true);
+    window.addEventListener('drst-report-problem', handler);
+    return () => window.removeEventListener('drst-report-problem', handler);
+  }, []);
+
   const handleSetTab = (id) => {
     setTab(id);
     setCurrentPanel(null);
@@ -3129,6 +3143,7 @@ export default function DrSelfTapeApp() {
         forceOpen={whatsNewForce}
         onClose={() => setWhatsNewForce(false)}
       />
+      {showReport && <ReportProblemModal onClose={() => setShowReport(false)} />}
       {/* No tokens modal */}
       {showNoTokens && (
         <NoTokensModal
