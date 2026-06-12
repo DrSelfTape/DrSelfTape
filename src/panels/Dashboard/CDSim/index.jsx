@@ -96,7 +96,7 @@ function AnalyzingPhase({ error, onRetry }) {
   }, [error]);
 
   const stages = [
-    { k: 0, label: 'Transcribing scene', detail: 'WHISPER · 16kHz' },
+    { k: 0, label: 'Transcribing scene', detail: 'SPEECH-TO-TEXT · 16kHz' },
     { k: 1, label: 'Comparing to sides', detail: 'WORD-LEVEL DIFF' },
     { k: 2, label: 'Jericho is listening', detail: 'ACTING NOTES INCOMING' },
   ];
