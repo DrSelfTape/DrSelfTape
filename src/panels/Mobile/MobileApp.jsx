@@ -2421,7 +2421,8 @@ function ScenesScreen({ setTab }) {
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.25 }} />
                 <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
               </svg>
-              <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: 0 }}>{pdfLoading ? "Parsing PDF..." : "Saving..."}</p>
+              <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: 0 }}>{pdfLoading ? "Reading your PDF…" : "Saving..."}</p>
+              {pdfLoading && <p style={{ fontSize: 11, color: 'var(--aurora-dim)', margin: '2px 0 0' }}>This can take up to 90 seconds</p>}
             </div>
           ) : (
             <>

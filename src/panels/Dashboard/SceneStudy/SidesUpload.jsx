@@ -131,7 +131,7 @@ export default function SidesUpload({ onReady }) {
                 <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
               </svg>
               <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--aurora-text, #0A0A0A)', margin: 0 }}>Reading your sides…</p>
-              <p style={{ fontSize: 11, color: 'var(--aurora-sub, rgba(10,10,10,0.5))', margin: 0 }}>Finding the START/END, your role, the other parts</p>
+              <p style={{ fontSize: 11, color: 'var(--aurora-sub, rgba(10,10,10,0.5))', margin: 0 }}>Finding your role + the other parts — this can take up to 90 seconds</p>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>

@@ -230,7 +230,7 @@ export default function ScriptUpload({ onSubmit }) {
                   <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
                 </svg>
                 <p className="text-sm font-medium text-[#0A0A0A]">{pdfStatus || 'Processing...'}</p>
-                <p className="text-xs text-[rgba(10,10,10,0.4)]">This may take a few seconds</p>
+                <p className="text-xs text-[rgba(10,10,10,0.4)]">Image-based PDFs can take up to 90 seconds — hang tight</p>
               </div>
             ) : (
               <>

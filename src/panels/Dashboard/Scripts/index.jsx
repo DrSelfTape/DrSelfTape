@@ -272,7 +272,8 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
                   className="w-8 h-8 rounded-full animate-spin"
                   style={{ border: '3px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }}
                 />
-                <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>Parsing PDF...</p>
+                <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>Reading your PDF…</p>
+                <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>This can take up to 90 seconds</p>
               </div>
             ) : fileName ? (
               <div className="flex flex-col items-center gap-2">
