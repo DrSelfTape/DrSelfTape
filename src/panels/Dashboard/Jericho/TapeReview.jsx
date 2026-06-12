@@ -4,13 +4,15 @@
  * (verdict, what's working, prioritized adjustments, scores + Performance DNA),
  * grounded in the in-house coaching doctrine. Powered by /ai/jericho/tape-review/.
  */
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles,
-  RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater,
+  RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater, Trophy, HelpCircle,
 } from 'lucide-react';
 import { reviewTape, clearTapeReview } from '../../../redux/features/jericho/jerichoSlice';
+import CompareTakes from './CompareTakes';
+import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 
@@ -56,12 +58,63 @@ export default function TapeReview() {
   const dispatch = useDispatch();
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError } = useSelector((s) => s.jericho);
 
+  const [mode, setMode] = useState('single'); // 'single' | 'compare'
   const [file, setFile] = useState(null);
   const [role, setRole] = useState('');
   const [tone, setTone] = useState('');
   const [sides, setSides] = useState('');
   const [showOptional, setShowOptional] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const inputRef = useRef(null);
+
+  // First time an actor opens the analyzer → show the walkthrough.
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem(TAPE_TUTORIAL_KEY)) setShowTutorial(true);
+    } catch { /* private mode — just skip */ }
+  }, []);
+
+  // A plain element (not an inline component) so re-renders reconcile it in
+  // place — otherwise the tutorial overlay would remount + replay its
+  // animation on every keystroke. Renders in both modes.
+  const modeToggle = (
+    <>
+      {showTutorial && <TapeAnalyzerTutorial onClose={() => setShowTutorial(false)} />}
+      <div className="flex items-center gap-1.5 mb-4">
+        <div className="flex gap-1.5 p-1 rounded-xl bg-[#F4F4EE] flex-1">
+          <button
+            onClick={() => setMode('single')}
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'single' ? 'bg-white text-[#0A0A0A] shadow-sm' : 'text-[rgba(10,10,10,0.5)]'}`}
+          >
+            <Sparkles size={13} /> Review a take
+          </button>
+          <button
+            onClick={() => setMode('compare')}
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'compare' ? 'bg-white text-[#0A0A0A] shadow-sm' : 'text-[rgba(10,10,10,0.5)]'}`}
+          >
+            <Trophy size={13} /> Compare takes
+          </button>
+        </div>
+        <button
+          onClick={() => setShowTutorial(true)}
+          aria-label="How the analyzer works"
+          className="w-9 h-9 rounded-xl bg-[#F4F4EE] flex items-center justify-center text-[#7A5A18] flex-shrink-0 hover:bg-[#D4A85F]/15 transition-colors"
+        >
+          <HelpCircle size={17} />
+        </button>
+      </div>
+    </>
+  );
+
+  // Compare mode owns its own screen (upload / loading / ranked result).
+  if (mode === 'compare') {
+    return (
+      <div>
+        {modeToggle}
+        <CompareTakes />
+      </div>
+    );
+  }
 
   const onPick = (e) => {
     const f = e.target.files?.[0];
@@ -227,6 +280,7 @@ export default function TapeReview() {
   // ─── Submit form ───────────────────────────────────────────────────
   return (
     <div className="space-y-4">
+      {modeToggle}
       <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
         <h3 className="text-sm font-bold text-[#0A0A0A] mb-1 flex items-center gap-2">
           <Film size={16} className="text-[#7A5A18]" /> Submit a self-tape

@@ -128,6 +128,28 @@ export const reviewTape = createAsyncThunk(
   }
 );
 
+/** Compare 2-4 takes of the same audition → ranked winner + why */
+export const compareTakes = createAsyncThunk(
+  'jericho/compareTakes',
+  async ({ takes = [], sides = '', role = '', tone = '' }, { rejectWithValue }) => {
+    try {
+      const fd = new FormData();
+      takes.forEach((t) => fd.append('takes', t));
+      if (sides) fd.append('sides', sides);
+      if (role) fd.append('role', role);
+      if (tone) fd.append('tone', tone);
+      const { data } = await axios.post(endPoints.jerichoCompareTakes, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        // Several takes analyzed (concurrently) + a ranking pass — give it room.
+        timeout: 180000,
+      });
+      return data?.data || data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Take comparison failed');
+    }
+  }
+);
+
 /** Fetch recent session history */
 export const fetchRecentSessions = createAsyncThunk(
   'jericho/fetchRecentSessions',
@@ -176,6 +198,9 @@ const jerichoSlice = createSlice({
     tapeReviewLoading: false,
     tapeReviewResult: null,
     tapeReviewError: null,
+    compareLoading: false,
+    compareResult: null,
+    compareError: null,
 
     // Last logged session ID (for attaching post-session feedback)
     lastSessionLogId: null,
@@ -198,6 +223,10 @@ const jerichoSlice = createSlice({
     clearTapeReview: (state) => {
       state.tapeReviewResult = null;
       state.tapeReviewError = null;
+    },
+    clearCompare: (state) => {
+      state.compareResult = null;
+      state.compareError = null;
     },
   },
   extraReducers: (builder) => {
@@ -284,6 +313,18 @@ const jerichoSlice = createSlice({
         state.tapeReviewLoading = false;
         state.tapeReviewError = action.payload || 'Tape review failed';
       })
+      .addCase(compareTakes.pending, (state) => {
+        state.compareLoading = true;
+        state.compareError = null;
+      })
+      .addCase(compareTakes.fulfilled, (state, action) => {
+        state.compareLoading = false;
+        state.compareResult = action.payload;
+      })
+      .addCase(compareTakes.rejected, (state, action) => {
+        state.compareLoading = false;
+        state.compareError = action.payload || 'Take comparison failed';
+      })
 
       // ── Recent Sessions ──
       .addCase(fetchRecentSessions.pending, (state) => { state.sessionsLoading = true; })
@@ -295,5 +336,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId, clearTapeReview } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, clearTapeReview, clearCompare } = jerichoSlice.actions;
 export default jerichoSlice.reducer;
