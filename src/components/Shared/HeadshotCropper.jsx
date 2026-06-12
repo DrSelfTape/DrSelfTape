@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import Cropper from 'react-easy-crop';
 
 /**
@@ -54,10 +55,10 @@ export default function HeadshotCropper({ imageSrc, onCancel, onComplete }) {
     }
   };
 
-  return (
+  return createPortal(
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 10000,
-      background: 'rgba(8,7,5,0.95)', display: 'flex', flexDirection: 'column',
+      position: 'fixed', inset: 0, zIndex: 100000,
+      background: 'rgba(8,7,5,0.97)', display: 'flex', flexDirection: 'column',
     }}>
       {/* Header */}
       <div style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 20px 10px', textAlign: 'center' }}>
@@ -106,6 +107,7 @@ export default function HeadshotCropper({ imageSrc, onCancel, onComplete }) {
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
