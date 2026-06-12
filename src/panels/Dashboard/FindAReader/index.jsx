@@ -104,6 +104,8 @@ const FindAReader = () => {
   // (a real status — they'll see it); left = an occasional deck-tuning note.
   // Never fabricated interest.
   const [swipeToast, setSwipeToast] = useState(null); // null | { text, gold }
+  // Free Rewind — undo the immediately-previous (non-match) swipe.
+  const [lastSwipe, setLastSwipe] = useState(null); // null | { index }
 
   const handleSwipe = useCallback(
     async (action) => {
@@ -123,7 +125,7 @@ const FindAReader = () => {
         if (result?.match && result?.match_details?.id) {
           // Hold the user on the celebration overlay; navigation runs
           // when the burst finishes (MatchCelebration calls onDone).
-          setCelebrating({ matchId: result.match_details.id });
+          setCelebrating({ matchId: result.match_details.id, actor });
           return;
         }
         // Per-swipe payoff chip — honest, never fabricated. Right/star =
@@ -143,6 +145,7 @@ const FindAReader = () => {
           variant: 'error',
         }));
       }
+      setLastSwipe({ index: currentIndex });
       setCurrentIndex((prev) => prev + 1);
       setSwiping(false);
     },
@@ -162,6 +165,8 @@ const FindAReader = () => {
     const id = celebrating?.matchId;
     setCelebrating(null);
     setSwiping(false);
+    setLastSwipe(null);
+    setCurrentIndex((prev) => prev + 1); // consume the matched card
     if (!id) return;
     const isMob = window.innerWidth < 768;
     if (isMob) {
@@ -170,6 +175,23 @@ const FindAReader = () => {
       navigate(`/dashboard/its-a-scene/${id}`);
     }
   }, [celebrating, navigate]);
+
+  // "Keep swiping" from the match screen — consume the card, stay in the deck.
+  const onMatchDismiss = useCallback(() => {
+    setCelebrating(null);
+    setSwiping(false);
+    setLastSwipe(null);
+    setCurrentIndex((prev) => prev + 1);
+  }, []);
+
+  // Free Rewind — bring back the last card so a mis-flick isn't a lost reader.
+  const rewind = useCallback(() => {
+    if (!lastSwipe || swiping || celebrating) return;
+    tapPrimary();
+    setCurrentIndex(lastSwipe.index);
+    setSessionSwipes((s) => s.slice(0, -1));
+    setLastSwipe(null);
+  }, [lastSwipe, swiping, celebrating]);
 
   const currentActor = readers[currentIndex];
   const nextActor = readers[currentIndex + 1];
@@ -294,6 +316,8 @@ const FindAReader = () => {
           {onlineCount > 0
             ? `${onlineCount} readers online`
             : `${readers.length} nearby`}
+          <span style={{ opacity: 0.5 }}>·</span>
+          {Math.max(0, readers.length - currentIndex)} left today
         </div>
       )}
 
@@ -311,6 +335,8 @@ const FindAReader = () => {
         {!readersLoading && noMore && sessionSwipes.length > 0 && (
           <SessionRecap
             swipes={sessionSwipes}
+            pendingLikes={pendingLikes}
+            onSeeLikes={goToLikes}
             onRefresh={() => { setSessionSwipes([]); setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
           />
         )}
@@ -391,7 +417,13 @@ const FindAReader = () => {
       )}
 
       {/* Match celebration — fixed overlay; holds nav until burst finishes */}
-      {celebrating && <MatchCelebration onDone={onCelebrationDone} />}
+      {celebrating && (
+        <MatchCelebration
+          actor={celebrating.actor}
+          onConnect={onCelebrationDone}
+          onDismiss={onMatchDismiss}
+        />
+      )}
 
       {/* "Readers want to read with you" tease — REAL incoming interest (mobile) */}
       {pendingLikes > 0 && !celebrating && (
@@ -415,6 +447,25 @@ const FindAReader = () => {
           {pendingLikes} reader{pendingLikes !== 1 ? 's' : ''} want to read with you
           <span style={{ opacity: 0.65 }}>→</span>
         </button>
+      )}
+
+      {/* Free Rewind — undo a mis-flick (mobile) */}
+      {lastSwipe && currentActor && !celebrating && (
+        <button
+          className="md:hidden"
+          onClick={rewind}
+          aria-label="Undo last swipe"
+          style={{
+            position: 'fixed', left: 18,
+            bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
+            zIndex: 45, width: 46, height: 46, borderRadius: '50%',
+            background: 'rgba(20,18,14,0.82)', border: '1px solid rgba(252,224,114,0.35)',
+            color: '#FCE072', fontSize: 20, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+            boxShadow: '0 6px 18px rgba(10,10,10,0.32)',
+          }}
+        >↩</button>
       )}
 
       {/* Per-swipe payoff chip — brief, honest status reward */}
