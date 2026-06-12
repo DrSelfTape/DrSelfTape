@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import ScriptUpload from './ScriptUpload';
+import SidesUpload from './SidesUpload';
 import RolePicker from './RolePicker';
 import Teleprompter from './Teleprompter';
 import PracticeV2 from './PracticeV2';
@@ -109,12 +110,14 @@ export default function SceneStudy() {
     const routeScript = location?.state?.scriptContent;
     const routeCharacters = location?.state?.characters;
     const routeCraftSkill = location?.state?.craft_skill;
+    const routeRole = location?.state?.role;
     if (routeScript) {
       setScriptText(routeScript);
       if (Array.isArray(routeCharacters) && routeCharacters.length) {
         setCachedCharacters(routeCharacters);
       }
       if (routeCraftSkill) setCraftSkill(routeCraftSkill);
+      if (routeRole) setSelectedRole(routeRole);
       setStep('pick-role');
       // Clear sessionStorage if it was also set
       sessionStorage.removeItem('preloadedScript');
@@ -125,13 +128,14 @@ export default function SceneStudy() {
     const raw = sessionStorage.getItem('preloadedScript');
     if (raw) {
       try {
-        const { scriptContent, characters: preloadedCharacters, craft_skill } = JSON.parse(raw);
+        const { scriptContent, characters: preloadedCharacters, craft_skill, role } = JSON.parse(raw);
         if (scriptContent) {
           setScriptText(scriptContent);
           if (Array.isArray(preloadedCharacters) && preloadedCharacters.length) {
             setCachedCharacters(preloadedCharacters);
           }
           if (craft_skill) setCraftSkill(craft_skill);
+          if (role) setSelectedRole(role);
           setStep('pick-role');
         }
       } catch { /* ignore */ }
@@ -261,12 +265,27 @@ export default function SceneStudy() {
 
       {/* Step Content */}
       {step === 'upload' && (
-        <ScriptUpload
-          onSubmit={(text) => {
-            setScriptText(text);
-            setStep('pick-role');
-          }}
-        />
+        <div className="max-w-2xl mx-auto">
+          <SidesUpload
+            onReady={({ scriptContent, characters, role }) => {
+              setScriptText(scriptContent);
+              if (Array.isArray(characters) && characters.length) setCachedCharacters(characters);
+              if (role) setSelectedRole(role);
+              setStep('pick-role');
+            }}
+          />
+          <div className="flex items-center gap-3 my-4">
+            <div className="flex-1 h-px bg-[#F4F4EE]" />
+            <span className="text-[11px] text-[rgba(10,10,10,0.4)] font-semibold uppercase tracking-wide">or a plain script</span>
+            <div className="flex-1 h-px bg-[#F4F4EE]" />
+          </div>
+          <ScriptUpload
+            onSubmit={(text) => {
+              setScriptText(text);
+              setStep('pick-role');
+            }}
+          />
+        </div>
       )}
 
       {step === 'pick-role' && (

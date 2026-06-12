@@ -17,6 +17,7 @@ import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ProfileCompleteness from "../../components/Dashboard/ProfileCompleteness";
 import DeleteAccountModal from "../../components/Dashboard/DeleteAccountModal";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
+import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import { V1HeroGraph, V1FAB, V1Sparkles } from "../../components/Aurora";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
@@ -2337,6 +2338,9 @@ function ScenesScreen({ setTab }) {
     sessionStorage.setItem('preloadedScript', JSON.stringify({
       scriptContent: selectedScript.content,
       characters: Array.isArray(selectedScript.characters) ? selectedScript.characters : undefined,
+      // Pre-selected role from parsed sides → SceneStudy lands the actor on
+      // their part automatically (still changeable in the role picker).
+      role: selectedScript.role,
       // Carry the Craft Journey skill tag through the rewrite so SceneStudy
       // can pass it to LiveSceneMode; without this, the completion handler
       // sees craftSkill='' and never fires completeCraftNode → progress
@@ -2377,6 +2381,19 @@ function ScenesScreen({ setTab }) {
           <Icon name="search" size={16} color="var(--aurora-text)" />
         </button>
       </div>
+
+      {/* Bring-your-own audition sides — Actors Access PDF → AI reads the other part */}
+      <SidesUpload
+        onReady={({ scriptContent, characters, role, title }) => {
+          setSelectedScript({
+            id: `sides-${Date.now()}`,
+            title: title || 'Audition Sides',
+            content: scriptContent,
+            characters,
+            role,
+          });
+        }}
+      />
 
       {/* Upload CTA — Mint dashed border, wrapped in label for iOS Safari compatibility */}
       <label htmlFor="script-upload-input" style={{ display: "block", cursor: "pointer" }}>
