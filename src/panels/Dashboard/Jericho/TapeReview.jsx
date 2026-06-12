@@ -8,7 +8,7 @@ import { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles,
-  RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity,
+  RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater,
 } from 'lucide-react';
 import { reviewTape, clearTapeReview } from '../../../redux/features/jericho/jerichoSlice';
 
@@ -29,6 +29,14 @@ const DNA = [
   { key: 'dramatic_depth', label: 'Dramatic Depth', color: '#ef4444' },
   { key: 'physicality', label: 'Physicality', color: '#22c55e' },
   { key: 'vocal_variety', label: 'Vocal Variety', color: '#A7ECDA' },
+];
+
+const PERF_FIELDS = [
+  { key: 'emotional_arc', label: 'Emotional arc' },
+  { key: 'strongest_beat', label: 'Strongest beat' },
+  { key: 'choices', label: 'The choice' },
+  { key: 'listening_presence', label: 'Listening & presence' },
+  { key: 'truth_vs_indicated', label: 'Truth vs. indicated' },
 ];
 
 function ScoreBar({ label, value, color = '#D4A85F' }) {
@@ -130,6 +138,23 @@ export default function TapeReview() {
                     {w.title && <p className="text-xs font-bold text-[#0A0A0A]">{w.title}</p>}
                     <p className="text-sm text-[rgba(10,10,10,0.62)] leading-relaxed">{w.detail || w}</p>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Performance read — the deep craft analysis */}
+        {r.performance && Object.values(r.performance).some(Boolean) && (
+          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
+            <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
+              <Theater size={16} className="text-[#7A5A18]" /> Performance read
+            </h3>
+            <div className="space-y-3.5">
+              {PERF_FIELDS.filter((f) => r.performance[f.key]).map((f) => (
+                <div key={f.key}>
+                  <p className="text-[11px] font-bold text-[#7A5A18] uppercase tracking-wide mb-1">{f.label}</p>
+                  <p className="text-sm text-[rgba(10,10,10,0.72)] leading-relaxed">{r.performance[f.key]}</p>
                 </div>
               ))}
             </div>
