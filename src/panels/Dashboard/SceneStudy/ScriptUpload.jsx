@@ -3,6 +3,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { cleanScriptText, detectScriptQuality } from '../../../utils/scriptCleaner';
 import axiosInstance from '../../../redux/http';
 import endPoints from '../../../redux/constant';
+import { isEmptyScript, pdfVisionFallback } from '../../../utils/pdfToScript';
 
 import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
@@ -109,27 +110,39 @@ export default function ScriptUpload({ onSubmit }) {
         setPdfStatus('Reading PDF...');
         const rawText = await extractPdfText(file);
 
-        // Step 2: AI reformat into clean CHARACTER: dialogue format
-        setPdfStatus('Formatting with AI...');
-        let finalText = rawText;
-        // Check cache first — avoids re-calling GPT on same PDF content
-        const cacheKey = `fmtscript_${simpleHash(rawText)}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) {
-          finalText = cached;
+        let finalText = '';
+        if (isEmptyScript(rawText)) {
+          // No text layer (Actors Access / scanned PDFs) → read the rendered
+          // pages with vision; result is already CHARACTER: dialogue.
+          setPdfStatus('Reading the pages…');
+          finalText = await pdfVisionFallback(file).catch(() => '');
         } else {
-          try {
-            const { data } = await axiosInstance.post(endPoints.formatScript, { text: rawText });
-            if (data?.success && data?.data?.formatted) {
-              finalText = data.data.formatted;
-              sessionStorage.setItem(cacheKey, finalText); // cache it
+          // Has a text layer → AI reformat into clean CHARACTER: dialogue.
+          setPdfStatus('Formatting with AI...');
+          finalText = rawText;
+          const cacheKey = `fmtscript_${simpleHash(rawText)}`;
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            finalText = cached;
+          } else {
+            try {
+              const { data } = await axiosInstance.post(endPoints.formatScript, { text: rawText });
+              if (data?.success && data?.data?.formatted) {
+                finalText = data.data.formatted;
+                sessionStorage.setItem(cacheKey, finalText); // cache it
+              }
+            } catch {
+              // If AI format fails, fall back to raw extracted text
             }
-          } catch {
-            // If AI format fails, fall back to raw extracted text
           }
         }
 
-        setScriptText(finalText);
+        if (!finalText) {
+          setPdfError("Couldn't read text from this PDF — paste your script, or use the “Upload your audition sides” tile.");
+          setFileName('');
+        } else {
+          setScriptText(finalText);
+        }
         setPdfStatus('');
       } catch (err) {
         setPdfError(err?.message || 'Could not parse PDF — please paste your script manually.');

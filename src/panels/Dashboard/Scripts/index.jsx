@@ -10,6 +10,7 @@ import {
   deleteScriptThunk,
 } from '../../../redux/features/scripts/scriptsSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
+import { isEmptyScript, pdfVisionFallback } from '../../../utils/pdfToScript';
 
 import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
@@ -158,8 +159,19 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
     if (name.endsWith('.pdf')) {
       setPdfLoading(true);
       try {
-        const text = await extractPdfText(file);
-        setContent(text);
+        let text = await extractPdfText(file);
+        // Actors Access / scanned PDFs have no text layer → pdfjs returns ~0
+        // characters. Read the rendered pages with vision instead.
+        if (isEmptyScript(text)) {
+          const visionText = await pdfVisionFallback(file).catch(() => '');
+          if (visionText) text = visionText;
+        }
+        if (isEmptyScript(text)) {
+          setFileError("Couldn't read text from this PDF. Paste the script below, or use the “Upload your audition sides” tile in Scene Study.");
+          setFileName('');
+        } else {
+          setContent(text);
+        }
       } catch {
         setFileError('Could not parse PDF — try a different file or paste your script.');
         setFileName('');

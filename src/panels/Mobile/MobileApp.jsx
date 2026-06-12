@@ -7,6 +7,7 @@ import NoTokensModal from "../../components/NoTokensModal";
 import UpdateBanner from "../../components/UpdateBanner";
 import WhatsNewModal from "../../components/WhatsNewModal";
 import ReportProblemModal from "../../components/ReportProblemModal";
+import { isEmptyScript, pdfVisionFallback } from "../../utils/pdfToScript";
 import { fetchAuditionsThunk, fetchAuditionStatsThunk, createAuditionThunk, updateAuditionThunk } from "../../redux/features/auditions/auditionsSlice";
 import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScriptsSlice";
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
@@ -2304,20 +2305,29 @@ function ScenesScreen({ setTab }) {
       setPdfLoading(true);
       try {
         const rawText = await extractPdfText(file);
-        // Check cache first — avoids re-calling GPT on same PDF content
-        const cacheKey = `fmtscript_${simpleHash(rawText)}`;
-        const cached = sessionStorage.getItem(cacheKey);
-        if (cached) {
-          content = cached;
-        } else {
-          try {
-            const res = await axiosInstance.post(endPoints.formatScript, { text: rawText });
-            content = res?.data?.data?.formatted || res?.data?.formatted || rawText;
-            if (content && content !== rawText) {
-              sessionStorage.setItem(cacheKey, content); // cache it
+        // Actors Access / scanned PDFs have no text layer → pdfjs returns ~0
+        // characters. Read the rendered pages with vision (already formatted as
+        // CHARACTER: dialogue, so skip the GPT reformat step).
+        if (isEmptyScript(rawText)) {
+          const visionText = await pdfVisionFallback(file).catch(() => '');
+          if (visionText) content = visionText;
+        }
+        if (!content) {
+          // Check cache first — avoids re-calling the formatter on same content
+          const cacheKey = `fmtscript_${simpleHash(rawText)}`;
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            content = cached;
+          } else {
+            try {
+              const res = await axiosInstance.post(endPoints.formatScript, { text: rawText });
+              content = res?.data?.data?.formatted || res?.data?.formatted || rawText;
+              if (content && content !== rawText) {
+                sessionStorage.setItem(cacheKey, content); // cache it
+              }
+            } catch {
+              content = rawText;
             }
-          } catch {
-            content = rawText;
           }
         }
       } catch {
