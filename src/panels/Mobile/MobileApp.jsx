@@ -98,6 +98,7 @@ const CDSim = lazy(() => import("../Dashboard/CDSim"));
 const Jericho = lazy(() => import("../Dashboard/Jericho"));
 const CraftJourney = lazy(() => import("../Dashboard/CraftJourney"));
 const Leaderboard = lazy(() => import("../Dashboard/Leaderboard"));
+const TapeReview = lazy(() => import("../Dashboard/Jericho/TapeReview"));
 
 const WhoWantsToRead = lazy(() => import("../Dashboard/FindAReader/WhoWantsToRead"));
 const Favorites = lazy(() => import("../Dashboard/FindAReader/Favorites"));
@@ -256,6 +257,7 @@ function Icon({ name, size = 20, color = TEXT_SECONDARY }) {
     back: "M15 19l-7-7 7-7",
     logout: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1",
     agent: "M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4",
+    tape: "M4 4h16a1 1 0 011 1v14a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1zM3 9h18M3 15h18M8 4v16M16 4v16",
   };
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
@@ -876,7 +878,7 @@ const TABS = [
   { id: "auditions", icon: "auditions", label: "Auditions" },
   { id: "find-a-reader", icon: "community", label: "Find Reader" },
   { id: "green-room", icon: "mic", label: "Green Room" },
-  { id: "leaderboard", icon: "sparkle", label: "Ranks" },
+  { id: "tape-review", icon: "tape", label: "Tape", highlight: true },
   { id: "more", icon: "more", label: "More" },
 ];
 
@@ -889,6 +891,7 @@ const MORE_FEATURES = [
   { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072" },
   { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280" },
   { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072" },
+  { id: "leaderboard", label: "Ranks", desc: "See where you rank this season", emoji: "🏆", color: "#FCE072" },
   { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA" },
   { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA" },
   { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072" },
@@ -1155,6 +1158,34 @@ function HomeScreen({ setTab, setCurrentPanel }) {
            redundant — the Smart Next Step banner and the Get Started
            tutorial checklist below already prompt the same action. */}
       {hasStats && <AuroraPipeline stats={s} auditions={auditions} setTab={setTab} />}
+
+      {/* ── Tape Review highlight — the hero feature ── */}
+      <button
+        type="button"
+        onClick={() => setTab('tape-review')}
+        style={{
+          width: '100%', marginBottom: 14, padding: 0, cursor: 'pointer',
+          borderRadius: 20, border: '1px solid rgba(212,168,95,0.45)', overflow: 'hidden',
+          position: 'relative',
+          background: 'linear-gradient(120deg, #1A1305 0%, #3A2A0E 45%, #7A5A18 100%)',
+          boxShadow: '0 12px 30px rgba(122,90,24,0.28)',
+          height: 132, display: 'block', textAlign: 'left',
+        }}
+      >
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 80% at 100% 0%, rgba(212,168,95,0.38), transparent 60%)' }} />
+        <div style={{ position: 'absolute', left: 18, top: 0, bottom: 0, right: 92, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <span className="aurora-eyebrow" style={{ color: '#FCE072' }}>✨ NEW · AI TAPE REVIEW</span>
+          <div className="aurora-display" style={{ fontSize: 19, color: '#FFF', letterSpacing: '-0.4px', lineHeight: 1.12, marginTop: 5 }}>
+            Casting-grade notes on your self-tape →
+          </div>
+          <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', marginTop: 6, fontWeight: 500 }}>
+            Submit a take · notes in seconds
+          </span>
+        </div>
+        <div style={{ position: 'absolute', right: 18, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
+          <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30 }}>🎥</div>
+        </div>
+      </button>
 
       {/* ── Community Leaderboard teaser ── */}
       <button
@@ -3039,6 +3070,23 @@ export default function DrSelfTapeApp() {
         <Leaderboard embedded />
       </Suspense>
     ),
+    "tape-review": (
+      <div style={{ padding: '2px 16px 20px' }}>
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 22 }}>🎥</span>
+            <h1 className="aurora-display" style={{ fontSize: 24, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.4px' }}>Tape Review</h1>
+            <span style={{ fontSize: 10, fontWeight: 800, background: 'var(--aurora-accent-light)', color: 'var(--aurora-accent-deep)', padding: '2px 8px', borderRadius: 999, letterSpacing: '0.04em' }}>AI</span>
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.4 }}>
+            Submit a self-tape and get casting-grade acting notes — your performance, framing, eyeline, and the moves that book the room.
+          </p>
+        </div>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>
+          <TapeReview />
+        </Suspense>
+      </div>
+    ),
     profile: <ProfileScreen setCurrentPanel={setCurrentPanel} />,
     more: <MoreScreen setCurrentPanel={setCurrentPanel} />,
   };
@@ -3241,12 +3289,13 @@ export default function DrSelfTapeApp() {
                     borderRadius: 100,
                     transition: 'all 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
                     minHeight: 44,
+                    position: 'relative',
                   }}
                 >
                   <Icon
                     name={t.icon}
                     size={20}
-                    color={a ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)'}
+                    color={(a || t.highlight) ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)'}
                   />
                   {a && (
                     <span style={{
@@ -3255,6 +3304,14 @@ export default function DrSelfTapeApp() {
                       letterSpacing: '-0.01em',
                       whiteSpace: 'nowrap',
                     }}>{t.label}</span>
+                  )}
+                  {t.highlight && !a && (
+                    <span style={{
+                      position: 'absolute', top: 6, right: 6,
+                      width: 7, height: 7, borderRadius: '50%',
+                      background: 'var(--aurora-accent-deep)',
+                      boxShadow: '0 0 0 2px rgba(255,255,255,0.85)',
+                    }} />
                   )}
                 </button>
               );
