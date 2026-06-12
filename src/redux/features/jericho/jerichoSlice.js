@@ -105,6 +105,29 @@ export const jerichoCoach = createAsyncThunk(
   }
 );
 
+/** Submit a self-tape for AI review (multipart upload → structured notes) */
+export const reviewTape = createAsyncThunk(
+  'jericho/reviewTape',
+  async ({ video, sides = '', role = '', tone = '' }, { rejectWithValue }) => {
+    try {
+      const fd = new FormData();
+      fd.append('video', video);
+      if (sides) fd.append('sides', sides);
+      if (role) fd.append('role', role);
+      if (tone) fd.append('tone', tone);
+      const { data } = await axios.post(endPoints.jerichoTapeReview, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        // Frame extraction + Whisper + Claude vision can take 30-60s; the
+        // default instance timeout would abort a healthy analysis.
+        timeout: 120000,
+      });
+      return data?.data || data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || 'Tape review failed');
+    }
+  }
+);
+
 /** Fetch recent session history */
 export const fetchRecentSessions = createAsyncThunk(
   'jericho/fetchRecentSessions',
@@ -149,6 +172,11 @@ const jerichoSlice = createSlice({
     coachingLoading: false,
     lastCoachingResult: null,
 
+    // Tape Review — submit a self-tape, get structured acting notes
+    tapeReviewLoading: false,
+    tapeReviewResult: null,
+    tapeReviewError: null,
+
     // Last logged session ID (for attaching post-session feedback)
     lastSessionLogId: null,
 
@@ -165,6 +193,11 @@ const jerichoSlice = createSlice({
     },
     setLastSessionLogId: (state, action) => {
       state.lastSessionLogId = action.payload;
+    },
+    /** Reset the tape-review result (e.g. to analyze another take) */
+    clearTapeReview: (state) => {
+      state.tapeReviewResult = null;
+      state.tapeReviewError = null;
     },
   },
   extraReducers: (builder) => {
@@ -238,6 +271,20 @@ const jerichoSlice = createSlice({
         state.error = action.payload;
       })
 
+      // ── Tape Review ──
+      .addCase(reviewTape.pending, (state) => {
+        state.tapeReviewLoading = true;
+        state.tapeReviewError = null;
+      })
+      .addCase(reviewTape.fulfilled, (state, action) => {
+        state.tapeReviewLoading = false;
+        state.tapeReviewResult = action.payload;
+      })
+      .addCase(reviewTape.rejected, (state, action) => {
+        state.tapeReviewLoading = false;
+        state.tapeReviewError = action.payload || 'Tape review failed';
+      })
+
       // ── Recent Sessions ──
       .addCase(fetchRecentSessions.pending, (state) => { state.sessionsLoading = true; })
       .addCase(fetchRecentSessions.fulfilled, (state, action) => {
@@ -248,5 +295,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, clearTapeReview } = jerichoSlice.actions;
 export default jerichoSlice.reducer;

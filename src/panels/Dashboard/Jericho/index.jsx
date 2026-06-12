@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Brain, TrendingUp, Zap, Target, Star, ChevronRight,
   Sparkles, Loader2, BarChart3, Clock, Flame, Shield,
-  Eye, Mic, Theater, Laugh, Heart, Volume2,
+  Eye, Mic, Theater, Laugh, Heart, Volume2, Film,
 } from 'lucide-react';
 import {
   fetchActorMemory,
@@ -17,6 +17,7 @@ import {
   updateActorMemory,
 } from '../../../redux/features/jericho/jerichoSlice';
 import useAIGate from '../../../components/AIConsent/useAIGate';
+import TapeReview from './TapeReview';
 
 // ─── Performance DNA Metrics ───────────────────────────────────────────
 
@@ -48,6 +49,7 @@ const SESSION_TYPE_LABELS = {
   live_scene: { label: 'Live Scene', emoji: '🎙️' },
   scene_generator: { label: 'Scene Gen', emoji: '✨' },
   audition_prep: { label: 'Audition Prep', emoji: '📋' },
+  self_tape_review: { label: 'Tape Review', emoji: '🎥' },
 };
 
 // ─── DNA Radar Chart (SVG) ─────────────────────────────────────────────
@@ -164,8 +166,11 @@ export default function JerichoDashboard() {
     recentSessions, sessionsLoading,
   } = useSelector((s) => s.jericho);
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | insights | history
+  const [activeTab, setActiveTab] = useState('overview'); // overview | tape | insights | history
   const [showStylePicker, setShowStylePicker] = useState(false);
+  // Lets a brand-new actor (no sessions yet) jump straight into Tape Review
+  // instead of being held on the empty state.
+  const [entered, setEntered] = useState(false);
 
   useEffect(() => {
     dispatch(fetchActorMemory());
@@ -220,7 +225,7 @@ export default function JerichoDashboard() {
   }
 
   // ── Empty state (BE returned no sessions yet) ──
-  if (!memory || (memory.total_sessions || 0) === 0) {
+  if ((!memory || (memory.total_sessions || 0) === 0) && !entered) {
     return (
       <div className="min-h-screen px-4 py-6 sm:p-8" style={{ background: 'var(--aurora-bg)' }}>
         <div className="max-w-2xl mx-auto text-center py-20">
@@ -237,13 +242,13 @@ export default function JerichoDashboard() {
             Start a coaching session or scene study to begin building your actor profile.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a
-              href="/dashboard/cd-sim"
+            <button
+              onClick={() => { setActiveTab('tape'); setEntered(true); }}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
               style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
             >
-              <Sparkles size={16} /> Start Coaching Session
-            </a>
+              <Film size={16} /> Review a Self-Tape
+            </button>
             <a
               href="/dashboard/scene-study"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-medium border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:text-[#0A0A0A] hover:border-[#555] transition-colors"
@@ -315,6 +320,7 @@ export default function JerichoDashboard() {
         <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 border border-[rgba(10,10,10,0.08)]">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
+            { id: 'tape', label: 'Tape', icon: Film },
             { id: 'insights', label: 'Insights', icon: Sparkles },
             { id: 'history', label: 'History', icon: Clock },
           ].map((tab) => {
@@ -465,6 +471,9 @@ export default function JerichoDashboard() {
                 )}
               </div>
             )}
+
+            {/* ═══ TAPE REVIEW TAB ═══ */}
+            {activeTab === 'tape' && <TapeReview />}
 
             {/* ═══ INSIGHTS TAB ═══ */}
             {activeTab === 'insights' && (
