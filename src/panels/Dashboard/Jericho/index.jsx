@@ -3,6 +3,7 @@
  * Shows performance DNA, coaching insights, evolution timeline, and session history.
  */
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Brain, TrendingUp, Zap, Target, Star, ChevronRight,
@@ -166,11 +167,18 @@ export default function JerichoDashboard() {
     recentSessions, sessionsLoading,
   } = useSelector((s) => s.jericho);
 
-  const [activeTab, setActiveTab] = useState('overview'); // overview | tape | insights | history
+  // Deep-link support: the desktop sidebar's "Tape Review" links to
+  // /dashboard/jericho?tab=tape so it opens straight on the Tape tab. Valid
+  // tabs: overview | tape | insights | history. (In the mobile shell there's
+  // no query string, so this no-ops to the overview default.)
+  const [searchParams] = useSearchParams();
+  const deepTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState(deepTab || 'overview');
   const [showStylePicker, setShowStylePicker] = useState(false);
   // Lets a brand-new actor (no sessions yet) jump straight into Tape Review
-  // instead of being held on the empty state.
-  const [entered, setEntered] = useState(false);
+  // instead of being held on the empty state — also true when deep-linked to
+  // the Tape tab, which works without any prior sessions.
+  const [entered, setEntered] = useState(deepTab === 'tape');
 
   useEffect(() => {
     dispatch(fetchActorMemory());
