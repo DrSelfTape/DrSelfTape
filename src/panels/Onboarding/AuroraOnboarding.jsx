@@ -111,14 +111,19 @@ function TopBar({ step, total, onBack, onSkip }) {
       padding: 'calc(env(safe-area-inset-top, 0px) + 8px) 22px 4px',
       display: 'flex', alignItems: 'center', gap: 14,
     }}>
-      <button onClick={onBack} style={{
-        background: 'transparent', border: 'none', cursor: 'pointer',
-        padding: 4, color: 'var(--aurora-text)', display: 'flex',
-      }}>
-        <svg width="11" height="18" viewBox="0 0 12 20" fill="none">
-          <path d="M10 2L2 10l8 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
+      {/* No-op back on the first step — render a spacer instead of a dead button. */}
+      {step > 1 ? (
+        <button onClick={onBack} style={{
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          padding: 4, color: 'var(--aurora-text)', display: 'flex',
+        }}>
+          <svg width="11" height="18" viewBox="0 0 12 20" fill="none">
+            <path d="M10 2L2 10l8 8" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </button>
+      ) : (
+        <div style={{ width: 11 }} />
+      )}
       <div style={{
         flex: 1, height: 6, background: 'rgba(10,10,10,0.07)',
         borderRadius: 100, overflow: 'hidden',

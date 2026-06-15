@@ -24,7 +24,13 @@ export default function useAIGate({ fallback = '/dashboard' } = {}) {
     if (user?.ai_consent_accepted_at) return;
     askedRef.current = true;
     requestAiConsent().then((ok) => {
-      if (!ok) navigate(fallback);
+      if (!ok) {
+        // react-router navigate() no-ops inside the Capacitor shell, so a
+        // declining mobile user would be stranded on the AI panel. Also fire
+        // the app's own nav event so they actually land back home.
+        try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'home' } })); } catch { /* noop */ }
+        navigate(fallback);
+      }
     });
   }, [user?.ai_consent_accepted_at, fallback, navigate]);
 }
