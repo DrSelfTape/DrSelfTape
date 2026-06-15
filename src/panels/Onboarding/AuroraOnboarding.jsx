@@ -1014,7 +1014,11 @@ export default function AuroraOnboarding({ onClose }) {
             step={qIndex + 1}
             total={Q_STEPS.length}
             onBack={back}
-            onSkip={['notif', 'follow'].includes(step) ? next : null}
+            // Always escapable: SKIP exits setup entirely (best-effort persists
+            // whatever's entered + marks onboarding seen). A required-step
+            // validation a user can't clear (iOS keyboard/focus bug, indecision)
+            // must never lock them out of the whole app behind this modal.
+            onSkip={() => finish()}
           />
           <div key={step} className="aurora-page-in" style={{
             flex: 1, overflowY: 'auto',

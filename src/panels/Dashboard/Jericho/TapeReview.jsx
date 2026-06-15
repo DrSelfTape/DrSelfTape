@@ -77,7 +77,7 @@ function ScoreBar({ label, value, color = '#D4A85F' }) {
   );
 }
 
-export default function TapeReview({ firstReview = false, onUpgrade }) {
+export default function TapeReview({ firstReview = false, onUpgrade, onExitFirstReview }) {
   // Apple 5.1.1(i) — the analyzer pipes video frames + audio through Claude /
   // Whisper. Gate here too: on mobile this screen mounts standalone (not inside
   // the Jericho panel that already gates), so without this the consent prompt
@@ -116,12 +116,17 @@ export default function TapeReview({ firstReview = false, onUpgrade }) {
           >
             <Sparkles size={13} /> Review a take
           </button>
-          <button
-            onClick={() => setMode('compare')}
-            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'compare' ? 'bg-white text-[#0A0A0A] shadow-sm' : 'text-[rgba(10,10,10,0.5)]'}`}
-          >
-            <Trophy size={13} /> Compare takes
-          </button>
+          {/* Compare Takes costs 1 token/take and would wall a Day-0 free user
+              mid-activation, bypassing the free-review paywall — hide it while
+              the free first review is in flight. */}
+          {!firstReview && (
+            <button
+              onClick={() => setMode('compare')}
+              className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'compare' ? 'bg-white text-[#0A0A0A] shadow-sm' : 'text-[rgba(10,10,10,0.5)]'}`}
+            >
+              <Trophy size={13} /> Compare takes
+            </button>
+          )}
         </div>
         <button
           onClick={() => setShowTutorial(true)}
@@ -333,6 +338,17 @@ export default function TapeReview({ firstReview = false, onUpgrade }) {
   return (
     <div className="space-y-4">
       {modeToggle}
+      {/* Escape hatch for the free-first-review flow: a user who declines AI
+          consent or doesn't want to upload must be able to leave instead of
+          being pinned here on every remount. */}
+      {firstReview && onExitFirstReview && (
+        <button
+          onClick={onExitFirstReview}
+          className="w-full text-center text-xs font-medium text-[rgba(10,10,10,0.45)] py-1 hover:text-[#7A5A18]"
+        >
+          Maybe later — explore the app first →
+        </button>
+      )}
       <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
         <h3 className="text-sm font-bold text-[#0A0A0A] mb-1 flex items-center gap-2">
           <Film size={16} className="text-[#7A5A18]" /> Submit a self-tape

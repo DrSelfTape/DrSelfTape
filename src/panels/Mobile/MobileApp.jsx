@@ -3133,6 +3133,13 @@ export default function DrSelfTapeApp() {
   }, []);
 
   const handleSetTab = (id) => {
+    // Leaving via any deliberate tab tap permanently exits first-review mode —
+    // clear the durable flag so the mount-effect can't re-pin the user to the
+    // Tape Review tab (the consent-decline / never-upload soft-lock).
+    if (id !== 'tape-review') {
+      setFirstReviewActive(false);
+      try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+    }
     setTab(id);
     setCurrentPanel(null);
   };
@@ -3178,6 +3185,7 @@ export default function DrSelfTapeApp() {
             onExitFirstReview={() => {
               try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
               setFirstReviewActive(false);
+              setTab('home');
             }}
           />
         </Suspense>
