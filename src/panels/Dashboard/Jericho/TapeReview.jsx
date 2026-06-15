@@ -151,7 +151,11 @@ export default function TapeReview({ firstReview = false, onUpgrade }) {
 
   const submit = () => {
     if (!file || tapeReviewLoading) return;
-    if (firstReview) trackEvent(Events.FIRST_REVIEW_STARTED, { source: 'onboarding' });
+    if (firstReview) {
+      trackEvent(Events.FIRST_REVIEW_STARTED, { source: 'onboarding' });
+      // Past the consent-remount window now — retire the durable handoff flag.
+      try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+    }
     dispatch(reviewTape({ video: file, role, tone, sides }));
   };
 

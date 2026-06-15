@@ -413,25 +413,32 @@ function ProfileStep({ data, set, onNext }) {
               background: `#222 url(${cropImg}) center/cover`,
             }} />
             <div style={{
-              position: 'absolute', bottom: 70, left: 0, right: 0, textAlign: 'center',
+              position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center',
               fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
               letterSpacing: '0.15em', color: 'rgba(255,255,255,0.6)',
-            }}>DRAG TO REPOSITION · PINCH TO ZOOM</div>
+            }}>THIS WILL BE YOUR HEADSHOT</div>
           </div>
+          {/* zIndex sits the actions above the circle's 2000px vignette shadow
+              so they read at full contrast instead of washed-out on black. */}
           <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '18px 26px calc(env(safe-area-inset-bottom, 0px) + 36px)',
+            position: 'relative', zIndex: 2,
+            display: 'flex', alignItems: 'center', gap: 12,
+            padding: '14px 26px calc(env(safe-area-inset-bottom, 0px) + 32px)',
           }}>
             <button onClick={() => setCropImg(null)} style={{
-              background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.85)',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 500, cursor: 'pointer',
+              flex: '0 0 auto',
+              background: 'rgba(255,255,255,0.14)',
+              border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff',
+              borderRadius: 100, padding: '13px 22px',
+              fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer',
             }}>Retake</button>
             <button onClick={acceptCrop} style={{
-              background: 'var(--aurora-heritage-gold)', border: 'none', color: '#1A1408',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
-              padding: '12px 28px', borderRadius: 100, cursor: 'pointer',
-              boxShadow: '0 8px 22px rgba(212,168,95,0.40)',
-            }}>Choose</button>
+              flex: 1,
+              background: 'linear-gradient(135deg,#C99A4E 0%,var(--aurora-heritage-gold) 45%,var(--aurora-heritage-gold-light) 100%)',
+              border: 'none', color: '#1A1408', borderRadius: 100, padding: '15px 28px',
+              fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, cursor: 'pointer',
+              boxShadow: '0 2px 4px rgba(122,90,24,0.25), 0 14px 30px rgba(212,168,95,0.45), inset 0 1px 0 rgba(255,255,255,0.6)',
+            }}>Use this photo</button>
           </div>
         </div>
       )}
@@ -972,6 +979,12 @@ export default function AuroraOnboarding({ onClose }) {
     // STARTED fires at the actual upload (in TapeReview); here we only persist
     // onboarding + hand off. The offer_shown → started → completed funnel then
     // measures real drop-off, not just CTA taps.
+    //
+    // The sessionStorage flag is the durable handoff: granting AI consent on
+    // the Tape Review screen remounts MobileApp (resetting its in-memory tab),
+    // so MobileApp re-reads this flag on every mount and re-asserts the
+    // first-review screen. The event covers the immediate (no-remount) case.
+    try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
     finish({ launchFirstReview: true });
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
   }, [finish]);

@@ -3087,6 +3087,22 @@ export default function DrSelfTapeApp() {
     return () => window.removeEventListener('drst-start-first-review', handler);
   }, []);
 
+  // Durable first-review handoff: granting AI consent on the Tape Review screen
+  // remounts this component (resetting `tab` to home), which would bounce the
+  // new user back. The sessionStorage flag (set by onboarding's offer) is
+  // re-read on every mount so the first-review screen is restored — and on that
+  // second pass consent already exists, so it sticks. The flag is cleared only
+  // once the user is committed (upload starts) or upgrades, so it survives any
+  // number of remounts in between.
+  useEffect(() => {
+    let pending = false;
+    try { pending = window.sessionStorage.getItem('dst_first_review') === '1'; } catch { /* noop */ }
+    if (!pending) return;
+    setFirstReviewActive(true);
+    setCurrentPanel(null);
+    setTab('tape-review');
+  }, []);
+
   // Listen for cross-component mobile navigation (e.g. Generator → Scene Study)
   useEffect(() => {
     const handler = (e) => {
@@ -3154,8 +3170,15 @@ export default function DrSelfTapeApp() {
         <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>
           <TapeReview
             firstReview={firstReviewActive}
-            onUpgrade={() => { setFirstReviewActive(false); setCurrentPanel('membership'); }}
-            onExitFirstReview={() => setFirstReviewActive(false)}
+            onUpgrade={() => {
+              try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+              setFirstReviewActive(false);
+              setCurrentPanel('membership');
+            }}
+            onExitFirstReview={() => {
+              try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+              setFirstReviewActive(false);
+            }}
           />
         </Suspense>
       </div>
