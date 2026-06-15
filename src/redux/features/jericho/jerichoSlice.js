@@ -16,7 +16,37 @@ function aiErrorMessage(err, fallback) {
   if (st === 403) return 'Turn on AI features in Settings to use this.';
   if (st === 413) return 'That file is too large — try a shorter / smaller export.';
   if (st === 400) return msg || "Those files couldn't be read — try exporting as mp4 or mov.";
+  if (st === 504) return msg || 'That took too long — please try again.';
   return msg || fallback;
+}
+
+const _sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+// When the BE runs the analysis off the request thread (AI_ASYNC_ANALYSIS), the
+// POST returns {job_id, status:'pending'} instead of the result. Poll the job
+// until it's done/failed. Throws an axios-shaped error so aiErrorMessage handles
+// it identically to the synchronous path.
+async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    await _sleep(interval);
+    const { data } = await axios.get(`${endPoints.analysisJob}${jobId}/`);
+    const j = data?.data || data;
+    if (j?.status === 'done') return j.result;
+    if (j?.status === 'failed') {
+      throw { response: { status: 502, data: { message: j.error || 'Analysis failed — please try again.' } } };
+    }
+  }
+  throw { response: { status: 504, data: { message: 'Analysis took too long — please try again.' } } };
+}
+
+// A tape-review / compare response is either the synchronous result or a pending
+// job to poll. Normalizes both to the final result.
+async function resolveAnalysis(payload) {
+  if (payload && payload.job_id && payload.status === 'pending') {
+    return pollAnalysisJob(payload.job_id);
+  }
+  return payload;
 }
 
 // ─── Thunks ────────────────────────────────────────────────────────────
@@ -131,11 +161,13 @@ export const reviewTape = createAsyncThunk(
       const { data } = await axios.post(endPoints.jerichoTapeReview, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
         // Frame extraction + Whisper + Claude vision can take 30-60s; the
-        // default instance timeout would abort a healthy analysis.
+        // default instance timeout would abort a healthy analysis. (Async path
+        // returns instantly; pollAnalysisJob then waits for the result.)
         timeout: 120000,
       });
+      const result = await resolveAnalysis(data?.data || data);
       trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role });
-      return data?.data || data;
+      return result;
     } catch (err) {
       return rejectWithValue(aiErrorMessage(err, 'Tape review failed'));
     }
@@ -157,8 +189,9 @@ export const compareTakes = createAsyncThunk(
         // Several takes analyzed (concurrently) + a ranking pass — give it room.
         timeout: 180000,
       });
+      const result = await resolveAnalysis(data?.data || data);
       trackEvent(Events.COMPARE_TAKES, { count: takes.length });
-      return data?.data || data;
+      return result;
     } catch (err) {
       return rejectWithValue(aiErrorMessage(err, 'Take comparison failed'));
     }

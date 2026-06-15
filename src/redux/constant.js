@@ -125,6 +125,7 @@ const endPoints = {
   jerichoCoach: `${baseURL}/v1/ai/jericho/coach/`,
   jerichoTapeReview: `${baseURL}/v1/ai/jericho/tape-review/`,
   jerichoCompareTakes: `${baseURL}/v1/ai/jericho/compare-takes/`,
+  analysisJob: `${baseURL}/v1/ai/jericho/jobs/`,
 
   // Craft Journey — skill path progression
   craftJourney: `${baseURL}/v1/ai/craft-journey/`,
