@@ -7,11 +7,19 @@ import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, res
 import { openExternal } from '../../../utils/openExternal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
+// WEEKLY pricing (added 2026-06-14): the `weekly` amounts below are display
+// only — the real charge comes from the Stripe/ASC/Play products. Keep these
+// in sync with the prices you create there. The weekly billing option is
+// hidden behind WEEKLY_ENABLED (import.meta.env.VITE_WEEKLY_ENABLED), so these
+// stay invisible until you flip the flag at build time.
+const WEEKLY_ENABLED = import.meta.env.VITE_WEEKLY_ENABLED === 'true';
+
 const PLANS = [
   {
     id: 'basic',
     name: 'Basic',
     tokens: 10,
+    weekly: 4.99,
     monthly: 9.99,
     yearly: 99.99,
     yearlySaving: '2 months free',
@@ -28,6 +36,7 @@ const PLANS = [
     id: 'plus',
     name: 'Plus',
     tokens: 20,
+    weekly: 6.99,
     monthly: 14.99,
     yearly: 149.99,
     yearlySaving: '2 months free',
@@ -46,6 +55,7 @@ const PLANS = [
     name: 'Premium',
     tokens: 50,
     unlimited: true,
+    weekly: 9.99,
     monthly: 24.99,
     yearly: 249.99,
     yearlySaving: '2 months free',
@@ -422,14 +432,15 @@ export default function Membership({ onClose }) {
           </div>
         )}
 
-        {/* Billing toggle — Monthly / Yearly */}
+        {/* Billing toggle — Weekly (flagged) / Monthly / Yearly */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 6, padding: 4, marginBottom: 16,
           background: 'rgba(10,10,10,0.05)', borderRadius: 100,
         }}>
-          {['monthly', 'yearly'].map((b) => {
+          {[...(WEEKLY_ENABLED ? ['weekly'] : []), 'monthly', 'yearly'].map((b) => {
             const on = billing === b;
+            const label = { weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly · Save 2mo' }[b];
             return (
               <button key={b} onClick={() => setBilling(b)} style={{
                 flex: 1, padding: '10px 14px', borderRadius: 100, border: 'none',
@@ -440,7 +451,7 @@ export default function Membership({ onClose }) {
                 boxShadow: on ? '0 2px 6px rgba(10,10,10,0.08)' : 'none',
                 transition: 'all 0.2s',
               }}>
-                {b === 'monthly' ? 'Monthly' : 'Yearly · Save 2mo'}
+                {label}
               </button>
             );
           })}
@@ -449,7 +460,7 @@ export default function Membership({ onClose }) {
         {/* Plan cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
           {PLANS.map((plan) => {
-            const price = billing === 'monthly' ? plan.monthly : plan.yearly;
+            const price = plan[billing] ?? plan.monthly;
             const isActive = currentPlan === plan.id;
             const planIsCurrent = isActive && status?.status === 'active';
             const selected = selectedPlan === plan.id;
@@ -516,7 +527,7 @@ export default function Membership({ onClose }) {
                           22px / 700 so it visually outweighs the trial pill below. */}
                       <div style={{ textAlign: 'right' }}>
                         <span className="aurora-mono" style={{ fontSize: 22, color: 'var(--aurora-text)', fontWeight: 700, letterSpacing: '-0.4px' }}>${price}</span>
-                        <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>/{billing === 'monthly' ? 'mo' : 'yr'}</span>
+                        <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>/{{ weekly: 'wk', monthly: 'mo', yearly: 'yr' }[billing]}</span>
                       </div>
                     </div>
                     <div style={{
