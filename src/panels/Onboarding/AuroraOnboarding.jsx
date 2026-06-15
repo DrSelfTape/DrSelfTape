@@ -917,52 +917,62 @@ export default function AuroraOnboarding({ onClose }) {
     set({ [key]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
   };
 
-  const finish = useCallback(async (opts) => {
-    try {
-      const fd = new FormData();
-      if (data.first_name) fd.append('first_name', data.first_name);
-      if (data.last_name) fd.append('last_name', data.last_name);
-      if (data.city) fd.append('city', data.city);
-      if (data.bio) fd.append('bio', data.bio);
-      if (data.pronouns) fd.append('pronouns', data.pronouns);
-      if (data.union_status) fd.append('union_status', data.union_status);
-      if (data.representation) fd.append('representation', data.representation);
-      if (data.types) fd.append('types', JSON.stringify(data.types));
-      if (data.interests) fd.append('interests', JSON.stringify(data.interests));
-      if (data.goals) fd.append('goals', JSON.stringify(data.goals));
-      if (data.level) fd.append('level', data.level);
-
-      if (data.headshotDataUrl && data.headshotDataUrl.startsWith('data:')) {
-        try {
-          const blob = await (await fetch(data.headshotDataUrl)).blob();
-          fd.append('headshot', blob, 'headshot.jpg');
-          try { const { trackEvent, Events } = await import('../../utils/analytics'); trackEvent(Events.UPLOAD_HEADSHOT, { source: 'onboarding' }); } catch { /* swallow */ }
-        } catch { /* headshot upload failed, continue without */ }
-      }
-
-      const hasAny = ['first_name', 'last_name', 'city', 'bio'].some((k) => fd.get(k));
-      if (hasAny) {
-        await dispatch(updateProfileThunk(fd)).unwrap().catch(() => {});
-        await dispatch(fetchProfileThunk()).catch(() => {});
-      }
-    } catch { /* profile patch best-effort */ }
-
+  const finish = useCallback((opts) => {
+    // Mark onboarding seen, clear local progress, and CLOSE IMMEDIATELY. The
+    // profile PATCH (especially a multi-MB headshot upload) is best-effort and
+    // runs in the background — awaiting it here previously trapped the user on
+    // the final screen whenever the upload was slow ("button stuck").
     dispatch(patchUserSettings({ reader_onboarding_seen: true }));
     try {
       window.localStorage.removeItem(STORAGE_STEP);
       window.localStorage.removeItem(STORAGE_DATA);
     } catch { /* storage unavailable */ }
+
+    // Snapshot the data now; the component may unmount before this resolves.
+    const d = data;
+    (async () => {
+      try {
+        const fd = new FormData();
+        if (d.first_name) fd.append('first_name', d.first_name);
+        if (d.last_name) fd.append('last_name', d.last_name);
+        if (d.city) fd.append('city', d.city);
+        if (d.bio) fd.append('bio', d.bio);
+        if (d.pronouns) fd.append('pronouns', d.pronouns);
+        if (d.union_status) fd.append('union_status', d.union_status);
+        if (d.representation) fd.append('representation', d.representation);
+        if (d.types) fd.append('types', JSON.stringify(d.types));
+        if (d.interests) fd.append('interests', JSON.stringify(d.interests));
+        if (d.goals) fd.append('goals', JSON.stringify(d.goals));
+        if (d.level) fd.append('level', d.level);
+
+        if (d.headshotDataUrl && d.headshotDataUrl.startsWith('data:')) {
+          try {
+            const blob = await (await fetch(d.headshotDataUrl)).blob();
+            fd.append('headshot', blob, 'headshot.jpg');
+            try { const { trackEvent, Events } = await import('../../utils/analytics'); trackEvent(Events.UPLOAD_HEADSHOT, { source: 'onboarding' }); } catch { /* swallow */ }
+          } catch { /* headshot upload failed, continue without */ }
+        }
+
+        const hasAny = ['first_name', 'last_name', 'city', 'bio'].some((k) => fd.get(k));
+        if (hasAny) {
+          await dispatch(updateProfileThunk(fd)).unwrap().catch(() => {});
+          await dispatch(fetchProfileThunk()).catch(() => {});
+        }
+      } catch { /* profile patch best-effort */ }
+    })();
+
     if (onClose) onClose(opts);
   }, [data, dispatch, onClose]);
 
   // From the 'offer' step: close onboarding, then ask MobileApp to drop the
   // user straight into a (free) Tape Review. The event is the cross-component
   // bridge — onboarding lives inside HomeScreen, the analyzer in the root.
-  const launchFirstReview = useCallback(async () => {
+  // finish() is now synchronous (background persist), so the handoff is instant.
+  const launchFirstReview = useCallback(() => {
     // STARTED fires at the actual upload (in TapeReview); here we only persist
     // onboarding + hand off. The offer_shown → started → completed funnel then
     // measures real drop-off, not just CTA taps.
-    await finish({ launchFirstReview: true });
+    finish({ launchFirstReview: true });
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
   }, [finish]);
 
