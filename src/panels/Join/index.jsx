@@ -125,12 +125,17 @@ export default function JoinPage() {
           >
             Join with Account
           </button>
-          <button
-            onClick={() => openExternal(room.room_url)}
-            className="w-full border border-white/10 hover:border-white/20 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
-          >
-            Join via Daily.co directly
-          </button>
+          {/* The live join URL is only returned to an authenticated, related
+              user (the BE withholds it from the logged-out preview), so only
+              show the direct-join button when we actually have it. */}
+          {room.room_url && (
+            <button
+              onClick={() => openExternal(room.room_url)}
+              className="w-full border border-white/10 hover:border-white/20 text-white font-semibold py-3 rounded-xl transition-colors text-sm"
+            >
+              Join via Daily.co directly
+            </button>
+          )}
         </div>
       </div>
 
