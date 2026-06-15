@@ -2994,6 +2994,9 @@ function TopBarAvatar({ active, onClick }) {
 export default function DrSelfTapeApp() {
   const [tab, setTab] = useState("home");
   const [currentPanel, setCurrentPanel] = useState(null);
+  // Free-first-review onboarding: true while a new user is inside their one
+  // free Tape Review, so TapeReview shows the paywall after the result.
+  const [firstReviewActive, setFirstReviewActive] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [showNoTokens, setShowNoTokens] = useState(false);
@@ -3070,6 +3073,20 @@ export default function DrSelfTapeApp() {
     return () => window.removeEventListener('insufficient_tokens', handler);
   }, []);
 
+  // Free-first-review: onboarding's "Try my free review" fires this; drop the
+  // user straight into the Tape Review tab in first-review mode (paywall after
+  // the result). Lives here because TapeReview mounts in this root component
+  // while onboarding mounts inside HomeScreen.
+  useEffect(() => {
+    const handler = () => {
+      setFirstReviewActive(true);
+      setCurrentPanel(null);
+      setTab('tape-review');
+    };
+    window.addEventListener('drst-start-first-review', handler);
+    return () => window.removeEventListener('drst-start-first-review', handler);
+  }, []);
+
   // Listen for cross-component mobile navigation (e.g. Generator → Scene Study)
   useEffect(() => {
     const handler = (e) => {
@@ -3135,7 +3152,11 @@ export default function DrSelfTapeApp() {
           </p>
         </div>
         <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>
-          <TapeReview />
+          <TapeReview
+            firstReview={firstReviewActive}
+            onUpgrade={() => { setFirstReviewActive(false); setCurrentPanel('membership'); }}
+            onExitFirstReview={() => setFirstReviewActive(false)}
+          />
         </Suspense>
       </div>
     ),

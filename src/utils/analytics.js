@@ -118,4 +118,11 @@ export const Events = {
   COMPARE_TAKES: 'compare_takes',
   SIDES_UPLOADED: 'sides_uploaded',
   PURCHASE: 'purchase',
+  // Free-first-review onboarding funnel (Day-0 activation → paywall).
+  FIRST_REVIEW_OFFER_SHOWN: 'first_review_offer_shown',
+  FIRST_REVIEW_STARTED: 'first_review_started',
+  FIRST_REVIEW_COMPLETED: 'first_review_completed',
+  FIRST_REVIEW_PAYWALL_SHOWN: 'first_review_paywall_shown',
+  FIRST_REVIEW_PAYWALL_TAP: 'first_review_paywall_tap',
+  FIRST_REVIEW_SKIPPED: 'first_review_skipped',
 };

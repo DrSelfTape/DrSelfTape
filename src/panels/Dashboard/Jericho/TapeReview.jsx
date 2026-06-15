@@ -14,8 +14,30 @@ import { reviewTape, clearTapeReview } from '../../../redux/features/jericho/jer
 import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
+import { trackEvent, Events } from '../../../utils/analytics';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
+
+/* Free-first-review paywall — shown right under the result of a new user's one
+ * free Tape Review, while the value is still on screen (Day-0 converts best). */
+function FirstReviewPaywall({ onUpgrade }) {
+  useEffect(() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_SHOWN); }, []);
+  return (
+    <div className="rounded-2xl border border-[#D4A85F]/30 p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.05))' }}>
+      <h3 className="text-base font-bold text-[#0A0A0A] leading-snug">That&apos;s one take. Get notes like that on every audition.</h3>
+      <p className="text-sm text-[rgba(10,10,10,0.6)] mt-1.5 leading-relaxed">
+        Unlimited Tape Reviews, Compare Takes, Bring Your Own Sides, and your AI scene partner.
+      </p>
+      <button
+        onClick={onUpgrade}
+        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+        style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+      >
+        <Sparkles size={15} /> See plans
+      </button>
+    </div>
+  );
+}
 
 const TECH_SCORES = [
   { key: 'framing', label: 'Framing', icon: Frame },
@@ -55,7 +77,7 @@ function ScoreBar({ label, value, color = '#D4A85F' }) {
   );
 }
 
-export default function TapeReview() {
+export default function TapeReview({ firstReview = false, onUpgrade }) {
   // Apple 5.1.1(i) — the analyzer pipes video frames + audio through Claude /
   // Whisper. Gate here too: on mobile this screen mounts standalone (not inside
   // the Jericho panel that already gates), so without this the consent prompt
@@ -129,8 +151,15 @@ export default function TapeReview() {
 
   const submit = () => {
     if (!file || tapeReviewLoading) return;
+    if (firstReview) trackEvent(Events.FIRST_REVIEW_STARTED, { source: 'onboarding' });
     dispatch(reviewTape({ video: file, role, tone, sides }));
   };
+
+  // The activation aha — fire COMPLETED once when the free first review lands.
+  useEffect(() => {
+    if (firstReview && tapeReviewResult) trackEvent(Events.FIRST_REVIEW_COMPLETED);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstReview, tapeReviewResult]);
 
   const reset = () => {
     setFile(null); setRole(''); setTone(''); setSides('');
@@ -271,14 +300,27 @@ export default function TapeReview() {
           </div>
         </div>
 
-        {/* Actions */}
-        <button
-          onClick={reset}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
-          style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
-        >
-          <RotateCcw size={15} /> Review another take
-        </button>
+        {/* Actions — in first-review mode the paywall leads; otherwise the
+            standard "review another take" reset. */}
+        {firstReview ? (
+          <>
+            <FirstReviewPaywall onUpgrade={() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_TAP); onUpgrade?.(); }} />
+            <button
+              onClick={reset}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-[rgba(10,10,10,0.55)]"
+            >
+              <RotateCcw size={14} /> Review another take
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={reset}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+          >
+            <RotateCcw size={15} /> Review another take
+          </button>
+        )}
       </div>
     );
   }

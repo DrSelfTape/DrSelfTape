@@ -15,8 +15,23 @@ import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
  * profile + sets userSettings.reader_onboarding_seen = true.
  * ─────────────────────────────────────────────────────────────────── */
 
-const STEPS = ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow', 'building', 'welcome'];
+// Free-first-review onboarding (the Day-0 activation + paywall moment). When
+// off, the flow ends at 'welcome' exactly as before. When on, a final 'offer'
+// step pitches one free Tape Review, then the analyzer's result carries the
+// paywall. Flip VITE_FIRST_REVIEW_FLOW=true once 1.0.7 (the analyzer) is live.
+const FIRST_REVIEW_FLOW = import.meta.env.VITE_FIRST_REVIEW_FLOW === 'true';
+
+const STEPS = ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow', 'building', 'welcome', 'offer'];
 const Q_STEPS = ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow'];
+
+// Best-effort analytics — mirrors the dynamic-import pattern finish() already
+// uses so a missing/blocked analytics bundle never breaks onboarding.
+function track(event, props) {
+  import('../../utils/analytics').then(({ trackEvent, Events }) => {
+    const name = Events[event] || event;
+    trackEvent(name, props);
+  }).catch(() => { /* analytics unavailable */ });
+}
 
 const ROLES = [
   { id: 'film', label: 'Film / TV', sub: 'SCRIPTED · STUDIO' },
@@ -785,6 +800,66 @@ function Welcome({ data, onDone }) {
   );
 }
 
+/* The offer — the activation moment. Pitches one free Tape Review right after
+ * the welcome celebration, while intent is highest (Day-0 converts best). */
+function Offer({ onTry, onSkip }) {
+  useEffect(() => { track('FIRST_REVIEW_OFFER_SHOWN'); }, []);
+  return (
+    <div className="aurora-orbs aurora-orbs-live" style={{
+      position: 'absolute', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+    }}>
+      <div style={{
+        position: 'relative', zIndex: 5, flex: 1, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', padding: '0 30px', textAlign: 'center',
+      }}>
+        <div style={{
+          width: 100, height: 100, borderRadius: 30,
+          background: 'linear-gradient(135deg,#C99A4E,var(--aurora-heritage-gold) 45%,var(--aurora-heritage-gold-light))',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 16px 40px rgba(212,168,95,0.55), inset 0 1px 0 rgba(255,255,255,0.6)',
+          border: '2px solid rgba(255,255,255,0.6)',
+        }}>
+          <span style={{ fontSize: 50 }}>🎥</span>
+        </div>
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.2em',
+          color: 'var(--aurora-accent-deep)', marginTop: 24,
+        }}>ON THE HOUSE</div>
+        <h1 style={{
+          fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700,
+          letterSpacing: '-0.6px', lineHeight: 1.04, marginTop: 8,
+        }}>Your first Tape<br />Review is free.</h1>
+        <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 320 }}>
+          Upload a take and Jericho gives you real casting-grade notes — your
+          performance, framing, eyeline, and the moves that book the room. ~30 seconds.
+        </p>
+        <div style={{ marginTop: 20, textAlign: 'left', maxWidth: 300, width: '100%' }}>
+          {['Casting-grade acting notes', 'Your strongest beat + the one fix', 'Framing, eyeline & lighting scored'].map((t) => (
+            <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
+              <span style={{
+                width: 20, height: 20, borderRadius: 100, background: 'var(--aurora-mint)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1A1408" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12l5 5 9-11" />
+                </svg>
+              </span>
+              <span style={{ fontSize: 14, color: 'var(--aurora-text)' }}>{t}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{
+        position: 'relative', zIndex: 5,
+        padding: '0 26px calc(env(safe-area-inset-bottom, 0px) + 38px)',
+      }}>
+        <GoldBtn onClick={onTry}>Try my free review →</GoldBtn>
+        <GhostBtn onClick={onSkip} style={{ marginTop: 6 }}>Maybe later</GhostBtn>
+      </div>
+    </div>
+  );
+}
+
 /* ───── ROOT ───── */
 export default function AuroraOnboarding({ onClose }) {
   // Onboarding is its own full-screen flow with its own progress bar
@@ -842,7 +917,7 @@ export default function AuroraOnboarding({ onClose }) {
     set({ [key]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
   };
 
-  const finish = useCallback(async () => {
+  const finish = useCallback(async (opts) => {
     try {
       const fd = new FormData();
       if (data.first_name) fd.append('first_name', data.first_name);
@@ -877,8 +952,24 @@ export default function AuroraOnboarding({ onClose }) {
       window.localStorage.removeItem(STORAGE_STEP);
       window.localStorage.removeItem(STORAGE_DATA);
     } catch { /* storage unavailable */ }
-    if (onClose) onClose();
+    if (onClose) onClose(opts);
   }, [data, dispatch, onClose]);
+
+  // From the 'offer' step: close onboarding, then ask MobileApp to drop the
+  // user straight into a (free) Tape Review. The event is the cross-component
+  // bridge — onboarding lives inside HomeScreen, the analyzer in the root.
+  const launchFirstReview = useCallback(async () => {
+    // STARTED fires at the actual upload (in TapeReview); here we only persist
+    // onboarding + hand off. The offer_shown → started → completed funnel then
+    // measures real drop-off, not just CTA taps.
+    await finish({ launchFirstReview: true });
+    try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
+  }, [finish]);
+
+  const skipFirstReview = useCallback(() => {
+    track('FIRST_REVIEW_SKIPPED');
+    finish();
+  }, [finish]);
 
   const qIndex = Q_STEPS.indexOf(step);
 
@@ -950,7 +1041,10 @@ export default function AuroraOnboarding({ onClose }) {
         </div>
       )}
       {step === 'building' && <Building onDone={next} />}
-      {step === 'welcome' && <Welcome data={data} onDone={finish} />}
+      {/* When the free-review flow is on, the welcome CTA advances to the offer
+          step instead of finishing; otherwise it closes onboarding as before. */}
+      {step === 'welcome' && <Welcome data={data} onDone={FIRST_REVIEW_FLOW ? next : finish} />}
+      {step === 'offer' && <Offer onTry={launchFirstReview} onSkip={skipFirstReview} />}
     </div>
   );
 }
