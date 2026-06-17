@@ -459,6 +459,11 @@ export const performLogout = () => async (dispatch) => {
     const { unregisterPushToken } = await import('../../../hooks/usePushNotifications');
     await unregisterPushToken();
   } catch { /* push util unavailable — don't block logout */ }
+  // Tear down the RevenueCat identity so the next user on this device isn't
+  // bound to this user's RC account (otherwise initPurchases early-returns on
+  // the stale `configured` flag and B's purchases attribute to A). Best-effort
+  // — must never block or throw into logout.
+  try { const { resetPurchases } = await import('../../../utils/purchases'); await resetPurchases(); } catch { /* RC unavailable — don't block logout */ }
   dispatch(logoutUser());
   // Strip onboarding progress + dismissed banner version — none of these are
   // user-scoped, so leaving them carries another user's state forward.

@@ -197,6 +197,32 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     const dna = r.performance_dna || {};
     const tags = Array.isArray(r.tone_tags) ? r.tone_tags : [];
 
+    const hasScores = TECH_SCORES.some((s) => scores[s.key] != null);
+    const hasDna = DNA.some((d) => dna[d.key] != null);
+    const hasPerformance = !!(r.performance && Object.values(r.performance).some(Boolean));
+
+    // Defense in depth (BUG 3): a 200 with an empty/near-empty body resolves
+    // truthy, so the result screen renders. The text blocks self-collapse, but
+    // the score grids would otherwise render every bar at a clamped 0 — fake
+    // "0/10" notes for a token the BE already refunded. If NOTHING real came
+    // back, show the incomplete-result card instead of zeroed scores.
+    if (!r.verdict && working.length === 0 && adjustments.length === 0 && !hasPerformance && !hasScores && !hasDna) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[#FF8280]/30 p-5 text-center" style={SURFACE}>
+            <p className="text-sm font-bold text-[#0A0A0A]">This review came back incomplete — your token was refunded. Please try again.</p>
+          </div>
+          <button
+            onClick={reset}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+          >
+            <RotateCcw size={15} /> Try again
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4 sm:space-y-5">
         {/* Verdict */}
@@ -289,25 +315,32 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
         )}
 
-        {/* Scores */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
-            <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Tape scores</h3>
-            <div className="space-y-2.5">
-              {TECH_SCORES.map((s) => (
-                <ScoreBar key={s.key} label={s.label} value={scores[s.key]} />
-              ))}
-            </div>
+        {/* Scores — only render a card when its data actually came back, so an
+            empty/partial result never shows a wall of clamped-to-0 bars. */}
+        {(hasScores || hasDna) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {hasScores && (
+              <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
+                <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Tape scores</h3>
+                <div className="space-y-2.5">
+                  {TECH_SCORES.map((s) => (
+                    <ScoreBar key={s.key} label={s.label} value={scores[s.key]} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {hasDna && (
+              <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
+                <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Performance DNA</h3>
+                <div className="space-y-2.5">
+                  {DNA.map((d) => (
+                    <ScoreBar key={d.key} label={d.label} value={dna[d.key]} color={d.color} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
-            <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Performance DNA</h3>
-            <div className="space-y-2.5">
-              {DNA.map((d) => (
-                <ScoreBar key={d.key} label={d.label} value={dna[d.key]} color={d.color} />
-              ))}
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Actions — in first-review mode the paywall leads; otherwise the
             standard "review another take" reset. */}

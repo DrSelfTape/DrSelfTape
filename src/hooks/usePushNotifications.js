@@ -59,11 +59,37 @@ function navDetailForPush(notif) {
   const data = notif?.data || notif?.notification?.data || {};
   const type = data.type;
   const matchId = data.match_id;
-  // Match + new message both land the user in the green-room conversation.
-  if (matchId && (type === 'new_message' || type === 'scene_partner_match')) {
+
+  // A FRESH match opens the "It's a Scene!" reveal, not the chat — the
+  // green-room sub-panel deep-link path (PanelScreen → ItsASceneWrapper)
+  // already accepts subPanel:'its-a-scene'. A new message goes to the chat.
+  if (matchId && type === 'scene_partner_match') {
+    return { panel: 'green-room', subPanel: 'its-a-scene', matchId: String(matchId) };
+  }
+  if (matchId && type === 'new_message') {
     return { panel: 'green-room', subPanel: 'green-room-chat', matchId: String(matchId) };
   }
-  return null;
+
+  // Best-effort deep-links for push types with an unambiguous destination.
+  // Only map to tabs/panels that definitely exist and are mobile-reachable
+  // (MobileApp TABS / PANEL_COMPONENTS); the drst-navigate handler routes a
+  // `tab` straight to setTab. Truly ambiguous types (e.g. CallKit scene-read,
+  // which surfaces as a native ring rather than a panel) stay null.
+  switch (type) {
+    case 'tape_review_complete':
+    case 'tape-review-complete':
+    case 'review_complete':
+      // Tape Review is a primary tab in the mobile shell.
+      return { tab: 'tape-review' };
+    case 'callback_reminder':
+    case 'callback-reminder':
+    case 'audition_reminder':
+    case 'audition-reminder':
+      // Callback / audition reminders land in the Auditions tracker tab.
+      return { tab: 'auditions' };
+    default:
+      return null;
+  }
 }
 
 // Route a tapped push: deep-link via drst-navigate when we recognise it, and

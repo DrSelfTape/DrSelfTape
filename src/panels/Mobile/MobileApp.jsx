@@ -109,6 +109,7 @@ const Favorites = lazy(() => import("../Dashboard/FindAReader/Favorites"));
 const FindAReader = lazy(() => import("../Dashboard/FindAReader"));
 const GreenRoom = lazy(() => import("../Dashboard/FindAReader/GreenRoom"));
 const GreenRoomChat = lazy(() => import("../Dashboard/FindAReader/GreenRoomChat"));
+const ReaderProfile = lazy(() => import("../Dashboard/FindAReader/ReaderProfile"));
 const ItsAScene = lazy(() => import("../Dashboard/FindAReader/ItsAScene"));
 const LiveRehearsals = lazy(() => Promise.resolve({ default: () => null }));
 const Community = lazy(() => Promise.resolve({ default: () => null }));
@@ -923,6 +924,12 @@ const PANEL_COMPONENTS = {
   "referral": Referral,
   "marketplace": Marketplace,
   "self-tapes": SelfTapesPanel,
+  // reader-profile mounts as a bare mobile panel (deep-linked from the Green
+  // Room chat header's "View Profile"). It needs a readerId from the
+  // drst-navigate detail, which PanelScreen threads in and renders via
+  // ReaderProfileWrapper. Registered here so the drst-navigate guard
+  // (PANEL_COMPONENTS[targetPanel]) passes instead of silently dropping the tap.
+  "reader-profile": ReaderProfile,
 };
 
 // Header labels for panels opened only via a teaser / deep-link, so they
@@ -1003,6 +1010,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       dispatch(getScripts());
       dispatch(fetchSubmissionsThunk());
       dispatch(fetchMatchingStats());
+      // Re-sync the AI token balance so the Home card matches server truth
+      // after an AI charge (e.g. returning from a Jericho / Tape Review flow).
+      // Rides the same debounced visibility/focus trigger — no extra polling.
+      refreshTokens?.();
     };
     refresh();
     let pending = null;
@@ -1018,7 +1029,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       document.removeEventListener('visibilitychange', onVisibility);
       window.removeEventListener('focus', onVisibility);
     };
-  }, [dispatch]);
+  }, [dispatch, refreshTokens]);
 
   useEffect(() => {
     // Wait until server settings have loaded before deciding whether to
@@ -2818,6 +2829,23 @@ function GreenRoomChatWrapper({ matchId, onBack }) {
   );
 }
 
+// Wrapper to inject readerId into ReaderProfile without React Router params.
+// ReaderProfile reads readerId from useParams() on web; here we pass it as a
+// prop (props.readerId takes precedence) so it can mount as a mobile panel.
+// onBack lets the mobile shell intercept the in-component "Back" button (which
+// calls navigate(-1) — a no-op inside the Capacitor shell).
+function ReaderProfileWrapper({ readerId, onBack }) {
+  return (
+    <Suspense fallback={
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
+        <div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div>
+      </div>
+    }>
+      <ReaderProfile readerId={readerId} onBack={onBack} />
+    </Suspense>
+  );
+}
+
 // Wrapper to inject matchId into ItsAScene without React Router params
 function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
   return (
@@ -2831,12 +2859,19 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
   );
 }
 
-function PanelScreen({ panelId, onBack, initialSubPanel }) {
+function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
   // initialSubPanel seeds the sub-screen for a deep-link (e.g. a fresh
   // scene_partner_match → { id: 'its-a-scene', matchId }). It's only read at
   // mount; the parent re-keys PanelScreen on each new deep-link so this runs.
   const [subPanel, setSubPanel] = useState(initialSubPanel || null); // { id: 'green-room-chat', matchId: '123' }
   const PanelComponent = PANEL_COMPONENTS[panelId];
+
+  // reader-profile renders bare (no PanelScreen header) — it owns its own
+  // "Back" button, which we route to onBack so the Capacitor shell dismisses
+  // the panel instead of relying on navigate(-1) (a no-op in the shell).
+  if (panelId === 'reader-profile') {
+    return <ReaderProfileWrapper readerId={readerId} onBack={onBack} />;
+  }
   // Top-level tabs (Find Reader, Green Room) also render through here when
   // a user taps them, but MORE_FEATURES doesn't list them — fall back to
   // TABS so the title bar reads "Green Room" instead of literal "Feature".
@@ -3014,6 +3049,9 @@ export default function DrSelfTapeApp() {
   // match arriving over the socket). Passed into PanelScreen as initialSubPanel
   // so it opens the match screen instead of the generic Green Room list.
   const [pendingSubPanel, setPendingSubPanel] = useState(null); // { id, matchId }
+  // readerId for a deep-linked reader-profile panel (Green Room chat header →
+  // "View Profile"). Threaded into PanelScreen which renders ReaderProfileWrapper.
+  const [pendingReaderId, setPendingReaderId] = useState(null);
   // Free-first-review onboarding: true while a new user is inside their one
   // free Tape Review, so TapeReview shows the paywall after the result.
   const [firstReviewActive, setFirstReviewActive] = useState(false);
@@ -3126,17 +3164,19 @@ export default function DrSelfTapeApp() {
   // Listen for cross-component mobile navigation (e.g. Generator → Scene Study)
   useEffect(() => {
     const handler = (e) => {
-      const { tab: targetTab, panel: targetPanel, subPanel: targetSubPanel, matchId } = e.detail || {};
+      const { tab: targetTab, panel: targetPanel, subPanel: targetSubPanel, matchId, readerId } = e.detail || {};
       if (targetTab) {
         setCurrentPanel(null);
         setTab(targetTab);
       } else if (targetPanel && PANEL_COMPONENTS[targetPanel]) {
-        // Guard against navigating to a panel that isn't registered (e.g. a
-        // react-router-only screen like reader-profile that can't mount as a
-        // mobile panel) — otherwise the content area renders blank.
+        // Guard against navigating to a panel that isn't registered —
+        // otherwise the content area renders blank.
         // A subPanel (e.g. a fresh scene_partner_match → 'its-a-scene') is
         // stashed so the panel opens that sub-screen instead of its list.
+        // reader-profile carries a readerId instead (Green Room chat header →
+        // "View Profile"), threaded into PanelScreen via pendingReaderId.
         setPendingSubPanel(targetSubPanel ? { id: targetSubPanel, matchId } : null);
+        setPendingReaderId(targetPanel === 'reader-profile' ? (readerId != null ? String(readerId) : null) : null);
         setCurrentPanel(targetPanel);
       }
     };
@@ -3162,6 +3202,7 @@ export default function DrSelfTapeApp() {
     // A deliberate tab tap discards any pending scene-match deep-link, so the
     // Green Room can never later auto-jump into a stale match.
     setPendingSubPanel(null);
+    setPendingReaderId(null);
     // Leaving via any deliberate tab tap permanently exits first-review mode —
     // clear the durable flag so the mount-effect can't re-pin the user to the
     // Tape Review tab (the consent-decline / never-upload soft-lock).
@@ -3355,6 +3396,7 @@ export default function DrSelfTapeApp() {
                 // Discard any pending scene-match deep-link — a bell tap to the
                 // Green Room must show the list, not re-open a stale match.
                 setPendingSubPanel(null);
+                setPendingReaderId(null);
                 // MeetingRoom is react-router-only (useParams + location.state)
                 // and can't mount as a mobile panel with a room — route live-
                 // session notifications to find-a-reader (where the scene is
@@ -3393,11 +3435,19 @@ export default function DrSelfTapeApp() {
               <PanelScreen
                 // Re-key on the pending sub-panel so a fresh deep-link (e.g. a
                 // new scene_partner_match) remounts PanelScreen and its local
-                // subPanel state initializes from initialSubPanel.
-                key={pendingSubPanel ? `${currentPanel}:${pendingSubPanel.id}:${pendingSubPanel.matchId}` : currentPanel}
+                // subPanel state initializes from initialSubPanel. reader-profile
+                // re-keys on its readerId so a second "View Profile" reloads it.
+                key={
+                  pendingSubPanel
+                    ? `${currentPanel}:${pendingSubPanel.id}:${pendingSubPanel.matchId}`
+                    : currentPanel === 'reader-profile'
+                      ? `reader-profile:${pendingReaderId}`
+                      : currentPanel
+                }
                 panelId={currentPanel}
                 initialSubPanel={pendingSubPanel && currentPanel === 'green-room' ? pendingSubPanel : null}
-                onBack={() => { setPendingSubPanel(null); setCurrentPanel(null); }}
+                readerId={currentPanel === 'reader-profile' ? pendingReaderId : null}
+                onBack={() => { setPendingSubPanel(null); setPendingReaderId(null); setCurrentPanel(null); }}
               />
             ) : (
               screens[tab]

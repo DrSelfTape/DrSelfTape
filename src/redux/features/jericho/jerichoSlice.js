@@ -56,6 +56,22 @@ async function resolveAnalysis(payload, { signal } = {}) {
   return payload;
 }
 
+// Defense in depth (BUG 3): the BE can return 200 with an empty/near-empty body
+// after charging a token (the BE refunds on its side). Without this guard the
+// thunk fulfills truthy and the result screen renders a wall of zeroed scores.
+// Treat a result with NONE of the real content fields as an incomplete analysis
+// and force the clean error path.
+function tapeReviewHasContent(r) {
+  if (!r || typeof r !== 'object') return false;
+  const verdict = !!r.verdict;
+  const working = Array.isArray(r.whats_working) && r.whats_working.length > 0;
+  const adjustments = Array.isArray(r.adjustments) && r.adjustments.length > 0;
+  const performance = !!(r.performance && Object.values(r.performance).some(Boolean));
+  const scores = !!(r.scores && Object.values(r.scores).some((v) => v != null));
+  const dna = !!(r.performance_dna && Object.values(r.performance_dna).some((v) => v != null));
+  return verdict || working || adjustments || performance || scores || dna;
+}
+
 // ─── Thunks ────────────────────────────────────────────────────────────
 
 /** Fetch the actor's AI memory profile */
@@ -174,6 +190,11 @@ export const reviewTape = createAsyncThunk(
         signal,
       });
       const result = await resolveAnalysis(data?.data || data, { signal });
+      // An empty/partial body charges a token but has nothing to show — take the
+      // clean error path instead of fulfilling a hollow result (BUG 3).
+      if (!tapeReviewHasContent(result)) {
+        return rejectWithValue('This review came back incomplete — your token was refunded. Please try again.');
+      }
       trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role });
       return result;
     } catch (err) {

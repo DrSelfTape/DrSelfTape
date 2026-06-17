@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { Capacitor } from '@capacitor/core';
-import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor } from '../../../utils/purchases';
+import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor, getStorePriceFor } from '../../../utils/purchases';
 import { openExternal } from '../../../utils/openExternal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
@@ -158,6 +158,28 @@ export default function Membership({ onClose }) {
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(null);
   const [introOffers, setIntroOffers] = useState({});
+  // Real localized store prices keyed `${plan}_${billing}` (e.g. "$9.99",
+  // "£8.99"). Populated on native stores from pkg.product.priceString — the
+  // hardcoded PLANS numbers are web/Stripe display only and can diverge from
+  // the actual store charge by region/currency.
+  const [storePrices, setStorePrices] = useState({});
+
+  // After a purchase/restore the BE entitlement is updated by the
+  // RevenueCat/Stripe webhook, which can lag the client. A single fixed-delay
+  // GET races that webhook → a paying user sees their OLD plan with no retry.
+  // Poll the status endpoint a bounded number of times until it reports active.
+  const refreshStatusUntilActive = async ({ attempts = 6, delayMs = 2000 } = {}) => {
+    for (let i = 0; i < attempts; i++) {
+      try {
+        const res = await axiosInstance.get('/v1/subscriptions/status/');
+        const data = res.data?.data;
+        if (data) setStatus(data);
+        if (data?.status === 'active' && data?.plan) return true;
+      } catch { /* transient — keep polling */ }
+      await new Promise((r) => setTimeout(r, delayMs));
+    }
+    return false;
+  };
 
   useEffect(() => {
     axiosInstance.get('/v1/subscriptions/status/')
@@ -171,6 +193,13 @@ export default function Membership({ onClose }) {
         const offer = await getIntroOfferFor(p, b).catch(() => null);
         return [`${p}_${b}`, offer];
       })).then((entries) => setIntroOffers(Object.fromEntries(entries)));
+
+      // Real localized store prices — prefer these over the hardcoded PLANS
+      // numbers on native stores (Apple/Google charge the region's price).
+      Promise.all(combos.map(async ([p, b]) => {
+        const priceString = await getStorePriceFor(p, b).catch(() => null);
+        return [`${p}_${b}`, priceString];
+      })).then((entries) => setStorePrices(Object.fromEntries(entries)));
     }
 
     const params = new URLSearchParams(window.location.search);
@@ -273,11 +302,21 @@ export default function Membership({ onClose }) {
           return;
         }
 
-        dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+        // The purchase promise resolved, but that alone doesn't mean an
+        // entitlement was granted. Deferred/pending (ask-to-buy, Family
+        // Sharing, billing retry) → "pending"; resolved-but-no-active-
+        // entitlement yet → "finalizing"; only a confirmed active entitlement
+        // earns "activated".
+        if (result.pending) {
+          dispatch(showSnackbar({ message: 'Your purchase is pending approval. We’ll unlock your plan once it’s approved.', variant: 'info' }));
+        } else if (result.hasActive === false) {
+          dispatch(showSnackbar({ message: 'Finalizing your subscription…', variant: 'info' }));
+        } else {
+          dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+        }
         trackPurchase({ status: 'success' });
-        setTimeout(() => {
-          axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
-        }, 2000);
+        // Poll for the BE entitlement — webhook may lag the purchase.
+        refreshStatusUntilActive();
       } catch (err) {
         // iapPurchase shouldn't throw, but if the plugin itself is
         // missing or rejects, surface a real error instead of silently
@@ -343,12 +382,12 @@ export default function Membership({ onClose }) {
 
   const handleRestore = async () => {
     if (!isNativeStore()) return;
-    const result = await restorePurchases();
+    // Identify the current Redux user before restoring so receipts attribute
+    // to THIS backend identity, not whoever RC was last bound to.
+    const result = await restorePurchases(userId);
     if (result.ok && result.hasActive) {
       dispatch(showSnackbar({ message: 'Purchases restored.', variant: 'success' }));
-      setTimeout(() => {
-        axiosInstance.get('/v1/subscriptions/status/').then((res) => setStatus(res.data.data));
-      }, 1500);
+      refreshStatusUntilActive();
     } else if (result.ok) {
       dispatch(showSnackbar({ message: 'No purchases found on this Apple ID.', variant: 'info' }));
     } else if (result.reason === 'unavailable') {
@@ -376,6 +415,10 @@ export default function Membership({ onClose }) {
   // amount once WEEKLY_ENABLED is flipped. Match the plan-card logic (plan[billing]).
   const ctaPrice = sel ? (sel[billing] ?? sel.monthly) : 0;
   const ctaPeriod = { weekly: 'wk', monthly: 'mo', yearly: 'yr' }[billing] || 'mo';
+  // Prefer the real localized store price for the selected plan (already
+  // currency-symboled); fall back to the hardcoded web/Stripe number with '$'.
+  const ctaStorePrice = storePrices[`${selectedPlan}_${billing}`];
+  const ctaPriceDisplay = ctaStorePrice || `$${ctaPrice}`;
 
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{
@@ -468,7 +511,11 @@ export default function Membership({ onClose }) {
         {/* Plan cards */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
           {PLANS.map((plan) => {
+            // Prefer the real localized store price (already currency-symboled,
+            // do NOT prepend '$'); fall back to the hardcoded web/Stripe number.
+            const storePrice = storePrices[`${plan.id}_${billing}`];
             const price = plan[billing] ?? plan.monthly;
+            const priceDisplay = storePrice || `$${price}`;
             const isActive = currentPlan === plan.id;
             const planIsCurrent = isActive && status?.status === 'active';
             const selected = selectedPlan === plan.id;
@@ -534,7 +581,7 @@ export default function Membership({ onClose }) {
                       {/* Apple 3.1.2(c): bill amount must dominate. Bumped to
                           22px / 700 so it visually outweighs the trial pill below. */}
                       <div style={{ textAlign: 'right' }}>
-                        <span className="aurora-mono" style={{ fontSize: 22, color: 'var(--aurora-text)', fontWeight: 700, letterSpacing: '-0.4px' }}>${price}</span>
+                        <span className="aurora-mono" style={{ fontSize: 22, color: 'var(--aurora-text)', fontWeight: 700, letterSpacing: '-0.4px' }}>{priceDisplay}</span>
                         <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>/{{ weekly: 'wk', monthly: 'mo', yearly: 'yr' }[billing]}</span>
                       </div>
                     </div>
@@ -635,7 +682,7 @@ export default function Membership({ onClose }) {
                     </span>
                   )}
                   <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.2px' }}>
-                    {hasActivePlan ? 'Switch' : 'Subscribe'} · ${ctaPrice}/{ctaPeriod} →
+                    {hasActivePlan ? 'Switch' : 'Subscribe'} · {ctaPriceDisplay}/{ctaPeriod} →
                   </span>
                 </span>
               )}

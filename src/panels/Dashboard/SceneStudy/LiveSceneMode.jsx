@@ -291,12 +291,17 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   // one undifferentiated blob has no cue to listen for — so we run TIMED mode
   // instead of stranding the actor on a dead "Line 1 of 1" reader.
   const canListen = useMemo(() => {
-    const distinct = new Set((characters || []).filter(Boolean));
-    if (distinct.size < 2) return false;
-    const hasActor = Array.isArray(lines) && lines.some((l) => l.character === userRole);
-    const hasPartner = Array.isArray(lines) && lines.some((l) => l.character !== userRole);
-    return hasActor && hasPartner;
-  }, [characters, lines, userRole]);
+    // Derive the distinct-character check from `lines` (the actual playback
+    // array) rather than the `characters` prop — after a mis-parse the two can
+    // diverge, leaving the selected role with no real beats and stranding the
+    // actor in listen mode forever (BUG 17).
+    if (!Array.isArray(lines) || lines.length < 2) return false;
+    const distinctInLines = new Set(lines.map((l) => l.character).filter(Boolean));
+    if (distinctInLines.size < 2) return false;
+    const actorBeats = lines.filter((l) => l.character === userRole).length;
+    const partnerBeats = lines.filter((l) => l.character !== userRole).length;
+    return actorBeats >= 1 && partnerBeats >= 1;
+  }, [lines, userRole]);
 
   // Check browser support
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -480,6 +485,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     if (idx >= lines.length) {
       setStatus('idle');
       setAiCurrentLine('🎬 Scene complete!');
+      setSceneComplete(true);
       return;
     }
 
@@ -520,6 +526,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (nextIdx >= lines.length) {
         setStatus('idle');
         setAiCurrentLine('🎬 Scene complete!');
+        setSceneComplete(true);
         isProcessingRef.current = false;
         return;
       }

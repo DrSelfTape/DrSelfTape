@@ -41,9 +41,19 @@ const goldGradient = {
   boxShadow: '0 8px 22px rgba(212,168,95,0.30)',
 };
 
-const ReaderProfile = () => {
-  const { readerId } = useParams();
+const ReaderProfile = (props) => {
+  // On web this mounts as a route and reads readerId from the URL params.
+  // On the Capacitor shell it mounts bare as a mobile sub-panel, so accept an
+  // injected readerId prop (and an onBack handler) that take precedence.
+  const { readerId: paramId } = useParams();
+  const readerId = props.readerId ?? paramId;
   const navigate = useNavigate();
+  // navigate(-1) no-ops inside the Capacitor shell, so when mounted as a
+  // mobile sub-panel use the injected onBack to dismiss back to Green Room.
+  const handleBack = () => {
+    if (props.onBack) props.onBack();
+    else navigate(-1);
+  };
   const dispatch = useDispatch();
   const reader = useReader(readerId);
   const fetchState = useSelector(
@@ -109,7 +119,7 @@ const ReaderProfile = () => {
         <div className="mx-auto max-w-lg">
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={handleBack}
             className="mb-6 flex items-center gap-1.5 text-sm transition-colors"
             style={{ color: 'var(--aurora-sub)' }}
           >

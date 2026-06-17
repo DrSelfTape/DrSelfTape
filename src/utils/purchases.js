@@ -77,6 +77,26 @@ export async function initPurchases(userId) {
   }
 }
 
+/**
+ * Tear down the RevenueCat identity on logout so the next user on this
+ * device is NOT bound to the previous user's RevenueCat account. Without
+ * this, `configured` stays true forever and initPurchases(B) early-returns,
+ * so User B's purchases/restores attribute to User A. logOut() resets RC to
+ * a fresh anonymous id; clearing `configured` lets the next login re-configure
+ * with the new user id. Best-effort — must never throw into the logout path.
+ */
+export async function resetPurchases() {
+  if (!isNativeStore()) { configured = false; return; }
+  try {
+    const sdk = await loadSDK();
+    if (sdk) await sdk.Purchases.logOut();
+  } catch (e) {
+    console.warn('RevenueCat logOut failed:', e);
+  } finally {
+    configured = false;
+  }
+}
+
 /** Returns the current Offering's available packages, or [] if none. */
 export async function getAvailablePackages() {
   const sdk = await loadSDK();
@@ -170,11 +190,30 @@ export async function purchase(plan, billing, userId) {
   }
   try {
     const { customerInfo } = await sdk.Purchases.purchasePackage({ aPackage: pkg });
-    return { ok: true, customerInfo };
+    // Don't treat a resolved promise as "subscription active". Deferred /
+    // pending purchases (ask-to-buy, Family Sharing approval, billing retry)
+    // resolve without granting an entitlement — surface that so the UI can
+    // say "pending"/"finalizing" rather than a flat "activated".
+    const active = customerInfo?.entitlements?.active || {};
+    return { ok: true, customerInfo, hasActive: Object.keys(active).length > 0 };
   } catch (e) {
     if (e?.userCancelled) return { ok: false, userCancelled: true };
+    const code = String(e?.code || e?.errorCode || '').toUpperCase();
+    if (code.includes('PENDING') || code.includes('DEFERRED')) return { ok: true, pending: true };
     return { ok: false, reason: 'purchase_failed', error: String(e?.message || e) };
   }
+}
+
+/**
+ * The real, localized store price string for a (plan, billing) pair, or null.
+ * pkg.product.priceString already includes the region's currency symbol and
+ * formatting (e.g. "$9.99", "£8.99", "¥1,200") — callers must render it as-is
+ * and must NOT prepend their own '$'. Reuses getPackageFor (same offering
+ * lookup getIntroOfferFor uses). Returns null off a native store / on error.
+ */
+export async function getStorePriceFor(plan, billing) {
+  const pkg = await getPackageFor(plan, billing);
+  return pkg?.product?.priceString || null;
 }
 
 // Returns the introductory offer for a (plan, billing) pair, or null.
@@ -202,9 +241,25 @@ export async function getIntroOfferFor(plan, billing) {
  *   - {ok: true, hasActive: false} — restore succeeded, user has no purchases
  *   - {ok: true, hasActive: true, customerInfo} — restore succeeded, has active subs
  */
-export async function restorePurchases() {
+export async function restorePurchases(userId) {
   const sdk = await loadSDK();
   if (!sdk) return { ok: false, reason: 'unavailable' };
+  // Identify the CURRENT user before restoring. Without this, restore runs
+  // onto whoever RC is currently bound to (e.g. a stale identity, or an
+  // anonymous id), so a restore could attribute another user's receipts —
+  // or fail to find this user's. Mirror purchase(): configure-if-needed with
+  // the appUserID, then logIn (idempotent, re-aliases anonymous → real).
+  if (userId) {
+    try {
+      if (!configured) {
+        await sdk.Purchases.configure({ apiKey: platformKey(), appUserID: String(userId) });
+        configured = true;
+      }
+      await sdk.Purchases.logIn({ appUserID: String(userId) });
+    } catch (e) {
+      return { ok: false, reason: 'restore_failed', error: e };
+    }
+  }
   try {
     const customerInfo = await sdk.Purchases.restorePurchases();
     const active = customerInfo?.activeSubscriptions || customerInfo?.entitlements?.active || {};

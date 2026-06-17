@@ -100,6 +100,27 @@ export default function CompareTakes() {
     const takesByNum = Object.fromEntries((r.takes || []).map((t) => [t.take, t]));
     const order = (r.ranking || []).filter((n) => takesByNum[n]);
 
+    // Defense in depth (BUG 3, analogous): a 200 with an empty/near-empty body
+    // charges tokens but has no ranking to show — the winner banner would read
+    // "Take undefined is your strongest". If no real takes came back, show the
+    // incomplete-result card instead of a hollow ranked result.
+    if (order.length === 0) {
+      return (
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-[#FF8280]/30 p-5 text-center" style={SURFACE}>
+            <p className="text-sm font-bold text-[#0A0A0A]">This comparison came back incomplete — your tokens were refunded. Please try again.</p>
+          </div>
+          <button
+            onClick={reset}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+            style={{ background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
+          >
+            <RotateCcw size={15} /> Try again
+          </button>
+        </div>
+      );
+    }
+
     return (
       <div className="space-y-4 sm:space-y-5">
         {/* Winner banner */}

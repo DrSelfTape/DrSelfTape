@@ -251,6 +251,15 @@ export const BecomeCoachModal = ({ open, onClose }) => {
           'Successfully switched role to coach. Please login again.'
       );
 
+      // De-register this device's APNs/VoIP push token FIRST, while the auth
+      // header is still present, so the orphaned token stops mapping this
+      // device to the now-logged-out user (mirrors performLogout). Best-effort
+      // — never block the role switch.
+      try {
+        const { unregisterPushToken } = await import('../../../hooks/usePushNotifications');
+        await unregisterPushToken();
+      } catch { /* push util unavailable — don't block logout */ }
+
       // Clear auth token from axios
       setAuthToken(null);
 

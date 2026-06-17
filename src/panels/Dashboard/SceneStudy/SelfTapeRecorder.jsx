@@ -60,7 +60,9 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
 
   const [recording, setRecording] = useState(false);
   const [recordedUrl, setRecordedUrl] = useState(null);
+  const recordedUrlRef = useRef(null); // tracks live object URL so unmount cleanup sees the latest
   const [recordedBlob, setRecordedBlob] = useState(null);
+  const [idemKey, setIdemKey] = useState(null); // per-recording idempotency key (BUG 12)
   const [timer, setTimer] = useState(0);
   const [cameraReady, setCameraReady] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -94,6 +96,17 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     };
   }, []);
 
+  // Revoke the recorded object URL on unmount — read from the ref so we
+  // always revoke the latest URL, not a stale closure value (BUG 13).
+  useEffect(() => {
+    return () => {
+      if (recordedUrlRef.current) {
+        URL.revokeObjectURL(recordedUrlRef.current);
+        recordedUrlRef.current = null;
+      }
+    };
+  }, []);
+
   const startRecording = useCallback(async () => {
     if (!streamRef.current) return;
     chunksRef.current = [];
@@ -117,9 +130,15 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
       if (cancelledRef.current && chunksRef.current.length === 0) return;
       const actualType = mimeType || recorder.mimeType || 'video/webm';
       const blob = new Blob(chunksRef.current, { type: actualType });
+      // Revoke any previous URL before replacing it (BUG 13 memory leak)
+      if (recordedUrlRef.current) URL.revokeObjectURL(recordedUrlRef.current);
       const url = URL.createObjectURL(blob);
+      recordedUrlRef.current = url;
       setRecordedUrl(url);
       setRecordedBlob(blob);
+      // Fresh idempotency key per finalized take, so a retry of THIS take
+      // dedups server-side but a new/retaken take gets a new key (BUG 12).
+      setIdemKey(crypto.randomUUID());
     };
     // Surface a mid-capture failure instead of silently losing the take.
     recorder.onerror = (e) => {
@@ -251,8 +270,10 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
 
   const handleRetake = () => {
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    recordedUrlRef.current = null;
     setRecordedUrl(null);
     setRecordedBlob(null);
+    setIdemKey(null); // drop the old take's idempotency key — next take gets a fresh one
     setTimer(0);
     setSaved(false);
     // Restart camera preview
@@ -270,6 +291,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
       fd.append('video', recordedBlob, `self-tape-${Date.now()}.${ext}`);
       fd.append('title', `Self-Tape ${new Date().toLocaleDateString()}`);
       fd.append('duration_seconds', String(timer));
+      // Dedup a lost-response retry of the same take server-side (BUG 12).
+      if (idemKey) fd.append('idempotency_key', idemKey);
       await axios.post(`${baseURL}/v1/growth/self-tapes/upload/`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });

@@ -12,120 +12,10 @@ import PostSessionJournal from '../../../components/Shared/PostSessionJournal';
 import FocusMode from '../../../components/Shared/FocusMode';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import useAIGate from '../../../components/AIConsent/useAIGate';
+import { parseScript, extractCharacters } from '../../../utils/scriptParse';
 
 const STEPS = ['upload', 'pick-role', 'practice'];
 const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice'];
-
-/**
- * Parse script text into lines with character + dialogue.
- * Supports:
- *   CHARACTER NAME: dialogue text
- *   CHARACTER NAME
- *   dialogue text (indented or on next line)
- */
-function parseScript(text) {
-  const lines = [];
-  const rawLines = text.split('\n');
-  let currentChar = null;
-  let currentDialogue = [];
-
-  const flush = () => {
-    if (currentChar && currentDialogue.length > 0) {
-      lines.push({
-        character: currentChar,
-        dialogue: currentDialogue.join(' ').trim(),
-      });
-    }
-    currentDialogue = [];
-  };
-
-  for (const raw of rawLines) {
-    const trimmed = raw.trim();
-    if (!trimmed) {
-      flush();
-      currentChar = null;
-      continue;
-    }
-
-    // Match "CHARACTER: dialogue" or "CHARACTER NAME: dialogue"
-    const colonMatch = trimmed.match(/^([A-Z][A-Z\s.''-]{0,40}):\s*(.*)$/);
-    if (colonMatch) {
-      flush();
-      currentChar = colonMatch[1].trim();
-      if (colonMatch[2]) currentDialogue.push(colonMatch[2]);
-      continue;
-    }
-
-    // Match standalone uppercase name (next line is dialogue)
-    if (/^[A-Z][A-Z\s.''-]{0,40}$/.test(trimmed) && !currentDialogue.length) {
-      flush();
-      currentChar = trimmed;
-      continue;
-    }
-
-    // Otherwise it's dialogue continuation
-    if (currentChar) {
-      currentDialogue.push(trimmed);
-    }
-  }
-  flush();
-
-  // Fallback: flattened screenplay sides lose their line breaks, so the cues
-  // end up INLINE ("GLORIA ... REUBEN ...") and the line-based pass above finds
-  // no characters. Detect the recurring ALL-CAPS names and split on them.
-  if (new Set(lines.map((l) => l.character)).size < 2) {
-    const inline = parseInlineCharacters(text);
-    if (new Set(inline.map((l) => l.character)).size >= 2) return inline;
-  }
-  return lines;
-}
-
-// Recover character/dialogue structure from a flattened screenplay where the
-// line breaks were lost: "GLORIA Hey. REUBEN Told you... GLORIA Oh my God...".
-// Real cues are ALL-CAPS and RECUR, so we key on names that appear 2+ times.
-function parseInlineCharacters(text) {
-  const flat = String(text || '').replace(/\s+/g, ' ').trim();
-  if (!flat) return [];
-  // Candidate cue: 1-2 ALL-CAPS words (letters + . ' -), >= 3 letters total —
-  // skips "I", "OK", "NO", "TV" etc. but keeps GLORIA / REUBEN / O'BRIEN / DR.
-  const cueRe = /\b([A-Z][A-Z.'’-]*(?:\s+[A-Z][A-Z.'’-]*)?)\b/g;
-  const counts = {};
-  let m;
-  while ((m = cueRe.exec(flat))) {
-    const name = m[1].trim().replace(/[.\s]+$/, '');
-    if (name.replace(/[^A-Z]/g, '').length < 3) continue;
-    counts[name] = (counts[name] || 0) + 1;
-  }
-  const names = Object.keys(counts).filter((n) => counts[n] >= 2);
-  if (names.length < 2) return [];
-  const esc = names
-    .map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
-    .sort((a, b) => b.length - a.length); // longest first so 2-word names win
-  const splitRe = new RegExp(`(?:^|\\s)(${esc.join('|')})(?=\\s)`, 'g');
-  const cues = [];
-  let mm;
-  while ((mm = splitRe.exec(flat))) {
-    cues.push({ name: mm[1], start: mm.index, after: splitRe.lastIndex });
-  }
-  const out = [];
-  for (let i = 0; i < cues.length; i++) {
-    const end = i + 1 < cues.length ? cues[i + 1].start : flat.length;
-    const dialogue = flat.slice(cues[i].after, end).trim();
-    if (dialogue) out.push({ character: cues[i].name.trim(), dialogue });
-  }
-  return out;
-}
-
-function extractCharacters(lines) {
-  const seen = new Set();
-  return lines
-    .map((l) => l.character)
-    .filter((c) => {
-      if (seen.has(c)) return false;
-      seen.add(c);
-      return true;
-    });
-}
 
 export default function SceneStudy() {
   // Apple Guideline 5.1.1(i) — Practice mode pipes script text through
@@ -192,7 +82,10 @@ export default function SceneStudy() {
   // we prefer the BE-cached value when available and fall back to the
   // parser, so legacy scripts saved before the `characters` field
   // landed still work.
-  const parsedLines = useMemo(() => parseScript(scriptText), [scriptText]);
+  const parsedLines = useMemo(
+    () => parseScript(scriptText, cachedCharacters),
+    [scriptText, cachedCharacters]
+  );
   const parsedCharacters = useMemo(() => extractCharacters(parsedLines), [parsedLines]);
   const characters = cachedCharacters && cachedCharacters.length
     ? cachedCharacters

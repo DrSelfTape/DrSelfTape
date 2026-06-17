@@ -31,10 +31,12 @@ export default function RecordTake({ onBack }) {
 
   const [status, setStatus] = useState('idle'); // idle | recording | recorded | trimming
   const [recordedUrl, setRecordedUrl] = useState(null);
+  const recordedUrlRef = useRef(null); // tracks live object URL so unmount cleanup sees the latest (BUG 14)
   const [recordedBlob, setRecordedBlob] = useState(null);
   const [cameraError, setCameraError] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [idemKey, setIdemKey] = useState(null); // per-recording idempotency key (BUG 12)
 
   const startCamera = useCallback(async () => {
     try {
@@ -63,7 +65,11 @@ export default function RecordTake({ onBack }) {
     return () => {
       try { screen.orientation?.unlock?.(); } catch { /* ignore */ }
       streamRef.current?.getTracks().forEach((t) => t.stop());
-      if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+      // Read from the ref — recordedUrl is captured stale (always null) here (BUG 14).
+      if (recordedUrlRef.current) {
+        URL.revokeObjectURL(recordedUrlRef.current);
+        recordedUrlRef.current = null;
+      }
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -81,9 +87,14 @@ export default function RecordTake({ onBack }) {
     mr.onstop = () => {
       const actualType = mimeType || mr.mimeType || 'video/webm';
       const blob = new Blob(chunksRef.current, { type: actualType });
+      // Revoke any previous URL before replacing it, and track the live one in a ref (BUG 14).
+      if (recordedUrlRef.current) URL.revokeObjectURL(recordedUrlRef.current);
       const url = URL.createObjectURL(blob);
+      recordedUrlRef.current = url;
       setRecordedBlob(blob);
       setRecordedUrl(url);
+      // Fresh idempotency key per finalized take (BUG 12).
+      setIdemKey(crypto.randomUUID());
       setStatus('recorded');
     };
     mediaRecorderRef.current = mr;
@@ -98,9 +109,11 @@ export default function RecordTake({ onBack }) {
 
   const handleRedo = async () => {
     if (recordedUrl) URL.revokeObjectURL(recordedUrl);
+    recordedUrlRef.current = null;
     setRecordedUrl(null);
     setRecordedBlob(null);
     setSaved(false);
+    setIdemKey(null); // drop the old take's idempotency key — next take gets a fresh one (BUG 12)
     setStatus('idle');
     await startCamera();
   };
@@ -133,7 +146,7 @@ export default function RecordTake({ onBack }) {
   };
 
   const handleSave = async () => {
-    if (!recordedBlob) return;
+    if (!recordedBlob || saving) return; // hardened in-flight guard (BUG 12)
     setSaving(true);
     try {
       const ext = (mimeTypeRef.current || '').includes('mp4') ? 'mp4' : 'webm';
@@ -142,6 +155,8 @@ export default function RecordTake({ onBack }) {
       fd.append('project', 'Scene Study Take');
       fd.append('role', 'Self-tape');
       fd.append('title', `Self-Tape ${new Date().toLocaleDateString()}`);
+      // Dedup a lost-response retry of the same take server-side (BUG 12).
+      if (idemKey) fd.append('idempotency_key', idemKey);
       await axios.post(`${baseURL}/v1/growth/self-tapes/upload/`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
 import axiosInstance from "../redux/http";
 import { openExternal } from "../utils/openExternal";
 import { trackEvent } from "../utils/analytics";
@@ -12,11 +13,12 @@ function storeUrl() {
   return Capacitor.getPlatform() === 'android' ? PLAY_STORE_URL : APP_STORE_URL;
 }
 
-// The marketing version baked into THIS FE bundle. Bump in lockstep with the
-// iOS pbxproj MARKETING_VERSION / Android versionName every time we ship. The
-// banner only fires when the BE-reported live version is GREATER than this, so
-// users on the latest bundle never see a stale "update" nag.
-const BUNDLE_VERSION = "1.0.8";
+// Web fallback only. On native we read the TRUE installed binary version at
+// runtime via CapApp.getInfo() (the iOS MARKETING_VERSION / Android
+// versionName), so a missed native bump can never silently fail-open the
+// banner. The banner only fires when the BE-reported live version is GREATER
+// than the installed version.
+const WEB_BUNDLE_VERSION = "1.0.8";
 
 const LS_DISMISSED = "updateBannerDismissed";
 const VERSION_ENDPOINT = "/v1/notifications/system/latest-version/";
@@ -35,7 +37,18 @@ function versionGt(a, b) {
 
 export default function UpdateBanner() {
   const [latest, setLatest] = useState(null);
+  const [bundleVersion, setBundleVersion] = useState(WEB_BUNDLE_VERSION);
   const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    // Source the REAL installed binary version on native (MARKETING_VERSION /
+    // versionName). Fail-open to the web fallback if getInfo errors.
+    if (Capacitor.isNativePlatform()) {
+      CapApp.getInfo()
+        .then((info) => { if (info?.version) setBundleVersion(info.version); })
+        .catch(() => { /* keep WEB_BUNDLE_VERSION fallback */ });
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,7 +67,7 @@ export default function UpdateBanner() {
   // Vercel, so no nag there.
   if (!Capacitor.isNativePlatform()) return null;
   if (!latest) return null;
-  if (!versionGt(latest, BUNDLE_VERSION)) return null;
+  if (!versionGt(latest, bundleVersion)) return null;
 
   let dismissedFor = null;
   try { dismissedFor = localStorage.getItem(LS_DISMISSED); } catch { /* storage unavailable */ }
@@ -63,12 +76,12 @@ export default function UpdateBanner() {
   const handleUpdate = () => {
     if (opening) return;
     setOpening(true);
-    trackEvent("update_banner_tapped", { from: BUNDLE_VERSION, to: latest });
+    trackEvent("update_banner_tapped", { from: bundleVersion, to: latest });
     openExternal(storeUrl());
   };
 
   const handleDismiss = () => {
-    trackEvent("update_banner_dismissed", { from: BUNDLE_VERSION, to: latest });
+    trackEvent("update_banner_dismissed", { from: bundleVersion, to: latest });
     try { localStorage.setItem(LS_DISMISSED, latest); } catch { /* storage unavailable */ }
     setLatest(null);
   };

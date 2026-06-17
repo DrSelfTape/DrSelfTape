@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
 import axiosInstance from '../redux/http';
 import { openExternal } from '../utils/openExternal';
 
 const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.drselftape.app';
 const VERSION_ENDPOINT = '/v1/notifications/system/latest-version/';
-// Keep in lockstep with UpdateBanner.BUNDLE_VERSION and the iOS pbxproj
-// MARKETING_VERSION / Android versionName. The gate trips when this is BELOW
-// the BE's reported min version for the current platform.
-const BUNDLE_VERSION = '1.0.8';
+// Web fallback only. On native we read the TRUE installed binary version at
+// runtime via CapApp.getInfo() (the iOS MARKETING_VERSION / Android
+// versionName) so a missed native bump can never silently fail-open the gate.
+// Web users auto-update via Vercel, so the gate never fires there anyway.
+const WEB_BUNDLE_VERSION = '1.0.8';
 
 // The right store per platform — itms-apps:// is dead on Android and the Play
 // https link is wrong on iOS, so the "Update now" CTA must choose by platform.
@@ -31,7 +33,7 @@ function versionLt(a, b) {
 
 /**
  * Full-screen "Update Required" modal that gates the entire app when the
- * baked BUNDLE_VERSION is below the BE's reported min_ios. Renders children
+ * installed binary version is below the BE's reported min_ios. Renders children
  * normally when the gate is clear (the common case).
  *
  * Only fires on native iOS — web users auto-update via Vercel, no install
@@ -42,7 +44,18 @@ function versionLt(a, b) {
  */
 export default function ForceUpdateGate({ children }) {
   const [minVersion, setMinVersion] = useState(null);
+  const [bundleVersion, setBundleVersion] = useState(WEB_BUNDLE_VERSION);
   const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    // Source the REAL installed binary version on native (MARKETING_VERSION /
+    // versionName). Fail-open to the web fallback if getInfo errors.
+    if (Capacitor.isNativePlatform()) {
+      CapApp.getInfo()
+        .then((info) => { if (info?.version) setBundleVersion(info.version); })
+        .catch(() => { /* keep WEB_BUNDLE_VERSION fallback */ });
+    }
+  }, []);
 
   useEffect(() => {
     // Native only (web auto-updates via Vercel). Use the CURRENT platform's
@@ -62,7 +75,7 @@ export default function ForceUpdateGate({ children }) {
     return () => { cancelled = true; };
   }, []);
 
-  const blocked = !!(minVersion && versionLt(BUNDLE_VERSION, minVersion));
+  const blocked = !!(minVersion && versionLt(bundleVersion, minVersion));
 
   if (!blocked) return children;
 
@@ -182,7 +195,7 @@ export default function ForceUpdateGate({ children }) {
           letterSpacing: '0.03em',
         }}
       >
-        You have v{BUNDLE_VERSION}{minVersion ? ` · required v${minVersion}` : ''}
+        You have v{bundleVersion}{minVersion ? ` · required v${minVersion}` : ''}
       </p>
 
       <style>{`
