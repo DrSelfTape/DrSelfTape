@@ -65,6 +65,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
   const [cameraReady, setCameraReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [recordError, setRecordError] = useState(null);
   const timerRef = useRef(null);
   const mimeTypeRef = useRef(getSupportedMimeType());
 
@@ -97,6 +98,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     if (!streamRef.current) return;
     chunksRef.current = [];
     cancelledRef.current = false;
+    setRecordError(null);
 
     // Lock to portrait so rotation doesn't kill the stream
     await lockOrientation();
@@ -110,11 +112,29 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     };
     recorder.onstop = () => {
       unlockOrientation();
+      // A recorder that errored mid-capture fires onerror BEFORE onstop and
+      // sets cancelledRef — don't surface a half/empty take as a good one.
+      if (cancelledRef.current && chunksRef.current.length === 0) return;
       const actualType = mimeType || recorder.mimeType || 'video/webm';
       const blob = new Blob(chunksRef.current, { type: actualType });
       const url = URL.createObjectURL(blob);
       setRecordedUrl(url);
       setRecordedBlob(blob);
+    };
+    // Surface a mid-capture failure instead of silently losing the take.
+    recorder.onerror = (e) => {
+      console.error('MediaRecorder runtime error', e?.error || e);
+      cancelledRef.current = true;
+      unlockOrientation();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      try {
+        if (recorder.state !== 'inactive') recorder.stop();
+      } catch { /* already stopped */ }
+      setRecording(false);
+      setRecordError('Recording failed mid-capture. Your take was not saved — please try again.');
     };
 
     recorder.start(1000);
@@ -288,6 +308,20 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
         )}
         <div className="w-9" />
       </div>
+
+      {/* Recording-failure banner — surfaces a mid-capture MediaRecorder
+          error so a failed take isn't silently lost, with a retry. */}
+      {recordError && (
+        <div className="mx-4 mt-2 z-20 flex items-center justify-between gap-3 rounded-lg bg-red-500/15 border border-red-500/40 px-4 py-2.5">
+          <span className="text-red-300 text-sm">{recordError}</span>
+          <button
+            onClick={() => { setRecordError(null); startRecording(); }}
+            className="shrink-0 rounded-full bg-red-500 px-4 py-1.5 text-sm font-bold text-white"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       {/* Main area — camera + teleprompter */}
       <div className="flex-1 relative overflow-hidden">

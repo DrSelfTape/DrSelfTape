@@ -237,6 +237,10 @@ const initialState = {
   favorites: [],
   favoritesLoading: false,
   greenRoomMessages: {},
+  // Latest in-flight fetch requestId per matchId — lets fulfilled handlers
+  // drop a stale (older, slower) response that would otherwise clobber the
+  // messages a newer fetch already wrote.
+  greenRoomMsgReq: {},
   messagesLoading: false,
   whoWantsToRead: [],
   likesLoading: false,
@@ -312,14 +316,24 @@ const readersMatchSlice = createSlice({
       })
 
       // fetchGreenRoomMessages
-      .addCase(fetchGreenRoomMessages.pending, (state) => {
+      .addCase(fetchGreenRoomMessages.pending, (state, action) => {
         state.messagesLoading = true;
         state.error = null;
+        // Record this as the newest in-flight fetch for the match so a
+        // slower, earlier request can't later overwrite fresher messages.
+        const argMatchId = action.meta?.arg;
+        if (argMatchId != null) {
+          state.greenRoomMsgReq[argMatchId] = action.meta.requestId;
+        }
       })
       .addCase(fetchGreenRoomMessages.fulfilled, (state, action) => {
         state.messagesLoading = false;
         const { matchId, messages } = action.payload;
         if (matchId) {
+          // Ignore a stale response: only apply if this request is still the
+          // latest one started for the match (guards concurrent overwrites).
+          const latestReqId = state.greenRoomMsgReq[matchId];
+          if (latestReqId && latestReqId !== action.meta.requestId) return;
           state.greenRoomMessages[matchId] = messages;
         }
       })

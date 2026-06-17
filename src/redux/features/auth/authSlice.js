@@ -452,6 +452,13 @@ export const { logoutUser, clearTempSession, setAiConsentAcceptedAt, setDateOfBi
 // scripts, etc.) so the next user on this device starts clean. Call this
 // instead of `logoutUser` at user-facing sign-out points.
 export const performLogout = () => async (dispatch) => {
+  // De-register this device's push token FIRST, while the auth header is
+  // still present, so the orphaned APNs/VoIP token stops mapping this device
+  // to the logged-out user (next user's pushes could otherwise misroute).
+  try {
+    const { unregisterPushToken } = await import('../../../hooks/usePushNotifications');
+    await unregisterPushToken();
+  } catch { /* push util unavailable — don't block logout */ }
   dispatch(logoutUser());
   // Strip onboarding progress + dismissed banner version — none of these are
   // user-scoped, so leaving them carries another user's state forward.

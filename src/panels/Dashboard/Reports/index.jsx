@@ -47,7 +47,10 @@ export default function Reports() {
   }, [dispatch]);
 
   const r = data || {};
-  const hasData = r.total_auditions > 0;
+  // Users who only IMPORTED submissions (agency reports) have total_auditions === 0
+  // but total_submissions > 0 — they still have data to show, so don't gate "No data
+  // yet" on auditions alone.
+  const hasData = r.total_auditions > 0 || r.total_submissions > 0;
 
   // Funnel data
   const funnelData = [

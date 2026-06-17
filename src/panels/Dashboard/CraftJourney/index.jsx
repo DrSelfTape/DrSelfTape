@@ -172,7 +172,13 @@ export default function CraftJourney() {
       dispatch(clearLastResult());
       return;
     }
-    setCelebrate({ node, stars: lastResult.stars || 2 });
+    // Carry the BE-awarded XP so the overlay shows the real number the
+    // backend granted, not a client-fabricated stars*20 estimate.
+    setCelebrate({
+      node,
+      stars: lastResult.stars || 2,
+      xpAwarded: typeof lastResult.xp_awarded === 'number' ? lastResult.xp_awarded : null,
+    });
   }, [lastResult, dispatch]);
 
   const closeCelebration = () => {
@@ -408,7 +414,7 @@ export default function CraftJourney() {
 
       {/* Celebration overlay — fires when BE confirms a node completion. */}
       {celebrate && (
-        <Celebration node={celebrate.node} stars={celebrate.stars} onClose={closeCelebration} />
+        <Celebration node={celebrate.node} stars={celebrate.stars} xpAwarded={celebrate.xpAwarded} onClose={closeCelebration} />
       )}
 
       {/* AI-generation overlay — blocks input while the scene is being
@@ -666,10 +672,13 @@ function Node({ node, dx, color, state, stars, onStart }) {
   );
 }
 
-function Celebration({ node, stars, onClose }) {
+function Celebration({ node, stars, xpAwarded, onClose }) {
   const [shownStars, setShownStars] = useState(0);
   const [xp, setXp] = useState(0);
-  const xpGain = stars * 20;
+  // Use the BE-awarded XP. Only fall back to a stars-based estimate if the
+  // backend didn't return xp_awarded (older API), so the overlay never shows
+  // a number that contradicts what was actually granted.
+  const xpGain = typeof xpAwarded === 'number' ? xpAwarded : stars * 20;
 
   useEffect(() => {
     const timers = [];

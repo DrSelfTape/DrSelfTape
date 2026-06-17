@@ -23,7 +23,10 @@ const ItsAScene = (props = {}) => {
   }, [matchId, matches, dispatch]);
 
   const myName = 'You';
-  const theirName = match?.reader?.name || 'Your Reader';
+  // Mirror GreenRoomChat — the partner lives on `other_actor` for most match
+  // shapes; `reader` only exists on some. Reading `reader` alone always fell
+  // through to the placeholder, so the screen never showed the real name.
+  const theirName = match?.reader?.name || match?.other_actor?.name || 'Your Reader';
   const myInitials = 'ME';
   const theirInitials = (theirName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)) || 'AR';
 

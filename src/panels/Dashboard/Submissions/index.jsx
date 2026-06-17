@@ -13,7 +13,7 @@ import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/audit
 
 // --- Constants ---
 
-const STATUS_TABS = ['all', 'sent', 'callback', 'booked', 'passed'];
+const STATUS_TABS = ['all', 'sent', 'viewed', 'callback', 'booked', 'passed'];
 
 const STATUS_BADGE = {
   sent: 'bg-blue-500/10 text-blue-400',

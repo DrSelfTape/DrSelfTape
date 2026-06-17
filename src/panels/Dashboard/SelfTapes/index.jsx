@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
-import { isIOSNative, saveLocalTape, deleteLocalTape, makeLocalTapeId } from '../../../utils/selfTapeStore';
+import { isIOSNative, saveLocalTape, deleteLocalTape, makeLocalTapeId, listLocalTapes } from '../../../utils/selfTapeStore';
 import { openExternal } from '../../../utils/openExternal';
 import {
   enqueueUpload, subscribe as subscribeQueue, getQueueSnapshot,
@@ -658,6 +658,23 @@ export default function SelfTapes() {
       })
       .catch(() => {})
       .finally(() => setLoading(false));
+    // Reconcile the local-copy map against the on-device cache. The cache is
+    // keyed by localTapeId, which equals a synced tape's idempotency_key, so
+    // this lets the "free up space" affordance reflect reality after a reload
+    // (the queue-subscription only marks copies for the current session).
+    listLocalTapes()
+      .then((metas) => {
+        if (!Array.isArray(metas) || metas.length === 0) return;
+        setHasLocalCopy((prev) => {
+          const next = { ...prev };
+          for (const m of metas) {
+            const id = m?.localId;
+            if (id) next[id] = true;
+          }
+          return next;
+        });
+      })
+      .catch(() => {});
   };
 
   const fetchQuota = () => {
@@ -858,7 +875,11 @@ export default function SelfTapes() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {mergedTapes.map((tape) => {
-            const localId = tape.localId;
+            // A local-pending row carries `localId`; a synced server row does
+            // not — but its `idempotency_key` IS the local cache key (same id
+            // the upload was keyed by). Resolve both so the local-copy lookup
+            // below actually hits for synced cloud tapes.
+            const localId = tape.localId || tape.idempotency_key || null;
             const task = localId ? queueByLocalId[localId] : null;
             // Sync state precedence: an in-flight queue task wins. A
             // server-side tape with no task is 'synced'.

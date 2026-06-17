@@ -11,7 +11,7 @@ import { useSnackbar } from '../../hooks/useSnackbar';
 import { setAuthToken } from '../../redux/http';
 import { getFirstRouteByRole } from '../../routes/routeHelpers';
 
-export const RoleSelectionModal = ({ open, onClose, availableRoles = [] }) => {
+export const RoleSelectionModal = ({ open, onClose, availableRoles = [], onRoleSelected }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { toast } = useSnackbar();
@@ -40,9 +40,18 @@ export const RoleSelectionModal = ({ open, onClose, availableRoles = [] }) => {
       // Close modal
       onClose();
 
-      // Navigate to role-specific dashboard
       const firstRoute = getFirstRouteByRole(role);
-      navigate(firstRoute, { replace: true });
+      // iOS Capacitor: react-router's imperative navigate() no-ops in the
+      // native shell, which stranded multi-role users on /login. Hand the
+      // chosen route back to the parent (PublicRoutes) so it can do the same
+      // declarative <Navigate> the single-role path uses — that DOES work on
+      // iOS. Fall back to imperative navigate() when no callback is wired
+      // (e.g. web usages that don't pass onRoleSelected).
+      if (typeof onRoleSelected === 'function') {
+        onRoleSelected(role, firstRoute);
+      } else {
+        navigate(firstRoute, { replace: true });
+      }
     } catch (error) {
       const errorMessage =
         typeof error === 'string'

@@ -3,8 +3,10 @@
  * Upload an agency talent report PDF → GPT-4o parses it → preview → import to submissions
  */
 import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Upload, X, FileText, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import {
   parseTalentReportThunk,
   importSubmissionsThunk,
@@ -73,6 +75,9 @@ function SubmissionPreviewRow({ row, selected, onToggle }) {
 }
 
 export default function TalentReportImporter({ onClose, onImported }) {
+  // Slide MobileApp's fixed top bar out of the way so this full-screen modal
+  // (position:fixed inset:0 z-100) isn't clipped by the iOS Capacitor top/bottom bars.
+  useHideMobileHeader(true);
   const dispatch = useDispatch();
   const { parseLoading, parsedReport, importLoading, error } = useSelector(s => s.submissions);
 
@@ -129,8 +134,8 @@ export default function TalentReportImporter({ onClose, onImported }) {
   const subs = parsedReport?.submissions || [];
   const displaySubs = showAll ? subs : subs.slice(0, 15);
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2147483000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div style={{ background: '#13151d', borderRadius: 20, border: '1px solid rgba(167,236,218,0.1)', width: '100%', maxWidth: 680, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
@@ -279,6 +284,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
 
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

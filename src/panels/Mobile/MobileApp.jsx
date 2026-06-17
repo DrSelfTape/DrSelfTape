@@ -925,6 +925,12 @@ const PANEL_COMPONENTS = {
   "self-tapes": SelfTapesPanel,
 };
 
+// Header labels for panels opened only via a teaser / deep-link, so they
+// aren't in MORE_FEATURES or TABS (otherwise PanelScreen shows "Feature").
+const PANEL_LABELS = {
+  "craft-journey": "Craft Journey",
+};
+
 /* ═══════════════════════════════════════════════════
    HOME
    ═══════════════════════════════════════════════════ */
@@ -2834,7 +2840,12 @@ function PanelScreen({ panelId, onBack, initialSubPanel }) {
   // Top-level tabs (Find Reader, Green Room) also render through here when
   // a user taps them, but MORE_FEATURES doesn't list them — fall back to
   // TABS so the title bar reads "Green Room" instead of literal "Feature".
-  const feature = MORE_FEATURES.find(f => f.id === panelId) || TABS.find(t => t.id === panelId);
+  // Panels opened only via a teaser/deep-link (e.g. craft-journey) live in
+  // neither list, so PANEL_LABELS supplies their header label.
+  const feature =
+    MORE_FEATURES.find(f => f.id === panelId) ||
+    TABS.find(t => t.id === panelId) ||
+    (PANEL_LABELS[panelId] ? { id: panelId, label: PANEL_LABELS[panelId] } : null);
   if (!PanelComponent) return null;
 
   const isDark = DARK_PANELS.has(panelId);
@@ -2889,6 +2900,7 @@ function PanelScreen({ panelId, onBack, initialSubPanel }) {
       }>
         {(isDark || isFullBleed) ? (
           <PanelComponent
+            embedded={panelId === 'leaderboard' ? true : undefined}
             onSelectMatch={panelId === 'green-room' ? (matchId) => setSubPanel({ id: 'green-room-chat', matchId }) : undefined}
             onMatchNavigate={panelId === 'who-wants-to-read' ? (matchId) => setSubPanel({ id: 'its-a-scene', matchId }) : undefined}
           />
@@ -2902,6 +2914,7 @@ function PanelScreen({ panelId, onBack, initialSubPanel }) {
             }}
           >
             <PanelComponent
+              embedded={panelId === 'leaderboard' ? true : undefined}
               onSelectMatch={panelId === 'green-room' ? (matchId) => setSubPanel({ id: 'green-room-chat', matchId }) : undefined}
               onMatchNavigate={panelId === 'who-wants-to-read' ? (matchId) => setSubPanel({ id: 'its-a-scene', matchId }) : undefined}
             />
@@ -3346,13 +3359,13 @@ export default function DrSelfTapeApp() {
                 // and can't mount as a mobile panel with a room — route live-
                 // session notifications to find-a-reader (where the scene is
                 // joined) instead of opening an empty meeting panel.
-                if (panel === 'meeting') { setCurrentPanel(null); setTab('find-a-reader'); return; }
+                if (panel === 'meeting') { setCurrentPanel(null); handleSetTab('find-a-reader'); return; }
                 if (panel && PANEL_COMPONENTS[panel]) setCurrentPanel(panel);
-                if (tab) { setCurrentPanel(null); setTab(tab); }
+                if (tab) { handleSetTab(tab); }
               }} />
               <TopBarAvatar
                 active={tab === "profile" && !currentPanel}
-                onClick={() => { setCurrentPanel(null); setTab("profile"); }}
+                onClick={() => { handleSetTab("profile"); }}
               />
             </div>
           </div>
@@ -3383,7 +3396,7 @@ export default function DrSelfTapeApp() {
                 // subPanel state initializes from initialSubPanel.
                 key={pendingSubPanel ? `${currentPanel}:${pendingSubPanel.id}:${pendingSubPanel.matchId}` : currentPanel}
                 panelId={currentPanel}
-                initialSubPanel={pendingSubPanel && pendingSubPanel.id !== 'green-room-chat' && currentPanel === 'green-room' ? pendingSubPanel : null}
+                initialSubPanel={pendingSubPanel && currentPanel === 'green-room' ? pendingSubPanel : null}
                 onBack={() => { setPendingSubPanel(null); setCurrentPanel(null); }}
               />
             ) : (

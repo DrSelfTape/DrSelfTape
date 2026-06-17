@@ -371,7 +371,11 @@ export default function Membership({ onClose }) {
   const selIntro = introOffers[`${selectedPlan}_${billing}`];
   const selIntroLabel = introOfferLabel(selIntro);
   const isCurrent = currentPlan === selectedPlan && status?.status === 'active';
-  const ctaPrice = sel ? (billing === 'monthly' ? sel.monthly : sel.yearly) : 0;
+  // Key the CTA price on the selected billing cadence (weekly/monthly/yearly).
+  // A binary monthly-vs-yearly check mispriced the weekly option as the YEARLY
+  // amount once WEEKLY_ENABLED is flipped. Match the plan-card logic (plan[billing]).
+  const ctaPrice = sel ? (sel[billing] ?? sel.monthly) : 0;
+  const ctaPeriod = { weekly: 'wk', monthly: 'mo', yearly: 'yr' }[billing] || 'mo';
 
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{
@@ -631,7 +635,7 @@ export default function Membership({ onClose }) {
                     </span>
                   )}
                   <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.2px' }}>
-                    {hasActivePlan ? 'Switch' : 'Subscribe'} · ${ctaPrice}/{billing === 'monthly' ? 'mo' : 'yr'} →
+                    {hasActivePlan ? 'Switch' : 'Subscribe'} · ${ctaPrice}/{ctaPeriod} →
                   </span>
                 </span>
               )}

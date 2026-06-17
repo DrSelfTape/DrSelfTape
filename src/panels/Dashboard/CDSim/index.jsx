@@ -252,10 +252,17 @@ export default function CDSim() {
 
     // Jericho enriched endpoint is the ONLY charged path for a CD coach
     // session. We deliberately do NOT fall back to /v1/ai/cd-feedback/ on a
-    // generic Jericho failure: cd-feedback charges a SECOND token for the
-    // same Analyze, and the BE now refunds a failed Jericho call's token —
-    // so a fallback here would double-charge the user for one action.
-    // Surface the error instead and let the user Retry (one charge each).
+    // failure: cd-feedback charges a SECOND token for the same Analyze, and
+    // the BE refunds a failed Jericho call's token — including the new case
+    // where the model returns an unusable/incomplete report (BE now refunds +
+    // 502 instead of a charged junk 200). So a fallback here would
+    // double-charge the user for one action.
+    //
+    // Charge integrity on Retry: each Retry fires exactly ONE request to this
+    // one endpoint (bumping retryNonce re-runs this effect once), and the BE
+    // has already refunded the prior failed attempt. So one Retry = one charge
+    // and the failed one was credited back — no compounding. We surface the
+    // error and let the user Retry intentionally rather than auto-retrying.
     // 402 (no credits) still propagates so the outer handler shows the
     // upgrade path.
     const tryJericho = axios
@@ -265,9 +272,13 @@ export default function CDSim() {
       .then((res) => {
         if (!cancelled) {
           const reportData = res.data?.data || res.data;
-          // Don't log / show a partial or fallback payload as a real coach
-          // report — strand it on the error screen (Retry) instead of saving
-          // a junk session to Jericho memory.
+          // Defense-in-depth: the BE now gates this exact shape and returns a
+          // refunded 502 for an unusable report, so this rarely fires — but if
+          // a partial/fallback payload ever slips through as a 200, don't log
+          // or show it as a real coach report. Strand it on the error screen
+          // (Retry) instead of saving a junk session to Jericho memory. The
+          // BE charged this attempt; surface it so the user retries
+          // intentionally (one Retry = one charge; the BE refunds failures).
           const isValidReport = reportData && typeof reportData === 'object'
             && (reportData.interpretation || reportData.performance);
           if (!isValidReport) {
