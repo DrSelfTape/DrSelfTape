@@ -16,7 +16,7 @@ function storeUrl() {
 // iOS pbxproj MARKETING_VERSION / Android versionName every time we ship. The
 // banner only fires when the BE-reported live version is GREATER than this, so
 // users on the latest bundle never see a stale "update" nag.
-const BUNDLE_VERSION = "1.0.7";
+const BUNDLE_VERSION = "1.0.8";
 
 const LS_DISMISSED = "updateBannerDismissed";
 const VERSION_ENDPOINT = "/v1/notifications/system/latest-version/";

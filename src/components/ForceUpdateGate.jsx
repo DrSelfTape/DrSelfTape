@@ -9,7 +9,7 @@ const VERSION_ENDPOINT = '/v1/notifications/system/latest-version/';
 // Keep in lockstep with UpdateBanner.BUNDLE_VERSION and the iOS pbxproj
 // MARKETING_VERSION / Android versionName. The gate trips when this is BELOW
 // the BE's reported min version for the current platform.
-const BUNDLE_VERSION = '1.0.7';
+const BUNDLE_VERSION = '1.0.8';
 
 // The right store per platform — itms-apps:// is dead on Android and the Play
 // https link is wrong on iOS, so the "Update now" CTA must choose by platform.
@@ -120,7 +120,7 @@ export default function ForceUpdateGate({ children }) {
           marginBottom: 10,
         }}
       >
-        New version available
+        Update required
       </div>
       <h1
         style={{
@@ -146,8 +146,8 @@ export default function ForceUpdateGate({ children }) {
           maxWidth: 300,
         }}
       >
-        You're on an older version. Update to the latest Dr Self Tape for a
-        smoother, more reliable studio.
+        This version of Dr Self Tape is no longer supported. Update to the latest
+        to keep using your studio.
       </p>
       <button
         type="button"
@@ -182,7 +182,7 @@ export default function ForceUpdateGate({ children }) {
           letterSpacing: '0.03em',
         }}
       >
-        You have v{BUNDLE_VERSION}{minIos ? ` · latest v${minIos}` : ''}
+        You have v{BUNDLE_VERSION}{minVersion ? ` · required v${minVersion}` : ''}
       </p>
 
       <style>{`
