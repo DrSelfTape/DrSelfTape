@@ -104,22 +104,44 @@ export async function getPackageFor(plan, billing) {
  * Open the native Apple purchase sheet for a (plan, billing) pair.
  * Resolves with { ok, customerInfo, userCancelled } so callers can
  * branch on the outcome without relying on rejected promises.
+ *
+ * `userId` is the Django user id and MUST be passed: the purchase has to
+ * be attributed to that backend identity or RevenueCat transacts under an
+ * anonymous $RCAnonymousID and the BE webhook (User.objects.get(id=app_user_id))
+ * can't match the receipt — Apple charges but Premium never grants and
+ * Restore can't fix it.
  */
-export async function purchase(plan, billing) {
+export async function purchase(plan, billing, userId) {
   if (!isNativeStore()) {
     return { ok: false, reason: 'unavailable', detail: 'not_native_store' };
   }
   const sdk = await loadSDK();
   if (!sdk) return { ok: false, reason: 'unavailable', detail: 'sdk_load_failed' };
+  if (!userId) {
+    // Refuse to transact anonymously — better to fail loudly than to bind
+    // the purchase to an id the BE webhook can never match.
+    return { ok: false, reason: 'unavailable', detail: 'no_user_id' };
+  }
   // Force configure() in case initPurchases was never called (e.g., the
   // user reached this screen before App.jsx's effect ran on a cold boot).
+  // Mirror initPurchases() and pass appUserID so we never configure under
+  // an anonymous id.
   if (!configured) {
     try {
-      await sdk.Purchases.configure({ apiKey: platformKey() });
+      await sdk.Purchases.configure({ apiKey: platformKey(), appUserID: String(userId) });
       configured = true;
     } catch (e) {
       return { ok: false, reason: 'unavailable', detail: 'configure_failed', error: String(e?.message || e) };
     }
+  }
+  // Always identify the purchasing user before transacting, even if
+  // initPurchases already configured (it may have configured anonymously
+  // if it ran before the user id was available, or threw). logIn is
+  // idempotent and re-aliases an anonymous id onto the real one.
+  try {
+    await sdk.Purchases.logIn({ appUserID: String(userId) });
+  } catch (e) {
+    return { ok: false, reason: 'unavailable', detail: 'login_failed', error: String(e?.message || e) };
   }
   // Fetch offerings + diagnose which step failed so we can surface a
   // useful message instead of a generic "Purchase failed".

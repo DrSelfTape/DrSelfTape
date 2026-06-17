@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { Capacitor } from '@capacitor/core';
@@ -148,6 +148,10 @@ export default function Membership({ onClose }) {
   useHideMobileHeader(true);
 
   const dispatch = useDispatch();
+  // The Django user id — MUST be threaded into the native IAP so RevenueCat
+  // attributes the purchase to this backend identity (not an anonymous
+  // $RCAnonymousID the webhook can never match). Mirrors App.jsx.
+  const userId = useSelector((s) => s.auth?.user?.id);
   const [billing, setBilling] = useState('yearly'); // default yearly so free trial is featured
   const [selectedPlan, setSelectedPlan] = useState('plus'); // default to Plus (popular)
   const [status, setStatus] = useState(null);
@@ -223,7 +227,7 @@ export default function Membership({ onClose }) {
 
     if (isNativeStore()) {
       try {
-        const result = await iapPurchase(planId, billing);
+        const result = await iapPurchase(planId, billing, userId);
         clearWatchdog();
         setCheckoutLoading(null);
 

@@ -250,15 +250,16 @@ export default function CDSim() {
     const payload = { script: scriptText, role: selectedRole, voice: selectedVoice };
     const AI_TIMEOUT_MS = 90000;
 
-    // Try Jericho enriched endpoint first, fallback to standard cd-feedback.
-    // Re-throw 402 (no credits) so the outer handler can show the upgrade
-    // path — falling back to cd-feedback hides the credits prompt.
+    // Jericho enriched endpoint is the ONLY charged path for a CD coach
+    // session. We deliberately do NOT fall back to /v1/ai/cd-feedback/ on a
+    // generic Jericho failure: cd-feedback charges a SECOND token for the
+    // same Analyze, and the BE now refunds a failed Jericho call's token —
+    // so a fallback here would double-charge the user for one action.
+    // Surface the error instead and let the user Retry (one charge each).
+    // 402 (no credits) still propagates so the outer handler shows the
+    // upgrade path.
     const tryJericho = axios
-      .post(`${baseURL}/v1/ai/jericho/coach/`, { ...payload, session_type: 'cd_coach' }, { timeout: AI_TIMEOUT_MS })
-      .catch((err) => {
-        if (err?.response?.status === 402) throw err;
-        return axios.post(`${baseURL}/v1/ai/cd-feedback/`, payload, { timeout: AI_TIMEOUT_MS });
-      });
+      .post(`${baseURL}/v1/ai/jericho/coach/`, { ...payload, session_type: 'cd_coach' }, { timeout: AI_TIMEOUT_MS });
 
     tryJericho
       .then((res) => {
