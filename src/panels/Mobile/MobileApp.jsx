@@ -2825,8 +2825,11 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
   );
 }
 
-function PanelScreen({ panelId, onBack }) {
-  const [subPanel, setSubPanel] = useState(null); // { id: 'green-room-chat', matchId: '123' }
+function PanelScreen({ panelId, onBack, initialSubPanel }) {
+  // initialSubPanel seeds the sub-screen for a deep-link (e.g. a fresh
+  // scene_partner_match → { id: 'its-a-scene', matchId }). It's only read at
+  // mount; the parent re-keys PanelScreen on each new deep-link so this runs.
+  const [subPanel, setSubPanel] = useState(initialSubPanel || null); // { id: 'green-room-chat', matchId: '123' }
   const PanelComponent = PANEL_COMPONENTS[panelId];
   // Top-level tabs (Find Reader, Green Room) also render through here when
   // a user taps them, but MORE_FEATURES doesn't list them — fall back to
@@ -2994,6 +2997,10 @@ function TopBarAvatar({ active, onClick }) {
 export default function DrSelfTapeApp() {
   const [tab, setTab] = useState("home");
   const [currentPanel, setCurrentPanel] = useState(null);
+  // Deep-link target for a Green Room sub-panel (e.g. a fresh "It's a Scene"
+  // match arriving over the socket). Passed into PanelScreen as initialSubPanel
+  // so it opens the match screen instead of the generic Green Room list.
+  const [pendingSubPanel, setPendingSubPanel] = useState(null); // { id, matchId }
   // Free-first-review onboarding: true while a new user is inside their one
   // free Tape Review, so TapeReview shows the paywall after the result.
   const [firstReviewActive, setFirstReviewActive] = useState(false);
@@ -3106,7 +3113,7 @@ export default function DrSelfTapeApp() {
   // Listen for cross-component mobile navigation (e.g. Generator → Scene Study)
   useEffect(() => {
     const handler = (e) => {
-      const { tab: targetTab, panel: targetPanel } = e.detail || {};
+      const { tab: targetTab, panel: targetPanel, subPanel: targetSubPanel, matchId } = e.detail || {};
       if (targetTab) {
         setCurrentPanel(null);
         setTab(targetTab);
@@ -3114,6 +3121,9 @@ export default function DrSelfTapeApp() {
         // Guard against navigating to a panel that isn't registered (e.g. a
         // react-router-only screen like reader-profile that can't mount as a
         // mobile panel) — otherwise the content area renders blank.
+        // A subPanel (e.g. a fresh scene_partner_match → 'its-a-scene') is
+        // stashed so the panel opens that sub-screen instead of its list.
+        setPendingSubPanel(targetSubPanel ? { id: targetSubPanel, matchId } : null);
         setCurrentPanel(targetPanel);
       }
     };
@@ -3136,6 +3146,9 @@ export default function DrSelfTapeApp() {
   }, []);
 
   const handleSetTab = (id) => {
+    // A deliberate tab tap discards any pending scene-match deep-link, so the
+    // Green Room can never later auto-jump into a stale match.
+    setPendingSubPanel(null);
     // Leaving via any deliberate tab tap permanently exits first-review mode —
     // clear the durable flag so the mount-effect can't re-pin the user to the
     // Tape Review tab (the consent-decline / never-upload soft-lock).
@@ -3326,6 +3339,9 @@ export default function DrSelfTapeApp() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: 'auto' }}>
               <NotificationBell onNavigate={({ panel, tab }) => {
+                // Discard any pending scene-match deep-link — a bell tap to the
+                // Green Room must show the list, not re-open a stale match.
+                setPendingSubPanel(null);
                 // MeetingRoom is react-router-only (useParams + location.state)
                 // and can't mount as a mobile panel with a room — route live-
                 // session notifications to find-a-reader (where the scene is
@@ -3361,7 +3377,15 @@ export default function DrSelfTapeApp() {
             position: "relative", zIndex: 1,
           }}>
             {currentPanel ? (
-              <PanelScreen panelId={currentPanel} onBack={() => setCurrentPanel(null)} />
+              <PanelScreen
+                // Re-key on the pending sub-panel so a fresh deep-link (e.g. a
+                // new scene_partner_match) remounts PanelScreen and its local
+                // subPanel state initializes from initialSubPanel.
+                key={pendingSubPanel ? `${currentPanel}:${pendingSubPanel.id}:${pendingSubPanel.matchId}` : currentPanel}
+                panelId={currentPanel}
+                initialSubPanel={pendingSubPanel && pendingSubPanel.id !== 'green-room-chat' && currentPanel === 'green-room' ? pendingSubPanel : null}
+                onBack={() => { setPendingSubPanel(null); setCurrentPanel(null); }}
+              />
             ) : (
               screens[tab]
             )}

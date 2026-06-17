@@ -176,6 +176,13 @@ async function runOne(task) {
     ? `${cached.meta.title}.${(cached.meta.mimeType || 'video/mp4').split('/').pop()}`
     : `tape.${(cached.meta?.mimeType || 'video/mp4').split('/').pop()}`;
   form.append('video', cached.blob, filename);
+  // Idempotency key: the stable per-recording localTapeId, generated ONCE
+  // at record time (see makeLocalTapeId in selfTapeStore) and constant
+  // across every retry of this task. The backend dedups on it so a 5xx /
+  // timeout retry of a request that actually committed returns the existing
+  // recording instead of creating a duplicate row + new R2 object + a second
+  // quota charge. Sending it on every attempt is what makes a retry a no-op.
+  form.append('idempotency_key', task.localTapeId);
   for (const [k, v] of Object.entries(task.fields || {})) {
     if (v != null && v !== '') form.append(k, v);
   }

@@ -159,16 +159,29 @@ export async function getLocalTapeBlobUrl(localId) {
       path: meta.path,
       directory: Directory.Documents,
     });
-    // res.data is base64 on web/iOS; on iOS it's a string we need to
-    // decode to a Blob ourselves.
-    const byteString = atob(res.data);
-    const bytes = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i += 1) bytes[i] = byteString.charCodeAt(i);
-    const blob = new Blob([bytes], { type: meta.mimeType });
+    // res.data is base64 on iOS. Do NOT atob() it into a JS string — for a
+    // 500 MB tape that materializes a ~500 MB byte-string + a Uint8Array and
+    // OOM-crashes WKWebView on cold-boot resume. Instead hand the base64 to
+    // the browser as a data: URL and let fetch() decode it straight into a
+    // Blob with no giant intermediate JS string.
+    const blob = await base64ToBlob(res.data, meta.mimeType);
     return URL.createObjectURL(blob);
   } catch {
     return null;
   }
+}
+
+/**
+ * Decode a base64 payload to a Blob WITHOUT materializing the whole thing as
+ * a JS string via atob(). The browser decodes the data: URL natively, so a
+ * 500 MB tape never becomes a 500 MB JS string — this is the cold-boot
+ * OOM-crash fix.
+ */
+async function base64ToBlob(b64, mimeType) {
+  const type = mimeType || 'application/octet-stream';
+  const dataUrl = `data:${type};base64,${b64}`;
+  const resp = await fetch(dataUrl);
+  return resp.blob();
 }
 
 /**
@@ -187,10 +200,10 @@ export async function getLocalTapeBlob(localId) {
       path: meta.path,
       directory: Directory.Documents,
     });
-    const byteString = atob(res.data);
-    const bytes = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i += 1) bytes[i] = byteString.charCodeAt(i);
-    return { blob: new Blob([bytes], { type: meta.mimeType }), meta };
+    // See base64ToBlob: never atob() the whole tape — a 500 MB recording
+    // OOM-crashes WKWebView. Decode via a data: URL + fetch instead.
+    const blob = await base64ToBlob(res.data, meta.mimeType);
+    return { blob, meta };
   } catch {
     return null;
   }

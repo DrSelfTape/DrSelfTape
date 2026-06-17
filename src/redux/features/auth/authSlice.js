@@ -263,7 +263,11 @@ export const authSlice = createSlice({
           date_of_birth: src?.date_of_birth,
         };
         state.loading = false;
-        state.user = src?.is_reset_password ? null : userData;
+        // Password resets now go through the emailed token-based /reset-password
+        // flow, so a successful auth response always carries a usable session.
+        // Never null the user while isAuthenticated is true — that left the user
+        // stranded on /login with no token and no reset screen.
+        state.user = userData;
         state.isAuthenticated = !!userData.id;
         state.error = null;
       })
@@ -293,7 +297,11 @@ export const authSlice = createSlice({
           is_staff: action.payload?.is_staff,
           date_of_birth: action.payload?.date_of_birth,
         };
-        state.user = action.payload?.is_reset_password ? null : userData;
+        // Password resets now go through the emailed token-based /reset-password
+        // flow, so a successful login always carries a usable session. Never null
+        // the user while isAuthenticated is true — that left the user stranded on
+        // /login with no token and no reset screen.
+        state.user = userData;
         state.error = null;
         state.isAuthenticated = true;
       })

@@ -75,7 +75,11 @@ export const SocketProvider = ({ children }) => {
         dispatch(fetchActivityFeed());
         if (data?.match_id) {
           if (isMobile()) {
-            window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
+            // Carry match_id through so the mobile app opens the "It's a Scene"
+            // match screen (a Green Room sub-panel) instead of the generic
+            // Green Room list. MobileApp's drst-navigate handler reads the
+            // { subPanel: 'its-a-scene', matchId } shape.
+            window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room', subPanel: 'its-a-scene', matchId: data.match_id } }));
           } else {
             navigate(`/dashboard/its-a-scene/${data.match_id}`);
           }
