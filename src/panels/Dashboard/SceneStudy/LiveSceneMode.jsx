@@ -603,8 +603,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     };
 
     recognition.onend = () => {
-      // Auto-restart if we're still supposed to be listening
-      if (isActiveRef.current && status === 'listening') {
+      // Auto-restart if we're still supposed to be listening. Use statusRef
+      // (not the closed-over `status`) so it doesn't see a stale value — same
+      // as onerror above (#11).
+      if (isActiveRef.current && statusRef.current === 'listening') {
         setTimeout(() => {
           if (isActiveRef.current) {
             try { recognition.start(); } catch {}
@@ -645,6 +647,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
   const startNativeListen = useCallback(async () => {
     const expected = expectedActorTurn();
+    // Empty / stage-direction "line" (whitespace, a parenthetical, etc.) has no
+    // words to listen for — there's no fire path, so the scene would hang on
+    // "listening" forever. Treat it as a no-wait beat and advance immediately.
+    if (cueTokens(expected).length === 0) {
+      await stopNativeListen();
+      // handleActorLineComplete drops whitespace-only text, so pass a tiny
+      // placeholder beat to get past its trim guard and advance the scene.
+      if (isActiveRef.current) handleActorLineComplete(expected.trim() || '(beat)');
+      return;
+    }
     nativeFiredRef.current = false;
     nativeLastSpeechRef.current = Date.now();
     nativeLastChangeRef.current = Date.now();
@@ -677,20 +689,33 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // case where iOS DROPS THE LAST WORD when you stop talking.
     nativeTickRef.current = setInterval(() => {
       if (!isActiveRef.current || isPausedRef.current) return;
+      if (nativeConfirmRef.current || nativeFiredRef.current) return;
+      // Absolute wall-clock safety: no line can EVER hang on "listening" — if
+      // we've gone 8s without any speech at all, advance regardless of content.
+      if (Date.now() - nativeLastSpeechRef.current > 8000) { fire(liveTranscriptRef.current); return; }
       const t = liveTranscriptRef.current;
-      if (!t || nativeConfirmRef.current || nativeFiredRef.current) return;
+      if (!t) return;
       const stable = Date.now() - nativeLastChangeRef.current; // transcript settled
       const p = cueProgress(expected, t);
       // Deadlock insurance only — the anchor (above) handles normal completion.
       // If recognition was rough and never hit the anchor, but they've said most
       // of the line and the transcript has settled, advance so it never stalls.
-      if (p.covered >= p.total - 2 && stable > 1600) fire(t);
+      // Floor the threshold so 1–2 word lines ("No.", "Stop.") don't go negative
+      // and fire on any settled noise; require a near-full match on short lines.
+      if (p.total > 0 && p.covered >= Math.max(1, p.total - 2) && stable > 1600) {
+        if (p.total <= 2 && !p.complete) return;
+        fire(t);
+      }
     }, 200);
 
     try {
       const avail = await NativeSpeech.available();
       if (!avail?.available) { switchToPretimedRef.current?.(); return; }
-      await NativeSpeech.requestPermissions();
+      // Don't discard the permission result — on denial the listener never
+      // hears anything and the scene hangs. Fall back to pre-timed instead.
+      const perm = await NativeSpeech.requestPermissions();
+      const speechPerm = perm?.speechRecognition || perm?.permission || perm?.status;
+      if (speechPerm && speechPerm !== 'granted') { switchToPretimedRef.current?.(); return; }
       const h = await NativeSpeech.addListener('partialResults', (e) => {
         if (!isActiveRef.current || isPausedRef.current) return;
         const t = (e?.matches && e.matches[0]) || '';
@@ -757,12 +782,22 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
   // Fallback: if listening misbehaves (noisy room, hard delivery), drop to the
   // reliable pre-timed flow from the current line.
-  const switchToPretimed = useCallback(() => {
-    stopNativeListen();
+  const switchToPretimed = useCallback(async () => {
+    await stopNativeListen();
+    // Native listening left the AVAudioSession in record mode (silences TTS).
+    // Restore the playback session + re-wake the AudioContext BEFORE the
+    // pre-timed reader speaks, mirroring fire() — otherwise the fallback reader
+    // plays silent. (See fire() ~666-671.)
+    await resetAudioToPlayback();
+    try {
+      const ctx = audioContextRef.current;
+      if (ctx && ctx.state === 'suspended') await ctx.resume();
+      primeAudio();
+    } catch { /* swallow */ }
     setReaderMode('pretimed');
     readerModeRef.current = 'pretimed';
     startPreTimedSceneRef.current?.(voice, prePauseSeconds, currentLineIdxRef.current);
-  }, [stopNativeListen, voice, prePauseSeconds]);
+  }, [stopNativeListen, voice, prePauseSeconds, primeAudio]);
   useEffect(() => { switchToPretimedRef.current = switchToPretimed; }, [switchToPretimed]);
 
   /**
@@ -971,7 +1006,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // current line — startRecognition would drop the user into broken
     // voice mode on iOS where webkitSpeechRecognition is non-functional.
     if (readerMode === 'pretimed') {
-      startPreTimedSceneRef.current?.(voice, 3, currentLineIdxRef.current);
+      startPreTimedSceneRef.current?.(voice, prePauseSeconds, currentLineIdxRef.current);
       return;
     }
 
@@ -982,7 +1017,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     } else if (currentLine && currentLine.character !== userRole) {
       playAiLinesFrom(currentLineIdxRef.current, conversationHistoryRef.current);
     }
-  }, [lines, userRole, startRecognition, playAiLinesFrom, readerMode, voice]);
+  }, [lines, userRole, startRecognition, playAiLinesFrom, readerMode, voice, prePauseSeconds]);
 
   /**
    * End the scene and clean up.

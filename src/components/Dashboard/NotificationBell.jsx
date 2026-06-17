@@ -127,7 +127,17 @@ export default function NotificationBell({ onNavigate }) {
       if (notif.type === 'rehearsal_started' && liveRoomUrl) {
         let roomId = '';
         try { roomId = new URL(liveRoomUrl).pathname.split('/').filter(Boolean).pop() || ''; } catch { roomId = ''; }
-        if (roomId) { navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl } }); return; }
+        if (roomId) {
+          // react-router navigate() no-ops in the Capacitor shell — on mobile
+          // route the meeting open through the same onNavigate the rest of this
+          // component uses (carry the room info so MeetingRoom can join).
+          if (isMobile && onNavigate) {
+            onNavigate({ panel: 'meeting', roomId, roomUrl: liveRoomUrl });
+          } else {
+            navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl } });
+          }
+          return;
+        }
       }
 
       const route =

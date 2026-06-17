@@ -56,6 +56,9 @@ export default function SidesUpload({ onReady }) {
 
   const handleFile = async (file) => {
     if (!file) return;
+    // The ~90s parse-sides request charges a token. Guard against a second
+    // tap landing while the first is still in flight (double token charge).
+    if (loading) return;
     if (!file.name.toLowerCase().endsWith('.pdf')) {
       setError('Please upload a PDF of your sides.');
       return;
@@ -82,12 +85,20 @@ export default function SidesUpload({ onReady }) {
       trackEvent(Events.SIDES_UPLOADED, { role: parsed.role || '', scenes: parsed.scenes?.length || 0 });
     } catch (err) {
       const sc = err?.response?.status;
+      const beMsg = err?.response?.data?.message;
       if (sc === 402) setError("You're out of AI tokens — top up to read your sides.");
       else if (sc === 403) {
         // Open the consent modal inline instead of dead-ending.
         requestAiConsent();
         setError('Turn on AI features to read your sides, then upload again.');
-      } else setError("Couldn't read those sides. Make sure it's a text PDF (not a photo) and try again.");
+      } else if (sc === 429) {
+        // fair_use_limit — daily soft cap.
+        setError(beMsg || "You've hit today's AI limit — resets in a few hours.");
+      } else if (sc === 503 || !err?.response) {
+        // token_check_failed, or a client-side timeout / network drop (no
+        // response object). Not a bad-PDF problem — don't blame the file.
+        setError(beMsg || "Couldn't reach the server — try again.");
+      } else setError(beMsg || "Couldn't read those sides. Make sure it's a text PDF (not a photo) and try again.");
     } finally {
       setLoading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -113,7 +124,7 @@ export default function SidesUpload({ onReady }) {
   return (
     <>
       {/* Upload tile */}
-      <label htmlFor="sides-upload-input" style={{ display: 'block', cursor: 'pointer' }}>
+      <label htmlFor="sides-upload-input" style={{ display: 'block', cursor: loading ? 'default' : 'pointer', pointerEvents: loading ? 'none' : 'auto' }}>
         <div style={{
           background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.06))',
           borderRadius: 18, padding: 22, marginBottom: 14,
@@ -149,7 +160,7 @@ export default function SidesUpload({ onReady }) {
             </div>
           )}
         </div>
-        <input id="sides-upload-input" ref={inputRef} type="file" accept=".pdf"
+        <input id="sides-upload-input" ref={inputRef} type="file" accept=".pdf" disabled={loading}
           style={{ display: 'none' }} onChange={(e) => handleFile(e.target.files?.[0])} />
       </label>
 

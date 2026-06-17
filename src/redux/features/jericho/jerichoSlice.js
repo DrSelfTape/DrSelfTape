@@ -10,6 +10,10 @@ import { trackEvent, Events } from '../../../utils/analytics';
 // Map an AI-feature request error to a clear, actionable message. 402 = out of
 // tokens, 403 = AI consent not granted, 400 = the file(s) couldn't be read.
 function aiErrorMessage(err, fallback) {
+  // Aborted (user left the screen mid-analysis) — not a real error.
+  if (err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED' || err?.aborted) {
+    return 'Analysis cancelled.';
+  }
   const st = err?.response?.status;
   const msg = err?.response?.data?.message || err?.response?.data?.detail;
   if (st === 402) return "You're out of AI tokens — top up to keep going.";
@@ -26,11 +30,14 @@ const _sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // POST returns {job_id, status:'pending'} instead of the result. Poll the job
 // until it's done/failed. Throws an axios-shaped error so aiErrorMessage handles
 // it identically to the synchronous path.
-async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000 } = {}) {
+async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, signal } = {}) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
+    // Bail the moment the caller (e.g. the screen unmounting) aborts.
+    if (signal?.aborted) throw { name: 'CanceledError', code: 'ERR_CANCELED', aborted: true };
     await _sleep(interval);
-    const { data } = await axios.get(`${endPoints.analysisJob}${jobId}/`);
+    if (signal?.aborted) throw { name: 'CanceledError', code: 'ERR_CANCELED', aborted: true };
+    const { data } = await axios.get(`${endPoints.analysisJob}${jobId}/`, { signal });
     const j = data?.data || data;
     if (j?.status === 'done') return j.result;
     if (j?.status === 'failed') {
@@ -42,9 +49,9 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000 } = 
 
 // A tape-review / compare response is either the synchronous result or a pending
 // job to poll. Normalizes both to the final result.
-async function resolveAnalysis(payload) {
+async function resolveAnalysis(payload, { signal } = {}) {
   if (payload && payload.job_id && payload.status === 'pending') {
-    return pollAnalysisJob(payload.job_id);
+    return pollAnalysisJob(payload.job_id, { signal });
   }
   return payload;
 }
@@ -151,7 +158,7 @@ export const jerichoCoach = createAsyncThunk(
 /** Submit a self-tape for AI review (multipart upload → structured notes) */
 export const reviewTape = createAsyncThunk(
   'jericho/reviewTape',
-  async ({ video, sides = '', role = '', tone = '' }, { rejectWithValue }) => {
+  async ({ video, sides = '', role = '', tone = '' }, { rejectWithValue, signal }) => {
     try {
       const fd = new FormData();
       fd.append('video', video);
@@ -164,8 +171,9 @@ export const reviewTape = createAsyncThunk(
         // default instance timeout would abort a healthy analysis. (Async path
         // returns instantly; pollAnalysisJob then waits for the result.)
         timeout: 120000,
+        signal,
       });
-      const result = await resolveAnalysis(data?.data || data);
+      const result = await resolveAnalysis(data?.data || data, { signal });
       trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role });
       return result;
     } catch (err) {
@@ -177,7 +185,7 @@ export const reviewTape = createAsyncThunk(
 /** Compare 2-4 takes of the same audition → ranked winner + why */
 export const compareTakes = createAsyncThunk(
   'jericho/compareTakes',
-  async ({ takes = [], sides = '', role = '', tone = '' }, { rejectWithValue }) => {
+  async ({ takes = [], sides = '', role = '', tone = '' }, { rejectWithValue, signal }) => {
     try {
       const fd = new FormData();
       takes.forEach((t) => fd.append('takes', t));
@@ -188,8 +196,9 @@ export const compareTakes = createAsyncThunk(
         headers: { 'Content-Type': 'multipart/form-data' },
         // Several takes analyzed (concurrently) + a ranking pass — give it room.
         timeout: 180000,
+        signal,
       });
-      const result = await resolveAnalysis(data?.data || data);
+      const result = await resolveAnalysis(data?.data || data, { signal });
       trackEvent(Events.COMPARE_TAKES, { count: takes.length });
       return result;
     } catch (err) {

@@ -3110,7 +3110,10 @@ export default function DrSelfTapeApp() {
       if (targetTab) {
         setCurrentPanel(null);
         setTab(targetTab);
-      } else if (targetPanel) {
+      } else if (targetPanel && PANEL_COMPONENTS[targetPanel]) {
+        // Guard against navigating to a panel that isn't registered (e.g. a
+        // react-router-only screen like reader-profile that can't mount as a
+        // mobile panel) — otherwise the content area renders blank.
         setCurrentPanel(targetPanel);
       }
     };
@@ -3323,7 +3326,12 @@ export default function DrSelfTapeApp() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: 'auto' }}>
               <NotificationBell onNavigate={({ panel, tab }) => {
-                if (panel) setCurrentPanel(panel);
+                // MeetingRoom is react-router-only (useParams + location.state)
+                // and can't mount as a mobile panel with a room — route live-
+                // session notifications to find-a-reader (where the scene is
+                // joined) instead of opening an empty meeting panel.
+                if (panel === 'meeting') { setCurrentPanel(null); setTab('find-a-reader'); return; }
+                if (panel && PANEL_COMPONENTS[panel]) setCurrentPanel(panel);
                 if (tab) { setCurrentPanel(null); setTab(tab); }
               }} />
               <TopBarAvatar

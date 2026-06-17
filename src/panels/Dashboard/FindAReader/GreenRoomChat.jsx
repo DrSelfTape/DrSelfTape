@@ -380,7 +380,20 @@ const GreenRoomChat = (props = {}) => {
 
         <button
           type="button"
-          onClick={() => otherActor?.id && navigate(`/dashboard/reader-profile/${otherActor.id}`)}
+          onClick={() => {
+            if (!otherActor?.id) return;
+            // react-router navigate() no-ops inside the Capacitor shell — route
+            // mobile through the drst-navigate event MobileApp listens for.
+            if (props.onViewProfile) {
+              props.onViewProfile(otherActor.id);
+            } else if (Capacitor.isNativePlatform()) {
+              window.dispatchEvent(new CustomEvent('drst-navigate', {
+                detail: { panel: 'reader-profile', readerId: otherActor.id },
+              }));
+            } else {
+              navigate(`/dashboard/reader-profile/${otherActor.id}`);
+            }
+          }}
           aria-label={`View ${partnerName}'s profile`}
           className="flex items-center gap-3 flex-1 min-w-0 text-left transition-opacity hover:opacity-80 active:opacity-70 focus:outline-none focus:ring-2 focus:ring-offset-2 rounded-full"
           style={{
