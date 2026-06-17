@@ -69,7 +69,51 @@ function parseScript(text) {
     }
   }
   flush();
+
+  // Fallback: flattened screenplay sides lose their line breaks, so the cues
+  // end up INLINE ("GLORIA ... REUBEN ...") and the line-based pass above finds
+  // no characters. Detect the recurring ALL-CAPS names and split on them.
+  if (new Set(lines.map((l) => l.character)).size < 2) {
+    const inline = parseInlineCharacters(text);
+    if (new Set(inline.map((l) => l.character)).size >= 2) return inline;
+  }
   return lines;
+}
+
+// Recover character/dialogue structure from a flattened screenplay where the
+// line breaks were lost: "GLORIA Hey. REUBEN Told you... GLORIA Oh my God...".
+// Real cues are ALL-CAPS and RECUR, so we key on names that appear 2+ times.
+function parseInlineCharacters(text) {
+  const flat = String(text || '').replace(/\s+/g, ' ').trim();
+  if (!flat) return [];
+  // Candidate cue: 1-2 ALL-CAPS words (letters + . ' -), >= 3 letters total —
+  // skips "I", "OK", "NO", "TV" etc. but keeps GLORIA / REUBEN / O'BRIEN / DR.
+  const cueRe = /\b([A-Z][A-Z.'’-]*(?:\s+[A-Z][A-Z.'’-]*)?)\b/g;
+  const counts = {};
+  let m;
+  while ((m = cueRe.exec(flat))) {
+    const name = m[1].trim().replace(/[.\s]+$/, '');
+    if (name.replace(/[^A-Z]/g, '').length < 3) continue;
+    counts[name] = (counts[name] || 0) + 1;
+  }
+  const names = Object.keys(counts).filter((n) => counts[n] >= 2);
+  if (names.length < 2) return [];
+  const esc = names
+    .map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .sort((a, b) => b.length - a.length); // longest first so 2-word names win
+  const splitRe = new RegExp(`(?:^|\\s)(${esc.join('|')})(?=\\s)`, 'g');
+  const cues = [];
+  let mm;
+  while ((mm = splitRe.exec(flat))) {
+    cues.push({ name: mm[1], start: mm.index, after: splitRe.lastIndex });
+  }
+  const out = [];
+  for (let i = 0; i < cues.length; i++) {
+    const end = i + 1 < cues.length ? cues[i + 1].start : flat.length;
+    const dialogue = flat.slice(cues[i].after, end).trim();
+    if (dialogue) out.push({ character: cues[i].name.trim(), dialogue });
+  }
+  return out;
 }
 
 function extractCharacters(lines) {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import ModePicker from './ModePicker';
 import axios from '../../../redux/http';
@@ -284,6 +284,19 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
   // Determine partner character name
   const partnerName = characters.find((c) => c !== userRole) || 'Scene Partner';
+
+  // Can the listening reader actually work? It needs the script to have parsed
+  // into a real back-and-forth: 2+ distinct characters, with lines for BOTH the
+  // actor's role AND the partner. A flattened/garbled script that collapses to
+  // one undifferentiated blob has no cue to listen for — so we run TIMED mode
+  // instead of stranding the actor on a dead "Line 1 of 1" reader.
+  const canListen = useMemo(() => {
+    const distinct = new Set((characters || []).filter(Boolean));
+    if (distinct.size < 2) return false;
+    const hasActor = Array.isArray(lines) && lines.some((l) => l.character === userRole);
+    const hasPartner = Array.isArray(lines) && lines.some((l) => l.character !== userRole);
+    return hasActor && hasPartner;
+  }, [characters, lines, userRole]);
 
   // Check browser support
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -817,6 +830,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     setPendingVoice(selectedVoice);
     setVoice(selectedVoice);
     setShowVoicePicker(false);
+    // Smart auto-fallback: if the script didn't parse into a real back-and-forth
+    // there's no cue to listen against, so skip listen/the mode picker entirely
+    // and run timed — the reader is never stranded on a dead single "line".
+    if (!canListen) {
+      startPreTimedSceneRef.current?.(selectedVoice, prePauseSeconds);
+      return;
+    }
     if (isNativeIOS()) {
       // Listen mode is the iOS default: the reader hears the actor finish their
       // line and responds on their cue. If recognition misbehaves it auto-falls
@@ -825,7 +845,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     } else {
       setShowModePicker(true);
     }
-  }, [primeAudio]);
+  }, [primeAudio, canListen, prePauseSeconds]);
   // Forward ref to startPreTimedScene — it's defined later in the file
   // and useCallback deps would hit the TDZ if referenced directly.
   const startPreTimedSceneRef = useRef(null);
@@ -838,7 +858,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       // would get stranded forever on "Your turn" because there's
       // nothing listening. Fall back to pre-timed mode silently so
       // every code path that lands here still produces a working scene.
-      if (!SpeechRecognition || isNativeIOS()) {
+      if (!SpeechRecognition || isNativeIOS() || !canListen) {
         startPreTimedSceneRef.current?.(selectedVoice, 3);
         return;
       }
@@ -860,7 +880,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         startRecognition();
       }
     },
-    [SpeechRecognition, lines, userRole, playAiLinesFrom, startRecognition, scrollToLine]
+    [SpeechRecognition, lines, userRole, playAiLinesFrom, startRecognition, scrollToLine, canListen]
   );
 
   // Start pre-timed mode — AI reads, then pauses for actor, then auto-advances
