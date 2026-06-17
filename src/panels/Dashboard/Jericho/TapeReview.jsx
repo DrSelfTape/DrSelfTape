@@ -102,6 +102,17 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     } catch { /* private mode — just skip */ }
   }, []);
 
+  // The activation aha — fire COMPLETED once when the free first review lands.
+  // MUST stay above the early returns below (compare / loading / result): a
+  // hook placed AFTER a conditional return crashes the whole tree with
+  // "Rendered fewer hooks than expected" the moment the branch flips — which
+  // is exactly what happened when tapping "Compare takes" (mode → 'compare'
+  // hit the early return and skipped this effect).
+  useEffect(() => {
+    if (firstReview && tapeReviewResult) trackEvent(Events.FIRST_REVIEW_COMPLETED);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstReview, tapeReviewResult]);
+
   // A plain element (not an inline component) so re-renders reconcile it in
   // place — otherwise the tutorial overlay would remount + replay its
   // animation on every keystroke. Renders in both modes.
@@ -163,12 +174,6 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     }
     dispatch(reviewTape({ video: file, role, tone, sides }));
   };
-
-  // The activation aha — fire COMPLETED once when the free first review lands.
-  useEffect(() => {
-    if (firstReview && tapeReviewResult) trackEvent(Events.FIRST_REVIEW_COMPLETED);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstReview, tapeReviewResult]);
 
   const reset = () => {
     setFile(null); setRole(''); setTone(''); setSides('');
