@@ -53,6 +53,10 @@ export default function CompareTakes() {
   const [expanded, setExpanded] = useState(null); // take number whose full notes are open
   const [sizeError, setSizeError] = useState('');
   const inputRefs = useRef({});
+  // F2: one stable idempotency key per compare action, reused across a re-submit
+  // of the same take set so the BE dedupes instead of double-charging the take
+  // tokens; cleared when the set changes or the action resets.
+  const idemKeyRef = useRef(null);
 
   const pickFile = (i, file) => {
     if (!file) return;
@@ -64,19 +68,23 @@ export default function CompareTakes() {
     setSlot(i, file);
   };
 
-  const setSlot = (i, file) => setSlots((s) => s.map((v, idx) => (idx === i ? file : v)));
+  const setSlot = (i, file) => { idemKeyRef.current = null; setSlots((s) => s.map((v, idx) => (idx === i ? file : v))); };
   const addSlot = () => setSlots((s) => (s.length >= 4 ? s : [...s, null]));
-  const removeSlot = (i) => setSlots((s) => (s.length <= 2 ? s : s.filter((_, idx) => idx !== i)));
+  const removeSlot = (i) => { idemKeyRef.current = null; setSlots((s) => (s.length <= 2 ? s : s.filter((_, idx) => idx !== i))); };
 
   const files = slots.filter(Boolean);
   const canSubmit = files.length >= 2 && !compareLoading;
 
   const submit = () => {
     if (!canSubmit) return;
-    dispatch(compareTakes({ takes: files, role, tone, sides }));
+    if (!idemKeyRef.current) {
+      idemKeyRef.current = (crypto?.randomUUID?.() || `cmp-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    }
+    dispatch(compareTakes({ takes: files, role, tone, sides, idempotencyKey: idemKeyRef.current }));
   };
 
   const reset = () => {
+    idemKeyRef.current = null; // next comparison is a new action
     setSlots([null, null]); setRole(''); setTone(''); setSides(''); setExpanded(null);
     dispatch(clearCompare());
   };

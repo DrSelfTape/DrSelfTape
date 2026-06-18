@@ -174,7 +174,7 @@ export const jerichoCoach = createAsyncThunk(
 /** Submit a self-tape for AI review (multipart upload → structured notes) */
 export const reviewTape = createAsyncThunk(
   'jericho/reviewTape',
-  async ({ video, sides = '', role = '', tone = '' }, { rejectWithValue, signal }) => {
+  async ({ video, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal }) => {
     try {
       const fd = new FormData();
       fd.append('video', video);
@@ -182,7 +182,12 @@ export const reviewTape = createAsyncThunk(
       if (role) fd.append('role', role);
       if (tone) fd.append('tone', tone);
       const { data } = await axios.post(endPoints.jerichoTapeReview, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          // Stable per-action key → a retried submit after a lost response
+          // dedupes on the BE instead of double-charging a token (F2).
+          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+        },
         // Frame extraction + Whisper + Claude vision can take 30-60s; the
         // default instance timeout would abort a healthy analysis. (Async path
         // returns instantly; pollAnalysisJob then waits for the result.)
@@ -206,7 +211,7 @@ export const reviewTape = createAsyncThunk(
 /** Compare 2-4 takes of the same audition → ranked winner + why */
 export const compareTakes = createAsyncThunk(
   'jericho/compareTakes',
-  async ({ takes = [], sides = '', role = '', tone = '' }, { rejectWithValue, signal }) => {
+  async ({ takes = [], sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal }) => {
     try {
       const fd = new FormData();
       takes.forEach((t) => fd.append('takes', t));
@@ -214,7 +219,12 @@ export const compareTakes = createAsyncThunk(
       if (role) fd.append('role', role);
       if (tone) fd.append('tone', tone);
       const { data } = await axios.post(endPoints.jerichoCompareTakes, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          // Stable per-action key → BE derives one key per take and dedupes a
+          // retried submit instead of double-charging the N take tokens (F2).
+          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
+        },
         // Several takes analyzed (concurrently) + a ranking pass — give it room.
         timeout: 180000,
         signal,

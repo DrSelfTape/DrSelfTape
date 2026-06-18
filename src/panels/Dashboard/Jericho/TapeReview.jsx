@@ -94,6 +94,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const [showOptional, setShowOptional] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const inputRef = useRef(null);
+  // F2: one stable idempotency key per analysis action. Generated on submit,
+  // reused if the user re-submits the SAME tape after a lost response (so the
+  // BE dedupes instead of double-charging), cleared when the action resets or a
+  // new file is chosen.
+  const idemKeyRef = useRef(null);
 
   // First time an actor opens the analyzer → show the walkthrough.
   useEffect(() => {
@@ -162,7 +167,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   const onPick = (e) => {
     const f = e.target.files?.[0];
-    if (f) setFile(f);
+    if (f) { idemKeyRef.current = null; setFile(f); } // new file = new action
   };
 
   const submit = () => {
@@ -172,10 +177,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       // Past the consent-remount window now — retire the durable handoff flag.
       try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
     }
-    dispatch(reviewTape({ video: file, role, tone, sides }));
+    if (!idemKeyRef.current) {
+      idemKeyRef.current = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    }
+    dispatch(reviewTape({ video: file, role, tone, sides, idempotencyKey: idemKeyRef.current }));
   };
 
   const reset = () => {
+    idemKeyRef.current = null; // next analysis is a new action
     setFile(null); setRole(''); setTone(''); setSides('');
     dispatch(clearTapeReview());
   };
