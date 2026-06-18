@@ -131,10 +131,6 @@ const endPoints = {
   craftJourney: `${baseURL}/v1/ai/craft-journey/`,
   craftJourneyComplete: `${baseURL}/v1/ai/craft-journey/complete/`,
 
-  // Push Notifications
-  pushSubscribe: `${baseURL}/v1/notifications/push/subscribe/`,
-  pushVapidKey: `${baseURL}/v1/notifications/push/vapid-key/`,
-
   // Wix Bookings
   wixServices: `${baseURL}/v1/wix/services/`,
   wixAvailability: `${baseURL}/v1/wix/availability/`,
