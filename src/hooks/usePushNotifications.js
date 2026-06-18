@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import axiosInstance from '../redux/http';
+import { openExternal } from '../utils/openExternal';
+
+// App-update broadcasts ("Tap to update") send the user to the store listing.
+const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.drselftape.app';
+const storeUrl = () => (Capacitor.getPlatform() === 'android' ? PLAY_STORE_URL : APP_STORE_URL);
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -116,6 +122,12 @@ function navDetailForPush(notif) {
 // always emit drst-push-tap so other listeners can react.
 function handlePushTap(notif) {
   try {
+    const data = notif?.data || notif?.notification?.data || {};
+    // App-update broadcast tapped from a closed app → open the store listing.
+    if (data.type === 'admin_broadcast' || data.type === 'app_update') {
+      openExternal(storeUrl());
+      return;
+    }
     const detail = navDetailForPush(notif);
     if (detail) {
       window.dispatchEvent(new CustomEvent('drst-navigate', { detail }));

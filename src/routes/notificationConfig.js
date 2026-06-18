@@ -1,4 +1,10 @@
+import { Capacitor } from '@capacitor/core';
 import { getCoachInvites, getOutgoingShares } from '../redux/features/sceneStudyScripts/readersSlice';
+import { openExternal } from '../utils/openExternal';
+
+const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.drselftape.app';
+const storeUrl = () => (Capacitor.getPlatform() === 'android' ? PLAY_STORE_URL : APP_STORE_URL);
 
 export const NOTIFICATION_CONSTANTS = {
   // Highlight timing
@@ -60,6 +66,13 @@ export const NOTIFICATION_CONFIG = {
     },
     notFoundMessage: 'This session is no longer available.',
     hasOthersMessage: 'This session may have been processed. Showing your sessions.',
+  },
+
+  // App-update broadcast ("Tap to update") → open the store listing.
+  admin_broadcast: {
+    route: null,
+    onlyAction: true,
+    action: async () => { await openExternal(storeUrl()); },
   },
 
   // Social / activity notifications → land on the screen they're about.

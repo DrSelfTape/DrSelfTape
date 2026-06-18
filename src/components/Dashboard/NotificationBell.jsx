@@ -2,10 +2,17 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { Bell, HeartHandshake, Clapperboard, MessageSquare, X, Megaphone } from 'lucide-react';
 import { getNotifications, markNotificationRead } from '../../redux/features/notifications/notificationsSlice';
 import useNotificationActions from '../../hooks/useNotificationActions';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { openExternal } from '../../utils/openExternal';
+
+// App-update broadcasts ("Tap to update") send the user to the store listing.
+const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.drselftape.app';
+const storeUrl = () => (Capacitor.getPlatform() === 'android' ? PLAY_STORE_URL : APP_STORE_URL);
 
 const NOTIF_ICONS = {
   scene_partner_like: HeartHandshake,
@@ -117,6 +124,15 @@ export default function NotificationBell({ onNavigate }) {
     if (!notif.is_read) dispatch(markNotificationRead(notif.id));
     setTimeout(() => {
       setOpen(false);
+
+      // App-update broadcast ("Tap to update") → open the store listing, not an
+      // in-app screen. openExternal routes store links through AppLauncher so
+      // the native App Store opens.
+      if (notif.type === 'admin_broadcast') {
+        openExternal(storeUrl());
+        return;
+      }
+
       const matchId = notif.data?.match_id;
 
       // Live scene request → jump straight into the partner's EXISTING
