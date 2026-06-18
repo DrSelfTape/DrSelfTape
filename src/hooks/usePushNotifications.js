@@ -91,8 +91,22 @@ function navDetailForPush(notif) {
     case 'callback-reminder':
     case 'audition_reminder':
     case 'audition-reminder':
-      // Callback / audition reminders land in the Auditions tracker tab.
+    case 'audition_update':
+      // Callback / audition reminders + tracker updates land in Auditions.
       return { tab: 'auditions' };
+    case 'scene_partner_like':
+      // "Someone wants to read with you" → the Who Wants to Read panel.
+      return { panel: 'who-wants-to-read' };
+    case 'room_invite':
+      // A rehearsal-room invite drops into the Green Room, where rooms live.
+      return { tab: 'green-room' };
+    case 'booking_confirmed':
+    case 'booking_cancelled':
+      // Reader-market booking changes open the marketplace.
+      return { panel: 'marketplace' };
+    // community_activity / admin_broadcast have no dedicated mobile screen —
+    // they fall through to null, which still opens the in-app notification
+    // center (drst-push-tap pops the bell) so the tap is never a dead end.
     default:
       return null;
   }

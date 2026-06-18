@@ -62,6 +62,19 @@ export const NOTIFICATION_CONFIG = {
     hasOthersMessage: 'This session may have been processed. Showing your sessions.',
   },
 
+  // Social / activity notifications → land on the screen they're about.
+  // Static routes (no validation) so a tap always navigates. The mobile
+  // shell + the NotificationBell handle these too; this covers the web
+  // /notifications full page, which routes purely through this config.
+  scene_partner_like:  { route: '/dashboard/who-wants-to-read' },
+  scene_partner_match: { route: '/dashboard/green-room' },
+  new_message:         { route: '/dashboard/green-room' },
+  rehearsal_started:   { route: '/dashboard/green-room' },
+  room_invite:         { route: '/dashboard/green-room' },
+  audition_update:     { route: '/dashboard/auditions' },
+  booking_confirmed:   { route: '/dashboard/marketplace' },
+  booking_cancelled:   { route: '/dashboard/marketplace' },
+
   // Actor's invitation was rejected by Coach - just show toast, no navigation
   script_share_rejected: {
     route: null, // No navigation - just action

@@ -140,15 +140,25 @@ export default function NotificationBell({ onNavigate }) {
         }
       }
 
-      const route =
-        notif.type === 'scene_partner_like' ? '/dashboard/who-wants-to-read' :
-        notif.type === 'scene_partner_match' && matchId ? `/dashboard/green-room/${matchId}` :
-        notif.type === 'rehearsal_started' && matchId ? `/dashboard/green-room/${matchId}` :
-        notif.type === 'new_message' && matchId ? `/dashboard/green-room/${matchId}` : null;
-      if (route) {
-        if (isMobile && onNavigate) {
-          onNavigate({ panel: notif.type === 'scene_partner_like' ? 'who-wants-to-read' : 'green-room' });
-        } else { navigate(route); }
+      // One destination map for every notification type, so tapping any
+      // notification lands on the screen it's about. `web` is a react-router
+      // path; `mobile` is the panel/tab the Capacitor shell's onNavigate
+      // understands (react-router navigate() no-ops inside the app shell).
+      const greenRoom = matchId ? `/dashboard/green-room/${matchId}` : '/dashboard/green-room';
+      const DEST = {
+        scene_partner_like:  { web: '/dashboard/who-wants-to-read', mobile: { panel: 'who-wants-to-read' } },
+        scene_partner_match: { web: greenRoom,                      mobile: { panel: 'green-room' } },
+        rehearsal_started:   { web: greenRoom,                      mobile: { panel: 'green-room' } },
+        new_message:         { web: greenRoom,                      mobile: { panel: 'green-room' } },
+        room_invite:         { web: '/dashboard/green-room',        mobile: { tab: 'green-room' } },
+        audition_update:     { web: '/dashboard/auditions',         mobile: { tab: 'auditions' } },
+        booking_confirmed:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
+        booking_cancelled:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
+      };
+      const dest = DEST[notif.type];
+      if (dest) {
+        if (isMobile && onNavigate) { onNavigate(dest.mobile); }
+        else { navigate(dest.web); }
       }
     }, 150);
   };
