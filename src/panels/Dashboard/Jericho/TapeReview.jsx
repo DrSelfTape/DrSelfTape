@@ -84,7 +84,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // would be skipped and the API would hard-403.
   useAIGate();
   const dispatch = useDispatch();
-  const { tapeReviewLoading, tapeReviewResult, tapeReviewError } = useSelector((s) => s.jericho);
+  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress } = useSelector((s) => s.jericho);
 
   const [mode, setMode] = useState('single'); // 'single' | 'compare'
   const [file, setFile] = useState(null);
@@ -191,12 +191,17 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   // ─── Loading ───────────────────────────────────────────────────────
   if (tapeReviewLoading) {
+    const uploading = uploadProgress < 100;
     return (
       <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-10 text-center" style={SURFACE}>
         <Loader2 className="w-9 h-9 animate-spin text-[#7A5A18] mx-auto mb-4" />
-        <p className="text-sm font-bold text-[#0A0A0A]">Jericho is watching your tape…</p>
+        <p className="text-sm font-bold text-[#0A0A0A]">
+          {uploading ? `Uploading your tape… ${uploadProgress}%` : 'Jericho is watching your tape…'}
+        </p>
         <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1.5 max-w-xs mx-auto leading-relaxed">
-          Reading your framing, eyeline, lighting, and the performance arc beat by beat. This takes ~30–60 seconds.
+          {uploading
+            ? 'Large tapes can take a few minutes to upload on a mobile connection — keep the app open.'
+            : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. This takes ~30–60 seconds.'}
         </p>
       </div>
     );

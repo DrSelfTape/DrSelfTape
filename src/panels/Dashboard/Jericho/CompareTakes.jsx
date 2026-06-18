@@ -42,7 +42,7 @@ function ScoreBar100({ value, gold }) {
 
 export default function CompareTakes() {
   const dispatch = useDispatch();
-  const { compareLoading, compareResult, compareError } = useSelector((s) => s.jericho);
+  const { compareLoading, compareResult, compareError, uploadProgress } = useSelector((s) => s.jericho);
 
   // Two slots to start; up to four.
   const [slots, setSlots] = useState([null, null]);
@@ -91,12 +91,17 @@ export default function CompareTakes() {
 
   // ─── Loading ───────────────────────────────────────────────────────
   if (compareLoading) {
+    const uploading = uploadProgress < 100;
     return (
       <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-10 text-center" style={SURFACE}>
         <Loader2 className="w-9 h-9 animate-spin text-[#7A5A18] mx-auto mb-4" />
-        <p className="text-sm font-bold text-[#0A0A0A]">Jericho is comparing your takes…</p>
+        <p className="text-sm font-bold text-[#0A0A0A]">
+          {uploading ? `Uploading your takes… ${uploadProgress}%` : 'Jericho is comparing your takes…'}
+        </p>
         <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1.5 max-w-xs mx-auto leading-relaxed">
-          Reading each take’s arc, choices and truth — then picking the one to submit. This takes ~1–2 minutes.
+          {uploading
+            ? 'Several large takes can take a few minutes to upload on a mobile connection — keep the app open.'
+            : 'Reading each take’s arc, choices and truth — then picking the one to submit. This takes ~1–2 minutes.'}
         </p>
       </div>
     );

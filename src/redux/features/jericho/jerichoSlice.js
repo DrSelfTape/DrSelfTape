@@ -172,26 +172,58 @@ export const jerichoCoach = createAsyncThunk(
 );
 
 /** Submit a self-tape for AI review (multipart upload → structured notes) */
+// Upload-failure telemetry → Sentry, so we can tell a slow-uplink timeout from a
+// WKWebView large-body failure (Stage-1 diagnostics for the big-tape upload
+// bug). Best-effort; never throws into the thunk's catch.
+async function captureUploadFailure(feature, err, startedAt, loaded, total, timeoutMs) {
+  try {
+    const Sentry = await import('@sentry/react');
+    const elapsedMs = Date.now() - startedAt;
+    Sentry.captureException(err, {
+      tags: { feature },
+      extra: {
+        code: err?.code, name: err?.name, message: err?.message,
+        status: err?.response?.status,
+        online: typeof navigator !== 'undefined' ? navigator.onLine : null,
+        elapsedMs, uploadedBytes: loaded, totalBytes: total,
+        uploadPercent: total ? Math.round((loaded / total) * 100) : null,
+        rateMbps: elapsedMs ? +(((loaded * 8) / 1e6) / (elapsedMs / 1000)).toFixed(2) : null,
+        timeoutMs,
+      },
+    });
+  } catch { /* sentry unavailable — don't break the catch path */ }
+}
+
 export const reviewTape = createAsyncThunk(
   'jericho/reviewTape',
-  async ({ video, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal }) => {
+  async ({ video, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
+    const startedAt = Date.now();
+    let lastLoaded = 0, lastTotal = 0;
     try {
       const fd = new FormData();
       fd.append('video', video);
       if (sides) fd.append('sides', sides);
       if (role) fd.append('role', role);
       if (tone) fd.append('tone', tone);
+      dispatch(setUploadProgress(0));
       const { data } = await axios.post(endPoints.jerichoTapeReview, fd, {
+        // Do NOT set Content-Type — the browser must set multipart/form-data
+        // WITH the boundary for a FormData body (a manual header omits it).
         headers: {
-          'Content-Type': 'multipart/form-data',
           // Stable per-action key → a retried submit after a lost response
           // dedupes on the BE instead of double-charging a token (F2).
           ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
-        // Frame extraction + Whisper + Claude vision can take 30-60s; the
-        // default instance timeout would abort a healthy analysis. (Async path
-        // returns instantly; pollAnalysisJob then waits for the result.)
-        timeout: 120000,
+        // A 100MB+ tape over a slow mobile uplink can take MINUTES just to
+        // upload; the old 120s timeout aborted it client-side before the body
+        // finished (the failure was the transfer, not the analysis — that's why
+        // the server only ever logged the CORS preflight). 15 min covers ~1Mbps.
+        // Durable fix is direct-to-R2 upload (Stage 2).
+        timeout: 900000,
+        onUploadProgress: (e) => {
+          lastLoaded = e.loaded || 0; lastTotal = e.total || 0;
+          if (e.total) dispatch(setUploadProgress(Math.min(100, Math.round((e.loaded / e.total) * 100))));
+        },
         signal,
       });
       const result = await resolveAnalysis(data?.data || data, { signal });
@@ -203,6 +235,7 @@ export const reviewTape = createAsyncThunk(
       trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role });
       return result;
     } catch (err) {
+      captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
       return rejectWithValue(aiErrorMessage(err, 'Tape review failed'));
     }
   }
@@ -211,28 +244,38 @@ export const reviewTape = createAsyncThunk(
 /** Compare 2-4 takes of the same audition → ranked winner + why */
 export const compareTakes = createAsyncThunk(
   'jericho/compareTakes',
-  async ({ takes = [], sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal }) => {
+  async ({ takes = [], sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
+    const startedAt = Date.now();
+    let lastLoaded = 0, lastTotal = 0;
     try {
       const fd = new FormData();
       takes.forEach((t) => fd.append('takes', t));
       if (sides) fd.append('sides', sides);
       if (role) fd.append('role', role);
       if (tone) fd.append('tone', tone);
+      dispatch(setUploadProgress(0));
       const { data } = await axios.post(endPoints.jerichoCompareTakes, fd, {
+        // Do NOT set Content-Type — let the browser set the multipart boundary.
         headers: {
-          'Content-Type': 'multipart/form-data',
           // Stable per-action key → BE derives one key per take and dedupes a
           // retried submit instead of double-charging the N take tokens (F2).
           ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
         },
-        // Several takes analyzed (concurrently) + a ranking pass — give it room.
-        timeout: 180000,
+        // N takes (100MB+ each) uploaded together can take several minutes on a
+        // mobile uplink — the old 180s timeout aborted the transfer client-side.
+        // 15 min headroom; Stage-2 fix is direct-to-R2 upload.
+        timeout: 900000,
+        onUploadProgress: (e) => {
+          lastLoaded = e.loaded || 0; lastTotal = e.total || 0;
+          if (e.total) dispatch(setUploadProgress(Math.min(100, Math.round((e.loaded / e.total) * 100))));
+        },
         signal,
       });
       const result = await resolveAnalysis(data?.data || data, { signal });
       trackEvent(Events.COMPARE_TAKES, { count: takes.length });
       return result;
     } catch (err) {
+      captureUploadFailure('compare_takes_upload', err, startedAt, lastLoaded, lastTotal, 900000);
       return rejectWithValue(aiErrorMessage(err, 'Take comparison failed'));
     }
   }
@@ -289,6 +332,10 @@ const jerichoSlice = createSlice({
     compareLoading: false,
     compareResult: null,
     compareError: null,
+    // 0-100 upload progress for the tape/compare multipart POST. A large tape
+    // can take minutes to upload on mobile, so the loading UI shows this instead
+    // of looking frozen.
+    uploadProgress: 0,
 
     // Last logged session ID (for attaching post-session feedback)
     lastSessionLogId: null,
@@ -306,6 +353,9 @@ const jerichoSlice = createSlice({
     },
     setLastSessionLogId: (state, action) => {
       state.lastSessionLogId = action.payload;
+    },
+    setUploadProgress: (state, action) => {
+      state.uploadProgress = action.payload;
     },
     /** Reset the tape-review result (e.g. to analyze another take) */
     clearTapeReview: (state) => {
@@ -392,26 +442,32 @@ const jerichoSlice = createSlice({
       .addCase(reviewTape.pending, (state) => {
         state.tapeReviewLoading = true;
         state.tapeReviewError = null;
+        state.uploadProgress = 0;
       })
       .addCase(reviewTape.fulfilled, (state, action) => {
         state.tapeReviewLoading = false;
         state.tapeReviewResult = action.payload;
+        state.uploadProgress = 0;
       })
       .addCase(reviewTape.rejected, (state, action) => {
         state.tapeReviewLoading = false;
         state.tapeReviewError = action.payload || 'Tape review failed';
+        state.uploadProgress = 0;
       })
       .addCase(compareTakes.pending, (state) => {
         state.compareLoading = true;
         state.compareError = null;
+        state.uploadProgress = 0;
       })
       .addCase(compareTakes.fulfilled, (state, action) => {
         state.compareLoading = false;
         state.compareResult = action.payload;
+        state.uploadProgress = 0;
       })
       .addCase(compareTakes.rejected, (state, action) => {
         state.compareLoading = false;
         state.compareError = action.payload || 'Take comparison failed';
+        state.uploadProgress = 0;
       })
 
       // ── Recent Sessions ──
@@ -424,5 +480,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId, clearTapeReview, clearCompare } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, clearCompare } = jerichoSlice.actions;
 export default jerichoSlice.reducer;
