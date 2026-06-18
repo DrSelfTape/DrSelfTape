@@ -465,6 +465,13 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           <p className="text-xs text-red-500 mt-3 text-center">{String(tapeReviewError)}</p>
         )}
 
+        {file && file.size > 60 * 1024 * 1024 && (
+          <p className="text-[11px] text-[#7A5A18] mt-3 text-center leading-relaxed">
+            Heads up — this is a large tape ({(file.size / (1024 * 1024)).toFixed(0)} MB). On a slower
+            connection the upload can take a few minutes; keep the app open and watch the progress.
+          </p>
+        )}
+
         <button
           onClick={submit}
           disabled={!file}

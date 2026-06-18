@@ -347,6 +347,13 @@ export default function CompareTakes() {
           <p className="text-xs text-red-500 mt-3 text-center">{String(compareError)}</p>
         )}
 
+        {files.reduce((s, f) => s + (f?.size || 0), 0) > 60 * 1024 * 1024 && (
+          <p className="text-[11px] text-[#7A5A18] mt-3 text-center leading-relaxed">
+            Heads up — these are large takes ({(files.reduce((s, f) => s + (f?.size || 0), 0) / (1024 * 1024)).toFixed(0)} MB total).
+            On a slower connection the upload can take a few minutes; keep the app open and watch the progress.
+          </p>
+        )}
+
         <button
           onClick={submit}
           disabled={!canSubmit}
