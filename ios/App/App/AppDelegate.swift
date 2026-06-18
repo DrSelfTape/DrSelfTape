@@ -152,7 +152,7 @@ final class VoipCallManager: NSObject {
 
     /// Report an incoming call to CallKit — used by BOTH the JS showIncomingCall
     /// (app alive) and the VoIP push handler (app killed/locked).
-    func reportIncomingCall(callId: String, callerName: String, roomUrl: String, hasVideo: Bool) {
+    func reportIncomingCall(callId: String, callerName: String, roomUrl: String, hasVideo: Bool, completion: (() -> Void)? = nil) {
         let uuid = callsById[callId] ?? UUID()
         callsById[callId] = uuid
         if !roomUrl.isEmpty { roomById[callId] = roomUrl }
@@ -162,6 +162,10 @@ final class VoipCallManager: NSObject {
         update.hasVideo = hasVideo
         provider?.reportNewIncomingCall(with: uuid, update: update) { error in
             if let error = error { NSLog("CallKit report failed: \(error.localizedDescription)") }
+            // Call the PushKit completion only AFTER CallKit has processed the
+            // report — calling it earlier (or skipping it on failure) risks iOS
+            // penalising/throttling future VoIP pushes for this app.
+            completion?()
         }
     }
 
@@ -198,8 +202,9 @@ extension VoipCallManager: PKPushRegistryDelegate {
         let callId = (d["callId"] as? String) ?? UUID().uuidString
         let name = (d["callerName"] as? String) ?? "Scene Partner"
         let room = (d["roomUrl"] as? String) ?? ""
-        reportIncomingCall(callId: callId, callerName: name, roomUrl: room, hasVideo: true)
-        completion()
+        reportIncomingCall(callId: callId, callerName: name, roomUrl: room, hasVideo: true) {
+            completion()
+        }
     }
 }
 

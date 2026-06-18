@@ -8,23 +8,42 @@ const VoipCall = registerPlugin('VoipCall');
 
 export const isVoipNative = () => Capacitor.getPlatform() === 'ios';
 
-function sendToken(token) {
-  if (!token) return;
-  axios.post('/v1/notifications/push/device-token/', { token, platform: 'ios_voip' }).catch(() => {});
+let tokenAcked = false; // the BE has confirmed receipt of the VoIP token
+
+// Report the VoIP token to the BE, retrying on failure. The first attempt can
+// fail because auth isn't ready yet or the device is briefly offline — and if
+// it's dropped silently the BE never learns the token and the device can never
+// be VoIP-rung. So back off and retry; leave tokenAcked false so a later
+// registerVoip() (next app launch / socket reconnect) tries again too.
+async function sendToken(token, attempt = 0) {
+  if (!token || tokenAcked) return;
+  try {
+    await axios.post('/v1/notifications/push/device-token/', { token, platform: 'ios_voip' });
+    tokenAcked = true;
+  } catch {
+    if (attempt < 4) {
+      const delay = 1000 * 2 ** attempt; // 1s, 2s, 4s, 8s
+      setTimeout(() => { sendToken(token, attempt + 1); }, delay);
+    }
+  }
 }
 
-let registered = false;
-/** Register for VoIP pushes and report the token to the backend. Idempotent. */
+let listenerAttached = false;
+/** Register for VoIP pushes and report the token to the backend. Idempotent;
+ *  safe (and useful) to call again — it re-attempts an unacked token. */
 export async function registerVoip() {
-  if (!isVoipNative() || registered) return;
-  registered = true;
+  if (!isVoipNative()) return;
   try {
-    // The token may arrive asynchronously after PushKit registration.
-    VoipCall.addListener('voipToken', ({ token }) => sendToken(token));
+    // The token may arrive asynchronously after PushKit registration, so keep
+    // the listener attached across calls (attach once).
+    if (!listenerAttached) {
+      VoipCall.addListener('voipToken', ({ token }) => sendToken(token));
+      listenerAttached = true;
+    }
     const res = await VoipCall.register();
-    sendToken(res?.token);
+    await sendToken(res?.token);
   } catch {
-    registered = false; // allow a retry if the plugin wasn't ready
+    listenerAttached = false; // plugin wasn't ready — allow a full retry
   }
 }
 
