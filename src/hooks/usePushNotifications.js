@@ -69,6 +69,12 @@ function navDetailForPush(notif) {
   if (matchId && type === 'new_message') {
     return { panel: 'green-room', subPanel: 'green-room-chat', matchId: String(matchId) };
   }
+  // An incoming live-read invite ("Incoming Scene Request") drops the actor into
+  // that match's chat, where the live-read / call controls live — so tapping the
+  // banner from a fully-closed app lands them in the right place to join the read.
+  if (matchId && type === 'rehearsal_started') {
+    return { panel: 'green-room', subPanel: 'green-room-chat', matchId: String(matchId) };
+  }
 
   // Best-effort deep-links for push types with an unambiguous destination.
   // Only map to tabs/panels that definitely exist and are mobile-reachable
