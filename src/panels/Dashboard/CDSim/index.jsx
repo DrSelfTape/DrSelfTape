@@ -99,6 +99,17 @@ function AnalyzingPhase({ error, onRetry }) {
         })}
       </div>
 
+      {!error && (
+        <p style={{
+          marginTop: 24, textAlign: 'center', fontSize: 12.5,
+          color: 'var(--aurora-dim)', lineHeight: 1.5,
+          maxWidth: 300, marginLeft: 'auto', marginRight: 'auto',
+        }}>
+          Longer scenes take a little more time to analyze — hang tight, this can
+          take up to a minute. Keep the app open.
+        </p>
+      )}
+
       {error && (
         <div style={{ marginTop: 28, textAlign: 'center' }}>
           <p style={{ color: 'var(--aurora-coral-deep, #C05957)', marginBottom: 14 }}>{error}</p>
