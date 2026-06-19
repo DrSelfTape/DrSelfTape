@@ -23,7 +23,7 @@ import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingMo
 import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import { V1HeroGraph, V1FAB, V1Sparkles } from "../../components/Aurora";
-import { AuroraHUD, AuroraQuests, AuroraSeason, AuroraProgressCard } from "../../components/Aurora/game";
+import { AuroraHUD, AuroraQuests, AuroraStreakGuard, AuroraSeason, AuroraProgressCard } from "../../components/Aurora/game";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
@@ -1094,6 +1094,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
         <AuroraHUD />
         <AuroraQuests />
+        <AuroraStreakGuard />
         <AuroraSeason />
       </div>
 

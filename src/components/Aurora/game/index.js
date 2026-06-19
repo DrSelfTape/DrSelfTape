@@ -5,3 +5,4 @@ export { AuroraHUD } from './AuroraHUD';
 export { AuroraQuests, AuroraQuestRow } from './AuroraQuests';
 export { AuroraSeason, AuroraSeasonNode } from './AuroraSeason';
 export { AuroraXPWheel, AuroraProgressCard } from './AuroraXPWheel';
+export { AuroraStreakGuard } from './AuroraStreakGuard';
