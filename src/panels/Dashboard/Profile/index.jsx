@@ -247,7 +247,7 @@ export default function Profile() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--aurora-heritage-gold-deep)' }} />
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--aurora-accent-deep)' }} />
       </div>
     );
   }
@@ -273,24 +273,27 @@ export default function Profile() {
 
       {/* Validation Popup */}
       {validationPopup && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="border border-red-500/30 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
-            style={{ background: 'var(--bg-elevated)', animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center backdrop-blur-sm px-4"
+          style={{ background: 'rgba(48,41,31,0.32)' }}
+        >
+          <div className="aurora-card p-6 max-w-sm w-full"
+            style={{ background: 'var(--aurora-glass-strong)', animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards' }}
           >
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-red-500/15 flex items-center justify-center">
-                <AlertCircle className="w-5 h-5 text-red-400" />
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,130,128,0.15)' }}>
+                <AlertCircle className="w-5 h-5" style={{ color: 'var(--aurora-rose)' }} />
               </div>
-              <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Complete Your Profile</h3>
+              <h3 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>Complete Your Profile</h3>
             </div>
-            <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-sm mb-4" style={{ color: 'var(--aurora-sub)' }}>
               Please fill in the following before saving:
             </p>
             <div className="space-y-2 mb-6">
               {validationPopup.map((field) => (
                 <div key={field} className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,130,128,0.10)', border: '1px solid rgba(255,130,128,0.25)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--aurora-coral, #FF8280)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{field}</span>
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--aurora-rose)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--aurora-rose)' }}>{field}</span>
                 </div>
               ))}
             </div>
@@ -298,8 +301,8 @@ export default function Profile() {
               onClick={() => setValidationPopup(null)}
               className="w-full py-3 rounded-xl font-semibold text-sm transition-colors"
               style={{
-                background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
-                color: '#FFF',
+                background: 'linear-gradient(135deg, var(--aurora-peach) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-accent-deep) 100%)',
+                color: 'var(--aurora-bg)',
                 boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
               }}
             >
@@ -317,16 +320,19 @@ export default function Profile() {
 
       {/* Marketplace Tutorial */}
       {showMarketplaceTutorial && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
-          <div className="max-w-sm w-full rounded-2xl p-7 shadow-2xl" style={{
-            background: 'linear-gradient(135deg, var(--bg-elevated), var(--bg-card))',
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center backdrop-blur-sm px-4"
+          style={{ background: 'rgba(48,41,31,0.32)' }}
+        >
+          <div className="aurora-card max-w-sm w-full p-7" style={{
+            background: 'linear-gradient(135deg, var(--aurora-glass-strong), var(--aurora-glass-strong))',
             border: '1px solid rgba(252,224,114,0.2)',
             animation: 'badgePop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards',
           }}>
             <div className="text-center mb-5">
               <span className="text-4xl">💰</span>
-              <h2 className="text-xl font-bold mt-3" style={{ color: 'var(--text-primary)' }}>Welcome to the Marketplace!</h2>
-              <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>
+              <h2 className="text-xl font-bold mt-3" style={{ color: 'var(--aurora-text)' }}>Welcome to the Marketplace!</h2>
+              <p className="text-sm mt-2" style={{ color: 'var(--aurora-sub)' }}>
                 You're about to start earning money as a reader. Here's how it works:
               </p>
             </div>
@@ -338,11 +344,11 @@ export default function Profile() {
                 { emoji: '🎬', title: 'Get Booked', desc: 'Actors browse your profile and book sessions. You get notified instantly.' },
                 { emoji: '💸', title: 'Get Paid Automatically', desc: 'You keep 80% of every session. Money goes straight to your bank.' },
               ].map((step, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: 'var(--bg-deep)' }}>
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl" style={{ background: 'var(--aurora-bg)' }}>
                   <span className="text-lg shrink-0 mt-0.5">{step.emoji}</span>
                   <div>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{step.desc}</p>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{step.title}</p>
+                    <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-sub)' }}>{step.desc}</p>
                   </div>
                 </div>
               ))}
@@ -353,8 +359,8 @@ export default function Profile() {
                 setShowMarketplaceTutorial(false);
                 dispatch(patchUserSettings({ marketplace_tutorial_seen: true }));
               }}
-              className="w-full py-3 rounded-xl text-white font-bold text-sm transition-colors"
-              style={{ background: 'linear-gradient(135deg, #F0D097, #D4A85F)' }}
+              className="w-full py-3 rounded-xl font-bold text-sm transition-colors"
+              style={{ background: 'linear-gradient(135deg, var(--aurora-peach), var(--aurora-heritage-gold))', color: 'var(--aurora-bg)' }}
             >
               Let's Set Up My Rates
             </button>
@@ -386,11 +392,15 @@ export default function Profile() {
                 <img
                   src={avatarPreview}
                   alt="Avatar"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-[#D4A85F]/20"
+                  className="w-32 h-32 rounded-full object-cover border-4"
+                  style={{ borderColor: 'rgba(212,168,95,0.20)' }}
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-[#D4A85F] flex items-center justify-center border-4 border-[#D4A85F]/20">
-                  <span className="text-white text-3xl font-bold">
+                <div
+                  className="w-32 h-32 rounded-full flex items-center justify-center border-4"
+                  style={{ background: 'var(--aurora-heritage-gold)', borderColor: 'rgba(212,168,95,0.20)' }}
+                >
+                  <span className="text-3xl font-bold" style={{ color: 'var(--aurora-bg)' }}>
                     {getInitials(profile)}
                   </span>
                 </div>
@@ -398,7 +408,8 @@ export default function Profile() {
               <button
                 type="button"
                 onClick={() => avatarInputRef.current?.click()}
-                className="absolute bottom-1 right-1 w-9 h-9 bg-[#D4A85F] rounded-full flex items-center justify-center text-white shadow-md hover:bg-[#C09850] transition-colors"
+                className="absolute bottom-1 right-1 w-9 h-9 rounded-full flex items-center justify-center shadow-md transition-colors"
+                style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-bg)' }}
               >
                 <Camera className="w-4 h-4" />
               </button>
@@ -413,23 +424,26 @@ export default function Profile() {
               />
             </div>
 
-            <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <h2 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>
               {profile?.first_name || 'First'} {profile?.last_name || 'Last'}
             </h2>
-            <span className="inline-block mt-1 px-3 py-0.5 text-xs font-medium rounded-full bg-[#D4A85F]/10 text-[#7A5A18] capitalize">
+            <span
+              className="inline-block mt-1 px-3 py-0.5 text-xs font-medium rounded-full capitalize"
+              style={{ background: 'rgba(212,168,95,0.10)', color: 'var(--aurora-accent-deep)' }}
+            >
               {profile?.role || 'actor'}
             </span>
 
             {/* Completion */}
             <div className="mt-6">
               <div className="flex items-center justify-between text-sm mb-1">
-                <span style={{ color: 'var(--text-secondary)' }}>Profile completion</span>
-                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{completion}%</span>
+                <span style={{ color: 'var(--aurora-sub)' }}>Profile completion</span>
+                <span className="aurora-mono font-semibold" style={{ color: 'var(--aurora-text)' }}>{completion}%</span>
               </div>
-              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--border-default)' }}>
+              <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--aurora-glass-border)' }}>
                 <div
-                  className="h-full bg-[#D4A85F] rounded-full transition-all duration-500"
-                  style={{ width: `${completion}%` }}
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${completion}%`, background: 'var(--aurora-heritage-gold)' }}
                 />
               </div>
             </div>
@@ -438,18 +452,18 @@ export default function Profile() {
           {/* Referral Card */}
           {referral.code && (
             <div className="aurora-card p-5 mt-6" style={{
-              background: 'linear-gradient(135deg, rgba(212,168,95,0.08), var(--aurora-surface-solid))',
+              background: 'linear-gradient(135deg, rgba(212,168,95,0.08), var(--aurora-glass))',
               border: '1px solid rgba(212,168,95,0.30)',
             }}>
               <div className="flex items-center gap-2 mb-3">
-                <Gift className="w-4 h-4 text-[#7A5A18]" />
-                <h3 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Your Referral Code</h3>
+                <Gift className="w-4 h-4" style={{ color: 'var(--aurora-accent-deep)' }} />
+                <h3 className="text-sm font-bold" style={{ color: 'var(--aurora-text)' }}>Your Referral Code</h3>
               </div>
 
               {/* Code */}
               <div className="flex items-center gap-2 mb-3">
-                <div className="flex-1 px-3 py-2.5 rounded-lg text-center font-mono text-lg font-bold tracking-widest" style={{
-                  background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: '#7A5A18',
+                <div className="flex-1 px-3 py-2.5 rounded-lg text-center aurora-mono text-lg font-bold tracking-widest" style={{
+                  background: 'var(--aurora-glass)', border: '1px solid var(--aurora-line)', color: 'var(--aurora-accent-deep)',
                 }}>
                   {referral.code}
                 </div>
@@ -461,9 +475,9 @@ export default function Profile() {
                     setTimeout(() => setCodeCopied(false), 2000);
                   }}
                   className="w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
-                  style={{ background: codeCopied ? 'rgba(34,197,94,0.15)' : 'var(--bg-input)', border: '1px solid var(--border-active)' }}
+                  style={{ background: codeCopied ? 'rgba(34,197,94,0.15)' : 'var(--aurora-glass)', border: '1px solid var(--aurora-line)' }}
                 >
-                  {codeCopied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />}
+                  {codeCopied ? <Check className="w-4 h-4" style={{ color: 'var(--aurora-mint)' }} /> : <Copy className="w-4 h-4" style={{ color: 'var(--aurora-sub)' }} />}
                 </button>
               </div>
 
@@ -477,15 +491,15 @@ export default function Profile() {
                     url: referral.share_url || `https://drselftape.app/signup?ref=${referral.code}`,
                   }).catch(() => {})}
                   className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold mb-3 transition-colors"
-                  style={{ background: 'rgba(212,168,95,0.12)', border: '1px solid rgba(212,168,95,0.35)', color: '#7A5A18' }}
+                  style={{ background: 'rgba(212,168,95,0.12)', border: '1px solid rgba(212,168,95,0.35)', color: 'var(--aurora-accent-deep)' }}
                 >
                   <Share2 className="w-4 h-4" /> Share Invite Link
                 </button>
               )}
 
-              <p className="text-xs text-center" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-xs text-center" style={{ color: 'var(--aurora-dim)' }}>
                 {referral.uses > 0 ? `${referral.uses} referral${referral.uses !== 1 ? 's' : ''} · ` : ''}
-                Both you and your friend get <span className="text-[#A7ECDA] font-semibold">50 free tokens</span>
+                Both you and your friend get <span className="text-[var(--aurora-mint)] font-semibold">50 free tokens</span>
               </p>
             </div>
           )}
@@ -499,38 +513,38 @@ export default function Profile() {
               <h3 className="aurora-display text-lg mb-4" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>Personal Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>First Name <span className="text-[#7A5A18]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>First Name <span style={{ color: 'var(--aurora-accent-deep)' }}>*</span></label>
                   <input
                     name="first_name"
                     value={form.first_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg outline-none transition-colors" style={{ border: '1px solid var(--aurora-line)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Last Name <span className="text-[#7A5A18]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Last Name <span style={{ color: 'var(--aurora-accent-deep)' }}>*</span></label>
                   <input
                     name="last_name"
                     value={form.last_name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg outline-none transition-colors" style={{ border: '1px solid var(--aurora-line)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Email</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Email</label>
                   <input
                     value={profile?.email || ''}
                     readOnly
-                    className="w-full px-3 py-2 rounded-lg cursor-not-allowed" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-surface)', color: 'var(--text-secondary)' }}
+                    className="w-full px-3 py-2 rounded-lg cursor-not-allowed" style={{ border: '1px solid var(--aurora-line)', background: 'var(--aurora-glass)', color: 'var(--aurora-sub)' }}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Phone</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Phone</label>
                   <input
                     name="phone_no"
                     value={form.phone_no}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg outline-none transition-colors" style={{ border: '1px solid var(--aurora-line)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                   />
                 </div>
               </div>
@@ -541,44 +555,44 @@ export default function Profile() {
               <h3 className="aurora-display text-lg mb-4" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>Actor Information</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Bio</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Bio</label>
                   <textarea
                     name="bio"
                     rows={4}
                     value={form.bio}
                     onChange={handleChange}
                     placeholder="Tell casting directors about yourself..."
-                    className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors resize-none" style={{ border: '1px solid var(--border-active)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    className="w-full px-3 py-2 rounded-lg outline-none transition-colors resize-none" style={{ border: '1px solid var(--aurora-line)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Reel URL</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Reel URL</label>
                     <input
                       name="reel_url"
                       value={form.reel_url}
                       onChange={handleChange}
                       placeholder="https://youtube.com/..."
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg outline-none transition-colors" style={{ border: '1px solid var(--aurora-glass-border)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Based In</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Based In</label>
                     <input
                       name="based_in"
                       value={form.based_in}
                       onChange={handleChange}
                       placeholder="Los Angeles, CA"
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg outline-none transition-colors" style={{ border: '1px solid var(--aurora-glass-border)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Union Status <span className="text-[#7A5A18]">*</span></label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Union Status <span style={{ color: 'var(--aurora-accent-deep)' }}>*</span></label>
                     <select
                       name="union"
                       value={form.union}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg outline-none transition-colors" style={{ border: '1px solid var(--aurora-glass-border)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                     >
                       <option value="">Select union status</option>
                       <option value="sag-aftra">SAG-AFTRA</option>
@@ -588,7 +602,7 @@ export default function Profile() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Years of Experience</label>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Years of Experience</label>
                     <input
                       name="years_experience"
                       type="number"
@@ -597,14 +611,14 @@ export default function Profile() {
                       value={form.years_experience}
                       onChange={handleChange}
                       placeholder="e.g. 5"
-                      className="w-full px-3 py-2 rounded-lg focus:ring-2 focus:ring-[#D4A85F]/50 focus:border-[#D4A85F] outline-none transition-colors" style={{ border: '1px solid var(--border-default)', background: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                      className="w-full px-3 py-2 rounded-lg outline-none transition-colors" style={{ border: '1px solid var(--aurora-glass-border)', background: 'var(--aurora-glass)', color: 'var(--aurora-text)' }}
                     />
                   </div>
                 </div>
 
                 {/* Genre Tags */}
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Genre Types</label>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--aurora-sub)' }}>Genre Types</label>
                   <div className="flex flex-wrap gap-2">
                     {['Drama', 'Comedy', 'Thriller', 'Horror', 'Sci-Fi', 'Action', 'Romance', 'Period', 'Musical', 'Indie'].map((g) => (
                       <button
@@ -618,10 +632,12 @@ export default function Profile() {
                         }}
                         className={`px-3 py-1 rounded-full text-xs font-semibold border transition-all ${
                           form.genres.includes(g)
-                            ? 'bg-[#D4A85F] border-[#D4A85F] text-white'
-                            : 'bg-transparent hover:border-[#D4A85F]/50'
+                            ? ''
+                            : 'bg-transparent'
                         }`}
-                        style={!form.genres.includes(g) ? { borderColor: 'var(--border-active)', color: 'var(--text-secondary)' } : {}}
+                        style={form.genres.includes(g)
+                          ? { background: 'var(--aurora-heritage-gold)', borderColor: 'var(--aurora-heritage-gold)', color: 'var(--aurora-bg)' }
+                          : { borderColor: 'var(--aurora-line)', color: 'var(--aurora-sub)' }}
                       >
                         {g}
                       </button>
@@ -632,21 +648,21 @@ export default function Profile() {
             </div>
 
             {/* Reader Marketplace — Pricing */}
-            <div className="rounded-2xl shadow-sm p-6" style={{
-              background: 'linear-gradient(135deg, rgba(252,224,114,0.03), var(--bg-surface))',
+            <div className="aurora-card p-6" style={{
+              background: 'linear-gradient(135deg, rgba(252,224,114,0.03), var(--aurora-glass))',
               border: '1px solid rgba(252,224,114,0.15)',
             }}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(252,224,114,0.1)' }}>
-                  <DollarSign className="w-5 h-5 text-[#FCE072]" />
+                  <DollarSign className="w-5 h-5" style={{ color: 'var(--aurora-heritage-gold)' }} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>Reader Marketplace</h3>
-                  <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>Earn money reading with other actors</p>
+                  <h3 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>Reader Marketplace</h3>
+                  <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>Earn money reading with other actors</p>
                 </div>
               </div>
 
-              <div className="my-4" style={{ height: 1, background: 'var(--border-default)' }} />
+              <div className="my-4" style={{ height: 1, background: 'var(--aurora-glass-border)' }} />
 
               {/* Toggle */}
               <div className="flex items-center gap-3 mb-6">
@@ -660,13 +676,13 @@ export default function Profile() {
                     }
                   }}
                   className="relative w-12 h-7 rounded-full transition-colors"
-                  style={{ background: readerForm.is_paid_reader ? '#FF8280' : 'var(--border-default)' }}
+                  style={{ background: readerForm.is_paid_reader ? 'var(--aurora-rose)' : 'var(--aurora-glass-border)' }}
                 >
                   <div className="absolute top-0.5 left-0.5 w-6 h-6 rounded-full bg-white transition-transform" style={{
                     transform: readerForm.is_paid_reader ? 'translateX(20px)' : 'translateX(0)',
                   }} />
                 </button>
-                <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                <span className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>
                   {readerForm.is_paid_reader ? 'Paid Reader — Active' : 'Not offering paid sessions'}
                 </span>
               </div>
@@ -675,7 +691,7 @@ export default function Profile() {
               {readerForm.is_paid_reader && (
                 <div className="space-y-5">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Your Session Rates</p>
+                    <p className="aurora-eyebrow mb-3" style={{ color: 'var(--aurora-dim)' }}>Your Session Rates</p>
                     <div className="grid grid-cols-3 gap-3">
                     {[
                       { key: 'session_rate_15', label: '15 min' },
@@ -683,36 +699,36 @@ export default function Profile() {
                       { key: 'session_rate_60', label: '60 min' },
                     ].map(r => (
                       <div key={r.key}>
-                        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>{r.label}</label>
+                        <label className="block text-xs font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>{r.label}</label>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'var(--text-muted)' }}>$</span>
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'var(--aurora-dim)' }}>$</span>
                           <input
                             type="number"
                             min="1"
                             max="200"
                             value={readerForm[r.key]}
                             onChange={(e) => setReaderForm(prev => ({ ...prev, [r.key]: e.target.value }))}
-                            className="w-full pl-7 pr-3 py-2.5 rounded-lg text-sm font-semibold outline-none transition-colors"
-                            style={{ background: 'var(--bg-input)', border: '1px solid var(--border-active)', color: 'var(--text-primary)' }}
+                            className="w-full pl-7 pr-3 py-2.5 rounded-lg text-sm font-semibold outline-none transition-colors aurora-mono"
+                            style={{ background: 'var(--aurora-glass)', border: '1px solid var(--aurora-line)', color: 'var(--aurora-text)' }}
                           />
                         </div>
                       </div>
                     ))}
                   </div>
 
-                    <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                    <p className="text-xs mt-2" style={{ color: 'var(--aurora-dim)' }}>
                       You keep 80%. Platform fee: 20%.
                     </p>
                   </div>
 
-                  <div style={{ height: 1, background: 'var(--border-default)' }} />
+                  <div style={{ height: 1, background: 'var(--aurora-glass-border)' }} />
 
                   {/* Connect Stripe button */}
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Payment Setup</p>
+                    <p className="aurora-eyebrow mb-3" style={{ color: 'var(--aurora-dim)' }}>Payment Setup</p>
                   {stripeStatus === 'connected' ? (
                     <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold"
-                      style={{ background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.3)', color: '#22c55e' }}
+                      style={{ background: 'rgba(167,236,218,0.12)', border: '1px solid rgba(167,236,218,0.35)', color: 'var(--aurora-mint)' }}
                     >
                       <Check className="w-4 h-4" />
                       Bank Account Connected — Payouts Active
@@ -720,13 +736,13 @@ export default function Profile() {
                   ) : stripeStatus === 'pending' ? (
                     <div>
                       <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold mb-2"
-                        style={{ background: 'rgba(252,224,114,0.1)', border: '1px solid rgba(252,224,114,0.3)', color: '#FCE072' }}
+                        style={{ background: 'rgba(252,224,114,0.1)', border: '1px solid rgba(252,224,114,0.3)', color: 'var(--aurora-heritage-gold)' }}
                       >
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Verification Pending — Stripe is reviewing your account
                       </div>
                       <div className="flex items-center gap-3 mb-2">
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>
                           This can take a few minutes.
                         </p>
                         <button
@@ -741,7 +757,7 @@ export default function Profile() {
                             });
                           }}
                           className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-md transition-colors"
-                          style={{ color: '#FCE072', background: 'rgba(252,224,114,0.08)', border: '1px solid rgba(252,224,114,0.2)', opacity: checkingStatus ? 0.6 : 1 }}
+                          style={{ color: 'var(--aurora-heritage-gold)', background: 'rgba(252,224,114,0.08)', border: '1px solid rgba(252,224,114,0.2)', opacity: checkingStatus ? 0.6 : 1 }}
                         >
                           {checkingStatus
                             ? <><Loader2 className="w-3 h-3 animate-spin" /> Checking...</>
@@ -750,7 +766,7 @@ export default function Profile() {
                         </button>
                       </div>
                       {stripeDetails && (stripeDetails.error || stripeDetails.requirements?.length > 0 || stripeDetails.disabled_reason) && (
-                        <div className="text-xs px-3 py-2 rounded-md mt-1" style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--text-muted)' }}>
+                        <div className="text-xs px-3 py-2 rounded-md mt-1" style={{ background: 'rgba(255,255,255,0.03)', color: 'var(--aurora-dim)' }}>
                           {stripeDetails.error && <p>Error: {stripeDetails.error}</p>}
                           {stripeDetails.disabled_reason && <p>Reason: {stripeDetails.disabled_reason}</p>}
                           {stripeDetails.requirements?.length > 0 && <p>Pending: {stripeDetails.requirements.join(', ')}</p>}
@@ -760,7 +776,7 @@ export default function Profile() {
                   ) : stripeStatus === 'error' ? (
                     <div>
                       <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold mb-2"
-                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
+                        style={{ background: 'rgba(255,130,128,0.10)', border: '1px solid rgba(255,130,128,0.30)', color: 'var(--aurora-rose)' }}
                       >
                         <AlertCircle className="w-4 h-4" />
                         Unable to verify — {stripeDetails?.error || 'Unknown error'}
@@ -775,7 +791,7 @@ export default function Profile() {
                           fetchReaderProfile().finally(() => setTimeout(() => setCheckingStatus(false), 1000));
                         }}
                         className="flex items-center gap-1 text-xs font-semibold px-3 py-1 rounded-md transition-colors"
-                        style={{ color: '#ef4444', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}
+                        style={{ color: 'var(--aurora-rose)', background: 'rgba(255,130,128,0.08)', border: '1px solid rgba(255,130,128,0.20)' }}
                       >
                         {checkingStatus ? <><Loader2 className="w-3 h-3 animate-spin" /> Retrying...</> : <><RefreshCw className="w-3 h-3" /> Retry</>}
                       </button>
@@ -783,7 +799,7 @@ export default function Profile() {
                   ) : stripeStatus === 'incomplete' ? (
                     <div>
                       <div className="flex items-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold mb-2"
-                        style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444' }}
+                        style={{ background: 'rgba(255,130,128,0.10)', border: '1px solid rgba(255,130,128,0.30)', color: 'var(--aurora-rose)' }}
                       >
                         <AlertCircle className="w-4 h-4" />
                         Setup Incomplete — Finish connecting your bank
@@ -804,7 +820,7 @@ export default function Profile() {
                             .catch(() => setConnectLoading(false));
                         }}
                         className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-                        style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
+                        style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: 'var(--aurora-mint)' }}
                       >
                         <ExternalLink className="w-4 h-4" />
                         {connectLoading ? 'Loading...' : 'Complete Setup'}
@@ -834,7 +850,7 @@ export default function Profile() {
                           });
                       }}
                       className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-                      style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
+                      style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: 'var(--aurora-mint)' }}
                     >
                       <ExternalLink className="w-4 h-4" />
                       {connectLoading ? 'Setting up...' : 'Connect Bank Account (Stripe)'}
@@ -851,10 +867,10 @@ export default function Profile() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Headshot */}
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Headshot <span className="text-[#7A5A18]">*</span></label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Headshot <span style={{ color: 'var(--aurora-accent-deep)' }}>*</span></label>
                   <div
                     onClick={() => headshotInputRef.current?.click()}
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#D4A85F] transition-colors" style={{ borderColor: 'var(--border-active)' }}
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors" style={{ borderColor: 'var(--aurora-line)' }}
                   >
                     {headshotPreview ? (
                       <img
@@ -864,9 +880,9 @@ export default function Profile() {
                       />
                     ) : (
                       <div className="py-4">
-                        <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
-                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Upload headshot</p>
-                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>JPG, PNG, WEBP</p>
+                        <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--aurora-dim)' }} />
+                        <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>Upload headshot</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>JPG, PNG, WEBP</p>
                       </div>
                     )}
                   </div>
@@ -883,27 +899,27 @@ export default function Profile() {
 
                 {/* Resume */}
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Resume (PDF)</label>
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--aurora-sub)' }}>Resume (PDF)</label>
                   <div
                     onClick={() => resumeInputRef.current?.click()}
-                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:border-[#D4A85F] transition-colors" style={{ borderColor: 'var(--border-active)' }}
+                    className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors" style={{ borderColor: 'var(--aurora-line)' }}
                   >
                     {resumeFile ? (
                       <div className="py-4">
-                        <Check className="w-8 h-8 mx-auto text-green-500 mb-2" />
-                        <p className="text-sm font-medium truncate" style={{ color: 'var(--text-secondary)' }}>{resumeFile.name}</p>
+                        <Check className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--aurora-mint)' }} />
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--aurora-sub)' }}>{resumeFile.name}</p>
                       </div>
                     ) : profile?.actor_profile?.resume_file ? (
                       <div className="py-4">
-                        <Check className="w-8 h-8 mx-auto text-green-500 mb-2" />
-                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Resume uploaded</p>
-                        <p className="text-xs text-[#7A5A18] mt-1">Click to replace</p>
+                        <Check className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--aurora-mint)' }} />
+                        <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>Resume uploaded</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--aurora-accent-deep)' }}>Click to replace</p>
                       </div>
                     ) : (
                       <div className="py-4">
-                        <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--text-muted)' }} />
-                        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Upload resume</p>
-                        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>PDF only</p>
+                        <Upload className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--aurora-dim)' }} />
+                        <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>Upload resume</p>
+                        <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>PDF only</p>
                       </div>
                     )}
                   </div>
@@ -923,7 +939,8 @@ export default function Profile() {
               <button
                 type="submit"
                 disabled={updateLoading}
-                className="px-6 py-2.5 bg-[#D4A85F] text-white font-medium rounded-lg hover:bg-[#C09850] transition-colors disabled:opacity-60 flex items-center gap-2"
+                className="px-6 py-2.5 font-medium rounded-lg transition-colors disabled:opacity-60 flex items-center gap-2"
+                style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-bg)' }}
               >
                 {updateLoading && <Loader2 className="w-4 h-4 animate-spin" />}
                 Save Changes
@@ -934,19 +951,19 @@ export default function Profile() {
       </div>
 
       {/* ── Achievements ─────────────────────────────────── */}
-      <div className="rounded-2xl p-6 mt-6" style={{ background: 'var(--bg-input)', border: '1px solid var(--border-default)' }}>
+      <div className="aurora-card p-6 mt-6" style={{ background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)' }}>
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Achievements</h2>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>Milestones earned from your audition activity</p>
+            <h2 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>Achievements</h2>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--aurora-dim)' }}>Milestones earned from your audition activity</p>
           </div>
           {auditionStats && (
             <div className="text-right">
-              <p className="text-2xl font-bold text-[#7A5A18]">
+              <p className="aurora-mono text-2xl font-bold" style={{ color: 'var(--aurora-accent-deep)' }}>
                 {BADGES.filter(b => b.check(auditionStats)).length}
-                <span className="text-base font-normal" style={{ color: 'var(--text-muted)' }}>/{BADGES.length}</span>
+                <span className="text-base font-normal" style={{ color: 'var(--aurora-dim)' }}>/{BADGES.length}</span>
               </p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>earned</p>
+              <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>earned</p>
             </div>
           )}
         </div>
@@ -956,17 +973,17 @@ export default function Profile() {
         ) : (
           /* Placeholder — show all locked until stats load */
           <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--text-muted)' }}>Start logging auditions to earn badges</h4>
+            <h4 className="aurora-eyebrow mb-3" style={{ color: 'var(--aurora-dim)' }}>Start logging auditions to earn badges</h4>
             <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
               {BADGES.map((b) => (
                 <div
                   key={b.id}
                   title={`${b.name}: ${b.desc}`}
                   className="flex flex-col items-center gap-1.5 p-3 rounded-xl opacity-50 grayscale"
-                  style={{ border: '1px solid var(--border-active)', background: 'var(--bg-surface)' }}
+                  style={{ border: '1px solid var(--aurora-line)', background: 'var(--aurora-glass)' }}
                 >
                   <span className="text-2xl">{b.emoji}</span>
-                  <span className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--text-secondary)' }}>{b.name}</span>
+                  <span className="text-[10px] font-bold text-center leading-tight" style={{ color: 'var(--aurora-sub)' }}>{b.name}</span>
                 </div>
               ))}
             </div>
@@ -992,7 +1009,7 @@ export default function Profile() {
           style={{
             background: 'rgba(255,130,128,0.10)',
             border: '1px solid rgba(255,130,128,0.35)',
-            color: 'var(--aurora-coral-deep, #C05957)',
+            color: 'var(--aurora-rose)',
           }}
         >
           <Trash2 size={16} />

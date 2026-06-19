@@ -146,25 +146,25 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
   // 100dvh tracks the visual viewport (shrinks when keyboard is up).
   return createPortal(
     <div
-      className="fixed inset-0 z-[1000] flex items-start justify-center bg-black/60"
-      style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 16px' }}
+      className="fixed inset-0 z-[1000] flex items-start justify-center"
+      style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 16px', background: 'rgba(48,41,31,0.32)' }}
     >
       <div
-        className="rounded-2xl p-6 w-full max-w-md border overflow-y-auto"
+        className="aurora-card p-6 w-full max-w-md overflow-y-auto"
         style={{
-          background: 'var(--bg-card)',
-          borderColor: 'var(--border-default)',
+          background: 'var(--aurora-glass-strong)',
+          borderColor: 'var(--aurora-glass-border)',
           maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 32px)',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
         }}
       >
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+          <h3 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>
             Upload Self-Tape
           </h3>
           <button onClick={onClose}>
-            <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+            <X className="w-5 h-5" style={{ color: 'var(--aurora-dim)' }} />
           </button>
         </div>
 
@@ -174,18 +174,18 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
           {iosNative && (
             <label
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer"
-              style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}
+              style={{ background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)' }}
             >
               <input
                 type="checkbox"
                 checked={saveLocallyFirst}
                 onChange={(e) => setSaveLocallyFirst(e.target.checked)}
-                className="w-4 h-4 accent-[#D4A85F]"
+                className="w-4 h-4 accent-[var(--aurora-heritage-gold)]"
               />
-              <span className="text-sm" style={{ color: 'var(--text-primary)' }}>
+              <span className="text-sm" style={{ color: 'var(--aurora-text)' }}>
                 Save locally first (faster)
               </span>
-              <span className="text-[11px] ml-auto" style={{ color: 'var(--text-muted)' }}>
+              <span className="text-[11px] ml-auto" style={{ color: 'var(--aurora-dim)' }}>
                 Uploads in the background
               </span>
             </label>
@@ -196,15 +196,15 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
               .click() on display:none inputs, so we keep the input in layout
               but visually hidden via opacity. */}
           <div>
-            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--aurora-sub)' }}>
               Video File *
             </label>
             <label
               className="block w-full rounded-xl px-4 py-3 text-sm text-left transition-colors cursor-pointer"
               style={{
-                background: 'var(--bg-surface)',
-                color: file ? 'var(--text-primary)' : 'var(--text-muted)',
-                border: '1px solid var(--border-default)',
+                background: 'var(--aurora-glass)',
+                color: file ? 'var(--aurora-text)' : 'var(--aurora-dim)',
+                border: '1px solid var(--aurora-glass-border)',
               }}
             >
               <input
@@ -216,7 +216,7 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
               />
               {file ? `${file.name} (${fileMb} MB)` : 'Choose a video file...'}
             </label>
-            <p className="mt-1.5 text-[11px]" style={{ color: 'var(--text-muted)' }}>
+            <p className="mt-1.5 text-[11px]" style={{ color: 'var(--aurora-dim)' }}>
               Max {maxMb} MB per tape
               {quota?.tape_count_cap != null && (
                 <> · {quota.tape_count}/{quota.tape_count_cap} tapes used on the {quota.plan} plan</>
@@ -226,7 +226,7 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
 
           {/* Title */}
           <div>
-            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--aurora-sub)' }}>
               Title *
             </label>
             <input
@@ -236,16 +236,16 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
               placeholder="e.g. Callback Take 2"
               className="w-full rounded-xl px-4 py-3 text-sm outline-none"
               style={{
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-default)',
+                background: 'var(--aurora-glass)',
+                color: 'var(--aurora-text)',
+                border: '1px solid var(--aurora-glass-border)',
               }}
             />
           </div>
 
           {/* Project Name */}
           <div>
-            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--aurora-sub)' }}>
               Project Name
             </label>
             <input
@@ -255,16 +255,16 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
               placeholder="e.g. The Morning Show"
               className="w-full rounded-xl px-4 py-3 text-sm outline-none"
               style={{
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-default)',
+                background: 'var(--aurora-glass)',
+                color: 'var(--aurora-text)',
+                border: '1px solid var(--aurora-glass-border)',
               }}
             />
           </div>
 
           {/* Role Name */}
           <div>
-            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--text-secondary)' }}>
+            <label className="text-sm font-medium mb-1.5 block" style={{ color: 'var(--aurora-sub)' }}>
               Role Name
             </label>
             <input
@@ -274,25 +274,25 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
               placeholder="e.g. Alex"
               className="w-full rounded-xl px-4 py-3 text-sm outline-none"
               style={{
-                background: 'var(--bg-surface)',
-                color: 'var(--text-primary)',
-                border: '1px solid var(--border-default)',
+                background: 'var(--aurora-glass)',
+                color: 'var(--aurora-text)',
+                border: '1px solid var(--aurora-glass-border)',
               }}
             />
           </div>
 
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && <p className="text-sm" style={{ color: 'var(--aurora-rose)' }}>{error}</p>}
 
           {uploading && !saveLocallyFirst && (
             <div>
-              <div className="flex items-center justify-between text-xs mb-1" style={{ color: 'var(--text-secondary)' }}>
+              <div className="flex items-center justify-between text-xs mb-1" style={{ color: 'var(--aurora-sub)' }}>
                 <span>Uploading…</span>
-                <span>{progress}%</span>
+                <span className="aurora-mono">{progress}%</span>
               </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--bg-surface)' }}>
+              <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--aurora-glass)' }}>
                 <div
                   className="h-full transition-all"
-                  style={{ width: `${progress}%`, background: '#D4A85F' }}
+                  style={{ width: `${progress}%`, background: 'var(--aurora-heritage-gold)' }}
                 />
               </div>
             </div>
@@ -304,9 +304,9 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
             onClick={onClose}
             className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors"
             style={{
-              background: 'var(--bg-surface)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border-default)',
+              background: 'var(--aurora-glass)',
+              color: 'var(--aurora-sub)',
+              border: '1px solid var(--aurora-glass-border)',
             }}
           >
             Cancel
@@ -314,7 +314,8 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
           <button
             onClick={handleSubmit}
             disabled={uploading || fileTooBig || !file || !title.trim()}
-            className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
           >
             {uploading
               ? (saveLocallyFirst ? 'Saving…' : `Uploading… ${progress}%`)
@@ -350,29 +351,29 @@ function SubmitModal({ tape, onClose }) {
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[1000] flex items-start justify-center bg-black/60"
-      style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 16px' }}
+      className="fixed inset-0 z-[1000] flex items-start justify-center"
+      style={{ padding: 'calc(env(safe-area-inset-top, 0px) + 16px) 16px 16px', background: 'rgba(48,41,31,0.32)' }}
     >
       <div
-        className="rounded-2xl p-6 w-full max-w-md border overflow-y-auto"
+        className="aurora-card p-6 w-full max-w-md overflow-y-auto"
         style={{
-          background: 'var(--bg-card)',
-          borderColor: 'var(--border-default)',
+          background: 'var(--aurora-glass-strong)',
+          borderColor: 'var(--aurora-glass-border)',
           maxHeight: 'calc(100dvh - env(safe-area-inset-top, 0px) - 32px)',
           WebkitOverflowScrolling: 'touch',
           overscrollBehavior: 'contain',
         }}
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+          <h3 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>
             Submit to Casting
           </h3>
           <button onClick={onClose}>
-            <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+            <X className="w-5 h-5" style={{ color: 'var(--aurora-dim)' }} />
           </button>
         </div>
 
-        <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm mb-4" style={{ color: 'var(--aurora-sub)' }}>
           Where are you submitting "{tape.title}"?
         </p>
 
@@ -383,14 +384,14 @@ function SubmitModal({ tape, onClose }) {
           placeholder="e.g. Sarah Jones Casting, Actors Access"
           className="w-full rounded-xl px-4 py-3 text-sm outline-none mb-4"
           style={{
-            background: 'var(--bg-surface)',
-            color: 'var(--text-primary)',
-            border: '1px solid var(--border-default)',
+            background: 'var(--aurora-glass)',
+            color: 'var(--aurora-text)',
+            border: '1px solid var(--aurora-glass-border)',
           }}
         />
 
         {done ? (
-          <p className="text-center text-sm text-[#A7ECDA] font-semibold py-3">
+          <p className="text-center text-sm text-[var(--aurora-mint)] font-semibold py-3">
             Submitted!
           </p>
         ) : (
@@ -399,9 +400,9 @@ function SubmitModal({ tape, onClose }) {
               onClick={onClose}
               className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors"
               style={{
-                background: 'var(--bg-surface)',
-                color: 'var(--text-secondary)',
-                border: '1px solid var(--border-default)',
+                background: 'var(--aurora-glass)',
+                color: 'var(--aurora-sub)',
+                border: '1px solid var(--aurora-glass-border)',
               }}
             >
               Cancel
@@ -409,7 +410,8 @@ function SubmitModal({ tape, onClose }) {
             <button
               onClick={handleSubmit}
               disabled={submitting || !submittedTo.trim()}
-              className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+              className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+              style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
@@ -428,7 +430,7 @@ function SyncChip({ syncState, progress, onRetry }) {
     return (
       <span
         className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-        style={{ background: 'rgba(167,236,218,0.15)', color: '#A7ECDA' }}
+        style={{ background: 'rgba(167,236,218,0.15)', color: 'var(--aurora-mint)' }}
       >
         <Check className="w-3 h-3" /> Synced
       </span>
@@ -438,7 +440,7 @@ function SyncChip({ syncState, progress, onRetry }) {
     return (
       <span
         className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-        style={{ background: 'rgba(212,168,95,0.18)', color: '#D4A85F' }}
+        style={{ background: 'rgba(212,168,95,0.18)', color: 'var(--aurora-heritage-gold)' }}
       >
         <Loader2 className="w-3 h-3 animate-spin" />
         Uploading… {Number.isFinite(progress) ? `${progress}%` : ''}
@@ -449,7 +451,7 @@ function SyncChip({ syncState, progress, onRetry }) {
     return (
       <span
         className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-        style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--text-muted)' }}
+        style={{ background: 'rgba(255,255,255,0.08)', color: 'var(--aurora-dim)' }}
       >
         Pending sync
       </span>
@@ -460,7 +462,7 @@ function SyncChip({ syncState, progress, onRetry }) {
       <button
         onClick={onRetry}
         className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
-        style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}
+        style={{ background: 'rgba(255,130,128,0.15)', color: 'var(--aurora-rose)' }}
       >
         <AlertCircle className="w-3 h-3" /> Failed — retry
       </button>
@@ -492,22 +494,29 @@ function TapeCard({
   };
   return (
     <div
-      className="rounded-2xl border overflow-hidden"
-      style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+      className="aurora-card overflow-hidden"
+      style={{ background: 'var(--aurora-glass-strong)', borderColor: 'var(--aurora-glass-border)' }}
     >
       {/* Video thumbnail / placeholder */}
-      <div className="relative h-40 bg-gradient-to-br from-[#1a1a2e] to-[#0f0f23] flex items-center justify-center">
+      <div
+        className="relative h-40 flex items-center justify-center"
+        style={{ background: 'linear-gradient(135deg, rgba(167,236,218,0.20), rgba(240,208,151,0.24))' }}
+      >
         {tape.thumbnail ? (
           <img src={tape.thumbnail} alt={tape.title} className="w-full h-full object-cover" />
         ) : (
-          <Film className="w-10 h-10 text-[#7A5A18]/40" />
+          <Film className="w-10 h-10" style={{ color: 'rgba(122,90,24,0.40)' }} />
         )}
         <button
           onClick={() => onPlay(tape)}
-          className="absolute inset-0 flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors group"
+          className="absolute inset-0 flex items-center justify-center transition-colors group"
+          style={{ background: 'rgba(48,41,31,0.18)' }}
         >
-          <div className="w-12 h-12 rounded-full bg-[#D4A85F]/90 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Play className="w-5 h-5 text-[#0A0A0A] ml-0.5" fill="white" />
+          <div
+            className="w-12 h-12 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform"
+            style={{ background: 'color-mix(in srgb, var(--aurora-heritage-gold) 90%, transparent)' }}
+          >
+            <Play className="w-5 h-5 ml-0.5" style={{ color: 'var(--aurora-text)' }} fill="currentColor" />
           </div>
         </button>
         {/* Sync chip overlays the thumbnail top-right */}
@@ -519,10 +528,11 @@ function TapeCard({
         {syncState === 'synced' && tape.hasLocalCopy && (
           <button
             onClick={(e) => { e.stopPropagation(); onFreeUpSpace?.(tape); }}
-            className="absolute top-2 left-2 p-1.5 rounded-full bg-black/40 hover:bg-black/60 transition-colors"
+            className="absolute top-2 left-2 p-1.5 rounded-full transition-colors"
+            style={{ background: 'var(--aurora-glass-strong)' }}
             title="Free up space — keep cloud copy, delete local cache"
           >
-            <HardDriveDownload className="w-3.5 h-3.5 text-white/80" />
+            <HardDriveDownload className="w-3.5 h-3.5" style={{ color: 'var(--aurora-text)' }} />
           </button>
         )}
       </div>
@@ -537,27 +547,27 @@ function TapeCard({
               onChange={(e) => setDraftTitle(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter') saveRename(); if (e.key === 'Escape') { setEditing(false); setDraftTitle(tape.title || ''); } }}
               className="flex-1 text-sm font-semibold px-2 py-1 rounded-md outline-none"
-              style={{ background: 'var(--bg-surface)', color: 'var(--text-primary)', border: '1px solid var(--border-default)' }}
+              style={{ background: 'var(--aurora-glass)', color: 'var(--aurora-text)', border: '1px solid var(--aurora-glass-border)' }}
             />
             <button type="button" title="Save" onClick={saveRename} onTouchEnd={(e) => { e.preventDefault(); saveRename(); }} style={_iconBtn}>
-              <Check className="w-4 h-4" style={{ color: '#7A5A18' }} />
+              <Check className="w-4 h-4" style={{ color: 'var(--aurora-accent-deep)' }} />
             </button>
             <button type="button" title="Cancel" onClick={() => { setEditing(false); setDraftTitle(tape.title || ''); }} onTouchEnd={(e) => { e.preventDefault(); setEditing(false); setDraftTitle(tape.title || ''); }} style={_iconBtn}>
-              <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+              <X className="w-4 h-4" style={{ color: 'var(--aurora-dim)' }} />
             </button>
           </div>
         ) : (
           <div className="flex items-start justify-between gap-2">
-            <h3 className="text-sm font-semibold truncate flex-1" style={{ color: 'var(--text-primary)' }}>
+            <h3 className="text-sm font-semibold truncate flex-1" style={{ color: 'var(--aurora-text)' }}>
               {tape.title}
             </h3>
             {!isLocalOnly && (
               <div className="flex items-center gap-0.5 shrink-0">
                 <button type="button" title="Rename" onClick={() => setEditing(true)} onTouchEnd={(e) => { e.preventDefault(); setEditing(true); }} style={_iconBtn}>
-                  <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                  <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--aurora-dim)' }} />
                 </button>
                 <button type="button" title="Delete" onClick={() => setConfirmDelete(true)} onTouchEnd={(e) => { e.preventDefault(); setConfirmDelete(true); }} style={_iconBtn}>
-                  <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+                  <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--aurora-dim)' }} />
                 </button>
               </div>
             )}
@@ -565,20 +575,20 @@ function TapeCard({
         )}
         {confirmDelete && (
           <div className="flex items-center gap-2 mt-2">
-            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>Delete this tape?</span>
+            <span className="text-xs" style={{ color: 'var(--aurora-sub)' }}>Delete this tape?</span>
             <button type="button" onClick={() => { setConfirmDelete(false); onDelete?.(tape); }} onTouchEnd={(e) => { e.preventDefault(); setConfirmDelete(false); onDelete?.(tape); }}
-              className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: 'var(--aurora-coral, #FF8280)', color: '#fff', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', border: 'none' }}>
+              className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: 'var(--aurora-rose)', color: 'var(--aurora-bg)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', border: 'none' }}>
               Delete
             </button>
             <button type="button" onClick={() => setConfirmDelete(false)} onTouchEnd={(e) => { e.preventDefault(); setConfirmDelete(false); }}
-              className="text-xs px-2 py-1" style={{ color: 'var(--text-muted)', background: 'transparent', border: 'none', touchAction: 'manipulation' }}>
+              className="text-xs px-2 py-1" style={{ color: 'var(--aurora-dim)', background: 'transparent', border: 'none', touchAction: 'manipulation' }}>
               Cancel
             </button>
           </div>
         )}
 
         {tape.project_name && (
-          <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-secondary)' }}>
+          <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--aurora-sub)' }}>
             {tape.project_name}
             {tape.role_name ? ` - ${tape.role_name}` : ''}
           </p>
@@ -587,16 +597,16 @@ function TapeCard({
         <div className="flex items-center gap-3 mt-2">
           {tape.duration && (
             <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
-              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+              <Clock className="w-3 h-3" style={{ color: 'var(--aurora-dim)' }} />
+                <span className="aurora-mono text-[11px]" style={{ color: 'var(--aurora-dim)' }}>
                 {tape.duration}
               </span>
             </div>
           )}
           {tape.created_at && (
             <div className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" style={{ color: 'var(--text-muted)' }} />
-              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
+              <Calendar className="w-3 h-3" style={{ color: 'var(--aurora-dim)' }} />
+              <span className="aurora-mono text-[11px]" style={{ color: 'var(--aurora-dim)' }}>
                 {new Date(tape.created_at).toLocaleDateString('en-US', {
                   month: 'short',
                   day: 'numeric',
@@ -611,9 +621,9 @@ function TapeCard({
             onClick={() => onPlay(tape)}
             className="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
             style={{
-              background: 'var(--bg-surface)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-default)',
+              background: 'var(--aurora-glass)',
+              color: 'var(--aurora-text)',
+              border: '1px solid var(--aurora-glass-border)',
             }}
           >
             <Play className="w-3.5 h-3.5" />
@@ -622,7 +632,8 @@ function TapeCard({
           <button
             onClick={() => onSubmitCasting(tape)}
             disabled={isLocalOnly}
-            className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+            className="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+            style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
           >
             <Send className="w-3.5 h-3.5" />
             Submit
@@ -823,11 +834,11 @@ export default function SelfTapes() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)' }}>
             My Self-Tapes
           </h1>
           {quota && (
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+            <p className="aurora-mono text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>
               {quota.tape_count}
               {quota.tape_count_cap != null && ` / ${quota.tape_count_cap}`}
               {' tapes · '}
@@ -839,7 +850,8 @@ export default function SelfTapes() {
         </div>
         <button
           onClick={() => setShowUpload(true)}
-          className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
+          className="text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
+          style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
         >
           <Upload className="w-4 h-4" />
           Upload
@@ -851,23 +863,24 @@ export default function SelfTapes() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="animate-pulse rounded-2xl h-64"
-              style={{ background: 'var(--bg-card)' }}
+              className="aurora-card animate-pulse h-64"
+              style={{ background: 'var(--aurora-glass-strong)' }}
             />
           ))}
         </div>
       ) : mergedTapes.length === 0 ? (
         <div
-          className="rounded-2xl p-12 border text-center"
-          style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+          className="aurora-card p-12 text-center"
+          style={{ background: 'var(--aurora-glass-strong)', borderColor: 'var(--aurora-glass-border)' }}
         >
-          <Film className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <Film className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--aurora-dim)' }} />
+          <p className="text-sm" style={{ color: 'var(--aurora-dim)' }}>
             No self-tapes yet. Upload your first recording!
           </p>
           <button
             onClick={() => setShowUpload(true)}
-            className="mt-4 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+            className="mt-4 text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+            style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
           >
             Upload Self-Tape
           </button>
