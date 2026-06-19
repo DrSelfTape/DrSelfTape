@@ -79,64 +79,71 @@ function introOfferLabel(intro) {
   return `${intro.priceString} for first ${intro.value} ${plural}`;
 }
 
-/* Before/After comparison rings — "Without Pro" 3% vs "With Pro" 17% callback rate */
-function ComparisonRings() {
-  const r = 38;
+/* Mini callback-rate ring used inside each comparison card. */
+function MiniRing({ pct, color, track, label }) {
+  const r = 30;
   const c = 2 * Math.PI * r;
-  const arc = (pct) => c * (1 - pct);
   return (
-    <div className="aurora-card" style={{
-      padding: '18px 16px', marginBottom: 18,
-      display: 'flex', alignItems: 'stretch', gap: 12,
+    <svg width="74" height="74" viewBox="0 0 74 74" style={{ display: 'block', margin: '0 auto' }}>
+      <circle cx="37" cy="37" r={r} stroke={track} strokeWidth="7" fill="none" />
+      <circle cx="37" cy="37" r={r} stroke={color} strokeWidth="7" fill="none"
+        strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} transform="rotate(-90 37 37)" />
+      <text x="37" y="42" textAnchor="middle" style={{
+        fontFamily: "'JetBrains Mono', monospace", fontSize: 17, fontWeight: 500, fill: color,
+      }}>{label}</text>
+    </svg>
+  );
+}
+
+/* One side of the before/after comparison — Aurora-native (no stock art):
+   eyebrow → mini callback ring → 7-day "week bars" → a one-line verdict. */
+function CompareCard({ kind }) {
+  const before = kind === 'before';
+  const bars = before ? [4, 2, 5, 1, 3, 0, 2] : [12, 18, 14, 22, 17, 20, 24];
+  const max = before ? 5 : 24;
+  return (
+    <div style={{
+      borderRadius: 20, padding: '16px 16px 18px', position: 'relative', overflow: 'hidden', minHeight: 230,
+      background: before ? 'rgba(255,255,255,0.5)' : 'linear-gradient(160deg, var(--aurora-heritage-gold), #F0D097)',
+      border: `1px solid ${before ? 'var(--aurora-line)' : 'rgba(255,255,255,0.5)'}`,
+      boxShadow: before ? 'none' : '0 14px 34px rgba(212,168,95,0.27)',
+      filter: before ? 'grayscale(0.5)' : 'none',
     }}>
-      {/* Without Pro */}
+      <div className="aurora-mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: before ? 'var(--aurora-dim)' : 'rgba(26,20,8,0.7)' }}>
+        {before ? 'WITHOUT PRO' : 'WITH PRO'}
+      </div>
+      <div style={{ margin: '14px 0' }}>
+        <MiniRing
+          pct={before ? 0.03 : 0.17}
+          color={before ? 'rgba(10,10,10,0.35)' : '#1A1408'}
+          track={before ? 'rgba(10,10,10,0.08)' : 'rgba(255,255,255,0.4)'}
+          label={before ? '3%' : '17%'}
+        />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, height: 38 }}>
+        {bars.map((v, i) => (
+          <div key={i} style={{
+            width: 7, height: `${Math.max(8, (v / max) * 38)}px`, borderRadius: 3,
+            background: before ? 'rgba(10,10,10,0.2)' : '#1A1408', opacity: before ? 0.6 : 0.9,
+          }} />
+        ))}
+      </div>
       <div style={{
-        flex: 1, textAlign: 'center', padding: '10px 4px',
-        opacity: 0.55, position: 'relative',
+        fontSize: 12, fontWeight: 600, letterSpacing: '-0.2px', marginTop: 14, lineHeight: 1.35,
+        color: before ? 'var(--aurora-sub)' : '#1A1408',
       }}>
-        <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 8 }}>WITHOUT PRO</span>
-        <svg width="86" height="86" viewBox="0 0 86 86" style={{ display: 'block', margin: '0 auto' }}>
-          <circle cx="43" cy="43" r={r} stroke="rgba(10,10,10,0.10)" strokeWidth="7" fill="none" />
-          <circle cx="43" cy="43" r={r} stroke="var(--aurora-dim)" strokeWidth="7" fill="none"
-            strokeLinecap="round" strokeDasharray={c} strokeDashoffset={arc(0.03)} transform="rotate(-90 43 43)" />
-          <text x="43" y="48" textAnchor="middle" style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500,
-            fill: 'var(--aurora-sub)',
-          }}>3%</text>
-        </svg>
-        <div className="aurora-mono" style={{ fontSize: 10, color: 'var(--aurora-dim)', marginTop: 6 }}>
-          callback rate
-        </div>
+        {before ? 'Guessing in the dark. Tapes pile up, callbacks stall.' : 'Sharper reads, more callbacks, a habit that compounds.'}
       </div>
-      {/* Arrow */}
-      <div style={{ display: 'flex', alignItems: 'center', color: 'var(--aurora-heritage-gold)' }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M5 12h14M13 5l7 7-7 7" />
-        </svg>
-      </div>
-      {/* With Pro */}
-      <div style={{
-        flex: 1, textAlign: 'center', padding: '10px 4px',
-        background: 'linear-gradient(160deg, rgba(212,168,95,0.16), rgba(212,168,95,0.05))',
-        borderRadius: 16, border: '1px solid rgba(212,168,95,0.30)',
-      }}>
-        <span className="aurora-eyebrow" style={{
-          display: 'block', marginBottom: 8, color: 'var(--aurora-accent-deep)',
-        }}>WITH PRO</span>
-        <svg width="86" height="86" viewBox="0 0 86 86" style={{ display: 'block', margin: '0 auto' }}>
-          <circle cx="43" cy="43" r={r} stroke="rgba(10,10,10,0.08)" strokeWidth="7" fill="none" />
-          <circle cx="43" cy="43" r={r} stroke="var(--aurora-heritage-gold)" strokeWidth="7" fill="none"
-            strokeLinecap="round" strokeDasharray={c} strokeDashoffset={arc(0.17)} transform="rotate(-90 43 43)"
-            style={{ filter: 'drop-shadow(0 0 6px rgba(212,168,95,0.5))' }} />
-          <text x="43" y="48" textAnchor="middle" style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 18, fontWeight: 500,
-            fill: 'var(--aurora-text)',
-          }}>17%</text>
-        </svg>
-        <div className="aurora-mono" style={{ fontSize: 10, color: 'var(--aurora-accent-deep)', marginTop: 6 }}>
-          callback rate
-        </div>
-      </div>
+    </div>
+  );
+}
+
+/* Before/After comparison — "Without Pro" 3% vs "With Pro" 17% callback rate. */
+function ComparisonRings() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
+      <CompareCard kind="before" />
+      <CompareCard kind="after" />
     </div>
   );
 }
