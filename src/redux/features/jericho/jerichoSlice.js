@@ -3,6 +3,7 @@
  * Redux slice for actor memory, session logs, insights, and evolution metrics.
  */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import rawAxios from 'axios';
 import axios from '../../http';
 import endPoints from '../../constant';
 import { trackEvent, Events } from '../../../utils/analytics';
@@ -199,40 +200,84 @@ export const reviewTape = createAsyncThunk(
   async ({ video, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
     const startedAt = Date.now();
     let lastLoaded = 0, lastTotal = 0;
+    const onUploadProgress = (e) => {
+      lastLoaded = e.loaded || 0; lastTotal = e.total || 0;
+      if (e.total) dispatch(setUploadProgress(Math.min(100, Math.round((e.loaded / e.total) * 100))));
+    };
     try {
-      const fd = new FormData();
-      fd.append('video', video);
-      if (sides) fd.append('sides', sides);
-      if (role) fd.append('role', role);
-      if (tone) fd.append('tone', tone);
       dispatch(setUploadProgress(0));
-      const { data } = await axios.post(endPoints.jerichoTapeReview, fd, {
-        // Do NOT set Content-Type — the browser must set multipart/form-data
-        // WITH the boundary for a FormData body (a manual header omits it).
-        headers: {
-          // Stable per-action key → a retried submit after a lost response
-          // dedupes on the BE instead of double-charging a token (F2).
-          ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}),
-        },
-        // A 100MB+ tape over a slow mobile uplink can take MINUTES just to
-        // upload; the old 120s timeout aborted it client-side before the body
-        // finished (the failure was the transfer, not the analysis — that's why
-        // the server only ever logged the CORS preflight). 15 min covers ~1Mbps.
-        // Durable fix is direct-to-R2 upload (Stage 2).
-        timeout: 900000,
-        onUploadProgress: (e) => {
-          lastLoaded = e.loaded || 0; lastTotal = e.total || 0;
-          if (e.total) dispatch(setUploadProgress(Math.min(100, Math.round((e.loaded / e.total) * 100))));
-        },
-        signal,
-      });
+
+      // ── Stage 2: direct-to-R2 upload ──────────────────────────────────────
+      // Push the (often 100MB+) video STRAIGHT to Cloudflare R2 via a presigned
+      // PUT, bypassing the Django app + Railway edge entirely. The old path
+      // streamed the whole body THROUGH the app server, which timed out / got
+      // cut on large tapes (the server only ever logged the CORS preflight).
+      // Then hand the BE just the R2 key to analyze. If presign or the R2 PUT
+      // fails for any reason, fall back to the direct multipart upload below so
+      // this can never be a hard regression.
+      let r2Key = null;
+      try {
+        const contentType = video?.type || 'application/octet-stream';
+        const { data: presign } = await axios.post(endPoints.jerichoTapeReviewPresign, {
+          filename: video?.name || 'tape.mov',
+          content_type: contentType,
+        }, { signal });
+        const info = presign?.data || presign || {};
+        if (info.upload_url && info.key) {
+          // Raw axios (no API interceptors / auth headers) — extra headers can
+          // break the presigned signature. PUT with the exact signed Content-Type.
+          await rawAxios.put(info.upload_url, video, {
+            headers: { 'Content-Type': info.content_type || contentType },
+            timeout: 900000,
+            onUploadProgress,
+            signal,
+          });
+          r2Key = info.key;
+        }
+      } catch {
+        r2Key = null; // presign / R2 PUT failed → fall back to direct upload
+      }
+
+      let data;
+      if (r2Key) {
+        // Small request: the BE pulls the already-uploaded object from R2.
+        const fd = new FormData();
+        fd.append('r2_key', r2Key);
+        if (sides) fd.append('sides', sides);
+        if (role) fd.append('role', role);
+        if (tone) fd.append('tone', tone);
+        dispatch(setUploadProgress(100));
+        ({ data } = await axios.post(endPoints.jerichoTapeReview, fd, {
+          // Stable per-action key → a retried submit dedupes on the BE instead
+          // of double-charging a token (F2).
+          headers: { ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
+          timeout: 900000,
+          signal,
+        }));
+      } else {
+        // Fallback: direct multipart upload through the app server (the body
+        // streams through Django). Do NOT set Content-Type — the browser must
+        // set multipart/form-data WITH the boundary for a FormData body.
+        const fd = new FormData();
+        fd.append('video', video);
+        if (sides) fd.append('sides', sides);
+        if (role) fd.append('role', role);
+        if (tone) fd.append('tone', tone);
+        ({ data } = await axios.post(endPoints.jerichoTapeReview, fd, {
+          headers: { ...(idempotencyKey ? { 'Idempotency-Key': idempotencyKey } : {}) },
+          timeout: 900000,
+          onUploadProgress,
+          signal,
+        }));
+      }
+
       const result = await resolveAnalysis(data?.data || data, { signal });
       // An empty/partial body charges a token but has nothing to show — take the
       // clean error path instead of fulfilling a hollow result (BUG 3).
       if (!tapeReviewHasContent(result)) {
         return rejectWithValue('This review came back incomplete — your token was refunded. Please try again.');
       }
-      trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role });
+      trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role, via: r2Key ? 'r2' : 'direct' });
       return result;
     } catch (err) {
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
