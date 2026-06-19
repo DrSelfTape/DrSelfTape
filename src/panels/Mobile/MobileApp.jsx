@@ -1816,7 +1816,7 @@ function AuditionsScreen() {
           reads as a compact tracker summary rather than a hero. */}
       <div style={{ marginBottom: 8 }}>
         <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: -44 }}>
-          <V1HeroGraph data={buildHeroData(auditions)} onSubmitFirst={() => {}} />
+          <V1HeroGraph data={buildHeroData(auditions)} onSubmitFirst={() => setShowAddForm(true)} />
         </div>
       </div>
 
