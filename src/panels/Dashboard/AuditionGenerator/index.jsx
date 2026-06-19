@@ -9,24 +9,24 @@ import { openExternal } from '../../../utils/openExternal';
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS — Aurora light
    ═══════════════════════════════════════════════════ */
-const BG          = 'transparent';
-const BG_CARD     = '#FFFFFF';
-const BG_CHIP     = '#F4F4EE';
-const BG_ELEVATED = '#FFFFFF';
-const BORDER      = 'rgba(10,10,10,0.06)';
-const BORDER_ACT  = 'rgba(10,10,10,0.14)';
-const TEXT        = '#0A0A0A';
-const TEXT2       = 'rgba(10,10,10,0.62)';
-const LABEL_COLOR = '#7A5A18';   // deep gold — section labels
-const SELECTED    = '#7A5A18';   // deep gold — selected chip text/border
-const SELECTED_BG = 'rgba(212,168,95,0.18)';
-const SELECTED_BD = 'rgba(212,168,95,0.45)';
-const MINT        = '#9FE6B4';
+const BG          = 'var(--aurora-bg)';
+const BG_CARD     = 'var(--aurora-glass)';
+const BG_CHIP     = 'var(--aurora-glass-strong)';
+const BG_ELEVATED = 'var(--aurora-surface-solid)';
+const BORDER      = 'var(--aurora-line)';
+const BORDER_ACT  = 'var(--aurora-line)';
+const TEXT        = 'var(--aurora-text)';
+const TEXT2       = 'var(--aurora-sub)';
+const LABEL_COLOR = 'var(--aurora-accent-deep)';   // deep gold — section labels
+const SELECTED    = 'var(--aurora-accent-deep)';   // deep gold — selected chip text/border
+const SELECTED_BG = 'rgba(212,168,95,0.14)';
+const SELECTED_BD = 'rgba(212,168,95,0.38)';
+const MINT        = 'var(--aurora-mint)';
 const MINT_BG     = 'rgba(159,230,180,0.18)';
 const MINT_BD     = 'rgba(159,230,180,0.45)';
 
 /* Button gradient: antique gold spectrum, Aurora light theme */
-const BTN_GRADIENT = 'linear-gradient(135deg, #F0D097 0%, #D4A85F 60%, #7A5A18 100%)';
+const BTN_GRADIENT = 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 60%, var(--aurora-accent-deep) 100%)';
 const BTN_TEXT     = '#FFFFFF';
 
 /* ═══════════════════════════════════════════════════
@@ -50,7 +50,7 @@ function SectionLabel({ text }) {
   return (
     <p style={{
       fontSize: 11, fontWeight: 600, color: LABEL_COLOR, margin: '0 0 10px',
-      textTransform: 'uppercase', letterSpacing: '0.8px',
+      textTransform: 'uppercase', letterSpacing: '0.8px', fontFamily: "'JetBrains Mono', ui-monospace, monospace",
     }}>
       {text}
     </p>
@@ -104,7 +104,8 @@ function Badge({ text, color }) {
   return (
     <span style={{
       fontSize: 10, fontWeight: 600, padding: '3px 10px', borderRadius: 6,
-      background: `${color}15`, color, textTransform: 'uppercase', letterSpacing: '0.5px',
+      background: `color-mix(in srgb, ${color} 14%, transparent)`, color, textTransform: 'uppercase', letterSpacing: '0.5px',
+      fontFamily: "'JetBrains Mono', ui-monospace, monospace",
     }}>
       {text}
     </span>
@@ -221,9 +222,9 @@ export default function AuditionGenerator() {
   };
 
   return (
-    <div style={{ background: BG, minHeight: '100%', fontFamily: "'Poppins', sans-serif", color: TEXT }}>
+    <div style={{ background: BG, minHeight: '100%', fontFamily: "'Space Grotesk', sans-serif", color: TEXT }}>
       <link
-        href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
         rel="stylesheet"
       />
       <style>{`
@@ -276,8 +277,8 @@ export default function AuditionGenerator() {
             {/* ── Error ── */}
             {error && (
               <div style={{
-                background: 'rgba(200,50,50,0.12)', border: '1px solid rgba(200,50,50,0.3)',
-                color: '#f87171', borderRadius: 12, padding: '12px 16px', fontSize: 13,
+                background: 'rgba(255,179,193,0.18)', border: '1px solid rgba(255,179,193,0.45)',
+                color: 'var(--aurora-accent-deep)', borderRadius: 12, padding: '12px 16px', fontSize: 13,
               }}>
                 {error}
               </div>
@@ -301,7 +302,7 @@ export default function AuditionGenerator() {
                 <>
                   <span style={{
                     width: 18, height: 18, borderRadius: '50%',
-                    border: '2px solid rgba(0,0,0,0.2)', borderTopColor: '#0d0d0d',
+                    border: '2px solid rgba(255,255,255,0.45)', borderTopColor: 'var(--aurora-text)',
                     animation: 'spin 0.8s linear infinite', display: 'inline-block', flexShrink: 0,
                   }} />
                   {LOADING_MSGS[loadingIdx]}
@@ -328,10 +329,11 @@ export default function AuditionGenerator() {
               background: BG_CARD, borderRadius: 16, padding: '18px',
               border: `1px solid ${BORDER}`, marginBottom: 16,
               maxHeight: 420, overflowY: 'auto',
+              boxShadow: 'var(--aurora-shadow-card)',
             }}>
               <p style={{
                 fontSize: 13, color: TEXT, margin: 0,
-                lineHeight: 1.8, fontFamily: 'monospace', whiteSpace: 'pre-wrap',
+                lineHeight: 1.8, fontFamily: "'JetBrains Mono', ui-monospace, monospace", whiteSpace: 'pre-wrap',
               }}>
                 {scene}
               </p>
@@ -378,7 +380,7 @@ export default function AuditionGenerator() {
                   {loading ? (
                     <span style={{
                       width: 14, height: 14, borderRadius: '50%',
-                      border: '2px solid rgba(0,0,0,0.2)', borderTopColor: '#0d0d0d',
+                      border: '2px solid rgba(255,255,255,0.45)', borderTopColor: 'var(--aurora-text)',
                       animation: 'spin 0.8s linear infinite', display: 'inline-block',
                     }} />
                   ) : 'Regenerate'}

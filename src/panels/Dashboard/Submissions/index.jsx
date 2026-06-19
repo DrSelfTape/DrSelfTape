@@ -16,11 +16,11 @@ import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/audit
 const STATUS_TABS = ['all', 'sent', 'viewed', 'callback', 'booked', 'passed'];
 
 const STATUS_BADGE = {
-  sent: 'bg-blue-500/10 text-blue-400',
-  viewed: 'bg-purple-500/10 text-purple-400',
-  callback: 'bg-orange-500/10 text-orange-400',
-  passed: 'bg-[#F4F4EE] text-[rgba(10,10,10,0.4)]',
-  booked: 'bg-green-500/10 text-green-400',
+  sent: 'bg-[rgba(167,214,255,0.22)] text-[#2f6f9f]',
+  viewed: 'bg-[rgba(216,197,242,0.24)] text-[#7658a8]',
+  callback: 'bg-[rgba(255,201,163,0.28)] text-[#9b5a20]',
+  passed: 'bg-[var(--aurora-glass-strong)] text-[rgba(10,10,10,0.4)]',
+  booked: 'bg-[rgba(159,230,180,0.24)] text-[#3f8051]',
 };
 
 const STATUS_LABELS = {
@@ -32,12 +32,12 @@ const STATUS_LABELS = {
 };
 
 const VIA_BADGE = {
-  self_submitted: 'bg-[#F4F4EE] text-[rgba(10,10,10,0.62)]',
-  agent: 'bg-blue-500/10 text-blue-400',
-  manager: 'bg-purple-500/10 text-purple-400',
-  casting_network: 'bg-orange-500/10 text-orange-400',
-  actors_access: 'bg-amber-500/10 text-amber-400',
-  other: 'bg-[#F4F4EE] text-[rgba(10,10,10,0.4)]',
+  self_submitted: 'bg-[var(--aurora-glass-strong)] text-[rgba(10,10,10,0.62)]',
+  agent: 'bg-[rgba(167,214,255,0.22)] text-[#2f6f9f]',
+  manager: 'bg-[rgba(216,197,242,0.24)] text-[#7658a8]',
+  casting_network: 'bg-[rgba(255,201,163,0.28)] text-[#9b5a20]',
+  actors_access: 'bg-[rgba(212,168,95,0.16)] text-[#7A5A18]',
+  other: 'bg-[var(--aurora-glass-strong)] text-[rgba(10,10,10,0.4)]',
 };
 
 const VIA_LABELS = {
@@ -103,13 +103,13 @@ function formatDateTime(iso) {
 // --- Skeleton ---
 
 const SkeletonCard = () => (
-  <div className="bg-white rounded-xl shadow-sm p-4 animate-pulse">
+  <div className="aurora-card rounded-xl p-4 animate-pulse">
     <div className="flex justify-between mb-3">
-      <div className="h-5 bg-[#F4F4EE] rounded w-1/3" />
-      <div className="h-5 bg-[#F4F4EE] rounded w-16" />
+      <div className="h-5 bg-[var(--aurora-glass-strong)] rounded w-1/3" />
+      <div className="h-5 bg-[var(--aurora-glass-strong)] rounded w-16" />
     </div>
-    <div className="h-4 bg-[#F4F4EE] rounded w-1/2 mb-2" />
-    <div className="h-3 bg-[#F4F4EE] rounded w-2/3" />
+    <div className="h-4 bg-[var(--aurora-glass-strong)] rounded w-1/2 mb-2" />
+    <div className="h-3 bg-[var(--aurora-glass-strong)] rounded w-2/3" />
   </div>
 );
 
@@ -241,7 +241,7 @@ export default function Submissions() {
           <button
             onClick={() => setShowImporter(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-full font-semibold text-xs transition-all cursor-pointer border whitespace-nowrap"
-            style={{ borderColor: 'rgba(212,168,95,0.45)', color: '#7A5A18', background: 'rgba(212,168,95,0.10)' }}
+            style={{ borderColor: 'rgba(212,168,95,0.45)', color: 'var(--aurora-accent-deep)', background: 'rgba(212,168,95,0.10)' }}
           >
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -251,7 +251,7 @@ export default function Submissions() {
           <button
             onClick={openCreate}
             className="flex items-center gap-1.5 px-3 py-2 rounded-full text-white font-semibold text-xs transition-colors cursor-pointer whitespace-nowrap"
-            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', boxShadow: '0 4px 14px rgba(212,168,95,0.30)' }}
+            style={{ background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-accent-deep))', boxShadow: '0 4px 14px rgba(212,168,95,0.30)' }}
           >
             <svg
               className="w-3.5 h-3.5"
@@ -296,7 +296,7 @@ export default function Submissions() {
                     ? 'border-b-2 text-[#0A0A0A]'
                     : 'text-[rgba(10,10,10,0.4)] hover:text-[rgba(10,10,10,0.62)]'
                 }`}
-                style={activeTab === tab ? { borderColor: '#D4A85F' } : undefined}
+                style={activeTab === tab ? { borderColor: 'var(--aurora-heritage-gold)' } : undefined}
               >
                 {tab} ({count})
               </button>
@@ -307,7 +307,8 @@ export default function Submissions() {
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value)}
-          className="self-start sm:self-auto text-sm border border-[rgba(10,10,10,0.14)] bg-[#F4F4EE] text-[#0A0A0A] rounded-lg px-3 py-1.5 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none"
+        className="self-start sm:self-auto text-sm border border-[rgba(10,10,10,0.14)] text-[#0A0A0A] rounded-lg px-3 py-1.5 focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none"
+        style={{ background: 'var(--aurora-glass-strong)' }}
         >
           {SORT_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -343,7 +344,7 @@ export default function Submissions() {
           <button
             onClick={openCreate}
             className="mt-4 inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-[#0A0A0A] font-medium text-sm"
-            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', boxShadow: '0 4px 14px rgba(212,168,95,0.30)' }}
+            style={{ background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-accent-deep))', boxShadow: '0 4px 14px rgba(212,168,95,0.30)' }}
           >
             Log Your First Submission
           </button>
@@ -353,7 +354,7 @@ export default function Submissions() {
           {sorted.map((sub) => (
             <div
               key={sub.id}
-              className="bg-white rounded-xl shadow-sm border border-[rgba(10,10,10,0.08)] p-4 hover:shadow-md transition-shadow"
+              className="aurora-card rounded-xl p-4 transition-shadow"
             >
               <div className="flex items-start justify-between mb-2">
                 <div className="flex-1 min-w-0">
@@ -424,14 +425,14 @@ export default function Submissions() {
                 </p>
               )}
 
-              <div className="flex items-center justify-between pt-3 border-t border-[#1E1E1E] mt-3">
+              <div className="flex items-center justify-between pt-3 border-t border-[rgba(10,10,10,0.06)] mt-3">
                 {/* Promote to Audition */}
                 {sub.status !== 'viewed' && sub.status !== 'callback' && sub.status !== 'booked' ? (
                   <button
                     onClick={() => handlePromote(sub.id)}
                     disabled={promotingId === sub.id}
                     className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-all cursor-pointer disabled:opacity-50"
-                    style={{ background: 'rgba(212,168,95,0.18)', color: '#7A5A18', border: '1px solid rgba(212,168,95,0.35)' }}
+                    style={{ background: 'rgba(212,168,95,0.18)', color: 'var(--aurora-accent-deep)', border: '1px solid rgba(212,168,95,0.35)' }}
                   >
                     {promotingId === sub.id ? (
                       <>
@@ -443,7 +444,7 @@ export default function Submissions() {
                     )}
                   </button>
                 ) : (
-                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-green-500/10 text-green-400 border border-green-500/20">
+                  <span className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[rgba(159,230,180,0.24)] text-[#3f8051] border border-[rgba(159,230,180,0.40)]">
                     ✓ In Audition Tracker
                   </span>
                 )}
@@ -470,8 +471,8 @@ export default function Submissions() {
 
       {/* Log / Edit Submission Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-[rgba(10,10,10,0.24)] z-50 flex items-center justify-center p-4">
+          <div className="aurora-card rounded-2xl w-full max-w-lg p-6 max-h-[90vh] overflow-y-auto" style={{ boxShadow: 'var(--aurora-shadow-modal)' }}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-[#0A0A0A]">
                 {editingId ? 'Edit Submission' : 'Log Submission'}
@@ -678,7 +679,7 @@ export default function Submissions() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-3 text-sm font-semibold text-[rgba(10,10,10,0.62)] bg-[#F4F4EE] hover:bg-[#3A3A3A] rounded-lg transition-colors cursor-pointer"
+                  className="flex-1 px-4 py-3 text-sm font-semibold text-[rgba(10,10,10,0.62)] bg-[#F4F4EE] rounded-lg transition-colors cursor-pointer"
                 >
                   Cancel
                 </button>

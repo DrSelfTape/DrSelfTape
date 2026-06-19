@@ -143,21 +143,22 @@ export default function SceneStudy() {
     <div className="max-w-5xl mx-auto px-2">
       {/* Live Study Mode Banner — hidden in v2 layout (tabs replace it) */}
       {!useV2 && (step === 'practice' || step === 'pick-role') && selectedRole && (
-        <div className="mb-4 sm:mb-6 bg-gradient-to-r from-[#1a1a2e] via-[#16213e] to-[#0f0f23] rounded-2xl p-5 border border-[#2a2a4a] relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_rgba(255,107,53,0.12),_transparent_60%)]" />
+        <div className="mb-4 sm:mb-6 rounded-2xl p-5 border relative overflow-hidden aurora-card">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_rgba(212,168,95,0.16),_transparent_60%)]" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="bg-[#D4A85F] text-white text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">New</span>
-                <h3 className="text-white font-bold text-base">Live Study Mode</h3>
+                <span className="text-[#0A0A0A] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: 'var(--aurora-heritage-gold)' }}>New</span>
+                <h3 className="font-bold text-base" style={{ color: 'var(--aurora-text)' }}>Live Study Mode</h3>
               </div>
-              <p className="text-gray-400 text-sm">
+              <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>
                 Hands-free real-time AI scene partner. Say your lines — the AI responds with voice instantly.
               </p>
             </div>
             <button
               onClick={() => setStep('live')}
-              className="bg-[#D4A85F] hover:bg-[#C09850] text-white font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 hover:shadow-lg hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+              className="font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer flex items-center justify-center gap-2 text-sm w-full sm:w-auto"
+              style={{ background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light), var(--aurora-heritage-gold), var(--aurora-accent-deep))', color: '#fff', boxShadow: 'var(--aurora-shadow-coral)' }}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
@@ -176,15 +177,16 @@ export default function SceneStudy() {
             <div
               className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                 i <= currentStepIdx
-                  ? 'bg-[#D4A85F] text-white'
-                  : 'bg-[#2A2A2A] text-[#666666]'
+                  ? 'text-white'
+                  : 'text-[rgba(10,10,10,0.4)]'
               }`}
+              style={{ background: i <= currentStepIdx ? 'var(--aurora-heritage-gold)' : 'var(--aurora-glass-strong)', border: '1px solid var(--aurora-line)' }}
             >
               {i + 1}
             </div>
             <span
               className={`text-sm font-medium hidden sm:inline ${
-                i <= currentStepIdx ? 'text-white' : 'text-[#666666]'
+                i <= currentStepIdx ? 'text-[#0A0A0A]' : 'text-[rgba(10,10,10,0.4)]'
               }`}
             >
               {STEP_LABELS[i]}
@@ -192,7 +194,7 @@ export default function SceneStudy() {
             {i < STEPS.length - 1 && (
               <div
                 className={`w-8 h-0.5 ${
-                  i < currentStepIdx ? 'bg-[#D4A85F]' : 'bg-[#2A2A2A]'
+                  i < currentStepIdx ? 'bg-[#D4A85F]' : 'bg-[rgba(10,10,10,0.06)]'
                 }`}
               />
             )}

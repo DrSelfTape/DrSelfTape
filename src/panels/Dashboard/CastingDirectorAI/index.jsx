@@ -5,24 +5,24 @@ import axios from "../../../redux/http";
 import endPoints from "../../../redux/constant";
 import useAIGate from "../../../components/AIConsent/useAIGate";
 
-const MINT = "#A7ECDA";
+const MINT = "var(--aurora-mint)";
 const MINT_DIM = "rgba(167,236,218,0.10)";
-const GOLD = "#FCE072";
+const GOLD = "var(--aurora-heritage-gold)";
 const GOLD_DIM = "rgba(252,224,114,0.10)";
-const CORAL_SOFT = "#FFB49A";
-const CORAL = "#FF8280";
+const CORAL_SOFT = "var(--aurora-peach)";
+const CORAL = "var(--aurora-rose)";
 const CORAL_DIM = "rgba(255, 130, 128,0.10)";
-const BG_DEEP = "#0c0e14";
-const BG_CARD = "#13151d";
-const BG_ELEVATED = "#1a1c26";
-const BG_INPUT = "#1e1e30";
-const BORDER = "rgba(167,236,218,0.06)";
-const BORDER_ACTIVE = "rgba(167,236,218,0.15)";
-const TEXT = "#f2f0ed";
-const TEXT2 = "#8a9a96";
-const TEXT3 = "#4a5a56";
-const PURPLE = "#b89aff";
-const GREEN = "#5ee6b8";
+const BG_DEEP = "var(--aurora-bg)";
+const BG_CARD = "var(--aurora-glass)";
+const BG_ELEVATED = "var(--aurora-surface-solid)";
+const BG_INPUT = "var(--aurora-glass-strong)";
+const BORDER = "var(--aurora-line)";
+const BORDER_ACTIVE = "rgba(212,168,95,0.28)";
+const TEXT = "var(--aurora-text)";
+const TEXT2 = "var(--aurora-sub)";
+const TEXT3 = "var(--aurora-dim)";
+const PURPLE = "var(--aurora-purple)";
+const GREEN = "var(--aurora-mint)";
 
 function Ic({ d, size = 20, color = TEXT2 }) {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.7} strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
@@ -106,7 +106,7 @@ const PREP_DATA = {
   wardrobe: {
     suggestion: "Worn leather jacket (character-specific), dark solid tee underneath. No patterns, no logos. Jewelry: one small stud earring or thin chain — something personal Maya would actually wear. Hair slightly undone — she's been sitting here for hours.",
     avoid: "Bright colors, business wear, anything too polished. Maya isn't put-together right now.",
-    colorPalette: ["#2a2a2a", "#4a3728", "#1a1a2e", "#6b5b4a"],
+    colorPalette: ["var(--aurora-text)", "var(--aurora-heritage-gold-deep)", "var(--aurora-sky)", "var(--aurora-peach)"],
   },
   lighting: {
     setup: "Single overhead key light (harsh, slightly warm). This is an interrogation room — the light should feel institutional and unflattering. If self-taping at home: position one light directly above and slightly in front. No fill light. Let shadows form under your eyes and jaw.",
@@ -178,7 +178,7 @@ function HubScreen({ setMode }) {
         <p style={{ fontSize: 12, color: TEXT2, margin: "0 0 14px" }}>Paste a scene and get a full breakdown instantly</p>
         <button onClick={() => setMode("breakdown")} style={{
           padding: "12px 28px", borderRadius: 12, border: "none", cursor: "pointer",
-          background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff",
+          background: `linear-gradient(135deg, ${CORAL}, var(--aurora-accent-deep))`, color: "#fff",
           fontSize: 14, fontWeight: 600,
         }}>Analyze a scene</button>
       </div>
@@ -209,7 +209,7 @@ function BreakdownScreen() {
       }} />
       <div style={{ display: "flex", gap: 10, marginTop: 14 }}>
         <button style={{ flex: 1, padding: "14px", borderRadius: 12, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Upload PDF</button>
-        <button onClick={startAnalysis} style={{ flex: 2, padding: "14px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${MINT}, ${GREEN})`, color: "#0c0e14", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Analyze scene</button>
+        <button onClick={startAnalysis} style={{ flex: 2, padding: "14px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${MINT}, ${GREEN})`, color: "var(--aurora-text)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Analyze scene</button>
       </div>
     </div>
   );
@@ -349,7 +349,7 @@ function NotesScreen() {
 
       <button style={{
         width: "100%", padding: "14px", borderRadius: 14, border: "none", cursor: "pointer", marginTop: 10,
-        background: `linear-gradient(135deg, ${CORAL}, #e06e6c)`, color: "#fff", fontSize: 14, fontWeight: 600,
+        background: `linear-gradient(135deg, ${CORAL}, var(--aurora-accent-deep))`, color: "#fff", fontSize: 14, fontWeight: 600,
       }}>Run another take</button>
     </div>
   );
@@ -402,7 +402,7 @@ function PrepScreen() {
           <p style={{ fontSize: 11, fontWeight: 600, color: TEXT3, margin: "0 0 8px", textTransform: "uppercase" }}>Color palette</p>
           <div style={{ display: "flex", gap: 8 }}>
             {d.wardrobe.colorPalette.map(c => (
-              <div key={c} style={{ width: 40, height: 40, borderRadius: 10, background: c, border: `1px solid rgba(255,255,255,0.1)` }} />
+              <div key={c} style={{ width: 40, height: 40, borderRadius: 10, background: c, border: `1px solid ${BORDER}` }} />
             ))}
           </div>
         </div>
@@ -553,7 +553,7 @@ function GeneratorScreen() {
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <button onClick={() => setGenerated(false)} style={{ flex: 1, padding: "14px", borderRadius: 12, border: `1px solid ${BORDER_ACTIVE}`, background: BG_ELEVATED, color: TEXT, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Regenerate</button>
-            <button style={{ flex: 2, padding: "14px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${MINT}, ${GREEN})`, color: "#0c0e14", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Analyze this scene</button>
+            <button style={{ flex: 2, padding: "14px", borderRadius: 12, border: "none", background: `linear-gradient(135deg, ${MINT}, ${GREEN})`, color: "var(--aurora-text)", fontSize: 14, fontWeight: 700, cursor: "pointer" }}>Analyze this scene</button>
           </div>
         </div>
       )}
@@ -574,7 +574,7 @@ function RehearseScreen() {
       <p style={{ fontSize: 13, color: TEXT2, margin: "0 0 20px" }}>AI scene partner with informed intent from breakdown</p>
 
       <div style={{
-        background: active ? `rgba(8,10,15,0.95)` : BG_CARD, borderRadius: 22, padding: 28, marginBottom: 20,
+        background: active ? "var(--aurora-glass-strong)" : BG_CARD, borderRadius: 22, padding: 28, marginBottom: 20,
         border: active ? `1px solid ${GOLD}30` : `1px solid ${BORDER}`,
         textAlign: "center", minHeight: 240, display: "flex", flexDirection: "column",
         alignItems: "center", justifyContent: "center", transition: "all 0.3s",
@@ -615,8 +615,8 @@ function RehearseScreen() {
       <button onClick={() => navigate("/dashboard/scene-study")} style={{
         width: "100%", padding: "16px", borderRadius: 16, border: "none",
         cursor: "pointer",
-        background: `linear-gradient(135deg, ${GOLD}, #e0c840)`,
-        color: "#0c0e14", fontSize: 16, fontWeight: 700,
+        background: `linear-gradient(135deg, ${GOLD}, var(--aurora-heritage-gold-deep))`,
+        color: "var(--aurora-text)", fontSize: 16, fontWeight: 700,
       }}>
         Start rehearsal
       </button>
@@ -636,8 +636,8 @@ export default function CastingDirectorAI() {
   const screens = { breakdown: <BreakdownScreen />, rehearse: <RehearseScreen />, notes: <NotesScreen />, prep: <PrepScreen />, generate: <GeneratorScreen /> };
 
   return (
-    <div style={{ background: BG_DEEP, minHeight: 0, fontFamily: "'Poppins', sans-serif", color: TEXT }}>
-      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+    <div style={{ background: BG_DEEP, minHeight: 0, fontFamily: "'Space Grotesk', sans-serif", color: TEXT }}>
+      <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <style>{`
         * { box-sizing: border-box; margin: 0; }
         ::-webkit-scrollbar { display: none; }
