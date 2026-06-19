@@ -1128,15 +1128,6 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <SlateTip>{SLATE_TIPS[(new Date().getDate() - 1) % SLATE_TIPS.length]}</SlateTip>
       </div>
 
-      {/* ── Today section: 7-day strip + daily craft trackers ── */}
-      <AuroraToday
-        auditions={auditions}
-        submissions={submissions}
-        scripts={rawScripts}
-        setTab={setTab}
-        setCurrentPanel={setCurrentPanel}
-      />
-
       {/* ── Smart Next Step CTA ── */}
       <button
         onClick={handleNextStep}
@@ -1168,14 +1159,6 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           {nextStep.cta}
         </span>
       </button>
-
-      {/* ── Hero metric ring (V1HeroGraph) ── */}
-      <div style={{ marginBottom: 18 }}>
-        <V1HeroGraph
-          data={buildHeroData(auditions)}
-          onSubmitFirst={() => setTab('auditions')}
-        />
-      </div>
 
       {/* ── Callback card (Aurora gold gradient) ── */}
       {firstCallback && (
@@ -1827,6 +1810,14 @@ function AuditionsScreen() {
         }}>
           <Icon name="plus" size={18} color="#fff" />
         </button>
+      </div>
+
+      {/* Submissions metric ring — moved here from Home, scaled down so it
+          reads as a compact tracker summary rather than a hero. */}
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ transform: 'scale(0.85)', transformOrigin: 'top center', marginBottom: -44 }}>
+          <V1HeroGraph data={buildHeroData(auditions)} onSubmitFirst={() => {}} />
+        </div>
       </div>
 
       {/* Add Audition Modal — portaled to <body> so it escapes the
@@ -3530,13 +3521,17 @@ export default function DrSelfTapeApp() {
                   onClick={() => handleSetTab(t.id)}
                   className="aurora-tab-btn"
                   style={{
-                    flex: a ? '0 0 auto' : '0 0 44px',
+                    // Cap the active pill so a long label (e.g. "Green Room")
+                    // can never widen the bar enough to push/drop other tabs —
+                    // the bar layout stays consistent on every tab.
+                    flex: a ? '0 1 auto' : '0 0 40px',
+                    maxWidth: a ? 108 : 40,
                     background: a ? 'var(--aurora-accent-light)' : 'transparent',
                     border: "none", cursor: "pointer",
                     display: "flex", flexDirection: "row",
                     alignItems: "center", justifyContent: 'center',
-                    gap: a ? 8 : 0,
-                    padding: a ? '10px 16px' : '10px 8px',
+                    gap: a ? 6 : 0,
+                    padding: a ? '10px 12px' : '10px 8px',
                     borderRadius: 100,
                     transition: 'all 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
                     minHeight: 44,
@@ -3550,10 +3545,12 @@ export default function DrSelfTapeApp() {
                   />
                   {a && (
                     <span style={{
-                      fontSize: 13, fontWeight: 700,
+                      fontSize: 12, fontWeight: 700,
                       color: 'var(--aurora-accent-deep)',
                       letterSpacing: '-0.01em',
                       whiteSpace: 'nowrap',
+                      overflow: 'hidden', textOverflow: 'ellipsis',
+                      maxWidth: 76,
                     }}>{t.label}</span>
                   )}
                   {t.highlight && !a && (

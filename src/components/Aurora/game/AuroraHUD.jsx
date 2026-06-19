@@ -80,9 +80,7 @@ export function AuroraHUD({ className = '', style = {} }) {
 
       <style>{`
         .aurora-game-hud {
-          position: sticky;
-          top: max(10px, env(safe-area-inset-top));
-          z-index: 30;
+          position: relative;
           display: grid;
           grid-template-columns: auto minmax(0, 1fr) auto;
           align-items: center;
