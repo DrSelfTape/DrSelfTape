@@ -23,12 +23,12 @@ import TutorialAchievement from '../../../components/Dashboard/TutorialAchieveme
 import DailyChallengeCard from '../../../components/Dashboard/DailyChallengeCard';
 
 const TYPE_COLORS = {
-  film: '#D4A85F',
-  commercial: '#3b82f6',
-  theatrical: '#8b5cf6',
-  industrial: '#6b7280',
-  theater: '#22c55e',
-  voiceover: '#eab308',
+  film: 'var(--aurora-heritage-gold)',
+  commercial: 'var(--aurora-sky)',
+  theatrical: 'var(--aurora-rose)',
+  industrial: 'var(--aurora-dim)',
+  theater: 'var(--aurora-mint)',
+  voiceover: 'var(--aurora-peach)',
 };
 
 const TYPE_LABELS = {
@@ -55,10 +55,10 @@ const FUNNEL_LABELS = { submitted: 'Submitted', reviewed: 'In Review', callback:
 // Soft cream-to-warm-white gradients so the banner reads on the Aurora
 // light page. Each step uses a different gold-tinted accent for visual
 // variety without going dark.
-const GRADIENT_WELCOME = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(212,168,95,0.10)]';
-const GRADIENT_PRACTICE = 'from-[#FFFFFF] via-[#FAFAF7] to-[rgba(255,130,128,0.08)]';
-const GRADIENT_CONNECT = 'from-[#FFFFFF] via-[#F4F4EE] to-[rgba(159,230,180,0.10)]';
-const GRADIENT_TRACK = 'from-[#FFFFFF] via-[#FAFAF7] to-[rgba(96,165,250,0.10)]';
+const GRADIENT_WELCOME = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-heritage-gold)_14%,transparent)]';
+const GRADIENT_PRACTICE = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-rose)_16%,transparent)]';
+const GRADIENT_CONNECT = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-mint)_18%,transparent)]';
+const GRADIENT_TRACK = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-sky)_18%,transparent)]';
 
 // Ordered onboarding sequence — first incomplete step wins. Most map to
 // keys in tutorial_progress; "headshot" is mirrored there as well by
@@ -244,7 +244,7 @@ export default function DashboardHome() {
   const typeData = Object.entries(s.by_type || {}).map(([key, count]) => ({
     name: TYPE_LABELS[key] || key,
     value: count,
-    color: TYPE_COLORS[key] || '#D4A85F',
+    color: TYPE_COLORS[key] || 'var(--aurora-heritage-gold)',
   }));
 
   // Funnel data
@@ -258,14 +258,14 @@ export default function DashboardHome() {
   const greeting = hour < 12 ? `Good morning, ${firstName}` : hour < 17 ? `Hey ${firstName}` : `Working late, ${firstName}?`;
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="aurora-orbs space-y-4 sm:space-y-6" style={{ color: 'var(--aurora-text)', fontFamily: "'Space Grotesk', sans-serif" }}>
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[#0A0A0A]" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '-0.5px' }}>{greeting}</h1>
+          <h1 className="aurora-display text-3xl" style={{ color: 'var(--aurora-text)' }}>{greeting}</h1>
         </div>
         <div className="flex items-center gap-3">
           <AvailabilityToggle />
@@ -285,18 +285,18 @@ export default function DashboardHome() {
         role="button"
         tabIndex={0}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(nextStep.path); }}
-        className={`aurora-glow bg-gradient-to-r ${nextStep.gradient} rounded-2xl p-6 border border-[rgba(10,10,10,0.08)] cursor-pointer transition-all duration-300 group relative overflow-hidden`}
+        className={`aurora-card bg-gradient-to-r ${nextStep.gradient} p-6 cursor-pointer transition-all duration-300 group relative overflow-hidden hover:-translate-y-0.5`}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_rgba(212,168,95,0.1),_transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_color-mix(in_oklch,var(--aurora-heritage-gold)_16%,transparent),_transparent_60%)]" />
         <div className="relative flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-[#D4A85F]/10 flex items-center justify-center shrink-0">
-            <nextStep.icon className="w-7 h-7 text-[#7A5A18]" />
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)', color: 'var(--aurora-accent-deep)' }}>
+            <nextStep.icon className="w-7 h-7" />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-[#0A0A0A] text-xl font-bold">{nextStep.title}</h2>
-            <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">{nextStep.description}</p>
+            <h2 className="aurora-display text-xl" style={{ color: 'var(--aurora-text)' }}>{nextStep.title}</h2>
+            <p className="text-sm mt-1" style={{ color: 'var(--aurora-sub)' }}>{nextStep.description}</p>
           </div>
-          <button className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 group-hover:shadow-lg group-hover:shadow-[#FF8280]/30 whitespace-nowrap cursor-pointer text-sm shrink-0">
+          <button className="aurora-mono px-5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap cursor-pointer text-sm shrink-0" style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', boxShadow: 'var(--aurora-shadow-coral)' }}>
             {nextStep.cta} &rarr;
           </button>
         </div>
@@ -312,11 +312,11 @@ export default function DashboardHome() {
           <button
             key={item.path}
             onClick={() => navigate(item.path)}
-            className="bg-white border border-[rgba(10,10,10,0.08)] rounded-2xl p-4 text-center hover:border-[#D4A85F]/30 hover:bg-[#F4F4EE] transition-all cursor-pointer group"
+            className="aurora-card p-4 text-center transition-all cursor-pointer group hover:-translate-y-0.5 hover:border-[color:var(--aurora-heritage-gold)]"
           >
             <span className="text-2xl block mb-2">{item.icon}</span>
-            <p className="text-[#0A0A0A] text-sm font-semibold">{item.label}</p>
-            <p className="text-[rgba(10,10,10,0.4)] text-xs mt-0.5">{item.desc}</p>
+            <p className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{item.label}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-dim)' }}>{item.desc}</p>
           </button>
         ))}
       </div>
@@ -337,7 +337,7 @@ export default function DashboardHome() {
           {/* Collapsible analytics */}
           <button
             onClick={() => setShowAnalytics(!showAnalytics)}
-            className="aurora-eyebrow flex items-center gap-2 cursor-pointer hover:text-[#7A5A18] transition-colors"
+            className="aurora-eyebrow flex items-center gap-2 cursor-pointer transition-colors hover:text-[color:var(--aurora-accent-deep)]"
             style={{ color: 'var(--aurora-dim)' }}
           >
             Analytics
@@ -348,9 +348,9 @@ export default function DashboardHome() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
               {/* Audition Breakdown by Type — Donut */}
               <div className="lg:col-span-1">
-                <Card>
+                <Card className="aurora-card" style={{ background: 'var(--aurora-surface-solid)', borderColor: 'var(--aurora-line)' }}>
                   <CardHeader>
-                    <CardTitle className="text-base font-semibold">By Type</CardTitle>
+                    <CardTitle className="aurora-display text-base" style={{ color: 'var(--aurora-text)' }}>By Type</CardTitle>
                   </CardHeader>
                   <CardContent>
                     {typeData.length > 0 ? (
@@ -360,11 +360,11 @@ export default function DashboardHome() {
                             {typeData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                           </Pie>
                           <Tooltip formatter={(value, name) => [value, name]} />
-                          <Legend verticalAlign="bottom" iconType="circle" iconSize={8} formatter={(value) => <span className="text-xs text-[rgba(10,10,10,0.62)]">{value}</span>} />
+                          <Legend verticalAlign="bottom" iconType="circle" iconSize={8} formatter={(value) => <span className="text-xs" style={{ color: 'var(--aurora-sub)' }}>{value}</span>} />
                         </PieChart>
                       </ResponsiveContainer>
                     ) : (
-                      <p className="text-sm text-[#888888] text-center py-12">No audition data yet</p>
+                      <p className="text-sm text-center py-12" style={{ color: 'var(--aurora-dim)' }}>No audition data yet</p>
                     )}
                   </CardContent>
                 </Card>
@@ -372,19 +372,19 @@ export default function DashboardHome() {
 
               {/* Pipeline Funnel */}
               <div className="lg:col-span-2">
-                <Card>
+                <Card className="aurora-card" style={{ background: 'var(--aurora-surface-solid)', borderColor: 'var(--aurora-line)' }}>
                   <CardHeader>
-                    <CardTitle className="text-base font-semibold">Audition Pipeline</CardTitle>
+                    <CardTitle className="aurora-display text-base" style={{ color: 'var(--aurora-text)' }}>Audition Pipeline</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ResponsiveContainer width="100%" height={220}>
                       <BarChart data={funnelData} layout="vertical" barSize={24}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#2A2A2A" horizontal={false} />
-                        <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: '#888888' }} axisLine={false} tickLine={false} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 13, fill: '#999999', fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
-                        <Tooltip formatter={(value) => [value, 'Auditions']} contentStyle={{ borderRadius: '8px', border: '1px solid #3A3A3A', backgroundColor: '#1E1E1E', color: '#fff' }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--aurora-line)" horizontal={false} />
+                        <XAxis type="number" allowDecimals={false} tick={{ fontSize: 12, fill: 'var(--aurora-dim)', fontFamily: 'JetBrains Mono, monospace' }} axisLine={false} tickLine={false} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 13, fill: 'var(--aurora-sub)', fontWeight: 500 }} axisLine={false} tickLine={false} width={90} />
+                        <Tooltip formatter={(value) => [value, 'Auditions']} contentStyle={{ borderRadius: '14px', border: '1px solid var(--aurora-line)', backgroundColor: 'var(--aurora-surface-solid)', color: 'var(--aurora-text)', boxShadow: 'var(--aurora-shadow-card)' }} />
                         <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                          {funnelData.map((_, i) => <Cell key={i} fill={`rgba(212,168,95, ${1 - i * 0.2})`} />)}
+                          {funnelData.map((_, i) => <Cell key={i} fill={`color-mix(in oklch, var(--aurora-heritage-gold) ${100 - i * 18}%, var(--aurora-bg))`} />)}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -400,30 +400,30 @@ export default function DashboardHome() {
 
       {/* Recent Submissions — only when data exists */}
       {recentSubs.length > 0 && (
-        <Card>
+        <Card className="aurora-card" style={{ background: 'var(--aurora-surface-solid)', borderColor: 'var(--aurora-line)' }}>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base font-semibold">Recent Submissions</CardTitle>
-              <button onClick={() => navigate('/dashboard/submissions')} className="text-xs text-[#7A5A18] hover:underline font-medium">View all &rarr;</button>
+              <CardTitle className="aurora-display text-base" style={{ color: 'var(--aurora-text)' }}>Recent Submissions</CardTitle>
+              <button onClick={() => navigate('/dashboard/submissions')} className="aurora-mono text-xs hover:underline" style={{ color: 'var(--aurora-accent-deep)' }}>View all &rarr;</button>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="divide-y divide-[#1E1E1E]">
+            <div className="divide-y divide-[color:var(--aurora-line)]">
               {recentSubs.map((sub) => (
                 <div key={sub.id} className="flex items-center justify-between py-2.5">
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold text-[#0A0A0A] truncate">{sub.project_name}</p>
-                    <p className="text-xs text-[#AAAAAA] truncate">{sub.role} {sub.casting_director ? `· ${sub.casting_director}` : ''}</p>
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--aurora-text)' }}>{sub.project_name}</p>
+                    <p className="text-xs truncate" style={{ color: 'var(--aurora-sub)' }}>{sub.role} {sub.casting_director ? `· ${sub.casting_director}` : ''}</p>
                   </div>
                   <div className="flex items-center gap-3 ml-4 shrink-0">
-                    <span className="text-xs text-[#888888]">
+                    <span className="aurora-mono text-xs" style={{ color: 'var(--aurora-dim)' }}>
                       {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
                     </span>
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                      sub.status === 'callback' ? 'bg-orange-500/10 text-orange-400' :
-                      sub.status === 'booked' ? 'bg-green-500/10 text-green-400' :
-                      sub.status === 'viewed' ? 'bg-purple-500/10 text-purple-400' :
-                      'bg-blue-500/10 text-blue-400'
+                    <span className={`aurora-mono text-xs px-2 py-0.5 rounded-full ${
+                      sub.status === 'callback' ? 'bg-[color-mix(in_oklch,var(--aurora-peach)_24%,transparent)] text-[color:var(--aurora-accent-deep)]' :
+                      sub.status === 'booked' ? 'bg-[color-mix(in_oklch,var(--aurora-mint)_30%,transparent)] text-[color:var(--aurora-accent-deep)]' :
+                      sub.status === 'viewed' ? 'bg-[color-mix(in_oklch,var(--aurora-rose)_26%,transparent)] text-[color:var(--aurora-accent-deep)]' :
+                      'bg-[color-mix(in_oklch,var(--aurora-sky)_28%,transparent)] text-[color:var(--aurora-accent-deep)]'
                     }`}>
                       {sub.status === 'sent' ? 'Submitted' : sub.status}
                     </span>
