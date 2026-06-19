@@ -23,6 +23,7 @@ import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingMo
 import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import { V1HeroGraph, V1FAB, V1Sparkles } from "../../components/Aurora";
+import { AuroraHUD, AuroraQuests, AuroraSeason, AuroraProgressCard } from "../../components/Aurora/game";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
@@ -1087,6 +1088,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         }}>
           {greeting} <span style={{ color: 'var(--aurora-heritage-gold)' }}>✦</span>
         </h1>
+      </div>
+
+      {/* ── Aurora gamification: progress HUD + daily quests + Pilot Season ── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
+        <AuroraHUD />
+        <AuroraQuests />
+        <AuroraSeason />
       </div>
 
       {/* ── Today section: 7-day strip + daily craft trackers ── */}
@@ -2713,6 +2721,11 @@ function ProfileScreen({ setCurrentPanel }) {
             <p className="aurora-micro" style={{ color: 'var(--aurora-dim)', margin: "4px 0 0" }}>{stat.l}</p>
           </div>
         ))}
+      </div>
+
+      {/* ── Aurora progression: XP wheel + level/rank/Takes ── */}
+      <div style={{ marginBottom: 22 }}>
+        <AuroraProgressCard />
       </div>
 
       {/* Menu */}
