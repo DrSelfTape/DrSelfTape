@@ -23,7 +23,7 @@ import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingMo
 import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import { V1HeroGraph, V1FAB, V1Sparkles } from "../../components/Aurora";
-import { AuroraHUD, AuroraQuests, AuroraStreakGuard, AuroraSeason, AuroraProgressCard } from "../../components/Aurora/game";
+import { AuroraHUD, AuroraQuests, AuroraStreakGuard, AuroraSeason, AuroraProgressCard, auroraCelebrate, SlateTip } from "../../components/Aurora/game";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
@@ -967,6 +967,17 @@ function getMobileNextStep({ profile, stats, submissions, scripts }) {
   return { title: 'Ready to work?', desc: 'Jump back into scene study or try the acting coach.', cta: 'Continue', icon: 'play', action: 'live' };
 }
 
+// Slate's rotating daily craft notes — the mascot as a gentle guide.
+const SLATE_TIPS = [
+  'One clean take beats ten rushed ones.',
+  'Read the other lines too — listening is the whole game.',
+  'Know your first three words cold. The rest follows.',
+  'Eyeline just off-lens. Let us see you think.',
+  'Tape it, log it, move on. Reps compound.',
+  'Specific beats big — pick one real thing to want.',
+  'Slate calm. The take starts before “action.”',
+];
+
 function HomeScreen({ setTab, setCurrentPanel }) {
   const dispatch = useDispatch();
   const { permission, subscribe, supported, showIOSPrompt, setShowIOSPrompt } = usePushNotifications();
@@ -1041,6 +1052,20 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     }
   }, [settingsLoaded, onboardingSeen]);
 
+  // Celebrate a new booking — fire the Aurora celebration when the booked-
+  // audition count ticks up. Skips the initial load AND the empty loading
+  // state so a transient data refresh can't false-fire. Purely observational.
+  const bookedAuditionCount = auditions.filter((a) => a.status === 'booked').length;
+  const prevBookedRef = useRef(null);
+  useEffect(() => {
+    if (!auditions.length) return;
+    if (prevBookedRef.current === null) { prevBookedRef.current = bookedAuditionCount; return; }
+    if (bookedAuditionCount > prevBookedRef.current) {
+      auroraCelebrate('reward', { title: 'You booked it! 🎬', message: 'A new role just landed in your tracker.' });
+    }
+    prevBookedRef.current = bookedAuditionCount;
+  }, [bookedAuditionCount, auditions.length]);
+
   const hasStats = (s.total_auditions || 0) > 0 || (s.total_booked || 0) > 0;
   const callbacks = auditions.filter(a => callbackBadge(a.callbackDate));
   const firstName = profile?.first_name || '';
@@ -1096,6 +1121,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <AuroraQuests />
         <AuroraStreakGuard />
         <AuroraSeason />
+      </div>
+
+      {/* Slate's daily note */}
+      <div style={{ marginBottom: 18 }}>
+        <SlateTip>{SLATE_TIPS[(new Date().getDate() - 1) % SLATE_TIPS.length]}</SlateTip>
       </div>
 
       {/* ── Today section: 7-day strip + daily craft trackers ── */}
