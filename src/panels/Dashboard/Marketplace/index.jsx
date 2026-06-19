@@ -18,11 +18,11 @@ function StarRating({ rating }) {
       {[1, 2, 3, 4, 5].map((s) => (
         <Star
           key={s}
-          className={`w-3.5 h-3.5 ${s <= Math.round(rating) ? 'text-[#FCE072] fill-[#FCE072]' : ''}`}
-          style={s > Math.round(rating) ? { color: 'var(--text-muted)' } : {}}
+          className={`w-3.5 h-3.5 ${s <= Math.round(rating) ? 'fill-[var(--aurora-heritage-gold)]' : ''}`}
+          style={{ color: s <= Math.round(rating) ? 'var(--aurora-heritage-gold)' : 'var(--aurora-dim)' }}
         />
       ))}
-      <span className="text-xs ml-1" style={{ color: 'var(--text-secondary)' }}>
+      <span className="aurora-mono text-xs ml-1" style={{ color: 'var(--aurora-sub)' }}>
         {rating?.toFixed(1)}
       </span>
     </div>
@@ -44,16 +44,19 @@ function ReaderCard({ reader, onBook }) {
 
   return (
     <div
-      className="rounded-2xl border overflow-hidden flex flex-col"
-      style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+      className="aurora-card overflow-hidden flex flex-col"
     >
       {/* Headshot — tappable to profile */}
       <button
         type="button"
         onClick={openProfile}
         aria-label={`View ${reader.name || 'reader'}'s profile`}
-        className="relative h-44 w-full bg-gradient-to-br from-[#FF8280]/20 to-[#A7ECDA]/10 p-0 border-0 block"
-        style={{ cursor: targetId ? 'pointer' : 'default' }}
+        className="relative h-44 w-full p-0 border-0 block"
+        style={{
+          cursor: targetId ? 'pointer' : 'default',
+          background:
+            'linear-gradient(135deg, color-mix(in oklch, var(--aurora-rose) 26%, var(--aurora-glass)), color-mix(in oklch, var(--aurora-sky) 18%, var(--aurora-glass)))',
+        }}
       >
         {reader.headshot ? (
           <img
@@ -63,7 +66,7 @@ function ReaderCard({ reader, onBook }) {
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <span className="text-5xl font-bold text-[#7A5A18]/40">
+            <span className="aurora-display text-5xl" style={{ color: 'color-mix(in oklch, var(--aurora-accent-deep) 40%, transparent)' }}>
               {(reader.name || 'R')[0].toUpperCase()}
             </span>
           </div>
@@ -76,8 +79,8 @@ function ReaderCard({ reader, onBook }) {
           type="button"
           onClick={openProfile}
           aria-label={`View ${reader.name || 'reader'}'s profile`}
-          className="text-base font-semibold mb-1 bg-transparent border-0 p-0 text-left"
-          style={{ color: 'var(--text-primary)', cursor: targetId ? 'pointer' : 'default' }}
+          className="aurora-display text-base mb-1 bg-transparent border-0 p-0 text-left"
+          style={{ color: 'var(--aurora-text)', cursor: targetId ? 'pointer' : 'default' }}
         >
           {reader.name}
         </button>
@@ -85,8 +88,8 @@ function ReaderCard({ reader, onBook }) {
         <StarRating rating={reader.rating || 0} />
 
         <div className="flex items-center gap-2 mt-2">
-          <Clock className="w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
-          <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+          <Clock className="w-3.5 h-3.5" style={{ color: 'var(--aurora-dim)' }} />
+          <span className="aurora-mono text-xs" style={{ color: 'var(--aurora-sub)' }}>
             {reader.session_count || 0} sessions
           </span>
         </div>
@@ -97,11 +100,11 @@ function ReaderCard({ reader, onBook }) {
             {reader.specialties.slice(0, 3).map((s, i) => (
               <span
                 key={i}
-                className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                className="aurora-eyebrow px-2 py-0.5 rounded-full"
                 style={{
-                  background: 'var(--bg-surface)',
-                  color: 'var(--text-secondary)',
-                  border: '1px solid var(--border-default)',
+                  background: 'var(--aurora-glass)',
+                  color: 'var(--aurora-sub)',
+                  border: '1px solid var(--aurora-line)',
                 }}
               >
                 {s}
@@ -119,15 +122,15 @@ function ReaderCard({ reader, onBook }) {
                 onClick={() => setDuration(d.value)}
                 className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${
                   duration === d.value
-                    ? 'bg-[#D4A85F] text-[#0A0A0A]'
+                    ? 'bg-[var(--aurora-heritage-gold)] text-[var(--aurora-accent-deep)]'
                     : ''
                 }`}
                 style={
                   duration !== d.value
                     ? {
-                        background: 'var(--bg-surface)',
-                        color: 'var(--text-secondary)',
-                        border: '1px solid var(--border-default)',
+                        background: 'var(--aurora-glass)',
+                        color: 'var(--aurora-sub)',
+                        border: '1px solid var(--aurora-line)',
                       }
                     : {}
                 }
@@ -138,12 +141,16 @@ function ReaderCard({ reader, onBook }) {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-[#A7ECDA]">
+            <span className="aurora-mono text-lg" style={{ color: 'var(--aurora-mint)' }}>
               {typeof price === 'number' ? `$${price}` : price}
             </span>
             <button
               onClick={() => onBook(reader, duration)}
-              className="bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              className="text-sm font-semibold px-4 py-2 rounded-xl transition-colors"
+              style={{
+                background: 'var(--aurora-heritage-gold)',
+                color: 'var(--aurora-accent-deep)',
+              }}
             >
               Book Session
             </button>
@@ -161,36 +168,38 @@ function ConfirmModal({ reader, duration, onConfirm, onClose, booking }) {
   return (
     // z-[110] beats the persistent MobileApp top bar (z-50). The previous
     // z-50 caused the bell + avatar to bleed onto the modal's title row.
-    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-black/60">
+    <div
+      className="fixed inset-0 z-[110] flex items-center justify-center p-4"
+      style={{ background: 'color-mix(in oklch, var(--aurora-text) 45%, transparent)' }}
+    >
       <div
-        className="rounded-2xl p-6 w-full max-w-md border"
-        style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+        className="aurora-card p-6 w-full max-w-md"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+          <h3 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>
             Confirm Booking
           </h3>
           <button onClick={onClose}>
-            <X className="w-5 h-5" style={{ color: 'var(--text-muted)' }} />
+            <X className="w-5 h-5" style={{ color: 'var(--aurora-dim)' }} />
           </button>
         </div>
 
         <div className="space-y-3 mb-6">
           <div className="flex justify-between">
-            <span style={{ color: 'var(--text-secondary)' }}>Reader</span>
-            <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <span style={{ color: 'var(--aurora-sub)' }}>Reader</span>
+            <span className="font-semibold" style={{ color: 'var(--aurora-text)' }}>
               {reader?.name}
             </span>
           </div>
           <div className="flex justify-between">
-            <span style={{ color: 'var(--text-secondary)' }}>Duration</span>
-            <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+            <span style={{ color: 'var(--aurora-sub)' }}>Duration</span>
+            <span className="aurora-mono" style={{ color: 'var(--aurora-text)' }}>
               {duration} min
             </span>
           </div>
           <div className="flex justify-between">
-            <span style={{ color: 'var(--text-secondary)' }}>Price</span>
-            <span className="font-bold text-[#A7ECDA]">
+            <span style={{ color: 'var(--aurora-sub)' }}>Price</span>
+            <span className="aurora-mono" style={{ color: 'var(--aurora-mint)' }}>
               {typeof price === 'number' ? `$${price}` : price}
             </span>
           </div>
@@ -201,9 +210,9 @@ function ConfirmModal({ reader, duration, onConfirm, onClose, booking }) {
             onClick={onClose}
             className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors"
             style={{
-              background: 'var(--bg-surface)',
-              color: 'var(--text-secondary)',
-              border: '1px solid var(--border-default)',
+              background: 'var(--aurora-glass)',
+              color: 'var(--aurora-sub)',
+              border: '1px solid var(--aurora-line)',
             }}
           >
             Cancel
@@ -211,7 +220,11 @@ function ConfirmModal({ reader, duration, onConfirm, onClose, booking }) {
           <button
             onClick={onConfirm}
             disabled={booking}
-            className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
+            style={{
+              background: 'var(--aurora-heritage-gold)',
+              color: 'var(--aurora-accent-deep)',
+            }}
           >
             {booking ? 'Booking...' : 'Confirm'}
           </button>
@@ -272,8 +285,8 @@ export default function Marketplace() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+    <div className="space-y-4 sm:space-y-6" style={{ color: 'var(--aurora-text)' }}>
+      <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)' }}>
         Reader Marketplace
       </h1>
 
@@ -282,17 +295,15 @@ export default function Marketplace() {
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="animate-pulse rounded-2xl h-80"
-              style={{ background: 'var(--bg-card)' }}
+              className="aurora-card animate-pulse h-80"
             />
           ))}
         </div>
       ) : readers.length === 0 ? (
         <div
-          className="rounded-2xl p-12 border text-center"
-          style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+          className="aurora-card p-12 text-center"
         >
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-sm" style={{ color: 'var(--aurora-dim)' }}>
             No readers available at the moment. Check back soon!
           </p>
         </div>

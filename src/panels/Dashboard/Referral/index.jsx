@@ -45,16 +45,15 @@ export default function Referral() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+      <div className="space-y-6" style={{ color: 'var(--aurora-text)' }}>
+        <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)' }}>
           Invite Friends
         </h1>
         <div className="animate-pulse space-y-4">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="rounded-2xl h-28"
-              style={{ background: 'var(--bg-card)' }}
+              className="aurora-card h-28"
             />
           ))}
         </div>
@@ -69,29 +68,32 @@ export default function Referral() {
   const tokensEarned = totalReferrals * 50;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" style={{ color: 'var(--aurora-text)' }}>
       {/* Header */}
-      <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
+      <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)' }}>
         Invite Friends
       </h1>
 
       {/* Info Card */}
       <div
-        className="rounded-2xl p-6 border relative overflow-hidden"
+        className="aurora-card p-6 relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(167,236,218,0.08))',
-          borderColor: 'var(--border-default)',
+          background:
+            'linear-gradient(135deg, color-mix(in oklch, var(--aurora-heritage-gold) 16%, var(--aurora-glass-strong)), color-mix(in oklch, var(--aurora-mint) 12%, var(--aurora-glass)))',
         }}
       >
         <div className="flex items-start gap-4">
-          <div className="w-12 h-12 rounded-xl bg-[#D4A85F]/20 flex items-center justify-center shrink-0">
-            <Gift className="w-6 h-6 text-[#7A5A18]" />
+          <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold) 22%, transparent)' }}
+          >
+            <Gift className="w-6 h-6" style={{ color: 'var(--aurora-accent-deep)' }} />
           </div>
           <div>
-            <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h2 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>
               Invite 3 actors, earn 150 tokens
             </h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+            <p className="text-sm mt-1" style={{ color: 'var(--aurora-sub)' }}>
               Share your referral link with fellow actors. When they sign up and complete their
               profile, you both earn 50 tokens.
             </p>
@@ -102,30 +104,28 @@ export default function Referral() {
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4">
         <div
-          className="rounded-2xl p-5 border"
-          style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+          className="aurora-card p-5"
         >
           <div className="flex items-center gap-3 mb-2">
-            <Users className="w-5 h-5 text-[#A7ECDA]" />
-            <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <Users className="w-5 h-5" style={{ color: 'var(--aurora-mint)' }} />
+            <span className="aurora-eyebrow">
               Total Referrals
             </span>
           </div>
-          <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          <p className="aurora-mono text-3xl" style={{ color: 'var(--aurora-text)' }}>
             {totalReferrals}
           </p>
         </div>
         <div
-          className="rounded-2xl p-5 border"
-          style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+          className="aurora-card p-5"
         >
           <div className="flex items-center gap-3 mb-2">
-            <Coins className="w-5 h-5 text-[#FCE072]" />
-            <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            <Coins className="w-5 h-5" style={{ color: 'var(--aurora-heritage-gold)' }} />
+            <span className="aurora-eyebrow">
               Tokens Earned
             </span>
           </div>
-          <p className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          <p className="aurora-mono text-3xl" style={{ color: 'var(--aurora-text)' }}>
             {tokensEarned}
           </p>
         </div>
@@ -133,19 +133,18 @@ export default function Referral() {
 
       {/* Referral Code Box */}
       <div
-        className="rounded-2xl p-6 border"
-        style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+        className="aurora-card p-6"
       >
-        <label className="text-sm font-medium mb-3 block" style={{ color: 'var(--text-secondary)' }}>
+        <label className="aurora-eyebrow mb-3 block">
           Your Referral Code
         </label>
         <div className="flex items-center gap-3">
           <div
-            className="flex-1 rounded-xl px-5 py-4 text-center text-2xl font-mono font-bold tracking-[0.3em] select-all"
+            className="aurora-mono flex-1 rounded-2xl px-5 py-4 text-center text-2xl font-bold tracking-[0.3em] select-all"
             style={{
-              background: 'var(--bg-surface)',
-              color: 'var(--text-primary)',
-              border: '1px solid var(--border-default)',
+              background: 'var(--aurora-glass)',
+              color: 'var(--aurora-text)',
+              border: '1px solid var(--aurora-line)',
             }}
           >
             {referralCode}
@@ -154,13 +153,13 @@ export default function Referral() {
             onClick={() => copyToClipboard(referralCode, 'code')}
             className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
             style={{
-              background: copied === 'code' ? '#22c55e' : '#D4A85F',
+              background: copied === 'code' ? 'var(--aurora-mint)' : 'var(--aurora-heritage-gold)',
             }}
           >
             {copied === 'code' ? (
-              <CheckCircle className="w-5 h-5 text-[#0A0A0A]" />
+              <CheckCircle className="w-5 h-5" style={{ color: 'var(--aurora-accent-deep)' }} />
             ) : (
-              <Copy className="w-5 h-5 text-[#0A0A0A]" />
+              <Copy className="w-5 h-5" style={{ color: 'var(--aurora-accent-deep)' }} />
             )}
           </button>
         </div>
@@ -168,19 +167,18 @@ export default function Referral() {
 
       {/* Share URL */}
       <div
-        className="rounded-2xl p-6 border"
-        style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+        className="aurora-card p-6"
       >
-        <label className="text-sm font-medium mb-3 block" style={{ color: 'var(--text-secondary)' }}>
+        <label className="aurora-eyebrow mb-3 block">
           Share Link
         </label>
         <div className="flex items-center gap-3">
           <div
-            className="flex-1 rounded-xl px-4 py-3 text-sm truncate"
+            className="flex-1 rounded-2xl px-4 py-3 text-sm truncate"
             style={{
-              background: 'var(--bg-surface)',
-              color: 'var(--text-muted)',
-              border: '1px solid var(--border-default)',
+              background: 'var(--aurora-glass)',
+              color: 'var(--aurora-dim)',
+              border: '1px solid var(--aurora-line)',
             }}
           >
             {shareUrl || 'Loading...'}
@@ -189,21 +187,25 @@ export default function Referral() {
             onClick={() => copyToClipboard(shareUrl, 'url')}
             className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
             style={{
-              background: copied === 'url' ? '#22c55e' : 'var(--bg-elevated)',
-              border: '1px solid var(--border-default)',
+              background: copied === 'url' ? 'var(--aurora-mint)' : 'var(--aurora-glass-strong)',
+              border: '1px solid var(--aurora-line)',
             }}
           >
             {copied === 'url' ? (
-              <CheckCircle className="w-5 h-5 text-[#0A0A0A]" />
+              <CheckCircle className="w-5 h-5" style={{ color: 'var(--aurora-accent-deep)' }} />
             ) : (
-              <Copy className="w-5 h-5" style={{ color: 'var(--text-primary)' }} />
+              <Copy className="w-5 h-5" style={{ color: 'var(--aurora-text)' }} />
             )}
           </button>
         </div>
 
         <button
           onClick={handleShare}
-          className="mt-4 w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+          className="mt-4 w-full font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
+          style={{
+            background: 'var(--aurora-heritage-gold)',
+            color: 'var(--aurora-accent-deep)',
+          }}
         >
           <Share2 className="w-5 h-5" />
           Share with Friends
@@ -212,14 +214,13 @@ export default function Referral() {
 
       {/* Referred Users */}
       <div
-        className="rounded-2xl p-6 border"
-        style={{ background: 'var(--bg-card)', borderColor: 'var(--border-default)' }}
+        className="aurora-card p-6"
       >
-        <h3 className="text-base font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>
+        <h3 className="aurora-display text-base mb-4" style={{ color: 'var(--aurora-text)' }}>
           Referred Friends
         </h3>
         {referrals.length === 0 ? (
-          <p className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-sm text-center py-8" style={{ color: 'var(--aurora-dim)' }}>
             No referrals yet. Share your link to get started!
           </p>
         ) : (
@@ -228,19 +229,22 @@ export default function Referral() {
               <div
                 key={i}
                 className="flex items-center justify-between py-3 px-4 rounded-xl"
-                style={{ background: 'var(--bg-surface)' }}
+                style={{ background: 'var(--aurora-glass)' }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-[#D4A85F]/20 flex items-center justify-center">
-                    <span className="text-sm font-bold text-[#7A5A18]">
+                  <div
+                    className="w-9 h-9 rounded-full flex items-center justify-center"
+                    style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold) 20%, transparent)' }}
+                  >
+                    <span className="aurora-mono text-sm" style={{ color: 'var(--aurora-accent-deep)' }}>
                       {(ref.name || 'U')[0].toUpperCase()}
                     </span>
                   </div>
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                  <span className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>
                     {ref.name || 'Unknown'}
                   </span>
                 </div>
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span className="aurora-mono text-xs" style={{ color: 'var(--aurora-dim)' }}>
                   {ref.joined
                     ? new Date(ref.joined).toLocaleDateString('en-US', {
                         month: 'short',
