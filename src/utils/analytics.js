@@ -61,7 +61,28 @@ const META_STD = {
   purchase: 'Subscribe',
 };
 
+// Read a browser cookie by name (for Meta's _fbp / _fbc match keys). Forwarding
+// these to the backend lets the server-side Conversions API match the same
+// person the browser pixel does — the single biggest Event Match Quality lift.
+function readCookie(name) {
+  try {
+    const m = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : undefined;
+  } catch { return undefined; }
+}
+
+// One id shared by the browser pixel AND the server-side CAPI event so Meta
+// dedupes them into a single conversion instead of double-counting.
+function newEventId() {
+  try {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  } catch {}
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function trackEvent(event, properties = {}) {
+  const eventId = newEventId();
+
   // PostHog (lazy — only if a key is configured)
   if (POSTHOG_KEY) {
     loadPostHog()?.then((posthog) => {
@@ -70,28 +91,38 @@ export function trackEvent(event, properties = {}) {
   }
 
   // Meta Pixel (web only — initialised in index.html for non-native platforms).
+  // The 4th-arg eventID is what Meta dedupes against the server-side event.
   try {
     if (typeof window !== 'undefined' && window.fbq) {
       const std = META_STD[event];
-      if (std) window.fbq('track', std, properties);
-      else window.fbq('trackCustom', event, properties);
+      if (std) window.fbq('track', std, properties, { eventID: eventId });
+      else window.fbq('trackCustom', event, properties, { eventID: eventId });
     }
   } catch { /* pixel not loaded */ }
 
-  // Also send to our backend for server-side logging. Reuse the same
-  // baseURL the rest of the app uses so we can't accidentally diverge.
+  // Also send to our backend — this is the ONLY Meta signal path on the native
+  // app (no fbq there), and it carries event_id + _fbp/_fbc so the server-side
+  // Conversions API can fire a deduped, well-matched conversion.
   try {
     const token = JSON.parse(localStorage.getItem('persist:root') || '{}');
     const auth = JSON.parse(token?.auth || '{}');
     const accessToken = auth?.user?.token?.access || auth?.user?.token;
     if (accessToken) {
+      const fbp = readCookie('_fbp');
+      const fbc = readCookie('_fbc');
+      const enriched = { ...properties };
+      if (fbp) enriched.fbp = fbp;
+      if (fbc) enriched.fbc = fbc;
+      if (typeof window !== 'undefined' && window.location) {
+        enriched.source_url = window.location.href;
+      }
       fetch(`${baseURL}/v1/analytics/track/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ event, properties }),
+        body: JSON.stringify({ event, properties: enriched, event_id: eventId }),
       }).catch(() => {});
     }
   } catch {}
