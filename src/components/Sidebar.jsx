@@ -119,9 +119,11 @@ function SidebarGroup({ group, pendingLikes, expanded, onToggle }) {
     <div>
       <button
         onClick={onToggle}
-        className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-colors cursor-pointer ${
-          isGroupActive ? 'text-[#7A5A18]' : 'text-[rgba(10,10,10,0.4)] hover:text-[rgba(10,10,10,0.62)]'
-        }`}
+        className="w-full flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-colors cursor-pointer hover:bg-[var(--aurora-glass)]"
+        style={{
+          color: isGroupActive ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)',
+          fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+        }}
       >
         <group.icon className="w-3.5 h-3.5 shrink-0" />
         <span className="flex-1 text-left">{group.label}</span>
@@ -152,24 +154,44 @@ function SidebarItem({ item, pendingLikes }) {
       to={item.path}
       end={item.end}
       className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
+        `flex items-center gap-3 px-4 py-2 rounded-xl text-sm font-semibold transition-colors border ${
           isActive
-            ? 'bg-[#D4A85F]/10 text-[#7A5A18]'
-            : 'hover:bg-[#D4A85F]/5'
+            ? 'shadow-sm'
+            : 'hover:bg-[var(--aurora-glass)]'
         }`
       }
-      style={({ isActive }) => isActive ? {} : { color: 'var(--text-secondary)' }}
+      style={({ isActive }) => ({
+        color: isActive ? 'var(--aurora-accent-deep)' : 'var(--aurora-sub)',
+        background: isActive
+          ? 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, var(--aurora-glass-strong))'
+          : 'transparent',
+        borderColor: isActive
+          ? 'color-mix(in oklch, var(--aurora-heritage-gold) 34%, var(--aurora-line))'
+          : 'transparent',
+        boxShadow: isActive
+          ? 'inset 3px 0 0 var(--aurora-heritage-gold), 0 8px 24px color-mix(in oklch, var(--aurora-heritage-gold) 14%, transparent)'
+          : 'none',
+        fontFamily: "'Space Grotesk', system-ui, sans-serif",
+      })}
     >
       <item.icon className="w-4 h-4 shrink-0" />
       <span className="flex-1">{item.label}</span>
       {badge && (
-        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-          /^\d+$/.test(badge)
-            ? 'bg-[#D4A85F] text-[#0A0A0A] min-w-[20px] text-center'
-            : badge === 'ADMIN'
-              ? 'bg-amber-500/10 text-amber-400'
-              : 'bg-emerald-500/10 text-emerald-400'
-        }`}>
+        <span
+          className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+            /^\d+$/.test(badge) ? 'min-w-[20px] text-center' : ''
+          }`}
+          style={{
+            background: /^\d+$/.test(badge)
+              ? 'var(--aurora-heritage-gold)'
+              : badge === 'ADMIN'
+                ? 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, var(--aurora-glass))'
+                : 'color-mix(in oklch, var(--aurora-mint) 24%, var(--aurora-glass))',
+            color: badge === 'ADMIN' ? 'var(--aurora-accent-deep)' : 'var(--aurora-text)',
+            border: '1px solid var(--aurora-glass-border)',
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+          }}
+        >
           {badge}
         </span>
       )}
@@ -232,13 +254,31 @@ export default function Sidebar() {
   const avatarUrl = profile?.user_image || profile?.actor_profile?.headshot || null
 
   return (
-    <aside className="fixed inset-y-0 left-0 z-50 w-64 border-r flex flex-col transition-colors duration-300" style={{ background: 'var(--sidebar-bg)', borderColor: 'var(--border-default)' }}>
+    <aside
+      className="fixed inset-y-0 left-0 z-50 w-64 border-r flex flex-col transition-colors duration-300"
+      style={{
+        background: 'var(--aurora-glass-strong)',
+        borderColor: 'var(--aurora-line)',
+        color: 'var(--aurora-text)',
+        boxShadow: 'var(--aurora-shadow-dock)',
+        backdropFilter: 'blur(22px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(22px) saturate(150%)',
+        fontFamily: "'Space Grotesk', system-ui, sans-serif",
+      }}
+    >
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b gap-3" style={{ borderColor: 'var(--border-default)' }}>
-        <div className="w-8 h-8 bg-[#D4A85F]/10 rounded-lg flex items-center justify-center">
-          <Clapperboard className="w-4 h-4 text-[#7A5A18]" />
+      <div className="h-16 flex items-center px-6 border-b gap-3" style={{ borderColor: 'var(--aurora-line)' }}>
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center border"
+          style={{
+            background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, var(--aurora-glass))',
+            borderColor: 'var(--aurora-glass-border)',
+            color: 'var(--aurora-accent-deep)',
+          }}
+        >
+          <Clapperboard className="w-4 h-4" />
         </div>
-        <span className="text-base font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>Dr. Self Tape</span>
+        <span className="text-base font-bold tracking-tight" style={{ color: 'var(--aurora-text)' }}>Dr. Self Tape</span>
       </div>
 
       {/* Navigation */}
@@ -260,10 +300,10 @@ export default function Sidebar() {
       </div>
 
       {/* User footer */}
-      <div className="p-4 border-t" style={{ borderColor: 'var(--border-default)' }}>
+      <div className="p-4 border-t" style={{ borderColor: 'var(--aurora-line)' }}>
         <button
           onClick={() => navigate('/dashboard/profile')}
-          className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[#F4F4EE] transition-colors group"
+          className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[var(--aurora-glass)] transition-colors group"
         >
           {/* Avatar */}
           <ProfilePhoto
@@ -273,17 +313,18 @@ export default function Sidebar() {
             className="w-9 h-9 shrink-0"
           />
           <div className="flex-1 min-w-0 text-left">
-            <p className="text-sm font-medium text-[#0A0A0A] truncate group-hover:text-[#7A5A18] transition-colors">
+            <p className="text-sm font-semibold text-[var(--aurora-text)] truncate group-hover:text-[var(--aurora-accent-deep)] transition-colors">
               {displayName}
             </p>
-            <p className="text-xs text-[rgba(10,10,10,0.4)] truncate">{email}</p>
+            <p className="text-xs truncate" style={{ color: 'var(--aurora-dim)' }}>{email}</p>
           </div>
         </button>
 
         {/* Log Out */}
         <button
           onClick={() => dispatch(performLogout())}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-[rgba(10,10,10,0.62)] hover:text-red-400 hover:bg-red-500/10 transition-colors mt-1"
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-[var(--aurora-glass)] transition-colors mt-1"
+          style={{ color: 'var(--aurora-sub)', fontFamily: "'Space Grotesk', system-ui, sans-serif" }}
         >
           <LogOut className="w-4 h-4 shrink-0" />
           <span>Log Out</span>
