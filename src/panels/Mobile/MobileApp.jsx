@@ -882,8 +882,8 @@ const TABS = [
   { id: "home", icon: "home", label: "Home" },
   { id: "scenes", icon: "scenes", label: "Practice" },
   { id: "auditions", icon: "auditions", label: "Auditions" },
-  { id: "find-a-reader", icon: "community", label: "Find Reader" },
-  { id: "green-room", icon: "mic", label: "Green Room" },
+  { id: "find-a-reader", icon: "community", label: "Reader" },
+  { id: "green-room", icon: "mic", label: "Room" },
   { id: "tape-review", icon: "tape", label: "Tape", highlight: true },
   { id: "more", icon: "more", label: "More" },
 ];
