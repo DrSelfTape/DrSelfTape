@@ -4,7 +4,6 @@ import axiosInstance from '../../../redux/http';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { Capacitor } from '@capacitor/core';
 import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor, getStorePriceFor } from '../../../utils/purchases';
-import { openExternal } from '../../../utils/openExternal';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 // WEEKLY pricing (added 2026-06-14): the `weekly` amounts below are display
@@ -339,6 +338,17 @@ export default function Membership({ onClose }) {
       return;
     }
 
+    if (Capacitor.isNativePlatform()) {
+      clearWatchdog();
+      setCheckoutLoading(null);
+      dispatch(showSnackbar({
+        message: "Subscriptions aren't available on this device yet. Please try again soon.",
+        variant: 'error',
+      }));
+      trackPurchase({ status: 'failed', reason: 'native_no_store' });
+      return;
+    }
+
     try {
       const res = await axiosInstance.post('/v1/subscriptions/checkout/', { plan: planId, billing });
       clearWatchdog();
@@ -358,12 +368,7 @@ export default function Membership({ onClose }) {
         axiosInstance.get('/v1/subscriptions/status/').then((r) => setStatus(r.data.data)).catch(() => {});
         return;
       }
-      // Native (Android here — iOS uses IAP and never reaches this branch):
-      // open Stripe in an in-app browser (Custom Tab) instead of navigating
-      // the WebView away, which destroys the SPA and strands the user with
-      // no route back. Web keeps the standard same-tab redirect.
-      if (Capacitor.isNativePlatform()) await openExternal(checkoutUrl);
-      else window.location.href = checkoutUrl;
+      window.location.href = checkoutUrl;
     } catch (err) {
       clearWatchdog();
       const message = err?.response?.data?.error || 'Something went wrong starting checkout. Please try again.';
@@ -376,6 +381,17 @@ export default function Membership({ onClose }) {
   const handleManage = async () => {
     if (isNativeStore()) {
       await manageSubscriptions();
+      return;
+    }
+    // Native without a working store (e.g. a web-subscribed user on the Android
+    // app before Play Billing is live): never navigate the WebView to the Stripe
+    // portal — it destroys the SPA and strands the user with no route back.
+    // Same invariant as the subscribe path above.
+    if (Capacitor.isNativePlatform()) {
+      dispatch(showSnackbar({
+        message: 'Manage your subscription at drselftapes.com.',
+        variant: 'info',
+      }));
       return;
     }
     try {
