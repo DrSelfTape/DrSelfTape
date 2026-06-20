@@ -40,10 +40,10 @@ export function isCapacitorNative() {
 
 // True if push is supported in this context
 export function isPushSupported() {
-  // Native push is iOS-only (APNs). Android push is intentionally NOT wired
-  // for v1 — no google-services.json / FCM config — so don't attempt the
-  // native register() flow there (it would just fail and log noise).
-  if (isCapacitorNative()) return Capacitor.getPlatform() === 'ios';
+  // Native push: iOS via APNs, Android via FCM (google-services.json ships in
+  // the Android build + the BE send_fcm_push path). Both native platforms run
+  // the register() flow; the device-token POST already tags platform correctly.
+  if (isCapacitorNative()) return true;
   if (typeof Notification === 'undefined') return false;
   if (!('serviceWorker' in navigator)) return false;
   if (!('PushManager' in window)) return false;

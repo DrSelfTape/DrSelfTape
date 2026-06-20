@@ -50,10 +50,12 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
 
-    <!-- Android push is not used in v1 (iOS APNs only). Strip FCM permissions
-         injected by @capacitor/push-notifications so Play review sees a clean set. -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" tools:node="remove" />
-    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" tools:node="remove" />
+    <!-- Android FCM push (parity with the iOS APNs path). POST_NOTIFICATIONS is
+         required on Android 13+ to display notifications; the C2DM RECEIVE
+         permission is injected by @capacitor/push-notifications / Firebase
+         Messaging and no longer stripped. Requires google-services.json in
+         android/app/ at build time. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- The app does not use the advertising ID (no ad/attribution SDKs).
          Explicitly remove the AD_ID permission a dependency might inject so the

@@ -53,3 +53,6 @@ android/app/release/
 ios/App/build/
 ios/App/build-archive/
 android/key.properties
+
+# Firebase Android config (place locally; required to build Android FCM push)
+android/app/google-services.json
