@@ -21,8 +21,15 @@ import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
 // paywall. Flip VITE_FIRST_REVIEW_FLOW=true once 1.0.7 (the analyzer) is live.
 const FIRST_REVIEW_FLOW = import.meta.env.VITE_FIRST_REVIEW_FLOW === 'true';
 
-const STEPS = ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow', 'building', 'welcome', 'offer'];
-const Q_STEPS = ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow'];
+// Activation-first order when the free-first-review flow is ON: pitch the free
+// Tape Review right after the name step (fast aha), and move the push-permission
+// (notif) ask to the LAST question step (after value). Flag OFF = original order.
+const STEPS = FIRST_REVIEW_FLOW
+  ? ['identity', 'offer', 'profile', 'interests', 'goals', 'level', 'follow', 'notif', 'building', 'welcome']
+  : ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow', 'building', 'welcome', 'offer'];
+const Q_STEPS = FIRST_REVIEW_FLOW
+  ? ['identity', 'profile', 'interests', 'goals', 'level', 'follow', 'notif']
+  : ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow'];
 
 // Best-effort analytics — mirrors the dynamic-import pattern finish() already
 // uses so a missing/blocked analytics bundle never breaks onboarding.
@@ -994,10 +1001,13 @@ export default function AuroraOnboarding({ onClose }) {
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
   }, [finish]);
 
-  const skipFirstReview = useCallback(() => {
+  // Offer now comes early (right after the name step). Skipping CONTINUES the
+  // rest of onboarding (profile → interests → … → notif) instead of ending it,
+  // so non-takers still complete their profile. (Plain fn: needs current `i`.)
+  const skipFirstReview = () => {
     track('FIRST_REVIEW_SKIPPED');
-    finish();
-  }, [finish]);
+    next();
+  };
 
   const qIndex = Q_STEPS.indexOf(step);
 
@@ -1075,7 +1085,7 @@ export default function AuroraOnboarding({ onClose }) {
       {step === 'building' && <Building onDone={next} />}
       {/* When the free-review flow is on, the welcome CTA advances to the offer
           step instead of finishing; otherwise it closes onboarding as before. */}
-      {step === 'welcome' && <Welcome data={data} onDone={FIRST_REVIEW_FLOW ? next : finish} />}
+      {step === 'welcome' && <Welcome data={data} onDone={finish} />}
       {step === 'offer' && <Offer onTry={launchFirstReview} onSkip={skipFirstReview} />}
     </div>
   );
