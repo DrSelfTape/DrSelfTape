@@ -208,8 +208,9 @@ export default function AIConsentModal() {
             fontFamily: "'Space Grotesk', sans-serif",
             fontSize: 12, color: 'rgba(26,22,18,0.7)', lineHeight: 1.5,
           }}>
-            Your video recordings are <strong>never</strong> sent to AI
-            providers. See our{' '}
+            When you run an AI feature like Tape Review, your tape&apos;s
+            extracted frames, audio, and transcript are sent to the AI
+            providers above to generate your notes. See our{' '}
             <button
               type="button"
               onClick={() => openExternal(PRIVACY_URL)}
