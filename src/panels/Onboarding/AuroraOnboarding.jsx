@@ -64,7 +64,7 @@ const TYPES = ['Leading', 'Character', 'Comedic', 'Ingénue', 'Best Friend', 'Vi
 const PRONOUNS = ['she/her', 'he/him', 'they/them', 'other'];
 const UNIONS = ['SAG-AFTRA', 'Eligible', 'Non-union'];
 
-const STORAGE_STEP = 'dst_onb_step';
+const STORAGE_STEP = 'dst_onb_step_v2'; // v2: step order changed (free-review reorder) — old numeric indices meant different steps, so ignore stale v1 progress (entered data in STORAGE_DATA is preserved)
 const STORAGE_DATA = 'dst_onb_data';
 
 /* Primary gold CTA — gradient + sheen */
@@ -924,7 +924,13 @@ export default function AuroraOnboarding({ onClose }) {
     try { window.localStorage.setItem(STORAGE_STEP, String(next)); } catch { /* storage unavailable */ }
   };
   const next = () => go(i + 1);
-  const back = () => go(i - 1);
+  const back = () => {
+    // 'offer' is a forward-only interstitial — Back should step over it
+    // (e.g. profile → identity, not profile → offer) so there's no offer↔profile loop.
+    let t = i - 1;
+    if (STEPS[t] === 'offer') t -= 1;
+    go(Math.max(0, t));
+  };
 
   const set = (patch) => setData((d) => {
     const nd = { ...d, ...patch };
@@ -1006,7 +1012,10 @@ export default function AuroraOnboarding({ onClose }) {
   // so non-takers still complete their profile. (Plain fn: needs current `i`.)
   const skipFirstReview = () => {
     track('FIRST_REVIEW_SKIPPED');
-    next();
+    // Advance into the rest of onboarding — but finish() if 'offer' is the LAST
+    // step (flag-off safety: offer is terminal there, so next() would clamp and
+    // trap the user on the offer forever).
+    if (i + 1 >= STEPS.length) finish(); else next();
   };
 
   const qIndex = Q_STEPS.indexOf(step);
