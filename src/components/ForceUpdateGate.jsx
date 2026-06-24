@@ -13,6 +13,11 @@ const VERSION_ENDPOINT = '/v1/notifications/system/latest-version/';
 // Web users auto-update via Vercel, so the gate never fires there anyway.
 const WEB_BUNDLE_VERSION = '1.0.8';
 
+// Practice builds (compiled with VITE_FORCE_UPDATE_TEST_CHANNEL=true) read the
+// TEST gate field (min_ios_test / min_android_test) so we can rehearse the
+// force-update flow without ever touching production users, who read min_ios.
+const TEST_CHANNEL = import.meta.env.VITE_FORCE_UPDATE_TEST_CHANNEL === 'true';
+
 // The right store per platform — itms-apps:// is dead on Android and the Play
 // https link is wrong on iOS, so the "Update now" CTA must choose by platform.
 function storeUrl() {
@@ -68,7 +73,9 @@ export default function ForceUpdateGate({ children }) {
     (async () => {
       try {
         const { data } = await axiosInstance.get(VERSION_ENDPOINT);
-        const min = platform === 'android' ? data?.min_android : data?.min_ios;
+        const min = platform === 'android'
+          ? (TEST_CHANNEL ? data?.min_android_test : data?.min_android)
+          : (TEST_CHANNEL ? data?.min_ios_test : data?.min_ios);
         if (!cancelled && min) setMinVersion(min);
       } catch { /* fail open — don't lock users out on a network blip */ }
     })();
@@ -133,7 +140,7 @@ export default function ForceUpdateGate({ children }) {
           marginBottom: 10,
         }}
       >
-        Update required
+        {TEST_CHANNEL ? 'Update required · 🧪 test channel' : 'Update required'}
       </div>
       <h1
         style={{
