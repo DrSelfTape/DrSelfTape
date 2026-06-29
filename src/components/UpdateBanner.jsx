@@ -18,7 +18,7 @@ function storeUrl() {
 // versionName), so a missed native bump can never silently fail-open the
 // banner. The banner only fires when the BE-reported live version is GREATER
 // than the installed version.
-const WEB_BUNDLE_VERSION = "1.0.8";
+const WEB_BUNDLE_VERSION = "1.0.11";
 
 const LS_DISMISSED = "updateBannerDismissed";
 const VERSION_ENDPOINT = "/v1/notifications/system/latest-version/";
