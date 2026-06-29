@@ -17,6 +17,31 @@ const ANDROID_KEY = import.meta.env.VITE_REVENUECAT_ANDROID_KEY || '';
 
 let configured = false;
 let purchasesPromise = null;
+let keylessWarned = false;
+
+// LOUD safeguard for the failure that killed all IAP: a native build shipped
+// without the RevenueCat key for its platform makes isNativeStore() false, so
+// every purchase/restore path silently no-ops and the app falls back to
+// "manage on web" with no signal anything is wrong. Scream once — console +
+// Sentry — so a keyless build is observable instead of silently dead. Never
+// throws (that would crash the app on launch); web stays a clean no-op.
+function warnIfKeylessNative() {
+  if (keylessWarned) return;
+  if (!Capacitor.isNativePlatform() || platformKey()) return;
+  keylessWarned = true;
+  const platform = Capacitor.getPlatform();
+  const envVar = platform === 'android' ? 'VITE_REVENUECAT_ANDROID_KEY' : 'VITE_REVENUECAT_IOS_KEY';
+  console.error(
+    `[purchases] No RevenueCat key for native platform "${platform}" — in-app ` +
+    `purchases are DISABLED. Set ${envVar} at build time.`
+  );
+  import('./sentry').then(({ Sentry }) => {
+    Sentry.captureMessage(`IAP misconfigured: no RevenueCat key for ${platform}`, {
+      level: 'error',
+      extra: { platform, envVar },
+    });
+  }).catch(() => { /* never block on telemetry */ });
+}
 
 // True ONLY on native iOS — kept for genuinely iOS-specific behaviour
 // (e.g. webkitSpeechRecognition gating) that must NOT apply to Android.
@@ -63,6 +88,9 @@ function loadSDK() {
  * Safe to call on any platform — no-ops off a native store or without an API key.
  */
 export async function initPurchases(userId) {
+  // Fire the keyless-native alarm BEFORE the early return below — isNativeStore()
+  // is false on a keyless build, so without this the misconfig would be swallowed.
+  warnIfKeylessNative();
   if (!isNativeStore() || configured) return;
   const sdk = await loadSDK();
   if (!sdk) return;
@@ -242,6 +270,13 @@ export async function getIntroOfferFor(plan, billing) {
  *   - {ok: true, hasActive: true, customerInfo} — restore succeeded, has active subs
  */
 export async function restorePurchases(userId) {
+  if (!userId) {
+    // Refuse to restore without a backend identity — otherwise the restore runs
+    // onto whoever RC is currently bound to (a stale or anonymous id) and can
+    // attribute another user's receipts to the wrong account. Mirror purchase()'s
+    // no_user_id guard and fail loudly instead of binding to the wrong identity.
+    return { ok: false, reason: 'no_user' };
+  }
   const sdk = await loadSDK();
   if (!sdk) return { ok: false, reason: 'unavailable' };
   // Identify the CURRENT user before restoring. Without this, restore runs

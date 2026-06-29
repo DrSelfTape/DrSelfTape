@@ -293,8 +293,13 @@ export default function Membership({ onClose }) {
             'no_package',
             'configure_failed',
             'sdk_load_failed',
+            'login_failed',
           ]);
-          if (SERVER_SIDE_REASONS.has(result.reason)) {
+          // purchases.js returns reason:'unavailable' with the real code in
+          // result.detail (sdk_load_failed / configure_failed / login_failed),
+          // so gate on detail too or the instrumentation never fires.
+          const investigable = SERVER_SIDE_REASONS.has(result.reason) || SERVER_SIDE_REASONS.has(result.detail);
+          if (investigable) {
             try {
               const { Sentry } = await import('../../../utils/sentry');
               Sentry.captureMessage(`IAP setup issue: ${result.reason}`, {
@@ -313,16 +318,37 @@ export default function Membership({ onClose }) {
         // Sharing, billing retry) → "pending"; resolved-but-no-active-
         // entitlement yet → "finalizing"; only a confirmed active entitlement
         // earns "activated".
+        trackPurchase({ status: 'success' });
+
+        // Pending purchases (ask-to-buy, Family Sharing, billing retry) never
+        // grant immediately — tell the user and stop; polling/alerting would be
+        // a false alarm.
         if (result.pending) {
           dispatch(showSnackbar({ message: 'Your purchase is pending approval. We’ll unlock your plan once it’s approved.', variant: 'info' }));
-        } else if (result.hasActive === false) {
-          dispatch(showSnackbar({ message: 'Finalizing your subscription…', variant: 'info' }));
-        } else {
-          dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+          return;
         }
-        trackPurchase({ status: 'success' });
-        // Poll for the BE entitlement — webhook may lag the purchase.
-        refreshStatusUntilActive();
+
+        // Don't claim "activated" off a resolved promise alone — the BE
+        // entitlement is granted by the (laggy) webhook. Poll for it, and only
+        // show success once the BE actually reports active. If it never lands,
+        // the user was charged but never granted — alert (don't hide it behind a
+        // success toast) and show a single honest, actionable message.
+        const granted = await refreshStatusUntilActive();
+        if (granted) {
+          dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
+        } else {
+          try {
+            const { Sentry } = await import('../../../utils/sentry');
+            Sentry.captureMessage('IAP purchase succeeded but entitlement never granted', {
+              level: 'error',
+              extra: { userId, planId, billing },
+            });
+          } catch { /* swallow */ }
+          dispatch(showSnackbar({
+            message: 'Payment received — your plan is still finalizing. Tap Restore Purchases or contact support if it doesn’t appear shortly.',
+            variant: 'info',
+          }));
+        }
       } catch (err) {
         // iapPurchase shouldn't throw, but if the plugin itself is
         // missing or rejects, surface a real error instead of silently
@@ -341,6 +367,17 @@ export default function Membership({ onClose }) {
     if (Capacitor.isNativePlatform()) {
       clearWatchdog();
       setCheckoutLoading(null);
+      // A native build that reaches here has NO working store (most likely a
+      // keyless/misconfigured build) — the single most important IAP failure
+      // to alert on, since no one can purchase. The web Stripe path never
+      // reaches this branch, so this fires only on a real native outage.
+      try {
+        const { Sentry } = await import('../../../utils/sentry');
+        Sentry.captureMessage('IAP unavailable: native_no_store', {
+          level: 'error',
+          extra: { platform: Capacitor.getPlatform() },
+        });
+      } catch { /* swallow */ }
       dispatch(showSnackbar({
         message: "Subscriptions aren't available on this device yet. Please try again soon.",
         variant: 'error',
@@ -409,8 +446,26 @@ export default function Membership({ onClose }) {
     // to THIS backend identity, not whoever RC was last bound to.
     const result = await restorePurchases(userId);
     if (result.ok && result.hasActive) {
-      dispatch(showSnackbar({ message: 'Purchases restored.', variant: 'success' }));
-      refreshStatusUntilActive();
+      // RC found active receipts, but the BE entitlement still comes from the
+      // webhook. Poll for it; only claim "restored" once the BE reports active.
+      // If it never lands, the receipt exists but the grant didn't — alert and
+      // show a single honest message instead of a false "restored".
+      const granted = await refreshStatusUntilActive();
+      if (granted) {
+        dispatch(showSnackbar({ message: 'Purchases restored.', variant: 'success' }));
+      } else {
+        try {
+          const { Sentry } = await import('../../../utils/sentry');
+          Sentry.captureMessage('IAP restore succeeded but entitlement never granted', {
+            level: 'error',
+            extra: { userId },
+          });
+        } catch { /* swallow */ }
+        dispatch(showSnackbar({
+          message: 'Payment received — your plan is still finalizing. Tap Restore Purchases or contact support if it doesn’t appear shortly.',
+          variant: 'info',
+        }));
+      }
     } else if (result.ok) {
       dispatch(showSnackbar({ message: 'No purchases found on this Apple ID.', variant: 'info' }));
     } else if (result.reason === 'unavailable') {

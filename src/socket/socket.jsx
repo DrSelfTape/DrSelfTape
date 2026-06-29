@@ -35,6 +35,10 @@ export const SocketProvider = ({ children }) => {
   // or a duplicate ringing modal.
   const lastMatchRef = useRef({ id: null, at: 0 });
 
+  // Tracks the auth token we last (re)registered the VoIP push token for, so we
+  // register once per token becoming available — never repeatedly in a loop.
+  const voipRegisteredForRef = useRef(null);
+
   // Incoming call state
   const [incomingCall, setIncomingCall] = useState(null); // { matchId, roomUrl, partnerName }
 
@@ -228,7 +232,15 @@ export const SocketProvider = ({ children }) => {
     let subs = [];
     (async () => {
       try {
-        registerVoip(); // register for VoIP pushes + report token to BE
+        // Tie VoIP token registration to AUTH, not just app launch. A user who
+        // signs in AFTER a logged-out cold start must (re)report their VoIP
+        // token now — otherwise killed-app CallKit incoming rings never reach
+        // them this session. The guard ref keeps this to once per token (and the
+        // launch-time case for an already-authed user still fires here too).
+        if (token && voipRegisteredForRef.current !== token) {
+          voipRegisteredForRef.current = token;
+          registerVoip(); // register for VoIP pushes + report token to BE
+        }
         subs.push(await VoipCall.addListener('callAnswered', (e) => {
           if (e?.roomUrl) joinRoom(e.roomUrl);
           // End the CallKit call immediately — the real call lives in the Daily
@@ -242,7 +254,7 @@ export const SocketProvider = ({ children }) => {
       } catch { /* plugin unavailable */ }
     })();
     return () => { subs.forEach((s) => { try { s.remove(); } catch { /* noop */ } }); };
-  }, [joinRoom]);
+  }, [joinRoom, token]);
 
   // Pulse a ringing haptic while the full-screen incoming-call alert is up.
   useEffect(() => {
