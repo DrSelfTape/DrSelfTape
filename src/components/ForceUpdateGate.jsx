@@ -112,21 +112,27 @@ export default function ForceUpdateGate({ children }) {
         animation: 'updGateIn 0.5s ease-out both',
       }}
     >
-      {/* logo in a soft floating card for depth */}
+      {/* animated mascot in a soft floating card (poster = static fallback) */}
       <div
         style={{
-          background: '#FFFFFF',
+          width: 184,
+          height: 245,
+          background: '#FBF6EC',
           borderRadius: 28,
-          padding: '26px 30px',
           marginBottom: 30,
+          overflow: 'hidden',
           boxShadow: '0 18px 50px rgba(150,116,40,0.20)',
           animation: 'updGateFloat 4s ease-in-out infinite',
         }}
       >
-        <img
-          src="/logo-black.png"
-          alt="Dr Self Tape"
-          style={{ width: 168, height: 'auto', display: 'block' }}
+        <video
+          src="/mascot-update.mp4"
+          poster="/mascot-update.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
       </div>
 
