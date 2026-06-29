@@ -8,6 +8,19 @@
  */
 export const WHATS_NEW = [
   {
+    id: 2,
+    version: '1.0.10',
+    date: 'June 2026',
+    title: 'A smoother Dr Self Tape',
+    intro: "We tightened things up across the app — here's what's better:",
+    highlights: [
+      { emoji: '📞', title: 'Live scene reads that reach you', body: 'Scene-read calls now ring reliably, even when the app is fully closed.' },
+      { emoji: '💳', title: 'More reliable subscriptions', body: 'Upgrades and Restore Purchases are steadier, with fewer silent hiccups.' },
+      { emoji: '🎬', title: 'A faster first run', body: 'Getting started is quicker — your first free AI Tape Review is right up front.' },
+      { emoji: '✨', title: 'Polish throughout', body: 'A livelier update screen plus dozens of fixes across the app.' },
+    ],
+  },
+  {
     id: 1,
     version: '1.0.7',
     date: 'June 2026',
