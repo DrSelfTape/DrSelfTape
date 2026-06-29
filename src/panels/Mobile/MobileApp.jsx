@@ -981,7 +981,7 @@ const SLATE_TIPS = [
 function HomeScreen({ setTab, setCurrentPanel }) {
   const dispatch = useDispatch();
   const { permission, subscribe, supported, showIOSPrompt, setShowIOSPrompt } = usePushNotifications();
-  const { balance, refresh: refreshTokens } = useTokenBalance();
+  const { balance, unlimited: tokensUnlimited, refresh: refreshTokens } = useTokenBalance();
   const rawAuditions = useSelector((state) => state.auditions.data || []);
   const rawScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
   const s = useSelector((state) => state.auditions.stats?.data || {});
@@ -1609,10 +1609,16 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         }}>
           <span style={{ fontSize: 16 }}>🎟️</span>
           <div style={{ flex: 1 }}>
-            <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{balance}</span>
-            <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}> AI tokens remaining</span>
+            {tokensUnlimited ? (
+              <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>Unlimited AI</span>
+            ) : (
+              <>
+                <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{balance}</span>
+                <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}> AI tokens remaining</span>
+              </>
+            )}
           </div>
-          {balance === 0 && (
+          {!tokensUnlimited && balance === 0 && (
             <span style={{
               fontSize: 11, fontWeight: 700, color: '#fff',
               background: 'var(--aurora-accent)', padding: '4px 10px', borderRadius: 100,
@@ -2729,7 +2735,7 @@ function ProfileScreen({ setCurrentPanel }) {
               border: '1px solid color-mix(in oklch, var(--aurora-mint) 35%, transparent)',
               letterSpacing: '0.1em', textTransform: 'uppercase',
             }}>
-              {subStatus.balance ?? 0} TOKENS
+              {subStatus.unlimited ? 'UNLIMITED' : `${subStatus.balance ?? 0} TOKENS`}
             </span>
           </div>
         )}

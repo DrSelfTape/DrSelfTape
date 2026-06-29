@@ -484,6 +484,9 @@ export default function Membership({ onClose }) {
   // to match (showing "1 week free" to an existing subscriber is misleading).
   const hasActivePlan = status?.status === 'active';
   const tokenBalance = status?.balance ?? 0;
+  // Premium is the "Unlimited" tier — the BE flags it so we show "Unlimited"
+  // rather than the frozen balance number (which never deducts for them).
+  const isUnlimited = !!status?.unlimited;
   const sel = PLANS.find((p) => p.id === selectedPlan);
   const selIntro = introOffers[`${selectedPlan}_${billing}`];
   const selIntroLabel = introOfferLabel(selIntro);
@@ -556,8 +559,14 @@ export default function Membership({ onClose }) {
             backdropFilter: 'blur(20px)',
           }}>
             <span style={{ fontSize: 14 }}>🎟️</span>
-            <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{tokenBalance}</span>
-            <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>tokens remaining</span>
+            {isUnlimited ? (
+              <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>Unlimited AI</span>
+            ) : (
+              <>
+                <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{tokenBalance}</span>
+                <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>tokens remaining</span>
+              </>
+            )}
           </div>
         )}
 
