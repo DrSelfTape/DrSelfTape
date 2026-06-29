@@ -797,8 +797,12 @@ export default function Membership({ onClose }) {
           </div>
         </div>
 
-        {/* "No payment now" microcopy */}
-        {selIntro?.isFreeTrial && (
+        {/* "No payment now" microcopy — gated on !hasActivePlan to match the
+            trial badge (675) and CTA prefix (753). An existing/upgrading
+            subscriber has already used the intro offer (the stores block a
+            re-used trial), so promising "no payment now / your trial ends" to
+            them is wrong. */}
+        {selIntro?.isFreeTrial && !hasActivePlan && (
           <div style={{
             textAlign: 'center', fontSize: 12, color: 'var(--aurora-sub)',
             marginBottom: 14, lineHeight: 1.5,
