@@ -1050,6 +1050,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const settingsLoadedForSteps = useSelector((state) => state.userSettings?.loaded);
   const firstReviewPending = !!settingsLoadedForSteps && !tutorialProgress.first_review;
 
+  // First-session Home variant (Tier 2 item 1): until the first Tape Review
+  // completes, Home renders 5 blocks max — greeting → hero → tutorial
+  // checklist (the ONE guidance system) → practice strip → Explore grid —
+  // instead of the full promotional feed. While settings are still loading
+  // we render the minimal variant too: the calmer wrong guess.
+  const firstSession = !settingsLoadedForSteps || firstReviewPending;
+
   const nextStep = getMobileNextStep({ profile, stats: s, submissions, scripts: rawScripts, firstReviewPending });
 
   // Drop the user into the Tape Review tab with the first-review flow active —
@@ -1158,6 +1165,18 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
   const firstCallback = callbacks[0];
 
+  // Tutorial checklist — rendered in one of two slots: directly under the
+  // hero for first-session users (their single guidance system), or in its
+  // usual lower slot on the full Home.
+  const tutorialChecklist = (
+    <div style={{ marginBottom: 14 }}>
+      <TutorialChecklist onNavigate={({ tab, panel }) => {
+        if (tab) { setTab(tab); }
+        if (panel) { setCurrentPanel(panel); }
+      }} />
+    </div>
+  );
+
   // ── Tape Review highlight — the hero feature. Permanent position 1 on
   // Home for everyone: free-offer copy + first-review handoff while the
   // free review is unclaimed, standard copy + tab handoff afterwards.
@@ -1202,10 +1221,14 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
 
-      {/* Profile completeness — auto-hides at 100% */}
-      <div style={{ paddingTop: 8 }}>
-        <ProfileCompleteness onTapMissing={() => setCurrentPanel('dash-profile')} />
-      </div>
+      {/* Profile completeness — auto-hides at 100%. Hidden pre-first-review:
+          the checklist is the one guidance system on the first-session Home,
+          and profile tasks come after the value moment (Tier 2 item 2). */}
+      {!firstSession && (
+        <div style={{ paddingTop: 8 }}>
+          <ProfileCompleteness onTapMissing={() => setCurrentPanel('dash-profile')} />
+        </div>
+      )}
 
       {/* ── Greeting block ── */}
       <div style={{ padding: '24px 0 22px' }}>
@@ -1224,6 +1247,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
            the first review is unclaimed, standard copy after) ── */}
       {tapeReviewHero}
 
+      {/* ── First-session: the checklist is the ONE guidance system, right
+           under the hero (it subsumes the Smart Next Step banner). ── */}
+      {firstSession && tutorialChecklist}
+
+      {/* ── Full-Home blocks — hidden until the first review completes so
+           the first session stays at 5 blocks with one obvious action. ── */}
+      {!firstSession && (<>
       {/* ── AI scene partner CTA — position 2. Routes to the actual live
            reader (Scenes tab → pick sides → Go Live), the same path the
            Smart Next Step 'live' action uses. It used to open cd-sim, which
@@ -1361,10 +1391,49 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           </div>
         </button>
       )}
+      </>)}
 
-      {/* ── Practice strip ── */}
+      {/* ── Practice strip ── (renders only with real data) */}
       <AuroraPracticeStrip />
 
+      {/* ── First-session Explore grid — compact 2×2 flat teaser tiles in
+           place of the full-width card stack. Deliberately flat: the hero
+           above keeps Home's only gradient (one-accent rule). ── */}
+      {firstSession && (
+        <div style={{ marginTop: 14 }}>
+          <span className="aurora-eyebrow" style={{ display: 'block', color: 'var(--aurora-dim)', marginBottom: 10 }}>
+            EXPLORE
+          </span>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            {[
+              { k: 'partner', emoji: '🎬', title: 'AI scene partner', desc: 'Run lines out loud', go: () => setTab('scenes') },
+              { k: 'compare', emoji: '🏆', title: 'Compare Takes', desc: 'AI picks your best', go: launchCompareTakes },
+              { k: 'coach', emoji: '🎭', title: 'Acting Coach', desc: 'Notes on your scene', go: () => setCurrentPanel('cd-sim') },
+              { k: 'community', emoji: '💬', title: 'Community', desc: 'Readers + green room', go: () => setTab('connect') },
+            ].map((t) => (
+              <button
+                key={t.k}
+                type="button"
+                onClick={t.go}
+                onTouchEnd={(e) => { e.preventDefault(); t.go(); }}
+                className="aurora-card"
+                style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 5,
+                  padding: '14px 14px 12px', cursor: 'pointer', textAlign: 'left',
+                  border: 'none', color: 'var(--aurora-text)',
+                  touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <span style={{ fontSize: 20 }}>{t.emoji}</span>
+                <span style={{ fontSize: 13.5, fontWeight: 600 }}>{t.title}</span>
+                <span style={{ fontSize: 11, color: 'var(--aurora-sub)' }}>{t.desc}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!firstSession && (<>
       {/* ── Pipeline blocks ── only render when there's data. The "log
            your first audition" empty state used to live here but was
            redundant — the Smart Next Step banner and the Get Started
@@ -1734,12 +1803,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       <div style={{ marginBottom: 14 }}>
         <DailyChallengeCard />
       </div>
-      <div style={{ marginBottom: 14 }}>
-        <TutorialChecklist onNavigate={({ tab, panel }) => {
-          if (tab) { setTab(tab); }
-          if (panel) { setCurrentPanel(panel); }
-        }} />
-      </div>
+      {tutorialChecklist}
 
       {/* ── Availability toggle ── */}
       <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
@@ -1855,6 +1919,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           ))}
         </div>
       )}
+      </>)}
 
       {/* ── V1FAB radial quick-actions ──
            First action is the money feature. The old "Record take" → cd-sim
