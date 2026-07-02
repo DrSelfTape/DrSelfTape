@@ -1186,10 +1186,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
            the first review is unclaimed, standard copy after) ── */}
       {tapeReviewHero}
 
-      {/* ── Studio CTA ── dark gradient block w/ gold mic — position 2 ── */}
+      {/* ── AI scene partner CTA — position 2. Routes to the actual live
+           reader (Scenes tab → pick sides → Go Live), the same path the
+           Smart Next Step 'live' action uses. It used to open cd-sim, which
+           is coaching notes, not a scene partner — a lying CTA. ── */}
       <button
         type="button"
-        onClick={() => setCurrentPanel('cd-sim')}
+        onClick={() => setTab('scenes')}
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 14,
           padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
@@ -1226,13 +1229,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             className="aurora-eyebrow"
             style={{ display: 'block', color: 'rgba(255,255,255,0.65)', marginBottom: 2 }}
           >
-            ACTING COACH
+            AI SCENE PARTNER
           </span>
           <p style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
             Rehearse with an AI scene partner
           </p>
           <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', margin: '2px 0 0' }}>
-            Upload sides · get coaching notes
+            Load your sides · run the scene out loud
           </p>
         </div>
       </button>
@@ -1598,6 +1601,52 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </div>
       )}
 
+      {/* ── Acting Coach (cd-sim) — honest copy: it gives coaching notes on
+           a scene, it is not the scene partner (that card lives up top). ── */}
+      <button
+        type="button"
+        onClick={() => setCurrentPanel('cd-sim')}
+        onTouchEnd={(e) => { e.preventDefault(); setCurrentPanel('cd-sim'); }}
+        className="aurora-card"
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+          padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
+          textAlign: 'left', border: 'none', color: 'var(--aurora-text)',
+          touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <div
+          style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: 'color-mix(in oklch, var(--aurora-heritage-gold) 22%, transparent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22, flexShrink: 0,
+          }}
+        >
+          🎭
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span
+            className="aurora-eyebrow"
+            style={{ display: 'block', color: 'var(--aurora-dim)', marginBottom: 2 }}
+          >
+            ACTING COACH
+          </span>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
+            Get coaching notes on your scene
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+            Upload sides · expert feedback on your read
+          </p>
+        </div>
+        <span
+          className="aurora-mono"
+          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+        >
+          OPEN →
+        </span>
+      </button>
+
       {/* ── Tutorial + daily challenge — kept; Aurora glass treatment via wrapper ── */}
       <div style={{ marginBottom: 14 }}>
         <DailyChallengeCard />
@@ -1724,16 +1773,19 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </div>
       )}
 
-      {/* ── V1FAB radial quick-actions ── */}
+      {/* ── V1FAB radial quick-actions ──
+           First action is the money feature. The old "Record take" → cd-sim
+           was a lying label twice over: there is no in-app recorder yet
+           (SelfTapesPanel is upload-only) and cd-sim isn't a camera. */}
       <V1FAB
         actions={[
           {
-            k: 'rec',
-            label: 'Record take',
-            short: 'REC',
+            k: 'notes',
+            label: 'Get tape notes',
+            short: 'NOTES',
             color: '#D4A85F',
-            icon: <Icon name="mic" size={16} />,
-            onClick: () => setCurrentPanel('cd-sim'),
+            icon: <Icon name="tape" size={16} />,
+            onClick: () => setTab('tape-review'),
           },
           {
             k: 'aud',
