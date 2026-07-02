@@ -498,10 +498,15 @@ function AuroraHeroRing({ stats, auditions }) {
 }
 
 /* ── Aurora practice strip ── 7-day chart of actual practice minutes
-   plus today / soft-goal headline. Logged by LiveSceneMode on session end. */
+   plus today / soft-goal headline and an honest server-computed streak
+   chip. Logged by LiveSceneMode on session end. */
 function AuroraPracticeStrip() {
   const [week, setWeek] = useState([]);  // [{ date, seconds }, ...] oldest → newest
   const [goal, setGoal] = useState(600); // 10 min default
+  // Server-computed consecutive practice days (BE derives it from the same
+  // PracticeDay rows this chart reads). Never from localStorage — the old
+  // gameStore streak was client-side fiction and got wiped on reinstall.
+  const [streakDays, setStreakDays] = useState(0);
   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   useEffect(() => {
@@ -509,6 +514,7 @@ function AuroraPracticeStrip() {
       const d = res?.data?.data;
       if (d?.days) setWeek(d.days);
       if (d?.daily_goal_seconds) setGoal(d.daily_goal_seconds);
+      if (typeof d?.current_streak_days === 'number') setStreakDays(d.current_streak_days);
     }).catch(() => {});
   }, []);
 
@@ -528,7 +534,18 @@ function AuroraPracticeStrip() {
   return (
     <div className="aurora-card" style={{ padding: 16, marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <span className="aurora-eyebrow">PRACTICE · TODAY</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <span className="aurora-eyebrow">PRACTICE · TODAY</span>
+          {/* Honest streak — server value only, and only once it's a streak
+              (>= 2 days). No XP, no ranks, no freeze tokens. */}
+          {streakDays >= 2 && (
+            <span style={{
+              fontSize: 'var(--type-xs)', fontWeight: 700, padding: '2px 8px', borderRadius: 100,
+              background: 'color-mix(in oklch, var(--aurora-peach) 26%, transparent)',
+              color: 'var(--aurora-text)', whiteSpace: 'nowrap', letterSpacing: '0.02em',
+            }}>🔥 {streakDays}-day streak</span>
+          )}
+        </span>
         <span className="aurora-mono" style={{ color: 'var(--aurora-text)', fontSize: 12 }}>
           {todayMin} <span style={{ color: 'var(--aurora-dim)' }}>/ {goalMin} min</span>
           {todaySeconds >= goal && (
@@ -3930,7 +3947,7 @@ export default function DrSelfTapeApp() {
 
       {isMobile ? (
         <div style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
-          {/* Top Bar — Aurora style: logo badge + mono wordmark, streak + bell + avatar.
+          {/* Top Bar — Aurora style: logo badge + mono wordmark, bell + avatar.
               Solid pinned bar with a subtle bottom hairline so the chrome
               reads as part of the build, not floating elements over the
               page gradient. Still slides up when a modal opens. */}
