@@ -198,6 +198,19 @@ export async function unregisterPushToken() {
   }
 }
 
+// Deep-link to this app's page in the OS Settings (iOS renders the
+// notification toggles there). Once a user has DENIED the permission the OS
+// never re-prompts, so Settings is the only recovery path — used by the
+// post-review "turn on notifications" nudge. Same AppLauncher route
+// openExternal uses for store links.
+export async function openNotificationSettings() {
+  try {
+    if (!isCapacitorNative()) return;
+    const { AppLauncher } = await import('@capacitor/app-launcher');
+    await AppLauncher.openUrl({ url: 'app-settings:' });
+  } catch { /* best-effort — never block the caller */ }
+}
+
 async function subscribeNative() {
   // Dynamic import so non-native bundles don't pull in the plugin.
   const { PushNotifications } = await import('@capacitor/push-notifications');
@@ -277,17 +290,28 @@ export function usePushNotifications() {
     }
   };
 
-  // Auto-subscribe on mount when running natively (Capacitor handles its
-  // own permission prompt; we don't surface an in-app prompt for it).
-  // Web Push only auto-runs if already granted to avoid prompting on
-  // every load.
+  // On mount: wire listeners and re-register ONLY when permission is already
+  // granted (mirrors the web branch). The old unconditional subscribe() fired
+  // the iOS system permission dialog at cold open — front-running the
+  // deliberately post-value onboarding notification step, which is now the
+  // FIRST ask. We also surface the real OS permission state so consumers can
+  // render a denied-state recovery path (Settings deep-link).
   useEffect(() => {
     if (native) {
       // Wire tap/registration listeners immediately — independent of the
       // permission prompt — so a notification that cold-starts the app
       // deep-links instead of being lost before subscribe() runs.
       wireNativeListeners();
-      subscribe();
+      (async () => {
+        try {
+          const { PushNotifications } = await import('@capacitor/push-notifications');
+          const perm = await PushNotifications.checkPermissions();
+          const state = perm.receive === 'granted' ? 'granted'
+            : perm.receive === 'denied' ? 'denied' : 'default';
+          setPermission(state);
+          if (state === 'granted') subscribe();
+        } catch { /* plugin unavailable — leave permission at 'default' */ }
+      })();
     } else if (supported && permission === 'granted') {
       subscribe();
     }

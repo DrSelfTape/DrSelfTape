@@ -7,7 +7,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Upload, Loader2, Film, CheckCircle2, Target, Sparkles,
+  Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X,
   RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater, Trophy, HelpCircle,
 } from 'lucide-react';
 import { reviewTape, clearTapeReview } from '../../../redux/features/jericho/jerichoSlice';
@@ -16,6 +16,7 @@ import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial'
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { trackEvent, Events } from '../../../utils/analytics';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { usePushNotifications, isCapacitorNative, openNotificationSettings } from '../../../hooks/usePushNotifications';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 
@@ -35,6 +36,53 @@ function FirstReviewPaywall({ onUpgrade }) {
         style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
       >
         <Sparkles size={15} /> See plans
+      </button>
+    </div>
+  );
+}
+
+const NOTIF_NUDGE_KEY = 'dst_notif_nudge_dismissed';
+
+/* Denied-state recovery — once a user has denied push, iOS never re-prompts,
+ * so after a completed review (the moment notifications have obvious value)
+ * we offer the only road back: the app's page in Settings. Dismissible and
+ * remembered per device. */
+function NotificationsNudge() {
+  const { permission } = usePushNotifications();
+  const [dismissed, setDismissed] = useState(() => {
+    try { return localStorage.getItem(NOTIF_NUDGE_KEY) === '1'; } catch { return false; }
+  });
+  if (!isCapacitorNative() || permission !== 'denied' || dismissed) return null;
+  const dismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem(NOTIF_NUDGE_KEY, '1'); } catch { /* private mode */ }
+  };
+  return (
+    <div className="rounded-2xl border border-[#D4A85F]/25 p-4 flex items-start gap-3" style={{ background: 'rgba(212,168,95,0.06)' }}>
+      <Bell size={16} className="text-[#7A5A18] flex-shrink-0 mt-0.5" />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-[#0A0A0A] font-medium leading-snug">
+          Turn on notifications to get your notes the moment they&apos;re ready.
+        </p>
+        <button
+          type="button"
+          onClick={openNotificationSettings}
+          onTouchEnd={(e) => { e.preventDefault(); openNotificationSettings(); }}
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          className="text-xs font-bold text-[#7A5A18] underline mt-1.5"
+        >
+          Open Settings
+        </button>
+      </div>
+      <button
+        type="button"
+        onClick={dismiss}
+        onTouchEnd={(e) => { e.preventDefault(); dismiss(); }}
+        style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+        aria-label="Dismiss"
+        className="flex-shrink-0 text-[rgba(10,10,10,0.35)]"
+      >
+        <X size={14} />
       </button>
     </div>
   );
@@ -250,6 +298,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
     return (
       <div className="space-y-4 sm:space-y-5">
+        {/* Push-denied recovery — notifications just became obviously useful */}
+        <NotificationsNudge />
+
         {/* Verdict */}
         {r.verdict && (
           <div className="rounded-2xl border border-[#D4A85F]/25 p-4 sm:p-5" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
