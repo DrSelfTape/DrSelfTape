@@ -3214,8 +3214,12 @@ const CONNECT_SECTIONS = [
   { key: 'chat', label: 'Chat', panelId: 'green-room' },
 ];
 
-function ConnectScreen({ section, setSection, onBack }) {
+function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
   const active = CONNECT_SECTIONS.find(s => s.key === section) || CONNECT_SECTIONS[0];
+  // A scene-match deep link (tab:'green-room' + subPanel) only applies to the
+  // Chat (green-room) section — thread it through so the match opens instead
+  // of the generic list (codex review catch on the 5-tab merge).
+  const subPanel = active.panelId === 'green-room' ? (pendingSubPanel || null) : null;
   return (
     <div style={{ minHeight: '100%' }}>
       {/* Section row */}
@@ -3240,8 +3244,15 @@ function ConnectScreen({ section, setSection, onBack }) {
           </button>
         ))}
       </div>
-      {/* Re-key so switching sections remounts the sub-screen cleanly. */}
-      <PanelScreen key={active.key} panelId={active.panelId} onBack={onBack} />
+      {/* Re-key so switching sections remounts the sub-screen cleanly — and
+          re-key on a pending deep-link so a late-arriving match target still
+          remounts into the right sub-screen. */}
+      <PanelScreen
+        key={subPanel ? `${active.key}:${subPanel.id}:${subPanel.matchId}` : active.key}
+        panelId={active.panelId}
+        onBack={onBack}
+        initialSubPanel={subPanel}
+      />
     </div>
   );
 }
@@ -3697,6 +3708,12 @@ export default function DrSelfTapeApp() {
       const { tab: targetTab, panel: targetPanel, subPanel: targetSubPanel, matchId, readerId } = e.detail || {};
       if (targetTab) {
         setCurrentPanel(null);
+        // A subPanel riding a TAB payload (e.g. tab:'green-room' +
+        // subPanel:'green-room-chat' from a scene-match deep link) is stashed
+        // so ConnectScreen opens the match instead of the generic list — and
+        // cleared otherwise so a stale match can't auto-reopen (codex review
+        // catch on the 5-tab merge).
+        setPendingSubPanel(targetSubPanel ? { id: targetSubPanel, matchId } : null);
         // Retired tab ids (find-a-reader / green-room) alias into the merged
         // Connect tab so old deep links and push payloads don't dead-end.
         const alias = TAB_ALIASES[targetTab];
@@ -3766,6 +3783,7 @@ export default function DrSelfTapeApp() {
         section={connectSection}
         setSection={setConnectSection}
         onBack={() => handleSetTab("home")}
+        pendingSubPanel={pendingSubPanel}
       />
     ),
     // Failsafe: any raw setTab that bypasses the alias resolution still
@@ -4111,8 +4129,11 @@ export default function DrSelfTapeApp() {
             <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
               {TABS.map(t => {
                 const a = tab === t.id;
+                // handleSetTab (not raw setTab) so an open panel is cleared —
+                // raw setTab left the panel overlaying the new tab (codex
+                // review catch).
                 return (
-                  <button key={t.id} onClick={() => setTab(t.id)} style={{
+                  <button key={t.id} onClick={() => handleSetTab(t.id)} style={{
                     display: "flex", alignItems: "center", gap: 12, padding: "11px 12px",
                     borderRadius: 12, border: "none", cursor: "pointer",
                     background: a ? CORAL_DIM : "transparent",
@@ -4124,7 +4145,7 @@ export default function DrSelfTapeApp() {
               })}
               <div style={{ borderTop: `1px solid ${BORDER}`, margin: "12px 0", paddingTop: 12 }}>
                 {/* Auditions left the 5-tab bar but stays a live tab id */}
-                <button onClick={() => setTab("auditions")} style={{
+                <button onClick={() => handleSetTab("auditions")} style={{
                   display: "flex", alignItems: "center", gap: 12, padding: "11px 12px",
                   borderRadius: 12, border: "none", cursor: "pointer", background: "transparent", width: "100%", marginBottom: 2,
                 }}>
