@@ -1202,10 +1202,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <span className="aurora-eyebrow" style={{ color: '#FCE072' }}>
           {firstReviewPending ? '✨ FREE · AI TAPE REVIEW' : '✨ NEW · AI TAPE REVIEW'}
         </span>
-        <div className="aurora-display" style={{ fontSize: 19, color: '#FFF', letterSpacing: '-0.4px', lineHeight: 1.12, marginTop: 5 }}>
+        <div className="aurora-display" style={{ fontSize: 'var(--type-lg)', color: '#FFF', letterSpacing: '-0.4px', lineHeight: 1.12, marginTop: 5 }}>
           {firstReviewPending ? 'Your first review is free →' : 'Casting-grade notes on your self-tape →'}
         </div>
-        <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', marginTop: 6, fontWeight: 500 }}>
+        <span style={{ fontSize: 'var(--type-sm)', color: 'rgba(255,255,255,0.72)', marginTop: 6, fontWeight: 500 }}>
           Submit a take · notes in seconds
         </span>
       </div>
@@ -1429,8 +1429,8 @@ function HomeScreen({ setTab, setCurrentPanel }) {
                 }}
               >
                 <span style={{ fontSize: 20 }}>{t.emoji}</span>
-                <span style={{ fontSize: 13.5, fontWeight: 600 }}>{t.title}</span>
-                <span style={{ fontSize: 11, color: 'var(--aurora-sub)' }}>{t.desc}</span>
+                <span style={{ fontSize: 'var(--type-base)', fontWeight: 600 }}>{t.title}</span>
+                <span style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)' }}>{t.desc}</span>
               </button>
             ))}
           </div>
@@ -4077,7 +4077,7 @@ export default function DrSelfTapeApp() {
                     color={(a || t.highlight) ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)'}
                   />
                   <span style={{
-                    fontSize: 10, fontWeight: a ? 700 : 500,
+                    fontSize: 'var(--type-xs)', fontWeight: a ? 700 : 500,
                     color: (a || t.highlight) ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)',
                     letterSpacing: '-0.01em',
                     whiteSpace: 'nowrap',

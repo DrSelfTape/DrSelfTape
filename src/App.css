@@ -208,7 +208,7 @@
 /* Mono / typography helpers */
 .aurora-eyebrow {
   font-family: "JetBrains Mono", monospace;
-  font-size: 10px;
+  font-size: var(--type-xs, 10px);
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -335,6 +335,19 @@ button, a, [role="button"] {
   --font-bebas: "Bebas Neue", sans-serif;
   --font-anton: "Anton", sans-serif;
   --font-sans: "Space Grotesk", sans-serif;
+
+  /* Type scale — 5 steps (layout gameplan Tier 3 sweep). Values match the
+   * dominant sizes already shipped, so adopting a step is consolidation,
+   * not redesign. New mobile type should pick a step; off-scale strays
+   * migrate to the nearest step opportunistically.
+   * NOTE: deliberately namespaced --type-* (NOT --text-*) — Tailwind v4's
+   * theme owns --text-xs/sm/base/lg for its text-* utilities and overriding
+   * those in :root would reshrink every Tailwind text class app-wide. */
+  --type-xs: 10px;      /* eyebrows, badges, tab-bar labels */
+  --type-sm: 11px;      /* card meta, secondary labels */
+  --type-base: 13px;    /* body copy, buttons, list titles */
+  --type-lg: 18px;      /* section titles, emphasized rows */
+  --type-display: 22px; /* screen titles, hero lines */
 }
 
 /* Hide scrollbar  */
