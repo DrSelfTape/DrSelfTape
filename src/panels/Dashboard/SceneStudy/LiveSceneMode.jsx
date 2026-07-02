@@ -322,6 +322,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
    * Play TTS audio for the AI response.
    */
   const playTTS = useCallback(async (text, selectedVoice) => {
+    // Each line starts with a clean slate — a failure banner from a previous
+    // line disappears as soon as a new line attempts playback.
+    setErrorMsg('');
     // Lazy fallback: if no gesture has fired yet (shouldn't happen on iOS
     // since Begin / VoicePicker / Allow all prime), still try to create.
     if (!audioContextRef.current) {
@@ -1498,8 +1501,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             )}
           </div>
 
-          {/* Error Message */}
-          {status === 'error' && errorMsg && (
+          {/* Error Message — renders whenever a message is set, NOT only in
+              the terminal 'error' status: the TTS-failure paths deliberately
+              continue the scene (status stays 'listening'/'playing'), and
+              gating on status==='error' made those messages invisible (codex
+              review catch — the June-29 silent reader stayed silent AND
+              unexplained). playTTS clears it on each new line. */}
+          {errorMsg && (
             <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-xl px-6 py-3 max-w-md">
               <p className="text-red-400 text-sm text-center">{errorMsg}</p>
             </div>
