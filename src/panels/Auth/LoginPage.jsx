@@ -116,6 +116,36 @@ export default function LoginPage() {
     }
   }, []);
 
+  // iOS 26 WKWebView leaves this scroll container scrolled after the keyboard
+  // dismisses, parking the logo under the Dynamic Island (screenshot-reported
+  // 2026-07-02). Restore the resting position once nothing is focused —
+  // keyboardDidHide on native, focusout as the web fallback.
+  const scrollRef = useRef(null);
+  useEffect(() => {
+    const restore = () => {
+      setTimeout(() => {
+        const el = document.activeElement;
+        const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+        if (!typing) scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 80);
+    };
+    let sub;
+    (async () => {
+      try {
+        if (Capacitor.isNativePlatform()) {
+          const { Keyboard } = await import('@capacitor/keyboard');
+          sub = await Keyboard.addListener('keyboardDidHide', restore);
+        }
+      } catch { /* plugin unavailable — the focusout fallback still applies */ }
+    })();
+    const node = scrollRef.current;
+    node?.addEventListener('focusout', restore);
+    return () => {
+      try { sub?.remove(); } catch { /* noop */ }
+      node?.removeEventListener('focusout', restore);
+    };
+  }, []);
+
   return (
     <div style={{
       // 100dvh shrinks with the iOS virtual keyboard so the Sign In button
@@ -169,7 +199,7 @@ export default function LoginPage() {
       }} />
 
       {/* Content layer */}
-      <div style={{
+      <div ref={scrollRef} style={{
         position: "relative", zIndex: 10,
         minHeight: "100dvh",
         display: "flex", flexDirection: "column",
