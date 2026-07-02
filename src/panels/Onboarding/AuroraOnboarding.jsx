@@ -7,8 +7,13 @@ import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
 import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
 
 /* ── Aurora post-signup onboarding flow ────────────────────────────────
- * 8 steps: identity → profile → interests → goals → level → notif →
- * follow → building → welcome.
+ * 3 screens pre-value (Tier 2 item 2): identity → free-review offer →
+ * notifications. The old profile/interests/goals/level/follow steps were
+ * cut — their only BE-real data (headshot, bio, union, location, years,
+ * genres) is collected post-first-review via the ProfileCompleteness
+ * card on Home instead (interests/goals/level never had BE fields; the
+ * old flow appended them to the profile PATCH and the serializer dropped
+ * them). The step components stay below for that post-value reuse.
  *
  * Mounts as a full-screen overlay above MobileApp content. Replaces the
  * old ReaderOnboardingModal trigger. Persists progress to localStorage so
@@ -22,15 +27,14 @@ import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
 // paywall. Flip VITE_FIRST_REVIEW_FLOW=true once 1.0.7 (the analyzer) is live.
 const FIRST_REVIEW_FLOW = import.meta.env.VITE_FIRST_REVIEW_FLOW === 'true';
 
-// Activation-first order when the free-first-review flow is ON: pitch the free
-// Tape Review right after the name step (fast aha), and move the push-permission
-// (notif) ask to the LAST question step (after value). Flag OFF = original order.
+// Three screens, nothing between the ad click and the aha moment. Flag ON:
+// name → free-review offer → notifications (offer-skip continues to notif;
+// taking the offer hands straight off to the analyzer). Flag OFF keeps the
+// offer terminal, as before, so skipFirstReview's finish() branch still holds.
 const STEPS = FIRST_REVIEW_FLOW
-  ? ['identity', 'offer', 'profile', 'interests', 'goals', 'level', 'follow', 'notif', 'building', 'welcome']
-  : ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow', 'building', 'welcome', 'offer'];
-const Q_STEPS = FIRST_REVIEW_FLOW
-  ? ['identity', 'profile', 'interests', 'goals', 'level', 'follow', 'notif']
-  : ['identity', 'profile', 'interests', 'goals', 'level', 'notif', 'follow'];
+  ? ['identity', 'offer', 'notif']
+  : ['identity', 'notif', 'offer'];
+const Q_STEPS = ['identity', 'notif'];
 
 // Best-effort analytics — mirrors the dynamic-import pattern finish() already
 // uses so a missing/blocked analytics bundle never breaks onboarding.
@@ -65,7 +69,7 @@ const TYPES = ['Leading', 'Character', 'Comedic', 'Ingénue', 'Best Friend', 'Vi
 const PRONOUNS = ['she/her', 'he/him', 'they/them', 'other'];
 const UNIONS = ['SAG-AFTRA', 'Eligible', 'Non-union'];
 
-const STORAGE_STEP = 'dst_onb_step_v2'; // v2: step order changed (free-review reorder) — old numeric indices meant different steps, so ignore stale v1 progress (entered data in STORAGE_DATA is preserved)
+const STORAGE_STEP = 'dst_onb_step_v3'; // v3: flow cut to 3 screens — old numeric indices meant different steps, so ignore stale v1/v2 progress (entered data in STORAGE_DATA is preserved)
 const STORAGE_DATA = 'dst_onb_data';
 
 /* Primary gold CTA — gradient + sheen */
@@ -1102,7 +1106,14 @@ export default function AuroraOnboarding({ onClose }) {
                 onNext={next}
               />
             )}
-            {step === 'notif' && <Notif onAllow={next} onSkip={next} />}
+            {/* notif is the LAST step when the free-review flow is on — advance
+                via finish() there, since next() would clamp and trap the user. */}
+            {step === 'notif' && (
+              <Notif
+                onAllow={() => (i + 1 >= STEPS.length ? finish() : next())}
+                onSkip={() => (i + 1 >= STEPS.length ? finish() : next())}
+              />
+            )}
             {step === 'follow' && <Follow onNext={next} />}
           </div>
         </div>
