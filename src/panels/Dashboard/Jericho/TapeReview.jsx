@@ -245,11 +245,16 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   }, []);
 
   // Fix: the mode initializer reads notesReadyKind synchronously at mount, but
-  // a resumed compare job sets notesReady = 'compare' only after the poll
-  // resolves (post-mount). Sync mode here so compare results land in compare
-  // mode even when the resume arrives after the initial render.
+  // a resumed job sets notesReady only after the poll resolves (post-mount).
+  // Sync mode BOTH ways so a resumed result always lands in the mode that can
+  // show it: compare results flip to compare, and a resumed REVIEW flips back
+  // to single even when the user arrived via the compare deep-link (the
+  // final-review FIX-SOON — otherwise a paid review sat invisible behind
+  // compare mode). notesReady is Redux-only and false at mount, so these fire
+  // exactly when a job resolves, never fighting the deep-link initializer.
   useEffect(() => {
     if (notesReadyKind === 'compare' && !firstReview) setMode('compare');
+    else if (notesReadyKind === 'review' && !firstReview) setMode('single');
   }, [notesReadyKind, firstReview]);
 
   // A plain element (not an inline component) so re-renders reconcile it in

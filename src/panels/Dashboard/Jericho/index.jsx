@@ -100,7 +100,12 @@ function ReviewDetailSheet({ session, onClose }) {
     setError(null);
     axios
       .get(`/v1/ai/session-log/${session.id}/`)
-      .then((res) => { setDetail(res.data); setLoading(false); })
+      .then((res) => {
+        // A 200 with a null/empty body would otherwise leave all three body
+        // states false → blank sheet (final-review FIX-SOON).
+        if (!res.data) { setError('Unexpected empty response.'); setLoading(false); return; }
+        setDetail(res.data); setLoading(false);
+      })
       .catch((err) => {
         setError(err?.response?.data?.detail || 'Failed to load review details.');
         setLoading(false);
