@@ -26,6 +26,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         } catch {
             NSLog("AVAudioSession setup failed: \(error)")
         }
+        // Re-arm the session after interruptions (phone call, Siri, alarm,
+        // another app taking audio). Without this, setActive(true) only ever
+        // ran at launch: an interruption mid scene-read left the session
+        // inactive and WKWebView's AudioContext suspended, so the AI reader
+        // went silent with no error (the June-29 1-star: turns kept logging,
+        // audio never played). On .ended we restore the category + activate;
+        // the web layer additionally falls back to HTMLAudio when its
+        // AudioContext is still suspended.
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: AVAudioSession.sharedInstance(),
+            queue: .main
+        ) { note in
+            guard let info = note.userInfo,
+                  let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
+                  let type = AVAudioSession.InterruptionType(rawValue: typeValue),
+                  type == .ended else { return }
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setCategory(
+                    .playAndRecord,
+                    mode: .default,
+                    options: [.defaultToSpeaker, .allowBluetooth, .duckOthers]
+                )
+                try session.setActive(true)
+                NSLog("AVAudioSession re-activated after interruption")
+            } catch {
+                NSLog("AVAudioSession re-activation failed: \(error)")
+            }
+        }
         // Start the VoIP/CallKit manager NOW (not in the plugin's load) so the
         // PushKit registry + CallKit provider exist even when iOS cold-launches
         // the app from a VoIP push before the web layer is up.
