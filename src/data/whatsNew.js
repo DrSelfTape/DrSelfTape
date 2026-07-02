@@ -8,6 +8,19 @@
  */
 export const WHATS_NEW = [
   {
+    id: 3,
+    version: '1.0.12',
+    date: 'July 2026',
+    title: 'A home screen that works for you',
+    intro: "We rebuilt the way you move through the app — here's what's new:",
+    highlights: [
+      { emoji: '🎬', title: 'Tape Review, front and center', body: 'Your AI casting notes are now the first thing on Home — and your first review is free.' },
+      { emoji: '⚖️', title: 'Compare Takes, easier to find', body: 'Filmed a few takes? The AI picks the winner — now one tap from Home, More, or right after a review.' },
+      { emoji: '🎧', title: 'A more reliable scene partner', body: "The AI reader's voice now recovers automatically after calls and interruptions — no more silent reads." },
+      { emoji: '🧭', title: 'Clearer navigation', body: "Every tab is labeled, and things live where you'd expect them." },
+    ],
+  },
+  {
     id: 2,
     version: '1.0.10',
     date: 'June 2026',
