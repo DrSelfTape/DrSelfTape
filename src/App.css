@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 @import 'tailwindcss';
 
@@ -332,8 +331,6 @@ button, a, [role="button"] {
   --text-input-size: 14px;
   --text-input-title-size: 12px;
   --font-jetbrains: "JetBrains Mono", monospace;
-  --font-bebas: "Bebas Neue", sans-serif;
-  --font-anton: "Anton", sans-serif;
   --font-sans: "Space Grotesk", sans-serif;
 
   /* Type scale — 5 steps (layout gameplan Tier 3 sweep). Values match the
