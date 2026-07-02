@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Copy, Share2, Gift, Users, Coins, CheckCircle } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import { trackEvent, Events } from '../../../utils/analytics';
 
 export default function Referral() {
   const [data, setData] = useState(null);
@@ -28,6 +29,7 @@ export default function Referral() {
 
   const handleShare = async () => {
     if (!data?.share_url) return;
+    trackEvent(Events.REFERRAL_SHARE_TAP, { method: navigator.share ? 'native' : 'copy' });
     if (navigator.share) {
       try {
         await navigator.share({

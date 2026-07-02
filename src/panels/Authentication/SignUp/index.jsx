@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 
@@ -20,6 +20,31 @@ import { registerUser } from '../../../redux/features/auth/authSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import AppleSignInButton from '../../../components/Auth/AppleSignInButton';
 import { Capacitor } from '@capacitor/core';
+import axiosInstance, { setAuthToken } from '../../../redux/http';
+import { trackEvent, Events } from '../../../utils/analytics';
+
+const REF_CODE_KEY = 'dst_ref_code';
+
+// Redeem a stored referral code right after registration. Both sides earn
+// 50 tokens (POST /v1/growth/referral/apply/ — BE validates self-referral,
+// reuse, and the referrer cap). Failure is silent-but-logged: an invalid or
+// expired code must never degrade a successful signup.
+async function applyStoredReferral(toast) {
+  let code = null;
+  try { code = localStorage.getItem(REF_CODE_KEY); } catch { /* private mode */ }
+  if (!code) return;
+  try {
+    const res = await axiosInstance.post('/v1/growth/referral/apply/', { code });
+    if (res?.data?.success) {
+      try { localStorage.removeItem(REF_CODE_KEY); } catch { /* noop */ }
+      trackEvent(Events.REFERRAL_APPLIED, { code });
+      toast.success('+50 tokens — referral bonus added! 🎁');
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn('Referral apply failed:', err?.response?.data?.message || err?.message);
+  }
+}
 
 export const Signup = () => {
   const navigate = useNavigate();
@@ -42,6 +67,16 @@ export const Signup = () => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Capture ?ref= from a shared referral link (the BE share_url points at
+  // /signup?ref=CODE). Persisted to localStorage so the code survives the
+  // form → register → auto-login transition.
+  useEffect(() => {
+    try {
+      const ref = new URLSearchParams(window.location.search).get('ref');
+      if (ref) localStorage.setItem(REF_CODE_KEY, ref.trim().toUpperCase());
+    } catch { /* noop */ }
+  }, []);
 
   const handleChange = (e) => {
     let { name, value, type, files } = e.target;
@@ -115,6 +150,14 @@ export const Signup = () => {
       const data = await action;
 
       if (data?.meta?.requestStatus === 'fulfilled') {
+        // Registration auto-logs-in, but the axios Authorization default is
+        // only synced by the route guards on navigation — set it here from
+        // the fulfilled payload (LoginPage pattern) so the referral apply
+        // can't race it.
+        const src = data?.payload?.login_data || data?.payload;
+        const accessToken = src?.token?.access || src?.token;
+        if (accessToken) setAuthToken(accessToken);
+        applyStoredReferral(toast);
         setFormData({
           firstName: '',
           email: '',

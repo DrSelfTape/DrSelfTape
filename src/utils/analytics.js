@@ -156,4 +156,8 @@ export const Events = {
   FIRST_REVIEW_PAYWALL_SHOWN: 'first_review_paywall_shown',
   FIRST_REVIEW_PAYWALL_TAP: 'first_review_paywall_tap',
   FIRST_REVIEW_SKIPPED: 'first_review_skipped',
+  // Referral loop — share tap in the Invite panel, and a successful
+  // /growth/referral/apply/ after a referred signup.
+  REFERRAL_SHARE_TAP: 'referral_share_tap',
+  REFERRAL_APPLIED: 'referral_applied',
 };
