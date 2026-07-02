@@ -1,10 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Video, Square, X, Download, Send, RotateCcw, Volume2 } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { Video, Square, X, Download, Send, RotateCcw, Volume2, Sparkles } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import endPoints from '../../../redux/constant';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { saveBlobUrl } from '../../../utils/saveMedia';
+import { reviewTape } from '../../../redux/features/jericho/jerichoSlice';
+import { requestAiConsent } from '../../../components/AIConsent/AIConsentModal';
 
 // Helper: pick a supported video mimeType (MP4 for Safari/iOS, WebM otherwise)
 function getSupportedMimeType() {
@@ -46,8 +49,12 @@ function unlockOrientation() {
   }
 }
 
-export default function SelfTapeRecorder({ lines, userRole, onClose }) {
+export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
   useHideMobileHeader(true);
+  const dispatch = useDispatch();
+  // Script-less mode ("Record a take" from the Practice tab): no teleprompter,
+  // no AI partner voice — just the camera + the record→review loop.
+  const hasLines = Array.isArray(lines) && lines.length > 0;
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
@@ -163,7 +170,9 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     timerRef.current = setInterval(() => setTimer((t) => t + 1), 1000);
 
     // Play through lines with AI voice for partner lines
-    if (aiVoiceEnabled) {
+    if (!hasLines) {
+      // Script-less take — nothing to prompt or read.
+    } else if (aiVoiceEnabled) {
       playThroughLines(0);
     } else {
       // Just auto-scroll
@@ -176,7 +185,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
         requestAnimationFrame(scroll);
       }
     }
-  }, [aiVoiceEnabled]);
+  }, [aiVoiceEnabled, hasLines]);
 
   // Play through lines — AI reads partner lines, pauses for user lines
   const playThroughLines = useCallback(async (startIdx) => {
@@ -314,6 +323,32 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
     if (!res.ok) alert('Failed to save. Please try again.');
   };
 
+  // Record→review loop (Tier 2 item 4): hand this take straight to the Tape
+  // Review analyzer. Consent is resolved HERE (same pattern as onboarding's
+  // launchFirstReview — the global modal resolves instantly when consent is
+  // already on file; without it the API hard-403s). Then dispatch reviewTape
+  // with the blob wrapped as a File (the thunk reads .name/.type for the R2
+  // presign) and land on the Review tab, where the staged progress + result
+  // render. The thunk outlives this component, so closing is safe.
+  const [notesLoading, setNotesLoading] = useState(false);
+  const handleGetNotes = async () => {
+    if (!recordedBlob || notesLoading) return;
+    setNotesLoading(true);
+    let ok = false;
+    try { ok = await requestAiConsent(); } catch { ok = false; }
+    if (!ok) { setNotesLoading(false); return; }
+    const ext = getFileExt(mimeTypeRef.current);
+    const file = new File([recordedBlob], `self-tape-${Date.now()}.${ext}`, {
+      type: recordedBlob.type || 'video/webm',
+    });
+    // Fresh key (not the Save flow's idemKey): different endpoint, different
+    // action — sharing one key risks a cross-endpoint dedup collision.
+    const key = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    dispatch(reviewTape({ video: file, idempotencyKey: key }));
+    try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'tape-review' } })); } catch { /* noop */ }
+    if (onClose) onClose();
+  };
+
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
   return (
@@ -367,8 +402,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
           />
         )}
 
-        {/* Teleprompter overlay — bottom half, centered */}
-        {!recordedUrl && (
+        {/* Teleprompter overlay — bottom half, centered (script mode only) */}
+        {!recordedUrl && hasLines && (
           <div
             ref={scrollRef}
             className="absolute bottom-0 left-0 right-0 overflow-y-auto"
@@ -413,8 +448,8 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
 
       {/* Bottom controls */}
       <div className="px-6 py-5 flex flex-col items-center gap-4" style={{ background: 'rgba(0,0,0,0.95)', paddingBottom: 'calc(env(safe-area-inset-bottom, 8px) + 20px)' }}>
-        {/* AI Voice toggle */}
-        {!recordedUrl && (
+        {/* AI Voice toggle — only meaningful when there's a script to read */}
+        {!recordedUrl && hasLines && (
           <button
             onClick={() => setAiVoiceEnabled(!aiVoiceEnabled)}
             className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold transition-colors"
@@ -465,7 +500,7 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
             <div className="w-14" />
           </>
         ) : (
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-5">
             <button onClick={handleRetake} className="flex flex-col items-center gap-1.5">
               <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center">
                 <RotateCcw className="w-5 h-5 text-white" />
@@ -480,9 +515,28 @@ export default function SelfTapeRecorder({ lines, userRole, onClose }) {
               <span className="text-[11px] text-white/60 font-medium">Download</span>
             </button>
 
+            {/* The money action — the take goes straight to the analyzer.
+                iOS tap-belt applied: this sits in a full-screen overlay,
+                exactly where WKWebView drops synthetic clicks. */}
+            <button
+              type="button"
+              onClick={handleGetNotes}
+              onTouchEnd={(e) => { e.preventDefault(); handleGetNotes(); }}
+              disabled={notesLoading}
+              className="flex flex-col items-center gap-1.5"
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            >
+              <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#D4A85F]">
+                {notesLoading
+                  ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  : <Sparkles className="w-6 h-6 text-white" />}
+              </div>
+              <span className="text-[11px] text-white font-semibold">AI Notes</span>
+            </button>
+
             <button onClick={handleSave} disabled={saving || saved} className="flex flex-col items-center gap-1.5">
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${saved ? 'bg-emerald-500' : 'bg-[#D4A85F]'}`}>
-                {saved ? <Video className="w-6 h-6 text-white" /> : saving ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-6 h-6 text-white" />}
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${saved ? 'bg-emerald-500' : 'bg-white/10'}`}>
+                {saved ? <Video className="w-5 h-5 text-white" /> : saving ? <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Send className="w-5 h-5 text-white" />}
               </div>
               <span className="text-[11px] text-white/60 font-medium">{saved ? 'Saved!' : saving ? 'Saving...' : 'Save'}</span>
             </button>

@@ -126,6 +126,9 @@ const DashProfile = lazy(() => import("../Dashboard/Profile"));
 const AgentPortal = lazy(() => Promise.resolve({ default: () => null }));
 const AuditionGenerator = lazy(() => import("../Dashboard/AuditionGenerator"));
 const SceneStudy = lazy(() => import("../Dashboard/SceneStudy"));
+// Resurrected in-app recorder (Tier 2 item 4) — "Record a take" on the
+// Practice tab, script-less mode, with the record→review handoff inside.
+const SelfTapeRecorder = lazy(() => import("../Dashboard/SceneStudy/SelfTapeRecorder"));
 const MeetingRoom = lazy(() => import("../Meeting/MeetingRoom"));
 const Referral = lazy(() => import("../Dashboard/Referral"));
 const Marketplace = lazy(() => import("../Dashboard/Marketplace"));
@@ -2593,6 +2596,8 @@ function ScenesScreen({ setTab }) {
   const [selectedScript, setSelectedScript] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null); // script object to confirm
+  // Full-screen in-app recorder — script-less "Record a take" (Tier 2 item 4).
+  const [showRecorder, setShowRecorder] = useState(false);
 
   // Craft Journey (and other panels) dispatch this event to drop an
   // AI-generated script directly into Scene Study without going
@@ -2745,6 +2750,12 @@ function ScenesScreen({ setTab }) {
 
   return (
     <div style={{ padding: "0 16px 24px" }}>
+      {/* In-app recorder overlay (fixed, z-9999) — camera + record→review loop */}
+      {showRecorder && (
+        <Suspense fallback={null}>
+          <SelfTapeRecorder lines={[]} userRole={null} onClose={() => setShowRecorder(false)} />
+        </Suspense>
+      )}
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--aurora-text)', margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
         <button style={{
@@ -2848,6 +2859,45 @@ function ScenesScreen({ setTab }) {
           style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
         >
           PLAY →
+        </span>
+      </button>
+
+      {/* Record a take — the in-app camera (resurrected SelfTapeRecorder).
+          Post-recording, "AI Notes" hands the take straight to Tape Review:
+          the record→review loop finally closes without the native camera app. */}
+      <button
+        type="button"
+        onClick={() => setShowRecorder(true)}
+        onTouchEnd={(e) => { e.preventDefault(); setShowRecorder(true); }}
+        className="aurora-card"
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+          padding: '13px 16px', marginBottom: 20, cursor: 'pointer',
+          textAlign: 'left', border: 'none', color: 'var(--aurora-text)',
+          touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <div style={{
+          width: 40, height: 40, borderRadius: 12,
+          background: 'color-mix(in oklch, var(--aurora-accent) 16%, transparent)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 19, flexShrink: 0,
+        }}>
+          📹
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
+            Record a take
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+            Film in-app · then get AI casting notes on it
+          </p>
+        </div>
+        <span
+          className="aurora-mono"
+          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+        >
+          REC →
         </span>
       </button>
 
