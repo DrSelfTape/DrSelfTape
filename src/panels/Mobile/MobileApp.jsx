@@ -515,6 +515,12 @@ function AuroraPracticeStrip() {
   const pctOfGoal = Math.min(Math.round((todaySeconds / Math.max(goal, 1)) * 100), 999);
   const max = Math.max(...week.map(d => d.seconds), goal, 1);
 
+  // Only render once there's real practice data — same rule as the
+  // hasStats-gated pipeline blocks. A week of flat zero bars just mirrors
+  // the user's own inactivity back at them as Home noise.
+  const hasPractice = week.some(d => (d.seconds || 0) > 0);
+  if (!hasPractice) return null;
+
   return (
     <div className="aurora-card" style={{ padding: 16, marginBottom: 14 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>

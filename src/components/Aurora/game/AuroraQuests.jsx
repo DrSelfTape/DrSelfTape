@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check, ChevronRight, Mic, Play, ScrollText, Users } from 'lucide-react';
 import { auroraCelebrate } from './AuroraCelebrate';
 import { gameStore, useGameStore, usePrefersReducedMotion } from './gameStore';
-import { SlateAurora, SlateTip } from './Slate';
+import { SlateAurora } from './Slate';
 
 const DEFAULT_QUESTS = [
   { id: 'warmup', title: 'Warm up your voice', sub: 'One focused breath and articulation pass.', xp: 20, tint: 'mint', Icon: Mic },
@@ -172,7 +172,9 @@ export function AuroraQuests({ quests = DEFAULT_QUESTS, className = '', style = 
           <h2>{doneCount}/{quests.length} reps complete</h2>
         </div>
       </div>
-      <SlateTip>Slate says: finish the smallest rep first. Momentum follows.</SlateTip>
+      {/* SlateTip removed — Home already renders Slate's rotating daily note
+          right below this stack, so this static line was a duplicate mascot
+          tip on the same screen. */}
       <div className="aurora-quests__list">
         {quests.map((quest) => (
           <AuroraQuestRow key={quest.id} quest={quest} completed={Boolean(completed[quest.id])} />
