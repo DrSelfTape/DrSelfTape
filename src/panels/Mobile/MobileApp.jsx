@@ -1120,10 +1120,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 
   const firstCallback = callbacks[0];
 
-  // ── Tape Review highlight — the hero feature. While the free first review
-  // is unclaimed it hoists to the top of Home (above the gamification stack)
-  // with the free-offer copy + first-review handoff; afterwards it renders in
-  // its usual spot below the pipeline with the standard copy.
+  // ── Tape Review highlight — the hero feature. Permanent position 1 on
+  // Home for everyone: free-offer copy + first-review handoff while the
+  // free review is unclaimed, standard copy + tab handoff afterwards.
   const tapeReviewHero = (
     <button
       type="button"
@@ -1183,8 +1182,60 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </h1>
       </div>
 
-      {/* ── Unclaimed free Tape Review — the activation hook leads Home ── */}
-      {firstReviewPending && tapeReviewHero}
+      {/* ── Tape Review hero — permanent position 1 (free-offer copy while
+           the first review is unclaimed, standard copy after) ── */}
+      {tapeReviewHero}
+
+      {/* ── Studio CTA ── dark gradient block w/ gold mic — position 2 ── */}
+      <button
+        type="button"
+        onClick={() => setCurrentPanel('cd-sim')}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+          padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
+          textAlign: 'left', borderRadius: 18,
+          background: 'linear-gradient(135deg, rgba(10,10,10,0.95), rgba(30,28,22,0.95))',
+          border: '1px solid rgba(212,168,95,0.32)',
+          position: 'relative', overflow: 'hidden',
+          boxShadow: '0 12px 28px rgba(10,10,10,0.28)',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute', top: -40, right: -40, width: 180, height: 180,
+            background: 'radial-gradient(circle, rgba(212,168,95,0.45), transparent 70%)',
+            pointerEvents: 'none',
+          }}
+        />
+        <div
+          style={{
+            position: 'relative',
+            width: 48, height: 48, borderRadius: 14,
+            background: 'linear-gradient(135deg, #F0D097, #D4A85F)',
+            border: '1px solid rgba(255,255,255,0.45)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#1A1408',
+            boxShadow: '0 6px 18px rgba(212,168,95,0.45)',
+            flexShrink: 0,
+          }}
+        >
+          <Icon name="play" size={22} color="#1A1408" />
+        </div>
+        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+          <span
+            className="aurora-eyebrow"
+            style={{ display: 'block', color: 'rgba(255,255,255,0.65)', marginBottom: 2 }}
+          >
+            ACTING COACH
+          </span>
+          <p style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
+            Rehearse with an AI scene partner
+          </p>
+          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', margin: '2px 0 0' }}>
+            Upload sides · get coaching notes
+          </p>
+        </div>
+      </button>
 
       {/* ── Aurora gamification: progress HUD + daily quests + Pilot Season ──
            Gated off — fake localStorage rank; revive only server-backed
@@ -1278,10 +1329,6 @@ function HomeScreen({ setTab, setCurrentPanel }) {
            redundant — the Smart Next Step banner and the Get Started
            tutorial checklist below already prompt the same action. */}
       {hasStats && <AuroraPipeline stats={s} auditions={auditions} setTab={setTab} />}
-
-      {/* ── Tape Review highlight — the hero feature (hoisted to the top of
-           Home instead while the free first review is unclaimed) ── */}
-      {!firstReviewPending && tapeReviewHero}
 
       {/* ── Community Leaderboard teaser ── */}
       <button
@@ -1550,57 +1597,6 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           })}
         </div>
       )}
-
-      {/* ── Studio CTA ── dark gradient block w/ gold mic ── */}
-      <button
-        type="button"
-        onClick={() => setCurrentPanel('cd-sim')}
-        style={{
-          width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-          padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
-          textAlign: 'left', borderRadius: 18,
-          background: 'linear-gradient(135deg, rgba(10,10,10,0.95), rgba(30,28,22,0.95))',
-          border: '1px solid rgba(212,168,95,0.32)',
-          position: 'relative', overflow: 'hidden',
-          boxShadow: '0 12px 28px rgba(10,10,10,0.28)',
-        }}
-      >
-        <div
-          style={{
-            position: 'absolute', top: -40, right: -40, width: 180, height: 180,
-            background: 'radial-gradient(circle, rgba(212,168,95,0.45), transparent 70%)',
-            pointerEvents: 'none',
-          }}
-        />
-        <div
-          style={{
-            position: 'relative',
-            width: 48, height: 48, borderRadius: 14,
-            background: 'linear-gradient(135deg, #F0D097, #D4A85F)',
-            border: '1px solid rgba(255,255,255,0.45)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#1A1408',
-            boxShadow: '0 6px 18px rgba(212,168,95,0.45)',
-            flexShrink: 0,
-          }}
-        >
-          <Icon name="play" size={22} color="#1A1408" />
-        </div>
-        <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
-          <span
-            className="aurora-eyebrow"
-            style={{ display: 'block', color: 'rgba(255,255,255,0.65)', marginBottom: 2 }}
-          >
-            ACTING COACH
-          </span>
-          <p style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
-            Rehearse with an AI scene partner
-          </p>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', margin: '2px 0 0' }}>
-            Upload sides · get coaching notes
-          </p>
-        </div>
-      </button>
 
       {/* ── Tutorial + daily challenge — kept; Aurora glass treatment via wrapper ── */}
       <div style={{ marginBottom: 14 }}>
