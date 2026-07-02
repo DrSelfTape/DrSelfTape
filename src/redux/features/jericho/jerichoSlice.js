@@ -27,6 +27,27 @@ function aiErrorMessage(err, fallback) {
 
 const _sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// ─── Persistence helpers ─────────────────────────────────────────────────────
+// Keep the key as a module constant so both the save and resume paths agree on
+// the exact string without needing to export it.
+const PENDING_JOB_KEY = 'dst_pending_analysis';
+
+// Persist a running job so it can be resumed after a page reload or app
+// restart. The slot holds the minimal info needed to re-attach: jobId + kind
+// + startedAt for the 30-minute TTL check in TapeReview. Wrapped in try/catch
+// — localStorage can throw in private/incognito mode.
+function savePendingJob(jobId, kind) {
+  try {
+    localStorage.setItem(PENDING_JOB_KEY, JSON.stringify({ jobId, kind, startedAt: Date.now() }));
+  } catch { /* private mode */ }
+}
+
+// Called once the job resolves (success OR failure OR poll timeout) so the
+// slot doesn't linger and the next mount skips a stale resume attempt.
+function clearPendingJob() {
+  try { localStorage.removeItem(PENDING_JOB_KEY); } catch { /* private mode */ }
+}
+
 // When the BE runs the analysis off the request thread (AI_ASYNC_ANALYSIS), the
 // POST returns {job_id, status:'pending'} instead of the result. Poll the job
 // until it's done/failed. Throws an axios-shaped error so aiErrorMessage handles
@@ -49,12 +70,43 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
 }
 
 // A tape-review / compare response is either the synchronous result or a pending
-// job to poll. Normalizes both to the final result.
-async function resolveAnalysis(payload, { signal } = {}) {
+// job to poll. Normalizes both to the final result. When the response is async,
+// persists the job to localStorage (so TapeReview can resume after a reload)
+// and clears the slot in a finally block — the clear is guaranteed regardless
+// of whether the poll succeeds, fails, or times out.
+async function resolveAnalysis(payload, { signal, kind } = {}) {
   if (payload && payload.job_id && payload.status === 'pending') {
-    return pollAnalysisJob(payload.job_id, { signal });
+    savePendingJob(payload.job_id, kind);
+    try {
+      return await pollAnalysisJob(payload.job_id, { signal });
+    } finally {
+      clearPendingJob();
+    }
   }
   return payload;
+}
+
+// ─── Shared result reducers ──────────────────────────────────────────────────
+// Extracted so resumeAnalysisJob can delegate to the same logic as the
+// originating thunks instead of duplicating it.
+function applyReviewResult(state, result) {
+  state.tapeReviewResult = result;
+  // Kind-tagged (truthy) so the Review tab lands in the matching mode
+  // when the user returns via the notes-ready dot — a plain boolean
+  // sent compare results back to single mode, where they were
+  // unreachable (codex review catch).
+  state.notesReady = 'review';
+  // A token was just spent — nudge useTokenBalance past its cache so
+  // every surface shows the post-charge number (codex review catch:
+  // the recorder path showed the pre-charge balance until an
+  // unrelated refresh).
+  try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
+}
+
+function applyCompareResult(state, result) {
+  state.compareResult = result;
+  state.notesReady = 'compare';
+  try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
 }
 
 // Defense in depth (BUG 3): the BE can return 200 with an empty/near-empty body
@@ -271,7 +323,7 @@ export const reviewTape = createAsyncThunk(
         }));
       }
 
-      const result = await resolveAnalysis(data?.data || data, { signal });
+      const result = await resolveAnalysis(data?.data || data, { signal, kind: 'review' });
       // An empty/partial body charges a token but has nothing to show — take the
       // clean error path instead of fulfilling a hollow result (BUG 3).
       if (!tapeReviewHasContent(result)) {
@@ -316,12 +368,39 @@ export const compareTakes = createAsyncThunk(
         },
         signal,
       });
-      const result = await resolveAnalysis(data?.data || data, { signal });
+      const result = await resolveAnalysis(data?.data || data, { signal, kind: 'compare' });
       trackEvent(Events.COMPARE_TAKES, { count: takes.length });
       return result;
     } catch (err) {
       captureUploadFailure('compare_takes_upload', err, startedAt, lastLoaded, lastTotal, 900000);
       return rejectWithValue(aiErrorMessage(err, 'Take comparison failed'));
+    }
+  }
+);
+
+/** Re-attach to a job that was started in a previous session (page reload /
+ *  app restart). Polls the same endpoint as a normal job, then dispatches into
+ *  the same result/notesReady/token-event path via the shared reducer helpers.
+ *  Clears the localStorage slot in a finally block so it's gone regardless of
+ *  whether the poll succeeds, errors, or is canceled. */
+export const resumeAnalysisJob = createAsyncThunk(
+  'jericho/resumeAnalysisJob',
+  async ({ jobId, kind }, { rejectWithValue, signal }) => {
+    try {
+      const result = await pollAnalysisJob(jobId, { signal });
+      return { result, kind };
+    } catch (err) {
+      // 404 = job expired/not found on the BE; canceled = user navigated away.
+      // Both are "silent" — no error banner, just clear and move on.
+      if (
+        err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED' || err?.aborted ||
+        err?.response?.status === 404
+      ) {
+        return rejectWithValue({ kind, silent: true });
+      }
+      return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed') });
+    } finally {
+      clearPendingJob();
     }
   }
 );
@@ -499,18 +578,8 @@ const jerichoSlice = createSlice({
       })
       .addCase(reviewTape.fulfilled, (state, action) => {
         state.tapeReviewLoading = false;
-        state.tapeReviewResult = action.payload;
         state.uploadProgress = 0;
-        // Kind-tagged (truthy) so the Review tab lands in the matching mode
-        // when the user returns via the notes-ready dot — a plain boolean
-        // sent compare results back to single mode, where they were
-        // unreachable (codex review catch).
-        state.notesReady = 'review';
-        // A token was just spent — nudge useTokenBalance past its cache so
-        // every surface shows the post-charge number (codex review catch:
-        // the recorder path showed the pre-charge balance until an
-        // unrelated refresh).
-        try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
+        applyReviewResult(state, action.payload);
       })
       .addCase(reviewTape.rejected, (state, action) => {
         state.tapeReviewLoading = false;
@@ -524,15 +593,41 @@ const jerichoSlice = createSlice({
       })
       .addCase(compareTakes.fulfilled, (state, action) => {
         state.compareLoading = false;
-        state.compareResult = action.payload;
         state.uploadProgress = 0;
-        state.notesReady = 'compare';
-        try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
+        applyCompareResult(state, action.payload);
       })
       .addCase(compareTakes.rejected, (state, action) => {
         state.compareLoading = false;
         state.compareError = action.payload || 'Take comparison failed';
         state.uploadProgress = 0;
+      })
+
+      // ── Resume (page-reload / app-restart recovery) ──
+      .addCase(resumeAnalysisJob.pending, (state) => {
+        // Use tapeReviewLoading for the staged-progress UI in TapeReview
+        // for both review and compare resumes — it's always TapeReview that
+        // initiates the resume, and uploadProgress = 100 skips the upload
+        // stage so the UI enters at "Watching your performance".
+        state.tapeReviewLoading = true;
+        state.tapeReviewError = null;
+        state.uploadProgress = 100;
+      })
+      .addCase(resumeAnalysisJob.fulfilled, (state, action) => {
+        const { result, kind } = action.payload;
+        state.tapeReviewLoading = false;
+        state.uploadProgress = 0;
+        if (kind === 'compare') {
+          applyCompareResult(state, result);
+        } else {
+          applyReviewResult(state, result);
+        }
+      })
+      .addCase(resumeAnalysisJob.rejected, (state, action) => {
+        state.tapeReviewLoading = false;
+        state.uploadProgress = 0;
+        const { silent, message } = action.payload || {};
+        // silent = 404/expired or user canceled — clear the UI, no error banner
+        if (!silent) state.tapeReviewError = message || 'Resume failed';
       })
 
       // ── Recent Sessions ──

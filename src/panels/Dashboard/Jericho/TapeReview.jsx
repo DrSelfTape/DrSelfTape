@@ -10,7 +10,7 @@ import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X,
   RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater, Trophy, HelpCircle,
 } from 'lucide-react';
-import { reviewTape, clearTapeReview } from '../../../redux/features/jericho/jerichoSlice';
+import { reviewTape, clearTapeReview, resumeAnalysisJob } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
@@ -20,6 +20,10 @@ import { Capacitor } from '@capacitor/core';
 import { usePushNotifications, isCapacitorNative, openNotificationSettings } from '../../../hooks/usePushNotifications';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
+
+// Matches the key and TTL used in jerichoSlice's persistence helpers.
+const PENDING_JOB_KEY = 'dst_pending_analysis';
+const PENDING_JOB_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
 /* Free-first-review paywall — shown right under the result of a new user's one
  * free Tape Review, while the value is still on screen (Day-0 converts best). */
@@ -137,7 +141,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // would be skipped and the API would hard-403.
   useAIGate();
   const dispatch = useDispatch();
-  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress } = useSelector((s) => s.jericho);
+  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult } = useSelector((s) => s.jericho);
+  const tutorialProgress = useSelector((s) => s.userSettings?.data?.tutorial_progress || {});
   // Kind of the pending notes-ready cue ('review' | 'compare' | false). Read
   // in the mode initializer below so a compare finished on another tab
   // reopens IN compare mode — the parent clears the flag in an effect, which
@@ -216,6 +221,36 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstReview, tapeReviewResult]);
+
+  // Resume a job that was actively polling when the user reloaded the page or
+  // restarted the app. Runs once on mount; the guard prevents a double-dispatch
+  // if Redux already carries an in-flight or completed result from the current
+  // session (e.g. the user navigated away and back without reloading).
+  useEffect(() => {
+    if (tapeReviewLoading || tapeReviewResult || compareLoading || compareResult) return;
+    let slot = null;
+    try { slot = JSON.parse(localStorage.getItem(PENDING_JOB_KEY)); } catch { return; }
+    if (!slot?.jobId || !slot?.startedAt) return;
+    if (Date.now() - slot.startedAt > PENDING_JOB_TTL_MS) {
+      // Slot is older than 30 minutes — the job almost certainly expired on the
+      // BE. Clear silently; no point polling a dead job.
+      try { localStorage.removeItem(PENDING_JOB_KEY); } catch { /* private mode */ }
+      return;
+    }
+    dispatch(resumeAnalysisJob({ jobId: slot.jobId, kind: slot.kind || 'review' }));
+  // Mount-only: reads Redux snapshot at mount to guard against double-dispatch.
+  // Adding these as deps would re-trigger the effect on every state change,
+  // which is the opposite of what we want — run once, check once.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Fix: the mode initializer reads notesReadyKind synchronously at mount, but
+  // a resumed compare job sets notesReady = 'compare' only after the poll
+  // resolves (post-mount). Sync mode here so compare results land in compare
+  // mode even when the resume arrives after the initial render.
+  useEffect(() => {
+    if (notesReadyKind === 'compare' && !firstReview) setMode('compare');
+  }, [notesReadyKind, firstReview]);
 
   // A plain element (not an inline component) so re-renders reconcile it in
   // place — otherwise the tutorial overlay would remount + replay its
@@ -647,7 +682,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         >
           <Sparkles size={15} /> Get my notes
         </button>
-        <p className="text-[10px] text-[rgba(10,10,10,0.35)] text-center mt-2">Uses 1 token · your tape is analyzed, not stored for training</p>
+        <p className="text-[10px] text-[rgba(10,10,10,0.35)] text-center mt-2">
+          {(firstReview || !tutorialProgress.first_review)
+            ? 'Your first review is free · your tape is analyzed, not stored for training'
+            : 'Uses 1 token · your tape is analyzed, not stored for training'}
+        </p>
       </div>
     </div>
   );
