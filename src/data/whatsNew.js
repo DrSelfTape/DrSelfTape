@@ -8,16 +8,19 @@
  */
 export const WHATS_NEW = [
   {
+    // 1.0.12 was superseded in review by 1.0.13 (Tier 2+3 folded in) — this
+    // entry is the combined release note users actually get.
     id: 3,
-    version: '1.0.12',
+    version: '1.0.13',
     date: 'July 2026',
     title: 'A home screen that works for you',
     intro: "We rebuilt the way you move through the app — here's what's new:",
     highlights: [
       { emoji: '🎬', title: 'Tape Review, front and center', body: 'Your AI casting notes are now the first thing on Home — and your first review is free.' },
+      { emoji: '📹', title: 'Record right in the app', body: 'Practice → Record a take — then send it straight to the AI for casting notes.' },
       { emoji: '⚖️', title: 'Compare Takes, easier to find', body: 'Filmed a few takes? The AI picks the winner — now one tap from Home, More, or right after a review.' },
-      { emoji: '🎧', title: 'A more reliable scene partner', body: "The AI reader's voice now recovers automatically after calls and interruptions — no more silent reads." },
-      { emoji: '🧭', title: 'Clearer navigation', body: "Every tab is labeled, and things live where you'd expect them." },
+      { emoji: '🎧', title: 'A more reliable scene partner', body: "The AI reader's voice now recovers automatically after calls and interruptions — plus a sample scene to try it instantly." },
+      { emoji: '🧭', title: 'A cleaner, clearer app', body: 'Five labeled tabs, a calmer Home, live progress while your notes are written, and an honest practice streak.' },
     ],
   },
   {
