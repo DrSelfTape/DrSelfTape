@@ -884,36 +884,54 @@ function callbackBadge(dateStr) {
   return null;
 }
 
+// 5-tab bar (Tier 2): Home, Practice, Review, Connect, More. Connect merges
+// the old Reader + Chat tabs (both surfaces render as sub-views inside
+// ConnectScreen); Auditions moved into More's "My Work" section but stays a
+// live hidden tab id (like 'live'/'profile') so every existing setTab call,
+// push deep-link and checklist step keeps working.
 const TABS = [
   { id: "home", icon: "home", label: "Home" },
   { id: "scenes", icon: "scenes", label: "Practice" },
-  { id: "auditions", icon: "auditions", label: "Auditions" },
-  { id: "find-a-reader", icon: "community", label: "Reader" },
-  { id: "green-room", icon: "mic", label: "Chat" },
   { id: "tape-review", icon: "tape", label: "Review", highlight: true },
+  { id: "connect", icon: "community", label: "Connect" },
   { id: "more", icon: "more", label: "More" },
 ];
 
+// Tab ids removed by the 5-tab restructure still arrive from deep links,
+// push payloads, TutorialChecklist steps and stored handoffs — alias them to
+// their new home (Connect + the section it should open on) so none dead-end.
+const TAB_ALIASES = {
+  'find-a-reader': { tab: 'connect', section: 'reader' },
+  'green-room': { tab: 'connect', section: 'chat' },
+};
+
+// Grouped like the web sidebar (AI Studio / Practice / Connect / My Work /
+// Community / Account) — the grouping the sidebar already proved out.
+// MoreScreen renders these in MORE_SECTIONS order with section headers.
 const MORE_FEATURES = [
-  { id: "jericho", label: "My Growth", desc: "Your evolving actor DNA and coaching insights", emoji: "🧠", color: "#FF8280" },
+  { id: "jericho", label: "My Growth", desc: "Your evolving actor DNA and coaching insights", emoji: "🧠", color: "#FF8280", section: "AI Studio" },
   // compare-takes is not a panel — MoreScreen deep-links it into the Tape
   // Review tab's compare mode (dst_compare_takes handoff, see TapeReview.jsx).
-  { id: "compare-takes", label: "Compare Takes", desc: "Upload 2–4 takes — AI picks the winner", emoji: "🏆", color: "#FCE072" },
-  { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#FF8280" },
-  { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
-  { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
-  { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#FF8280" },
-  { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072" },
-  { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280" },
-  { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072" },
-  { id: "leaderboard", label: "Ranks", desc: "See where you rank this season", emoji: "🏆", color: "#FCE072" },
-  { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA" },
-  { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA" },
-  { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072" },
-  { id: "self-tapes", label: "Self-Tapes", desc: "Record and submit auditions", emoji: "📹", color: "#FFB49A" },
-  { id: "whats-new", label: "What's New", desc: "See the latest features and updates", emoji: "🆕", color: "#A7ECDA" },
-  { id: "report-problem", label: "Report a Problem", desc: "Something not working? Tell us", emoji: "🐞", color: "#FF8280" },
+  { id: "compare-takes", label: "Compare Takes", desc: "Upload 2–4 takes — AI picks the winner", emoji: "🏆", color: "#FCE072", section: "AI Studio" },
+  { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#FF8280", section: "AI Studio" },
+  { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#FF8280", section: "AI Studio" },
+  { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A", section: "Practice" },
+  { id: "self-tapes", label: "Self-Tapes", desc: "Record and submit auditions", emoji: "📹", color: "#FFB49A", section: "Practice" },
+  { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280", section: "Connect" },
+  { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072", section: "Connect" },
+  { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072", section: "Connect" },
+  // auditions is a tab, not a panel — MoreScreen routes it via drst-navigate.
+  { id: "auditions", label: "Audition Tracker", desc: "Log and track every audition", emoji: "🎯", color: "#A7D6FF", section: "My Work" },
+  { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8", section: "My Work" },
+  { id: "leaderboard", label: "Ranks", desc: "See where you rank this season", emoji: "🏆", color: "#FCE072", section: "Community" },
+  { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA", section: "Community" },
+  { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA", section: "Account" },
+  { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072", section: "Account" },
+  { id: "whats-new", label: "What's New", desc: "See the latest features and updates", emoji: "🆕", color: "#A7ECDA", section: "Account" },
+  { id: "report-problem", label: "Report a Problem", desc: "Something not working? Tell us", emoji: "🐞", color: "#FF8280", section: "Account" },
 ];
+
+const MORE_SECTIONS = ["AI Studio", "Practice", "Connect", "My Work", "Community", "Account"];
 
 const PANEL_COMPONENTS = {
   "find-a-reader": FindAReader,
@@ -946,6 +964,10 @@ const PANEL_COMPONENTS = {
 // aren't in MORE_FEATURES or TABS (otherwise PanelScreen shows "Feature").
 const PANEL_LABELS = {
   "craft-journey": "Craft Journey",
+  // These left TABS in the 5-tab restructure but still open as panels
+  // (desktop sidebar, socket deep-links) — keep their header labels.
+  "find-a-reader": "Find a Reader",
+  "green-room": "Green Room",
 };
 
 /* ═══════════════════════════════════════════════════
@@ -2961,6 +2983,52 @@ function ProfileScreen({ setCurrentPanel }) {
 /* ═══════════════════════════════════════════════════
    MORE SCREEN — Grid of all additional features
    ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   CONNECT — merged social surface (Tier 2, item 5)
+   ───────────────────────────────────────────────────
+   One tab for the old Reader + Chat tabs. A segmented
+   control (same idiom as the Auditions Tracker/
+   Submissions row) switches between the two existing
+   screens, which render unchanged through PanelScreen
+   (keeps the green-room chat sub-panel wiring intact).
+   ═══════════════════════════════════════════════════ */
+const CONNECT_SECTIONS = [
+  { key: 'reader', label: 'Find a Reader', panelId: 'find-a-reader' },
+  { key: 'chat', label: 'Chat', panelId: 'green-room' },
+];
+
+function ConnectScreen({ section, setSection, onBack }) {
+  const active = CONNECT_SECTIONS.find(s => s.key === section) || CONNECT_SECTIONS[0];
+  return (
+    <div style={{ minHeight: '100%' }}>
+      {/* Section row */}
+      <div style={{ display: "flex", gap: 6, padding: "14px 16px 0" }}>
+        {CONNECT_SECTIONS.map(sec => (
+          <button
+            key={sec.key}
+            type="button"
+            onClick={() => setSection(sec.key)}
+            onTouchEnd={(e) => { e.preventDefault(); setSection(sec.key); }}
+            className="aurora-mono"
+            style={{
+              padding: "6px 16px", borderRadius: 100, border: "none", cursor: "pointer",
+              fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+              background: active.key === sec.key ? 'var(--aurora-text)' : "transparent",
+              color: active.key === sec.key ? 'var(--aurora-bg)' : 'var(--aurora-dim)',
+              transition: 'all 0.2s',
+              touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {sec.label}
+          </button>
+        ))}
+      </div>
+      {/* Re-key so switching sections remounts the sub-screen cleanly. */}
+      <PanelScreen key={active.key} panelId={active.panelId} onBack={onBack} />
+    </div>
+  );
+}
+
 function MoreScreen({ setCurrentPanel }) {
   const dispatch = useDispatch();
   return (
@@ -2970,32 +3038,45 @@ function MoreScreen({ setCurrentPanel }) {
         <h1 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>More features</h1>
         <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "6px 0 0" }}>All your tools in one place</p>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        {MORE_FEATURES.map(f => (
-          <button key={f.id} onClick={() => {
-            if (f.id === 'whats-new') return window.dispatchEvent(new CustomEvent('drst-whats-new'));
-            if (f.id === 'report-problem') return window.dispatchEvent(new CustomEvent('drst-report-problem'));
-            if (f.id === 'compare-takes') {
-              // Not a panel — land on the Tape Review tab in compare mode.
-              // TapeReview consumes the flag in its mode initializer.
-              try { window.sessionStorage.setItem('dst_compare_takes', '1'); } catch { /* noop */ }
-              return window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'tape-review' } }));
-            }
-            setCurrentPanel(f.id);
-          }} className="aurora-glass" style={{
-            padding: "18px 16px", cursor: "pointer", textAlign: "left",
-            transition: "transform 0.15s, box-shadow 0.2s",
-            borderRadius: 18,
-          }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: 12,
-              background: `${f.color}22`, display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 26, marginBottom: 10,
-            }}>{f.emoji}</div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, lineHeight: 1.3 }}>{f.label}</p>
-          </button>
-        ))}
-      </div>
+      {/* Grouped like the web sidebar — section headers instead of one
+          flat 15-tile grid (the sidebar's proven AI Studio grouping). */}
+      {MORE_SECTIONS.map(section => (
+        <div key={section} style={{ marginBottom: 20 }}>
+          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 10, color: 'var(--aurora-dim)' }}>
+            {section.toUpperCase()}
+          </span>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            {MORE_FEATURES.filter(f => f.section === section).map(f => (
+              <button key={f.id} onClick={() => {
+                if (f.id === 'whats-new') return window.dispatchEvent(new CustomEvent('drst-whats-new'));
+                if (f.id === 'report-problem') return window.dispatchEvent(new CustomEvent('drst-report-problem'));
+                if (f.id === 'compare-takes') {
+                  // Not a panel — land on the Tape Review tab in compare mode.
+                  // TapeReview consumes the flag in its mode initializer.
+                  try { window.sessionStorage.setItem('dst_compare_takes', '1'); } catch { /* noop */ }
+                  return window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'tape-review' } }));
+                }
+                if (f.id === 'auditions') {
+                  // A (hidden) tab since the 5-tab restructure, not a panel.
+                  return window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'auditions' } }));
+                }
+                setCurrentPanel(f.id);
+              }} className="aurora-glass" style={{
+                padding: "18px 16px", cursor: "pointer", textAlign: "left",
+                transition: "transform 0.15s, box-shadow 0.2s",
+                borderRadius: 18,
+              }}>
+                <div style={{
+                  width: 42, height: 42, borderRadius: 12,
+                  background: `${f.color}22`, display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 26, marginBottom: 10,
+                }}>{f.emoji}</div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, lineHeight: 1.3 }}>{f.label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
 
       {/* Log Out */}
       <button
@@ -3264,6 +3345,9 @@ function TopBarAvatar({ active, onClick }) {
 export default function DrSelfTapeApp() {
   const [tab, setTab] = useState("home");
   const [currentPanel, setCurrentPanel] = useState(null);
+  // Which sub-view the merged Connect tab shows ('reader' | 'chat'). Old
+  // find-a-reader / green-room tab ids alias here via TAB_ALIASES.
+  const [connectSection, setConnectSection] = useState('reader');
   // Deep-link target for a Green Room sub-panel (e.g. a fresh "It's a Scene"
   // match arriving over the socket). Passed into PanelScreen as initialSubPanel
   // so it opens the match screen instead of the generic Green Room list.
@@ -3386,7 +3470,15 @@ export default function DrSelfTapeApp() {
       const { tab: targetTab, panel: targetPanel, subPanel: targetSubPanel, matchId, readerId } = e.detail || {};
       if (targetTab) {
         setCurrentPanel(null);
-        setTab(targetTab);
+        // Retired tab ids (find-a-reader / green-room) alias into the merged
+        // Connect tab so old deep links and push payloads don't dead-end.
+        const alias = TAB_ALIASES[targetTab];
+        if (alias) {
+          setConnectSection(alias.section);
+          setTab(alias.tab);
+        } else {
+          setTab(targetTab);
+        }
       } else if (targetPanel && PANEL_COMPONENTS[targetPanel]) {
         // Guard against navigating to a panel that isn't registered —
         // otherwise the content area renders blank.
@@ -3417,7 +3509,11 @@ export default function DrSelfTapeApp() {
     return () => window.removeEventListener('drst-report-problem', handler);
   }, []);
 
-  const handleSetTab = (id) => {
+  const handleSetTab = (rawId) => {
+    // Retired tab ids alias into the merged Connect tab (5-tab restructure).
+    const alias = TAB_ALIASES[rawId];
+    if (alias) setConnectSection(alias.section);
+    const id = alias ? alias.tab : rawId;
     // A deliberate tab tap discards any pending scene-match deep-link, so the
     // Green Room can never later auto-jump into a stale match.
     setPendingSubPanel(null);
@@ -3438,6 +3534,15 @@ export default function DrSelfTapeApp() {
     auditions: <AuditionsScreen />,
     scenes: <ScenesScreen setTab={handleSetTab} />,
     live: <LiveScreen />,
+    connect: (
+      <ConnectScreen
+        section={connectSection}
+        setSection={setConnectSection}
+        onBack={() => handleSetTab("home")}
+      />
+    ),
+    // Failsafe: any raw setTab that bypasses the alias resolution still
+    // renders the old full-screen surfaces instead of a blank content area.
     "find-a-reader": (
       <PanelScreen panelId="find-a-reader" onBack={() => handleSetTab("home")} />
     ),
@@ -3781,6 +3886,14 @@ export default function DrSelfTapeApp() {
                 );
               })}
               <div style={{ borderTop: `1px solid ${BORDER}`, margin: "12px 0", paddingTop: 12 }}>
+                {/* Auditions left the 5-tab bar but stays a live tab id */}
+                <button onClick={() => setTab("auditions")} style={{
+                  display: "flex", alignItems: "center", gap: 12, padding: "11px 12px",
+                  borderRadius: 12, border: "none", cursor: "pointer", background: "transparent", width: "100%", marginBottom: 2,
+                }}>
+                  <Icon name="auditions" size={18} color={TEXT_MUTED} />
+                  <span style={{ fontSize: 14, fontWeight: 500, color: TEXT_MUTED }}>Auditions</span>
+                </button>
                 {[{ id: "find-a-reader", icon: "community", label: "Find a Reader" }, { id: "green-room", icon: "mic", label: "Green Room" }].map(t => (
                   <button key={t.id} onClick={() => setCurrentPanel(t.id)} style={{
                     display: "flex", alignItems: "center", gap: 12, padding: "11px 12px",
