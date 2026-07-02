@@ -265,8 +265,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         </p>
         <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1.5 max-w-xs mx-auto leading-relaxed">
           {uploading
-            ? 'Large tapes can take a few minutes to upload on a mobile connection — keep the app open.'
-            : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. This takes ~30–60 seconds.'}
+            ? 'Large tapes can take a few minutes to upload on a mobile connection — keep the app open until the upload finishes.'
+            : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. You can close the app — we’ll notify you when your notes are ready.'}
         </p>
       </div>
     );
