@@ -331,12 +331,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       }
     }
     const ctx = audioContextRef.current;
-    if (!ctx) {
-      return;
-    }
 
-    // Resume if suspended
-    if (ctx.state === 'suspended') {
+    // Resume if suspended. NOTE: outside a user gesture this can silently
+    // fail and leave the context suspended (iOS suspends it after any
+    // audio-session interruption) — we branch on the REAL state below
+    // instead of assuming resume worked. A missing/suspended context no
+    // longer bails: the HTMLAudio path plays regardless.
+    if (ctx && ctx.state === 'suspended') {
       try { await ctx.resume(); } catch { /* swallow */ }
     }
 
@@ -367,33 +368,59 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       return;
     }
 
+    // HTMLAudio path — NOT gated by AudioContext state. Serves two cases:
+    // (1) the context is missing or stuck suspended (iOS suspends WebAudio
+    //     after an audio-session interruption and resume() outside a gesture
+    //     silently fails — previously source.start() then played NOTHING with
+    //     no error while the scene marched on: the June-29 silent-reader
+    //     1-star, session #114);
+    // (2) decodeAudioData rejects (the original fallback).
+    // audio.play() rejections propagate to the caller so silence can be
+    // surfaced instead of swallowed.
+    const playViaHtmlAudio = async () => {
+      const blob = new Blob([arrayBuf], { type: 'audio/mpeg' });
+      const blobUrl = URL.createObjectURL(blob);
+      const audio = new Audio(blobUrl);
+      audioRef.current = audio;
+      await audio.play();
+      await new Promise((resolve) => {
+        let done = false;
+        const cleanup = () => {
+          if (done) return;
+          done = true;
+          try { URL.revokeObjectURL(blobUrl); } catch { /* noop */ }
+          audioRef.current = null;
+          resolve();
+        };
+        audio.onended = cleanup;
+        // Without these the scene hangs forever if the blob fails to play
+        // or never fires 'ended'. Watchdog = clip duration + 2s slack,
+        // falling back to 60s before metadata loads.
+        audio.onerror = cleanup;
+        setTimeout(cleanup, ((audio.duration || 58) + 2) * 1000);
+      });
+    };
+
+    const webAudioReady = ctx && ctx.state === 'running';
+    if (!webAudioReady) {
+      try {
+        await playViaHtmlAudio();
+      } catch {
+        // Even HTMLAudio couldn't start — tell the actor instead of reading
+        // the scene in silence. A screen tap is a gesture, so the next line's
+        // resume() attempt will succeed.
+        setErrorMsg("The reader's voice couldn't play — tap the screen once and continue; the next line will have audio.");
+      }
+      return;
+    }
+
     let audioBuffer;
     try {
       // .slice(0) prevents "detached ArrayBuffer" crash in Chrome
       audioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
     } catch (decodeErr) {
       try {
-        const blob = new Blob([arrayBuf], { type: 'audio/mpeg' });
-        const blobUrl = URL.createObjectURL(blob);
-        const audio = new Audio(blobUrl);
-        audioRef.current = audio;
-        await audio.play();
-        await new Promise((resolve) => {
-          let done = false;
-          const cleanup = () => {
-            if (done) return;
-            done = true;
-            try { URL.revokeObjectURL(blobUrl); } catch { /* noop */ }
-            audioRef.current = null;
-            resolve();
-          };
-          audio.onended = cleanup;
-          // Without these the scene hangs forever if the blob fails to play
-          // or never fires 'ended'. Watchdog = clip duration + 2s slack,
-          // falling back to 60s before metadata loads.
-          audio.onerror = cleanup;
-          setTimeout(cleanup, ((audio.duration || 58) + 2) * 1000);
-        });
+        await playViaHtmlAudio();
       } catch (fallbackErr) {
         // fallback playback failed
       }
