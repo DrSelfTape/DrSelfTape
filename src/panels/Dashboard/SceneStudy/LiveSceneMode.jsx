@@ -1185,7 +1185,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   return (
     <div
       className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
-      style={{ background: 'var(--aurora-bg, #FAFAF7)' }}
+      style={{
+        background: 'var(--aurora-bg, #FAFAF7)',
+        // Full-screen takeover: keep the top bar out of the notch and the
+        // bottom status bar (with the mobile Pause/End controls) above the
+        // home indicator.
+        paddingTop: 'env(safe-area-inset-top, 0px)',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+      }}
     >
       {/* Mic Permission Modal */}
       <PermissionsModal
@@ -1238,7 +1245,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           {sceneStarted && (
             <button
               onClick={isPaused ? resumeScene : pauseScene}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
+              className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer ${
                 isPaused
                   ? 'bg-[#D4A85F] text-[#0A0A0A] hover:bg-[#C09850]'
                   : 'border border-[#D4A85F]/40 text-[#7A5A18] hover:bg-[#D4A85F]/10'
@@ -1249,7 +1256,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           )}
           <button
             onClick={endScene}
-            className="px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors cursor-pointer"
+            className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-4 py-2 rounded-lg border border-red-500/40 text-red-400 hover:bg-red-500/10 text-sm font-medium transition-colors cursor-pointer"
           >
             End Scene
           </button>
@@ -1509,7 +1516,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             <div className="flex items-center gap-2 sm:hidden">
               <button
                 onClick={isPaused ? resumeScene : pauseScene}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                className={`min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                   isPaused
                     ? 'bg-[#D4A85F] text-[#0A0A0A]'
                     : 'border border-[#D4A85F]/40 text-[#7A5A18]'
@@ -1519,7 +1526,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               </button>
               <button
                 onClick={endScene}
-                className="px-3 py-1.5 rounded-lg border border-red-500/40 text-red-400 text-xs font-semibold transition-colors cursor-pointer"
+                className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 rounded-lg border border-red-500/40 text-red-400 text-xs font-semibold transition-colors cursor-pointer"
               >
                 ✕
               </button>
