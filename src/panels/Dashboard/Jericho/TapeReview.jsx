@@ -15,6 +15,7 @@ import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { trackEvent, Events } from '../../../utils/analytics';
+import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 
@@ -114,7 +115,12 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // is exactly what happened when tapping "Compare takes" (mode → 'compare'
   // hit the early return and skipped this effect).
   useEffect(() => {
-    if (firstReview && tapeReviewResult) trackEvent(Events.FIRST_REVIEW_COMPLETED);
+    if (!tapeReviewResult) return;
+    // Any completed review claims the "first AI Tape Review" step — this is
+    // the server-synced flag that retires the Home free-review offer + the
+    // Get Started checklist entry (markStep no-ops once set).
+    markStep('first_review');
+    if (firstReview) trackEvent(Events.FIRST_REVIEW_COMPLETED);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstReview, tapeReviewResult]);
 

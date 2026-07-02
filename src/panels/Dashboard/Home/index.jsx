@@ -74,6 +74,17 @@ const ONBOARDING_STEPS = [
     gradient: GRADIENT_WELCOME,
   },
   {
+    // The activation aha — completed via markStep('first_review') when any
+    // Tape Review result lands (TapeReview.jsx).
+    key: 'first_review',
+    title: 'Get your first AI Tape Review',
+    description: 'Submit a self-tape — casting-grade notes on your performance in minutes.',
+    cta: 'Get My Notes',
+    path: '/dashboard/jericho?tab=tape',
+    icon: Sparkles,
+    gradient: GRADIENT_WELCOME,
+  },
+  {
     key: 'generate_scene',
     title: 'Generate your first scene',
     description: 'Pick a genre and tone — get custom audition sides in seconds.',

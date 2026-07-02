@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import {
-  Camera, Sparkles, Mic, Users2, Radio, MessageSquare, Target,
+  Camera, Sparkles, Mic, Users2, Radio, MessageSquare, Target, Film,
   ChevronDown, ChevronUp, Check, ArrowRight, Trophy, Zap, X,
 } from 'lucide-react';
 import { store } from '../../redux/store';
@@ -13,6 +13,9 @@ const STEP_COLORS = ['#FF8280', '#A7ECDA', '#FFB49A', '#3b82f6', '#22c55e', '#FC
 
 const STEPS = [
   { id: 'headshot', label: 'Upload a Headshot', desc: 'So scene partners can see you', icon: Camera, route: '/dashboard/profile', mobilePanel: 'dash-profile' },
+  // The activation aha — completed via markStep('first_review') when any
+  // Tape Review result lands (TapeReview.jsx).
+  { id: 'first_review', label: 'Get your first AI Tape Review', desc: 'Casting-grade notes on a self-tape', icon: Film, route: '/dashboard/jericho?tab=tape', mobileTab: 'tape-review' },
   { id: 'generate_scene', label: 'Generate a Scene', desc: 'Create a custom practice scene with AI', icon: Sparkles, route: '/dashboard/generator', mobilePanel: 'generator' },
   { id: 'practice_ai', label: 'Practice with AI', desc: 'Rehearse your scene with the AI reader', icon: Mic, route: '/dashboard/scene-study', mobileTab: 'live' },
   { id: 'find_reader', label: 'Find a Reader', desc: 'Swipe to find a real scene partner', icon: Users2, route: '/dashboard/find-a-reader', mobileTab: 'find-a-reader' },

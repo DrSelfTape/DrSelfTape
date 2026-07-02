@@ -943,12 +943,19 @@ const PANEL_LABELS = {
    HOME
    ═══════════════════════════════════════════════════ */
 /* ── Smart next step for mobile ── */
-function getMobileNextStep({ profile, stats, submissions, scripts }) {
+function getMobileNextStep({ profile, stats, submissions, scripts, firstReviewPending }) {
   const hasHeadshot = profile?.actor_profile?.headshot;
   const hasAuditions = (stats?.total_auditions || 0) > 0;
   const hasSubs = Array.isArray(submissions) && submissions.length > 0;
   const hasScripts = Array.isArray(scripts) && scripts.length > 0;
 
+  // TOP priority: the unclaimed free Tape Review is the activation aha —
+  // every other step below is secondary until the user has seen real notes
+  // on a real tape. Completion is tracked via tutorial_progress.first_review
+  // (server-synced), marked when any Tape Review result lands.
+  if (firstReviewPending) {
+    return { title: 'Your free Tape Review is waiting', desc: 'Submit one self-tape — get casting-grade notes on your performance in minutes.', cta: 'Claim It', icon: 'sparkle', action: 'first-review' };
+  }
   if (!hasHeadshot) {
     return { title: 'Complete your profile', desc: 'Add a headshot so scene partners can find you.', cta: 'Add Headshot', icon: 'community', action: 'profile' };
   }
@@ -997,7 +1004,23 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTutorialAchievement, setShowTutorialAchievement] = useState(false);
 
-  const nextStep = getMobileNextStep({ profile, stats: s, submissions, scripts: rawScripts });
+  // Free-first-review still unclaimed? tutorial_progress.first_review is the
+  // server-synced flag TapeReview marks when any review result lands. Gated on
+  // settingsLoaded so a returning user never sees a false "free review" flash
+  // before their progress arrives.
+  const tutorialProgress = useSelector((state) => state.userSettings?.data?.tutorial_progress) || {};
+  const settingsLoadedForSteps = useSelector((state) => state.userSettings?.loaded);
+  const firstReviewPending = !!settingsLoadedForSteps && !tutorialProgress.first_review;
+
+  const nextStep = getMobileNextStep({ profile, stats: s, submissions, scripts: rawScripts, firstReviewPending });
+
+  // Drop the user into the Tape Review tab with the first-review flow active —
+  // the exact handoff AuroraOnboarding's offer step uses (sessionStorage flag
+  // survives the AI-consent remount; the event covers the immediate case).
+  const launchFreeReview = () => {
+    try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
+    try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
+  };
 
   useEffect(() => {
     const handler = () => setShowTutorialAchievement(true);
@@ -1083,9 +1106,45 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     else if (nextStep.action === 'generator') setCurrentPanel('generator');
     else if (nextStep.action === 'live') setTab('scenes');
     else if (nextStep.action === 'audition') setTab('auditions');
+    else if (nextStep.action === 'first-review') launchFreeReview();
   };
 
   const firstCallback = callbacks[0];
+
+  // ── Tape Review highlight — the hero feature. While the free first review
+  // is unclaimed it hoists to the top of Home (above the gamification stack)
+  // with the free-offer copy + first-review handoff; afterwards it renders in
+  // its usual spot below the pipeline with the standard copy.
+  const tapeReviewHero = (
+    <button
+      type="button"
+      onClick={() => (firstReviewPending ? launchFreeReview() : setTab('tape-review'))}
+      style={{
+        width: '100%', marginBottom: 14, padding: 0, cursor: 'pointer',
+        borderRadius: 20, border: '1px solid rgba(212,168,95,0.45)', overflow: 'hidden',
+        position: 'relative',
+        background: 'linear-gradient(120deg, #1A1305 0%, #3A2A0E 45%, #7A5A18 100%)',
+        boxShadow: '0 12px 30px rgba(122,90,24,0.28)',
+        height: 132, display: 'block', textAlign: 'left',
+      }}
+    >
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 80% at 100% 0%, rgba(212,168,95,0.38), transparent 60%)' }} />
+      <div style={{ position: 'absolute', left: 18, top: 0, bottom: 0, right: 92, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <span className="aurora-eyebrow" style={{ color: '#FCE072' }}>
+          {firstReviewPending ? '✨ FREE · AI TAPE REVIEW' : '✨ NEW · AI TAPE REVIEW'}
+        </span>
+        <div className="aurora-display" style={{ fontSize: 19, color: '#FFF', letterSpacing: '-0.4px', lineHeight: 1.12, marginTop: 5 }}>
+          {firstReviewPending ? 'Your first review is free →' : 'Casting-grade notes on your self-tape →'}
+        </div>
+        <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', marginTop: 6, fontWeight: 500 }}>
+          Submit a take · notes in seconds
+        </span>
+      </div>
+      <div style={{ position: 'absolute', right: 18, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30 }}>🎥</div>
+      </div>
+    </button>
+  );
 
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 20px 32px", minHeight: '100%' }}>
@@ -1114,6 +1173,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           {greeting} <span style={{ color: 'var(--aurora-heritage-gold)' }}>✦</span>
         </h1>
       </div>
+
+      {/* ── Unclaimed free Tape Review — the activation hook leads Home ── */}
+      {firstReviewPending && tapeReviewHero}
 
       {/* ── Aurora gamification: progress HUD + daily quests + Pilot Season ── */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
@@ -1204,33 +1266,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
            tutorial checklist below already prompt the same action. */}
       {hasStats && <AuroraPipeline stats={s} auditions={auditions} setTab={setTab} />}
 
-      {/* ── Tape Review highlight — the hero feature ── */}
-      <button
-        type="button"
-        onClick={() => setTab('tape-review')}
-        style={{
-          width: '100%', marginBottom: 14, padding: 0, cursor: 'pointer',
-          borderRadius: 20, border: '1px solid rgba(212,168,95,0.45)', overflow: 'hidden',
-          position: 'relative',
-          background: 'linear-gradient(120deg, #1A1305 0%, #3A2A0E 45%, #7A5A18 100%)',
-          boxShadow: '0 12px 30px rgba(122,90,24,0.28)',
-          height: 132, display: 'block', textAlign: 'left',
-        }}
-      >
-        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 80% at 100% 0%, rgba(212,168,95,0.38), transparent 60%)' }} />
-        <div style={{ position: 'absolute', left: 18, top: 0, bottom: 0, right: 92, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <span className="aurora-eyebrow" style={{ color: '#FCE072' }}>✨ NEW · AI TAPE REVIEW</span>
-          <div className="aurora-display" style={{ fontSize: 19, color: '#FFF', letterSpacing: '-0.4px', lineHeight: 1.12, marginTop: 5 }}>
-            Casting-grade notes on your self-tape →
-          </div>
-          <span style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.72)', marginTop: 6, fontWeight: 500 }}>
-            Submit a take · notes in seconds
-          </span>
-        </div>
-        <div style={{ position: 'absolute', right: 18, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-          <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30 }}>🎥</div>
-        </div>
-      </button>
+      {/* ── Tape Review highlight — the hero feature (hoisted to the top of
+           Home instead while the free first review is unclaimed) ── */}
+      {!firstReviewPending && tapeReviewHero}
 
       {/* ── Community Leaderboard teaser ── */}
       <button
