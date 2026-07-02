@@ -501,7 +501,11 @@ const jerichoSlice = createSlice({
         state.tapeReviewLoading = false;
         state.tapeReviewResult = action.payload;
         state.uploadProgress = 0;
-        state.notesReady = true;
+        // Kind-tagged (truthy) so the Review tab lands in the matching mode
+        // when the user returns via the notes-ready dot — a plain boolean
+        // sent compare results back to single mode, where they were
+        // unreachable (codex review catch).
+        state.notesReady = 'review';
       })
       .addCase(reviewTape.rejected, (state, action) => {
         state.tapeReviewLoading = false;
@@ -517,7 +521,7 @@ const jerichoSlice = createSlice({
         state.compareLoading = false;
         state.compareResult = action.payload;
         state.uploadProgress = 0;
-        state.notesReady = true;
+        state.notesReady = 'compare';
       })
       .addCase(compareTakes.rejected, (state, action) => {
         state.compareLoading = false;

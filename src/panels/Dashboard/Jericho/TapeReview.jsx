@@ -138,6 +138,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   useAIGate();
   const dispatch = useDispatch();
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress } = useSelector((s) => s.jericho);
+  // Kind of the pending notes-ready cue ('review' | 'compare' | false). Read
+  // in the mode initializer below so a compare finished on another tab
+  // reopens IN compare mode — the parent clears the flag in an effect, which
+  // runs after this render (codex review catch).
+  const notesReadyKind = useSelector((s) => s.jericho?.notesReady);
 
   // 'single' | 'compare'. The Home "Compare Takes" card and the More-grid
   // tile deep-link here via the dst_compare_takes sessionStorage flag (same
@@ -150,6 +155,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       wantsCompare = window.sessionStorage.getItem('dst_compare_takes') === '1';
       if (wantsCompare) window.sessionStorage.removeItem('dst_compare_takes');
     } catch { /* private mode — just skip */ }
+    if (notesReadyKind === 'compare' && !firstReview) return 'compare';
     return wantsCompare && !firstReview ? 'compare' : 'single';
   });
   const [file, setFile] = useState(null);
