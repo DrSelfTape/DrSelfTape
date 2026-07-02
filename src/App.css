@@ -16,63 +16,11 @@
  *   - Antique gold #D4A85F exposed only as --aurora-heritage-gold
  * ─────────────────────────────────────────────────────────────────── */
 
+/* :root defaults are the LIGHT values — the app is light-only (theme.jsx
+ * pins data-theme="light" on mount) and the pre-hydration frame must paint
+ * light too, or every cold start flashes dark. The dark block below is dead
+ * code kept for a possible future dark mode. */
 :root,
-[data-theme="dark"] {
-  /* Legacy tokens */
-  --bg-deepest: #080a0f;
-  --bg-deep: #0D0D0D;
-  --bg-card: #13151d;
-  --bg-elevated: #1A1A2E;
-  --bg-surface: #1E1E1E;
-  --bg-input: #111318;
-  --border-default: #2A2A2A;
-  --border-active: #3A3A3A;
-  --text-primary: #f2f0ed;
-  --text-secondary: #999999;
-  --text-muted: #666666;
-  --text-dim: #444444;
-  --sidebar-bg: #0D0D0D;
-  --topbar-bg: #0D0D0Dee;
-  --card-shadow: rgba(0,0,0,0.3);
-
-  /* Aurora — dark variant */
-  --aurora-bg: #0c0e14;
-  --aurora-page: #080a0f;
-  --aurora-surface-solid: #13151d;
-  --aurora-glass: rgba(255,255,255,0.04);
-  --aurora-glass-strong: rgba(255,255,255,0.07);
-  --aurora-glass-border: rgba(255,255,255,0.08);
-  --aurora-text: #f2f0ed;
-  --aurora-sub: rgba(242,240,237,0.62);
-  --aurora-dim: rgba(242,240,237,0.40);
-  --aurora-line: rgba(255,255,255,0.06);
-  --aurora-line-soft: rgba(255,255,255,0.04);
-
-  --aurora-accent: #FF8280;
-  --aurora-accent-deep: #C05957;
-  --aurora-accent-light: #FFB49A;
-
-  --aurora-gold: #FCE072;
-  --aurora-gold-deep: #B89A2E;
-  --aurora-gold-light: #FFF0B2;
-
-  --aurora-heritage-gold: #D4A85F;
-  --aurora-heritage-gold-deep: #7A5A18;
-  --aurora-heritage-gold-light: #F0D097;
-
-  --aurora-mint:   #9FE6B4;
-  --aurora-sky:    #A7D6FF;
-  --aurora-peach:  #FFC9A3;
-  --aurora-rose:   #FFB3C1;
-  --aurora-purple: #D8C5F2;
-
-  --aurora-shadow-card:  0 4px 20px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.04);
-  --aurora-shadow-modal: 0 24px 60px rgba(0,0,0,0.50);
-  --aurora-shadow-dock:  0 10px 30px rgba(0,0,0,0.40);
-  --aurora-shadow-coral: 0 12px 30px rgba(255,130,128,0.30);
-  --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.25);
-}
-
 [data-theme="light"] {
   /* Legacy tokens — Aurora-light values */
   --bg-deepest: #FAFAF7;
@@ -136,6 +84,62 @@
   --aurora-shadow-dock:  0 10px 30px rgba(10,10,10,0.06);
   --aurora-shadow-coral: 0 12px 30px rgba(212,168,95,0.30);
   --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.30);
+}
+
+[data-theme="dark"] {
+  /* Legacy tokens */
+  --bg-deepest: #080a0f;
+  --bg-deep: #0D0D0D;
+  --bg-card: #13151d;
+  --bg-elevated: #1A1A2E;
+  --bg-surface: #1E1E1E;
+  --bg-input: #111318;
+  --border-default: #2A2A2A;
+  --border-active: #3A3A3A;
+  --text-primary: #f2f0ed;
+  --text-secondary: #999999;
+  --text-muted: #666666;
+  --text-dim: #444444;
+  --sidebar-bg: #0D0D0D;
+  --topbar-bg: #0D0D0Dee;
+  --card-shadow: rgba(0,0,0,0.3);
+
+  /* Aurora — dark variant */
+  --aurora-bg: #0c0e14;
+  --aurora-page: #080a0f;
+  --aurora-surface-solid: #13151d;
+  --aurora-glass: rgba(255,255,255,0.04);
+  --aurora-glass-strong: rgba(255,255,255,0.07);
+  --aurora-glass-border: rgba(255,255,255,0.08);
+  --aurora-text: #f2f0ed;
+  --aurora-sub: rgba(242,240,237,0.62);
+  --aurora-dim: rgba(242,240,237,0.40);
+  --aurora-line: rgba(255,255,255,0.06);
+  --aurora-line-soft: rgba(255,255,255,0.04);
+
+  --aurora-accent: #FF8280;
+  --aurora-accent-deep: #C05957;
+  --aurora-accent-light: #FFB49A;
+
+  --aurora-gold: #FCE072;
+  --aurora-gold-deep: #B89A2E;
+  --aurora-gold-light: #FFF0B2;
+
+  --aurora-heritage-gold: #D4A85F;
+  --aurora-heritage-gold-deep: #7A5A18;
+  --aurora-heritage-gold-light: #F0D097;
+
+  --aurora-mint:   #9FE6B4;
+  --aurora-sky:    #A7D6FF;
+  --aurora-peach:  #FFC9A3;
+  --aurora-rose:   #FFB3C1;
+  --aurora-purple: #D8C5F2;
+
+  --aurora-shadow-card:  0 4px 20px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.04);
+  --aurora-shadow-modal: 0 24px 60px rgba(0,0,0,0.50);
+  --aurora-shadow-dock:  0 10px 30px rgba(0,0,0,0.40);
+  --aurora-shadow-coral: 0 12px 30px rgba(255,130,128,0.30);
+  --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.25);
 }
 
 /* ── Aurora utility classes ─────────────────────────────────────────── */

@@ -1,5 +1,8 @@
 <!doctype html>
-<html lang="en">
+<!-- data-theme="light" pre-hydration: the app is light-only (theme.jsx pins
+     it on mount) but the first painted frame used to resolve the dark :root
+     defaults — a dark flash on every cold start. -->
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
@@ -19,7 +22,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Dr Self Tape" />
-    <meta name="theme-color" content="#0D0D0D" />
+    <meta name="theme-color" content="#FAFAF7" />
 
     <!-- Apple Splash Screens (iPhone) -->
     <link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" href="/icons/icon-512x512.png" />
