@@ -2,11 +2,11 @@
  * Jericho — Actor Growth Dashboard
  * Shows performance DNA, coaching insights, evolution timeline, and session history.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
-  Brain, TrendingUp, Zap, Target, Star, ChevronRight,
+  Brain, TrendingUp, Zap, Target, Star, ChevronRight, X,
   Sparkles, Loader2, BarChart3, Clock, Flame, Shield,
   Eye, Mic, Theater, Laugh, Heart, Volume2, Film,
 } from 'lucide-react';
@@ -19,6 +19,8 @@ import {
 } from '../../../redux/features/jericho/jerichoSlice';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import TapeReview from './TapeReview';
+import axios from '../../../redux/http';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 // ─── Performance DNA Metrics ───────────────────────────────────────────
 
@@ -52,6 +54,239 @@ const SESSION_TYPE_LABELS = {
   audition_prep: { label: 'Audition Prep', emoji: '📋' },
   self_tape_review: { label: 'Tape Review', emoji: '🎥' },
 };
+
+// ─── Review Detail Sheet constants ────────────────────────────────────
+
+// Human-readable labels for tape-review score keys.
+const SCORE_LABELS = {
+  framing: 'Framing',
+  eyeline: 'Eyeline',
+  lighting: 'Lighting',
+  energy_commitment: 'Energy / Commitment',
+  dynamic_range: 'Dynamic Range',
+};
+
+// Human-readable labels for tape-review performance keys.
+const PERF_LABELS = {
+  emotional_arc: 'Emotional Arc',
+  strongest_beat: 'Strongest Beat',
+  choices: 'Choices',
+  listening_presence: 'Listening Presence',
+  truth_vs_indicated: 'Truth vs. Indicated',
+};
+
+// Keys that identify a tape-review-shaped ai_feedback dict. If NONE of
+// these are present we fall back to a generic labeled list.
+const TAPE_REVIEW_KEYS = ['verdict', 'scores', 'performance', 'the_one_thing', 'tone_tags'];
+
+// ─── ReviewDetailSheet ─────────────────────────────────────────────────
+
+/**
+ * Full-screen overlay that fetches and renders the stored Jericho notes
+ * for a single `self_tape_review` session. Hides the Aurora mobile
+ * header via useHideMobileHeader for its lifetime so the X button is
+ * fully reachable.
+ */
+function ReviewDetailSheet({ session, onClose }) {
+  // Suppress the persistent Aurora top bar while this overlay is open.
+  useHideMobileHeader(true);
+
+  const [detail, setDetail] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchDetail = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    axios
+      .get(`/v1/ai/session-log/${session.id}/`)
+      .then((res) => { setDetail(res.data); setLoading(false); })
+      .catch((err) => {
+        setError(err?.response?.data?.detail || 'Failed to load review details.');
+        setLoading(false);
+      });
+  }, [session.id]);
+
+  useEffect(() => { fetchDetail(); }, [fetchDetail]);
+
+  const feedback = detail?.ai_feedback || null;
+  // True when the response has at least one structured tape-review field.
+  const hasTapeKeys = feedback && TAPE_REVIEW_KEYS.some((k) => k in feedback);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex flex-col overflow-y-auto"
+      style={{ background: 'var(--aurora-bg)' }}
+    >
+      {/* ── Sheet header ── */}
+      <div
+        className="flex items-center justify-between px-4 py-4 border-b border-[rgba(10,10,10,0.08)] sticky top-0 z-10"
+        style={{ background: 'var(--aurora-bg)' }}
+      >
+        <div className="flex items-center gap-2">
+          <Film size={16} className="text-[#7A5A18]" />
+          <h2 className="text-base font-bold text-[#0A0A0A]">Tape Review</h2>
+          {session.created_at && (
+            <span className="text-xs text-[rgba(10,10,10,0.4)]">
+              {new Date(session.created_at).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric',
+              })}
+            </span>
+          )}
+        </div>
+        <button
+          type="button"
+          onTouchEnd={(e) => { e.preventDefault(); onClose(); }}
+          onClick={onClose}
+          className="w-8 h-8 rounded-full flex items-center justify-center border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:text-[#0A0A0A] transition-colors"
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          aria-label="Close"
+        >
+          <X size={16} />
+        </button>
+      </div>
+
+      {/* ── Sheet body ── */}
+      <div className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
+
+        {/* Loading spinner */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
+          </div>
+        )}
+
+        {/* Error state with retry */}
+        {error && (
+          <div className="text-center py-20">
+            <p className="text-sm text-[rgba(10,10,10,0.62)] mb-4">{error}</p>
+            <button
+              type="button"
+              onTouchEnd={(e) => { e.preventDefault(); fetchDetail(); }}
+              onClick={fetchDetail}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-[#0A0A0A]"
+              style={{
+                background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {/* Loaded content */}
+        {detail && !loading && (
+          <div className="space-y-5">
+            {hasTapeKeys ? (
+              <>
+                {/* Verdict — headline treatment */}
+                {feedback.verdict && (
+                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-2">Verdict</h3>
+                    <p className="text-base font-bold text-[#0A0A0A] leading-snug">{feedback.verdict}</p>
+                  </div>
+                )}
+
+                {/* Scores — labeled 1–10 progress bars */}
+                {feedback.scores && Object.keys(feedback.scores).length > 0 && (
+                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Scores</h3>
+                    <div className="space-y-3">
+                      {Object.entries(feedback.scores).map(([k, v]) => (
+                        <div key={k} className="flex items-center gap-3">
+                          <span className="text-xs text-[rgba(10,10,10,0.62)] w-32 truncate flex-shrink-0">
+                            {SCORE_LABELS[k] || k.replace(/_/g, ' ')}
+                          </span>
+                          <div className="flex-1 h-2 rounded-full bg-[#F4F4EE] overflow-hidden">
+                            <div
+                              className="h-full rounded-full transition-all duration-700"
+                              style={{ width: `${(Number(v) / 10) * 100}%`, background: '#D4A85F' }}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-[#0A0A0A] w-6 text-right">{v}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Performance — readable-label sections */}
+                {feedback.performance && Object.keys(feedback.performance).length > 0 && (
+                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Performance</h3>
+                    <div className="space-y-4">
+                      {Object.entries(feedback.performance).map(([k, v]) => (
+                        <div key={k}>
+                          <span className="text-[10px] font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide">
+                            {PERF_LABELS[k] || k.replace(/_/g, ' ')}
+                          </span>
+                          <p className="text-sm text-[rgba(10,10,10,0.62)] leading-relaxed mt-0.5">{String(v)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* The One Thing — highlighted callout */}
+                {feedback.the_one_thing && (
+                  <div
+                    className="rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/30"
+                    style={{ background: 'rgba(212,168,95,0.08)' }}
+                  >
+                    <h3 className="text-xs font-bold text-[#7A5A18] uppercase tracking-wide mb-2 flex items-center gap-1.5">
+                      <Sparkles size={12} /> The One Thing
+                    </h3>
+                    <p className="text-sm font-semibold text-[#0A0A0A] leading-relaxed">{feedback.the_one_thing}</p>
+                  </div>
+                )}
+
+                {/* Tone tags — chips */}
+                {feedback.tone_tags && feedback.tone_tags.length > 0 && (
+                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-3">Tone</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {feedback.tone_tags.map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#D4A85F]/10 text-[#7A5A18] border border-[#D4A85F]/20"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              /* Fallback: generic / unknown session shape — list all present fields */
+              <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Session Notes</h3>
+                {feedback && Object.keys(feedback).length > 0 ? (
+                  <div className="space-y-3">
+                    {Object.entries(feedback).map(([k, v]) => (
+                      <div key={k}>
+                        <span className="text-[10px] font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide">
+                          {k.replace(/_/g, ' ')}
+                        </span>
+                        <p className="text-sm text-[rgba(10,10,10,0.62)] leading-relaxed mt-0.5">
+                          {typeof v === 'string' ? v : JSON.stringify(v)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[rgba(10,10,10,0.4)]">No notes stored for this session.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ─── DNA Radar Chart (SVG) ─────────────────────────────────────────────
 
@@ -175,6 +410,8 @@ export default function JerichoDashboard() {
   const deepTab = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(deepTab || 'overview');
   const [showStylePicker, setShowStylePicker] = useState(false);
+  // Detail sheet — null when closed, or the session object to show.
+  const [selectedSession, setSelectedSession] = useState(null);
   // Lets a brand-new actor (no sessions yet) jump straight into Tape Review
   // instead of being held on the empty state — also true when deep-linked to
   // the Tape tab, which works without any prior sessions.
@@ -270,6 +507,14 @@ export default function JerichoDashboard() {
   }
 
   return (
+    <>
+      {/* Detail sheet — mounts as a fixed overlay when a review row is tapped */}
+      {selectedSession && (
+        <ReviewDetailSheet
+          session={selectedSession}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
     <div className="min-h-screen px-4 py-6 sm:p-8" style={{ background: 'var(--aurora-bg)' }}>
       <div className="max-w-4xl mx-auto">
 
@@ -554,11 +799,23 @@ export default function JerichoDashboard() {
                   recentSessions.map((session, i) => {
                     const typeInfo = SESSION_TYPE_LABELS[session.session_type] || { label: session.session_type, emoji: '🎭' };
                     const date = session.created_at ? new Date(session.created_at) : null;
+                    // Only tape-review rows open the detail sheet; other types
+                    // stay non-tappable to match their current rendering.
+                    const isTapeReview = session.session_type === 'self_tape_review';
+                    const Wrapper = isTapeReview ? 'button' : 'div';
                     return (
-                      <div
+                      <Wrapper
                         key={session.id || i}
-                        className="rounded-xl border border-[rgba(10,10,10,0.08)] p-3 sm:p-4 flex items-center gap-3"
-                        style={{ background: 'var(--bg-surface, #1A1A2E)' }}
+                        {...(isTapeReview && {
+                          type: 'button',
+                          onTouchEnd: (e) => { e.preventDefault(); setSelectedSession(session); },
+                          onClick: () => setSelectedSession(session),
+                        })}
+                        className={`rounded-xl border border-[rgba(10,10,10,0.08)] p-3 sm:p-4 flex items-center gap-3${isTapeReview ? ' w-full text-left' : ''}`}
+                        style={{
+                          background: 'var(--bg-surface, #1A1A2E)',
+                          ...(isTapeReview && { touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }),
+                        }}
                       >
                         <span className="text-lg">{typeInfo.emoji}</span>
                         <div className="flex-1 min-w-0">
@@ -590,7 +847,7 @@ export default function JerichoDashboard() {
                           )}
                         </div>
                         <ChevronRight size={14} className="text-[#3A3A3A] flex-shrink-0" />
-                      </div>
+                      </Wrapper>
                     );
                   })
                 ) : (
@@ -606,5 +863,6 @@ export default function JerichoDashboard() {
         )}
       </div>
     </div>
+    </>
   );
 }
