@@ -381,6 +381,10 @@ const jerichoSlice = createSlice({
     // can take minutes to upload on mobile, so the loading UI shows this instead
     // of looking frozen.
     uploadProgress: 0,
+    // Return cue: a review/compare finished (possibly while the user was on
+    // another tab). The mobile tab bar shows a "notes ready" dot on the Review
+    // tab while this is set; visiting the tab clears it.
+    notesReady: false,
 
     // Last logged session ID (for attaching post-session feedback)
     lastSessionLogId: null,
@@ -410,6 +414,10 @@ const jerichoSlice = createSlice({
     clearCompare: (state) => {
       state.compareResult = null;
       state.compareError = null;
+    },
+    /** Review-tab visit acknowledges the finished notes — dot comes off. */
+    clearNotesReady: (state) => {
+      state.notesReady = false;
     },
   },
   extraReducers: (builder) => {
@@ -493,6 +501,7 @@ const jerichoSlice = createSlice({
         state.tapeReviewLoading = false;
         state.tapeReviewResult = action.payload;
         state.uploadProgress = 0;
+        state.notesReady = true;
       })
       .addCase(reviewTape.rejected, (state, action) => {
         state.tapeReviewLoading = false;
@@ -508,6 +517,7 @@ const jerichoSlice = createSlice({
         state.compareLoading = false;
         state.compareResult = action.payload;
         state.uploadProgress = 0;
+        state.notesReady = true;
       })
       .addCase(compareTakes.rejected, (state, action) => {
         state.compareLoading = false;
@@ -525,5 +535,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, clearCompare } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, clearCompare, clearNotesReady } = jerichoSlice.actions;
 export default jerichoSlice.reducer;

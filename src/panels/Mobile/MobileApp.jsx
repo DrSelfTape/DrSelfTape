@@ -16,6 +16,7 @@ import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
 import { markStep } from "../../components/Dashboard/TutorialChecklist";
 import { logoutUser, performLogout } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
+import { clearNotesReady } from "../../redux/features/jericho/jerichoSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ProfileCompleteness from "../../components/Dashboard/ProfileCompleteness";
 import DeleteAccountModal from "../../components/Dashboard/DeleteAccountModal";
@@ -3410,6 +3411,16 @@ function TopBarAvatar({ active, onClick }) {
 export default function DrSelfTapeApp() {
   const [tab, setTab] = useState("home");
   const [currentPanel, setCurrentPanel] = useState(null);
+  // "Notes ready" return cue — a tape review / compare finished (often while
+  // the user wandered to another tab during the multi-minute analysis). Shows
+  // a mint dot on the Review tab; visiting the tab acknowledges + clears it.
+  const reduxDispatch = useDispatch();
+  const notesReady = useSelector((s) => !!s.jericho?.notesReady);
+  useEffect(() => {
+    if (notesReady && tab === 'tape-review' && !currentPanel) {
+      reduxDispatch(clearNotesReady());
+    }
+  }, [notesReady, tab, currentPanel, reduxDispatch]);
   // Which sub-view the merged Connect tab shows ('reader' | 'chat'). Old
   // find-a-reader / green-room tab ids alias here via TAB_ALIASES.
   const [connectSection, setConnectSection] = useState('reader');
@@ -3905,14 +3916,24 @@ export default function DrSelfTapeApp() {
                     maxWidth: '100%',
                     lineHeight: 1.1,
                   }}>{t.label}</span>
-                  {t.highlight && !a && (
+                  {/* Notes-ready return cue wins over the standing highlight
+                      dot: mint + glow says "your casting notes finished while
+                      you were away". Cleared on Review-tab visit. */}
+                  {t.id === 'tape-review' && notesReady && !a ? (
+                    <span style={{
+                      position: 'absolute', top: 4, right: '50%', marginRight: -16,
+                      width: 8, height: 8, borderRadius: '50%',
+                      background: 'var(--aurora-mint)',
+                      boxShadow: '0 0 0 2px rgba(255,255,255,0.85), 0 0 8px var(--aurora-mint)',
+                    }} />
+                  ) : (t.highlight && !a && (
                     <span style={{
                       position: 'absolute', top: 4, right: '50%', marginRight: -16,
                       width: 7, height: 7, borderRadius: '50%',
                       background: 'var(--aurora-accent-deep)',
                       boxShadow: '0 0 0 2px rgba(255,255,255,0.85)',
                     }} />
-                  )}
+                  ))}
                 </button>
               );
             })}

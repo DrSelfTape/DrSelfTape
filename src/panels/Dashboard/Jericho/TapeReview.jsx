@@ -165,6 +165,19 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // new file is chosen.
   const idemKeyRef = useRef(null);
 
+  // Staged analysis progress (Tier 2 item 3): once the R2 upload completes,
+  // the multi-minute wait is split into two honest, time-based stages —
+  // "watching" (frames + audio pass) then "writing" (the notes come together).
+  // No fake percentages; the stage flip just keeps the screen visibly alive.
+  const [analysisStage, setAnalysisStage] = useState('watching');
+  const analysisUploading = tapeReviewLoading && uploadProgress < 100;
+  useEffect(() => {
+    if (!tapeReviewLoading) { setAnalysisStage('watching'); return; }
+    if (analysisUploading) return; // stage clock starts when the upload lands
+    const t = setTimeout(() => setAnalysisStage('writing'), 45000);
+    return () => clearTimeout(t);
+  }, [tapeReviewLoading, analysisUploading]);
+
   // First time an actor opens the analyzer → show the walkthrough. Suppressed
   // during the free first review (it would stack on the fresh offer handoff);
   // that user gets it AFTER their first result instead — see below.
@@ -269,20 +282,65 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     dispatch(clearTapeReview());
   };
 
-  // ─── Loading ───────────────────────────────────────────────────────
+  // ─── Loading — staged progress (upload → watching → writing) ────────
   if (tapeReviewLoading) {
-    const uploading = uploadProgress < 100;
+    const uploading = analysisUploading;
+    const stages = [
+      {
+        key: 'upload',
+        label: uploading ? `Uploading your take… ${uploadProgress}%` : 'Take uploaded',
+        active: uploading,
+        done: !uploading,
+      },
+      {
+        key: 'watching',
+        label: 'Watching your performance',
+        active: !uploading && analysisStage === 'watching',
+        done: !uploading && analysisStage === 'writing',
+      },
+      {
+        key: 'writing',
+        label: 'Writing your casting notes',
+        active: !uploading && analysisStage === 'writing',
+        done: false,
+      },
+    ];
     return (
-      <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-10 text-center" style={SURFACE}>
-        <Loader2 className="w-9 h-9 animate-spin text-[#7A5A18] mx-auto mb-4" />
-        <p className="text-sm font-bold text-[#0A0A0A]">
-          {uploading ? `Uploading your tape… ${uploadProgress}%` : 'Jericho is watching your tape…'}
-        </p>
-        <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1.5 max-w-xs mx-auto leading-relaxed">
-          {uploading
-            ? 'Large tapes can take a few minutes to upload on a mobile connection — keep the app open until the upload finishes.'
-            : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. You can close the app — we’ll notify you when your notes are ready.'}
-        </p>
+      <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-8" style={SURFACE}>
+        <div className="max-w-xs mx-auto">
+          {/* Real percentage bar while the upload is the real work */}
+          {uploading && (
+            <div className="h-1.5 rounded-full mb-6 overflow-hidden" style={{ background: 'rgba(10,10,10,0.08)' }}>
+              <div
+                className="h-full transition-all duration-300"
+                style={{ width: `${uploadProgress}%`, background: 'linear-gradient(90deg, #D4A85F, #7A5A18)' }}
+              />
+            </div>
+          )}
+          <div className="space-y-4">
+            {stages.map((st) => (
+              <div key={st.key} className="flex items-center gap-3">
+                <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                  {st.done ? (
+                    <CheckCircle2 size={18} className="text-[#7A5A18]" />
+                  ) : st.active ? (
+                    <Loader2 size={18} className="animate-spin text-[#7A5A18]" />
+                  ) : (
+                    <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(10,10,10,0.18)' }} />
+                  )}
+                </span>
+                <p className={`text-sm ${st.active ? 'font-bold text-[#0A0A0A]' : st.done ? 'font-medium text-[rgba(10,10,10,0.55)]' : 'font-medium text-[rgba(10,10,10,0.35)]'}`}>
+                  {st.label}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-[rgba(10,10,10,0.4)] mt-6 leading-relaxed">
+            {uploading
+              ? 'Large tapes can take a few minutes to upload on a mobile connection — keep the app open until the upload finishes.'
+              : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. You can close the app — we’ll notify you when your notes are ready.'}
+          </p>
+        </div>
       </div>
     );
   }
