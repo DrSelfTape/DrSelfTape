@@ -506,6 +506,11 @@ const jerichoSlice = createSlice({
         // sent compare results back to single mode, where they were
         // unreachable (codex review catch).
         state.notesReady = 'review';
+        // A token was just spent — nudge useTokenBalance past its cache so
+        // every surface shows the post-charge number (codex review catch:
+        // the recorder path showed the pre-charge balance until an
+        // unrelated refresh).
+        try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
       })
       .addCase(reviewTape.rejected, (state, action) => {
         state.tapeReviewLoading = false;
@@ -522,6 +527,7 @@ const jerichoSlice = createSlice({
         state.compareResult = action.payload;
         state.uploadProgress = 0;
         state.notesReady = 'compare';
+        try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
       })
       .addCase(compareTakes.rejected, (state, action) => {
         state.compareLoading = false;

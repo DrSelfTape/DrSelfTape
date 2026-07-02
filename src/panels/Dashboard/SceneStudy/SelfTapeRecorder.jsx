@@ -283,6 +283,8 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
     setRecordedUrl(null);
     setRecordedBlob(null);
     setIdemKey(null); // drop the old take's idempotency key — next take gets a fresh one
+    notesKeyRef.current = null; // same for the AI Notes key
+    notesFiringRef.current = false;
     setTimer(0);
     setSaved(false);
     // Restart camera preview
@@ -331,20 +333,32 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
   // presign) and land on the Review tab, where the staged progress + result
   // render. The thunk outlives this component, so closing is safe.
   const [notesLoading, setNotesLoading] = useState(false);
+  // Synchronous re-entry guard for the AI Notes tap. The tap-belt fires BOTH
+  // onTouchEnd and (sometimes) a synthetic click; React state alone lets both
+  // pass the guard before the rerender — on a MONEY action that meant two
+  // reviewTape dispatches with two different idempotency keys, i.e. a double
+  // charge the BE cannot dedupe (codex review catch).
+  const notesFiringRef = useRef(false);
+  // One idempotency key per recorded take — belt #2: even if a double-fire
+  // slipped through, the BE would dedupe identical keys. Reset per new take.
+  const notesKeyRef = useRef(null);
   const handleGetNotes = async () => {
-    if (!recordedBlob || notesLoading) return;
+    if (!recordedBlob || notesLoading || notesFiringRef.current) return;
+    notesFiringRef.current = true;
     setNotesLoading(true);
     let ok = false;
     try { ok = await requestAiConsent(); } catch { ok = false; }
-    if (!ok) { setNotesLoading(false); return; }
+    if (!ok) { setNotesLoading(false); notesFiringRef.current = false; return; }
     const ext = getFileExt(mimeTypeRef.current);
     const file = new File([recordedBlob], `self-tape-${Date.now()}.${ext}`, {
       type: recordedBlob.type || 'video/webm',
     });
     // Fresh key (not the Save flow's idemKey): different endpoint, different
     // action — sharing one key risks a cross-endpoint dedup collision.
-    const key = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    dispatch(reviewTape({ video: file, idempotencyKey: key }));
+    if (!notesKeyRef.current) {
+      notesKeyRef.current = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    }
+    dispatch(reviewTape({ video: file, idempotencyKey: notesKeyRef.current }));
     try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'tape-review' } })); } catch { /* noop */ }
     if (onClose) onClose();
   };

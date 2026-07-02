@@ -41,7 +41,10 @@ export function useTokenBalance() {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  // Listen for insufficient_tokens event to invalidate and refresh
+  // Hard invalidation events: insufficient_tokens (a spend was refused) and
+  // dst-tokens-changed (an AI charge just settled — fired by the jericho
+  // slice's fulfilled reducers so every charge path, including the recorder's
+  // record→review handoff, shows the post-charge balance immediately).
   useEffect(() => {
     const handler = () => {
       cachedBalance = null;
@@ -49,7 +52,11 @@ export function useTokenBalance() {
       refresh(true);
     };
     window.addEventListener('insufficient_tokens', handler);
-    return () => window.removeEventListener('insufficient_tokens', handler);
+    window.addEventListener('dst-tokens-changed', handler);
+    return () => {
+      window.removeEventListener('insufficient_tokens', handler);
+      window.removeEventListener('dst-tokens-changed', handler);
+    };
   }, [refresh]);
 
   return { balance, unlimited, loading, refresh };
