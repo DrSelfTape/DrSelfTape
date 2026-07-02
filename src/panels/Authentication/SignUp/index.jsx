@@ -191,7 +191,10 @@ export const Signup = () => {
             (no SiwA there). */}
         {Capacitor.getPlatform() !== 'android' && (
           <div className='mt-6'>
-            <AppleSignInButton onError={(msg) => toast.error(msg)} />
+            <AppleSignInButton
+              onError={(msg) => toast.error(msg)}
+              onSuccess={() => applyStoredReferral(toast)}
+            />
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 0' }}>
               <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
               <span style={{

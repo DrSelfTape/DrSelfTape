@@ -16,6 +16,7 @@ import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial'
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { trackEvent, Events } from '../../../utils/analytics';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { Capacitor } from '@capacitor/core';
 import { usePushNotifications, isCapacitorNative, openNotificationSettings } from '../../../hooks/usePushNotifications';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
@@ -52,7 +53,10 @@ function NotificationsNudge() {
   const [dismissed, setDismissed] = useState(() => {
     try { return localStorage.getItem(NOTIF_NUDGE_KEY) === '1'; } catch { return false; }
   });
-  if (!isCapacitorNative() || permission !== 'denied' || dismissed) return null;
+  // iOS-only: `app-settings:` is an iOS URL scheme — on Android the Open
+  // Settings tap would silently no-op (codex review catch), and the Android
+  // build ships without push anyway.
+  if (!isCapacitorNative() || Capacitor.getPlatform() !== 'ios' || permission !== 'denied' || dismissed) return null;
   const dismiss = () => {
     setDismissed(true);
     try { localStorage.setItem(NOTIF_NUDGE_KEY, '1'); } catch { /* private mode */ }

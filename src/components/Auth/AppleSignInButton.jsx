@@ -42,7 +42,7 @@ function loadAppleJSOnce() {
   });
 }
 
-export default function AppleSignInButton({ disabled, onError, label = 'Continue with Apple' }) {
+export default function AppleSignInButton({ disabled, onError, onSuccess, label = 'Continue with Apple' }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
@@ -59,12 +59,16 @@ export default function AppleSignInButton({ disabled, onError, label = 'Continue
     if (appleLoginUser.fulfilled.match(result)) {
       const token = result.payload?.token?.access || result.payload?.token;
       if (token) setAuthToken(token);
+      // Post-auth hook (e.g. the signup page applies a stored ?ref= referral).
+      // Awaited so its toast fires before we navigate away; the callback is
+      // responsible for its own error handling and must never throw.
+      if (onSuccess) await onSuccess();
       const role = result.payload?.active_role || result.payload?.role || 'actor';
       navigate(getFirstRouteByRole(role));
     } else {
       onError?.(result.payload || 'Apple sign-in failed. Please try again.');
     }
-  }, [dispatch, navigate, onError]);
+  }, [dispatch, navigate, onError, onSuccess]);
 
   const handleNative = useCallback(async () => {
     try {
