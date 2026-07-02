@@ -142,6 +142,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   useAIGate();
   const dispatch = useDispatch();
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult } = useSelector((s) => s.jericho);
+  const tutorialProgress = useSelector((s) => s.userSettings?.data?.tutorial_progress || {});
   // Kind of the pending notes-ready cue ('review' | 'compare' | false). Read
   // in the mode initializer below so a compare finished on another tab
   // reopens IN compare mode — the parent clears the flag in an effect, which
@@ -681,7 +682,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         >
           <Sparkles size={15} /> Get my notes
         </button>
-        <p className="text-[10px] text-[rgba(10,10,10,0.35)] text-center mt-2">Uses 1 token · your tape is analyzed, not stored for training</p>
+        <p className="text-[10px] text-[rgba(10,10,10,0.35)] text-center mt-2">
+          {(firstReview || !tutorialProgress.first_review)
+            ? 'Your first review is free · your tape is analyzed, not stored for training'
+            : 'Uses 1 token · your tape is analyzed, not stored for training'}
+        </p>
       </div>
     </div>
   );
