@@ -974,6 +974,13 @@ function getMobileNextStep({ profile, stats, submissions, scripts, firstReviewPe
   return { title: 'Ready to work?', desc: 'Jump back into scene study or try the acting coach.', cta: 'Continue', icon: 'play', action: 'live' };
 }
 
+// Aurora gamification stack (HUD / quests / streak guard / season pass) —
+// hidden from Home: the rank ("#128"), XP and league numbers are fake
+// localStorage defaults from gameStore.js, and the stack owned the entire
+// first viewport ahead of the real money features. Revive only once the
+// numbers are server-backed. Components kept intact on purpose.
+const SHOW_AURORA_GAME = false;
+
 // Slate's rotating daily craft notes — the mascot as a gentle guide.
 const SLATE_TIPS = [
   'One clean take beats ten rushed ones.',
@@ -1179,13 +1186,17 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {/* ── Unclaimed free Tape Review — the activation hook leads Home ── */}
       {firstReviewPending && tapeReviewHero}
 
-      {/* ── Aurora gamification: progress HUD + daily quests + Pilot Season ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
-        <AuroraHUD />
-        <AuroraQuests />
-        <AuroraStreakGuard />
-        <AuroraSeason />
-      </div>
+      {/* ── Aurora gamification: progress HUD + daily quests + Pilot Season ──
+           Gated off — fake localStorage rank; revive only server-backed
+           (see SHOW_AURORA_GAME above). */}
+      {SHOW_AURORA_GAME && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 18 }}>
+          <AuroraHUD />
+          <AuroraQuests />
+          <AuroraStreakGuard />
+          <AuroraSeason />
+        </div>
+      )}
 
       {/* Slate's daily note */}
       <div style={{ marginBottom: 18 }}>
