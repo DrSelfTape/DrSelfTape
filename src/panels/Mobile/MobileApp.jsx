@@ -890,6 +890,9 @@ const TABS = [
 
 const MORE_FEATURES = [
   { id: "jericho", label: "My Growth", desc: "Your evolving actor DNA and coaching insights", emoji: "🧠", color: "#FF8280" },
+  // compare-takes is not a panel — MoreScreen deep-links it into the Tape
+  // Review tab's compare mode (dst_compare_takes handoff, see TapeReview.jsx).
+  { id: "compare-takes", label: "Compare Takes", desc: "Upload 2–4 takes — AI picks the winner", emoji: "🏆", color: "#FCE072" },
   { id: "cd-sim", label: "Acting Coach", desc: "Get expert feedback on your scene work", emoji: "🎭", color: "#FF8280" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8" },
@@ -1027,6 +1030,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const launchFreeReview = () => {
     try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
+  };
+
+  // Land on the Tape Review tab in compare mode — TapeReview consumes the
+  // flag in its mode initializer (same handoff shape as dst_first_review).
+  const launchCompareTakes = () => {
+    try { window.sessionStorage.setItem('dst_compare_takes', '1'); } catch { /* noop */ }
+    setTab('tape-review');
   };
 
   useEffect(() => {
@@ -1644,6 +1654,51 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
         >
           OPEN →
+        </span>
+      </button>
+
+      {/* ── Compare Takes door — previously unreachable from anywhere ── */}
+      <button
+        type="button"
+        onClick={launchCompareTakes}
+        onTouchEnd={(e) => { e.preventDefault(); launchCompareTakes(); }}
+        className="aurora-card"
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 14,
+          padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
+          textAlign: 'left', border: 'none', color: 'var(--aurora-text)',
+          touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <div
+          style={{
+            width: 44, height: 44, borderRadius: 14,
+            background: 'color-mix(in oklch, #FCE072 30%, transparent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 22, flexShrink: 0,
+          }}
+        >
+          🏆
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span
+            className="aurora-eyebrow"
+            style={{ display: 'block', color: 'var(--aurora-dim)', marginBottom: 2 }}
+          >
+            COMPARE TAKES · AI
+          </span>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
+            Filmed 3 takes? AI picks the winner
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+            Upload 2–4 takes · ranked with reasons
+          </p>
+        </div>
+        <span
+          className="aurora-mono"
+          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+        >
+          RANK →
         </span>
       </button>
 
@@ -2914,6 +2969,12 @@ function MoreScreen({ setCurrentPanel }) {
           <button key={f.id} onClick={() => {
             if (f.id === 'whats-new') return window.dispatchEvent(new CustomEvent('drst-whats-new'));
             if (f.id === 'report-problem') return window.dispatchEvent(new CustomEvent('drst-report-problem'));
+            if (f.id === 'compare-takes') {
+              // Not a panel — land on the Tape Review tab in compare mode.
+              // TapeReview consumes the flag in its mode initializer.
+              try { window.sessionStorage.setItem('dst_compare_takes', '1'); } catch { /* noop */ }
+              return window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'tape-review' } }));
+            }
             setCurrentPanel(f.id);
           }} className="aurora-glass" style={{
             padding: "18px 16px", cursor: "pointer", textAlign: "left",

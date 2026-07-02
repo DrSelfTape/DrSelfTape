@@ -139,7 +139,19 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const dispatch = useDispatch();
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress } = useSelector((s) => s.jericho);
 
-  const [mode, setMode] = useState('single'); // 'single' | 'compare'
+  // 'single' | 'compare'. The Home "Compare Takes" card and the More-grid
+  // tile deep-link here via the dst_compare_takes sessionStorage flag (same
+  // handoff shape as dst_first_review) — consumed once on mount. Never during
+  // the free first review: Compare costs tokens and would wall a Day-0 user
+  // mid-activation, bypassing the free-review paywall.
+  const [mode, setMode] = useState(() => {
+    let wantsCompare = false;
+    try {
+      wantsCompare = window.sessionStorage.getItem('dst_compare_takes') === '1';
+      if (wantsCompare) window.sessionStorage.removeItem('dst_compare_takes');
+    } catch { /* private mode — just skip */ }
+    return wantsCompare && !firstReview ? 'compare' : 'single';
+  });
   const [file, setFile] = useState(null);
   const [role, setRole] = useState('');
   const [tone, setTone] = useState('');
@@ -438,7 +450,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         )}
 
         {/* Actions — in first-review mode the paywall leads; otherwise the
-            standard "review another take" reset. */}
+            standard "review another take" reset plus the Compare Takes
+            handoff (hidden during the free first review for the same
+            token-wall reason as the mode toggle). */}
         {firstReview ? (
           <>
             <FirstReviewPaywall onUpgrade={() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_TAP); onUpgrade?.(); }} />
@@ -450,13 +464,26 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             </button>
           </>
         ) : (
-          <button
-            onClick={reset}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
-            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
-          >
-            <RotateCcw size={15} /> Review another take
-          </button>
+          <>
+            {/* The exact moment the need exists: notes are on screen, the
+                obvious next question is "which of my takes is stronger?" */}
+            <button
+              type="button"
+              onClick={() => setMode('compare')}
+              onTouchEnd={(e) => { e.preventDefault(); setMode('compare'); }}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15"
+            >
+              <Trophy size={15} /> Compare this take against another →
+            </button>
+            <button
+              onClick={reset}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+              style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+            >
+              <RotateCcw size={15} /> Review another take
+            </button>
+          </>
         )}
       </div>
     );
