@@ -41,7 +41,6 @@ async function applyStoredReferral(toast) {
       toast.success('+50 tokens — referral bonus added! 🎁');
     }
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('Referral apply failed:', err?.response?.data?.message || err?.message);
   }
 }

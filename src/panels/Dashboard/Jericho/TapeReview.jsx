@@ -157,7 +157,6 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     try {
       if (!localStorage.getItem(TAPE_TUTORIAL_KEY)) setShowTutorial(true);
     } catch { /* private mode — just skip */ }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstReview]);
 
   // The activation aha — fire COMPLETED once when the free first review lands.
