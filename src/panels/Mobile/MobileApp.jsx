@@ -2533,6 +2533,55 @@ function AuditionsScreen() {
 /* ═══════════════════════════════════════════════════
    SCENES
    ═══════════════════════════════════════════════════ */
+// ── Demo scene (Tier 2 item 6) ── an original, neutral comedic two-hander so
+// a brand-new user can hear the AI reader without owning a script. Loaded via
+// the existing drst-load-virtual-script path, which skips the upload gate and
+// lands directly in the live-read flow. ~12 exchanges; either role plays.
+const DEMO_SCENE_TITLE = 'Sample Scene: The Last Slice';
+const DEMO_SCENE_CONTENT = `ALEX: You're really going to stand there and pretend you didn't see the cake.
+
+JO: What cake?
+
+ALEX: The retirement cake. In the break room. There was one slice left at nine o'clock.
+
+JO: Sounds like a mystery.
+
+ALEX: You have frosting on your collar.
+
+JO: That's paint.
+
+ALEX: Vanilla-scented paint?
+
+JO: I've been painting a very small vanilla fence.
+
+ALEX: I labeled that slice, Jo. There was a sticky note. With my name on it.
+
+JO: Notes fall off. It's a known flaw in the sticky note industry.
+
+ALEX: The note was still on the plate. Under the fork. That you used.
+
+JO: Okay. Hypothetically. If someone did eat the slice, maybe that someone was having a very hard morning.
+
+ALEX: You got here forty minutes ago.
+
+JO: They were a dense forty minutes.
+
+ALEX: I skipped breakfast for that slice.
+
+JO: And honestly? That's on you. Never trust a break room.
+
+ALEX: I want to be mad, but that's actually good advice.
+
+JO: There's a second cake in the supply closet. Don't ask why I know that.
+
+ALEX: You have a cake informant?
+
+JO: I have a network. Are we doing this or not?
+
+ALEX: Get the forks.
+
+JO: Already in my pocket.`;
+
 function ScenesScreen({ setTab }) {
   const dispatch = useDispatch();
   const fallbackScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
@@ -2749,6 +2798,58 @@ function ScenesScreen({ setTab }) {
         </div>
         <input id="script-upload-input" ref={fileInputRef} type="file" accept=".pdf,.txt" style={{ display: "none" }} onChange={e => handleFileUpload(e.target.files?.[0])} />
       </label>
+
+      {/* No script? Try the bundled sample scene — the cold-open path to
+          hearing the AI reader without the upload prerequisite. Goes through
+          the same drst-load-virtual-script handler Craft Journey uses. */}
+      <button
+        type="button"
+        onClick={() => {
+          try {
+            window.dispatchEvent(new CustomEvent('drst-load-virtual-script', {
+              detail: { content: DEMO_SCENE_CONTENT, title: DEMO_SCENE_TITLE },
+            }));
+          } catch { /* noop */ }
+        }}
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          try {
+            window.dispatchEvent(new CustomEvent('drst-load-virtual-script', {
+              detail: { content: DEMO_SCENE_CONTENT, title: DEMO_SCENE_TITLE },
+            }));
+          } catch { /* noop */ }
+        }}
+        className="aurora-card"
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+          padding: '13px 16px', marginBottom: 20, cursor: 'pointer',
+          textAlign: 'left', border: 'none', color: 'var(--aurora-text)',
+          touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        <div style={{
+          width: 40, height: 40, borderRadius: 12,
+          background: 'color-mix(in oklch, var(--aurora-mint) 18%, transparent)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 19, flexShrink: 0,
+        }}>
+          🎬
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
+            Try a sample scene
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+            No script needed — run a short comedy two-hander with the AI reader
+          </p>
+        </div>
+        <span
+          className="aurora-mono"
+          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+        >
+          PLAY →
+        </span>
+      </button>
 
       <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--aurora-dim)', margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "1px" }}>Your Scripts</p>
 
