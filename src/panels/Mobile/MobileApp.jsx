@@ -883,8 +883,8 @@ const TABS = [
   { id: "scenes", icon: "scenes", label: "Practice" },
   { id: "auditions", icon: "auditions", label: "Auditions" },
   { id: "find-a-reader", icon: "community", label: "Reader" },
-  { id: "green-room", icon: "mic", label: "Room" },
-  { id: "tape-review", icon: "tape", label: "Tape", highlight: true },
+  { id: "green-room", icon: "mic", label: "Chat" },
+  { id: "tape-review", icon: "tape", label: "Review", highlight: true },
   { id: "more", icon: "more", label: "More" },
 ];
 
@@ -3668,8 +3668,8 @@ export default function DrSelfTapeApp() {
           </div>
 
           {/* Bottom Tab Bar — floating glass pill w/ active-pill highlight.
-           * Active tab = solid black pill containing icon + horizontal label.
-           * Inactive tabs = just the icon (no label).
+           * Every tab shows its icon + a 10px label underneath (standard
+           * iOS pattern — 6 of 7 tabs used to be anonymous glyphs).
            * Slides down + fades when a modal is open so bottom-sheet
            * action buttons (Cancel / Delete) aren't hidden behind it. */}
           <div style={{
@@ -3699,20 +3699,19 @@ export default function DrSelfTapeApp() {
                   onClick={() => handleSetTab(t.id)}
                   className="aurora-tab-btn"
                   style={{
-                    // Cap the active pill so a long label (e.g. "Green Room")
-                    // can never widen the bar enough to push/drop other tabs —
-                    // the bar layout stays consistent on every tab.
-                    flex: a ? '0 1 auto' : '0 0 40px',
-                    maxWidth: a ? 108 : 40,
+                    // Even distribution — every tab is icon-over-label now,
+                    // so no active-pill width games are needed.
+                    flex: '1 1 0',
+                    minWidth: 0,
                     background: a ? 'var(--aurora-accent-light)' : 'transparent',
                     border: "none", cursor: "pointer",
-                    display: "flex", flexDirection: "row",
+                    display: "flex", flexDirection: "column",
                     alignItems: "center", justifyContent: 'center',
-                    gap: a ? 6 : 0,
-                    padding: a ? '10px 12px' : '10px 8px',
-                    borderRadius: 100,
+                    gap: 2,
+                    padding: '5px 2px',
+                    borderRadius: 16,
                     transition: 'all 0.32s cubic-bezier(0.4, 0, 0.2, 1)',
-                    minHeight: 44,
+                    minHeight: 48,
                     position: 'relative',
                   }}
                 >
@@ -3721,19 +3720,18 @@ export default function DrSelfTapeApp() {
                     size={20}
                     color={(a || t.highlight) ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)'}
                   />
-                  {a && (
-                    <span style={{
-                      fontSize: 12, fontWeight: 700,
-                      color: 'var(--aurora-accent-deep)',
-                      letterSpacing: '-0.01em',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden', textOverflow: 'ellipsis',
-                      maxWidth: 76,
-                    }}>{t.label}</span>
-                  )}
+                  <span style={{
+                    fontSize: 10, fontWeight: a ? 700 : 500,
+                    color: (a || t.highlight) ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)',
+                    letterSpacing: '-0.01em',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden', textOverflow: 'ellipsis',
+                    maxWidth: '100%',
+                    lineHeight: 1.1,
+                  }}>{t.label}</span>
                   {t.highlight && !a && (
                     <span style={{
-                      position: 'absolute', top: 6, right: 6,
+                      position: 'absolute', top: 4, right: '50%', marginRight: -16,
                       width: 7, height: 7, borderRadius: '50%',
                       background: 'var(--aurora-accent-deep)',
                       boxShadow: '0 0 0 2px rgba(255,255,255,0.85)',
