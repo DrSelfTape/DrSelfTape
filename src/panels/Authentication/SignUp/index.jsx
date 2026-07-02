@@ -54,7 +54,6 @@ export const Signup = () => {
     firstName: '',
     email: '',
     password: '',
-    confirmPassword: '',
     accountType: { label: 'Actor', value: 'actor' },
     phoneNo: '',
     dateOfBirth: '',
@@ -62,7 +61,6 @@ export const Signup = () => {
   const fieldRefs = {
     email: useRef(null),
     password: useRef(null),
-    confirmPassword: useRef(null),
   };
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [errors, setErrors] = useState({});
@@ -102,14 +100,6 @@ export const Signup = () => {
 
     if (!validateEmail(formData?.email?.trim())) {
       newErrors.email = 'Invalid Email';
-    }
-
-    if (
-      validatePassword(formData?.password?.trim()) &&
-      validatePassword(formData?.confirmPassword?.trim()) &&
-      formData?.password !== formData?.confirmPassword
-    ) {
-      newErrors.confirmPassword = 'Passwords do not match';
     }
 
     // Age gate (Terms §1 / COPPA). The server re-validates in
@@ -162,7 +152,6 @@ export const Signup = () => {
           firstName: '',
           email: '',
           password: '',
-          confirmPassword: '',
           accountType: { label: 'Actor', value: 'actor' },
           phoneNo: '',
           dateOfBirth: '',
@@ -199,7 +188,23 @@ export const Signup = () => {
         </h2>
         <p className='mt-2 text-sm' style={{ color: 'var(--aurora-sub)' }}>Start practicing in under 60 seconds</p>
 
-        <div className='mt-8'>
+        {/* Apple Sign In leads — one tap beats the form. Hidden on Android
+            (no SiwA there). */}
+        {Capacitor.getPlatform() !== 'android' && (
+          <div className='mt-6'>
+            <AppleSignInButton onError={(msg) => toast.error(msg)} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 0' }}>
+              <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
+              <span style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
+                color: 'var(--aurora-dim)', letterSpacing: '0.15em',
+              }}>OR SIGN UP WITH EMAIL</span>
+              <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
+            </div>
+          </div>
+        )}
+
+        <div className='mt-6'>
           <form onSubmit={handleSubmit} className=''>
             <div className='space-y-6'>
               <CustomInput
@@ -245,18 +250,6 @@ export const Signup = () => {
                   />
                 )}
               </div>
-
-              <CustomInput
-                label='Confirm Password'
-                name='confirmPassword'
-                type='password'
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder='Re-enter your password'
-                error={!!errors.confirmPassword}
-                errorMsg={errors.confirmPassword}
-                ref={fieldRefs.confirmPassword}
-              />
 
               <CustomInput
                 label='Date of Birth'
@@ -309,7 +302,6 @@ export const Signup = () => {
                     !formData.firstName ||
                     !formData.email ||
                     !formData.password ||
-                    !formData.confirmPassword ||
                     !formData.dateOfBirth ||
                     !isPasswordValid ||
                     !agreeTerms
@@ -337,22 +329,6 @@ export const Signup = () => {
                 >
                   Get Started
                 </CustomButton>
-
-                {/* Divider + Apple Sign In — hidden on Android (no SiwA there) */}
-                {Capacitor.getPlatform() !== 'android' && (
-                  <>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '6px 0' }}>
-                      <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
-                      <span style={{
-                        fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                        color: 'var(--aurora-dim)', letterSpacing: '0.15em',
-                      }}>OR</span>
-                      <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />
-                    </div>
-
-                    <AppleSignInButton onError={(msg) => toast.error(msg)} />
-                  </>
-                )}
 
                 <p className='text-sm text-center' style={{ color: 'var(--aurora-sub)' }}>
                   Already have an account?{' '}

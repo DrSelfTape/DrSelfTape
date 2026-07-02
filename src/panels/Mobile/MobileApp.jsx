@@ -1069,8 +1069,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   useEffect(() => {
     // Wait until server settings have loaded before deciding whether to
     // show onboarding — otherwise a returning user might see it briefly.
+    // 300ms (was 2000ms): just enough to let the Home paint settle — a new
+    // user staring at an unexplained dashboard for 2s reads as broken.
     if (settingsLoaded && !onboardingSeen) {
-      const timer = setTimeout(() => setShowOnboarding(true), 2000);
+      const timer = setTimeout(() => setShowOnboarding(true), 300);
       return () => clearTimeout(timer);
     }
   }, [settingsLoaded, onboardingSeen]);

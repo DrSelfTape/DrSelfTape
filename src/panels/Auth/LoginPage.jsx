@@ -342,6 +342,26 @@ export default function LoginPage() {
                 {authLoading ? "Signing in…" : cooldownLeft > 0 ? `Wait ${cooldownLeft}s` : "Sign in →"}
               </button>
 
+              {/* Create Account — fresh installs land here, so signup gets a
+                  primary-weight CTA right beside Sign In instead of a 13px
+                  footer link. Anchor (not react-router navigate) — same
+                  navigation path the old footer link used, which works in
+                  the Capacitor shell. */}
+              <a
+                href="/signup"
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  width: "100%", padding: 15, borderRadius: 100, marginTop: 10,
+                  background: "rgba(26,20,8,0.92)", color: "#F0D097",
+                  fontFamily: "inherit", fontSize: 15, fontWeight: 600, letterSpacing: "-0.2px",
+                  textDecoration: "none", cursor: "pointer",
+                  boxShadow: "0 10px 26px rgba(20,16,8,0.28), inset 0 1px 0 rgba(255,255,255,0.08)",
+                  touchAction: "manipulation", WebkitTapHighlightColor: "transparent",
+                }}
+              >
+                New here? Create an account →
+              </a>
+
               {/* Divider + Apple Sign In — hidden on Android (no SiwA there) */}
               {Capacitor.getPlatform() !== 'android' && (
                 <>
@@ -358,12 +378,6 @@ export default function LoginPage() {
                 </>
               )}
 
-              <div style={{ textAlign: "center", marginTop: 18, fontSize: 13, color: SUB }}>
-                New here?{" "}
-                <a href="/signup" style={{ color: DEEP, fontWeight: 600, textDecoration: "none" }}>
-                  Create an account
-                </a>
-              </div>
             </form>
           </div>
 

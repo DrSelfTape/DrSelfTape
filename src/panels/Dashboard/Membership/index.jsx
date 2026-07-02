@@ -78,7 +78,7 @@ function introOfferLabel(intro) {
   return `${intro.priceString} for first ${intro.value} ${plural}`;
 }
 
-/* Mini callback-rate ring used inside each comparison card. */
+/* Mini progress ring used inside each comparison card. */
 function MiniRing({ pct, color, track, label }) {
   const r = 30;
   const c = 2 * Math.PI * r;
@@ -95,7 +95,9 @@ function MiniRing({ pct, color, track, label }) {
 }
 
 /* One side of the before/after comparison — Aurora-native (no stock art):
-   eyebrow → mini callback ring → 7-day "week bars" → a one-line verdict. */
+   eyebrow → mini ring → 7-day "week bars" (reps per day, illustrative) → a
+   one-line verdict. The ring shows what Pro actually changes — AI notes on
+   your takes — not invented callback rates. */
 function CompareCard({ kind }) {
   const before = kind === 'before';
   const bars = before ? [4, 2, 5, 1, 3, 0, 2] : [12, 18, 14, 22, 17, 20, 24];
@@ -113,10 +115,10 @@ function CompareCard({ kind }) {
       </div>
       <div style={{ margin: '14px 0' }}>
         <MiniRing
-          pct={before ? 0.03 : 0.17}
+          pct={before ? 0.06 : 0.92}
           color={before ? 'rgba(10,10,10,0.35)' : '#1A1408'}
           track={before ? 'rgba(10,10,10,0.08)' : 'rgba(255,255,255,0.4)'}
-          label={before ? '3%' : '17%'}
+          label={before ? 'DIY' : 'AI'}
         />
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, height: 38 }}>
@@ -131,13 +133,13 @@ function CompareCard({ kind }) {
         fontSize: 12, fontWeight: 600, letterSpacing: '-0.2px', marginTop: 14, lineHeight: 1.35,
         color: before ? 'var(--aurora-sub)' : '#1A1408',
       }}>
-        {before ? 'Guessing in the dark. Tapes pile up, callbacks stall.' : 'Sharper reads, more callbacks, a habit that compounds.'}
+        {before ? "You're the only eyes on your takes. Guesswork compounds." : 'Casting-grade notes on every take. Compare before you submit.'}
       </div>
     </div>
   );
 }
 
-/* Before/After comparison — "Without Pro" 3% vs "With Pro" 17% callback rate. */
+/* Before/After comparison — self-review vs AI notes on every take. */
 function ComparisonRings() {
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
@@ -194,7 +196,10 @@ export default function Membership({ onClose }) {
       .finally(() => setLoading(false));
 
     if (isNativeStore()) {
-      const combos = ['basic', 'plus', 'premium'].flatMap((p) => ['monthly', 'yearly'].map((b) => [p, b]));
+      // 'weekly' included for the dormant weekly tier (VITE_WEEKLY_ENABLED):
+      // getIntroOfferFor/getStorePriceFor .catch(null) on combos the store
+      // doesn't sell yet, so prefetching it is flip-ready and free today.
+      const combos = ['basic', 'plus', 'premium'].flatMap((p) => ['weekly', 'monthly', 'yearly'].map((b) => [p, b]));
       Promise.all(combos.map(async ([p, b]) => {
         const offer = await getIntroOfferFor(p, b).catch(() => null);
         return [`${p}_${b}`, offer];
@@ -541,8 +546,8 @@ export default function Membership({ onClose }) {
           <p style={{
             fontSize: 14, color: 'var(--aurora-sub)', marginTop: 10, lineHeight: 1.5,
           }}>
-            AI coaching, unlimited rehearsals, and verified scene partners.
-            <strong style={{ color: 'var(--aurora-text)' }}> Pro members convert callbacks 5× more often.</strong>
+            Casting-grade notes on every take, an AI reader that waits for your beat,
+            <strong style={{ color: 'var(--aurora-text)' }}> and Compare Takes before you submit.</strong>
           </p>
         </div>
 
