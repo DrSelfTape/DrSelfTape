@@ -149,12 +149,16 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // new file is chosen.
   const idemKeyRef = useRef(null);
 
-  // First time an actor opens the analyzer → show the walkthrough.
+  // First time an actor opens the analyzer → show the walkthrough. Suppressed
+  // during the free first review (it would stack on the fresh offer handoff);
+  // that user gets it AFTER their first result instead — see below.
   useEffect(() => {
+    if (firstReview) return;
     try {
       if (!localStorage.getItem(TAPE_TUTORIAL_KEY)) setShowTutorial(true);
     } catch { /* private mode — just skip */ }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [firstReview]);
 
   // The activation aha — fire COMPLETED once when the free first review lands.
   // MUST stay above the early returns below (compare / loading / result): a
@@ -168,7 +172,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // the server-synced flag that retires the Home free-review offer + the
     // Get Started checklist entry (markStep no-ops once set).
     markStep('first_review');
-    if (firstReview) trackEvent(Events.FIRST_REVIEW_COMPLETED);
+    if (firstReview) {
+      trackEvent(Events.FIRST_REVIEW_COMPLETED);
+      // The pre-upload tutorial was suppressed for this flow — surface it now
+      // as the "how to read your notes" walkthrough, with the result behind it.
+      try {
+        if (!localStorage.getItem(TAPE_TUTORIAL_KEY)) setShowTutorial(true);
+      } catch { /* private mode — just skip */ }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstReview, tapeReviewResult]);
 
@@ -298,6 +309,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
     return (
       <div className="space-y-4 sm:space-y-5">
+        {/* First-review "how to read your notes" walkthrough — the pre-upload
+            tutorial is deferred to here for that flow (modeToggle, which
+            normally hosts the overlay, doesn't render on the result screen). */}
+        {showTutorial && <TapeAnalyzerTutorial onClose={() => setShowTutorial(false)} />}
+
         {/* Push-denied recovery — notifications just became obviously useful */}
         <NotificationsNudge />
 

@@ -1640,11 +1640,21 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         )}
       </div>
 
-      {/* ── Token balance ── */}
+      {/* ── Token balance — tappable → membership panel (Home's only
+           proactive paywall entry; it used to be a dead <div>). Tap-belt
+           applied per the iOS WKWebView synthetic-click gotcha. ── */}
       {balance !== null && (
-        <div className="aurora-card" style={{
-          display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '12px 16px',
-        }}>
+        <button
+          type="button"
+          onClick={() => setCurrentPanel('membership')}
+          onTouchEnd={(e) => { e.preventDefault(); setCurrentPanel('membership'); }}
+          className="aurora-card"
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, padding: '12px 16px',
+            border: 'none', cursor: 'pointer', textAlign: 'left', color: 'var(--aurora-text)',
+            touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+          }}
+        >
           <span style={{ fontSize: 16 }}>🎟️</span>
           <div style={{ flex: 1 }}>
             {tokensUnlimited ? (
@@ -1656,7 +1666,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
               </>
             )}
           </div>
-          {!tokensUnlimited && balance === 0 && (
+          {/* Upgrade chip from 3 tokens down — at 0 the wall already hit;
+              ≤3 is where the next AI action is at risk. */}
+          {!tokensUnlimited && balance <= 3 && (
             <span style={{
               fontSize: 11, fontWeight: 700, color: '#fff',
               background: 'var(--aurora-accent)', padding: '4px 10px', borderRadius: 100,
@@ -1664,7 +1676,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
               Upgrade
             </span>
           )}
-        </div>
+        </button>
       )}
 
       {/* ── Recent Scripts ── */}

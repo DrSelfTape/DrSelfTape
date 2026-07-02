@@ -4,6 +4,7 @@ import { updateProfileThunk, fetchProfileThunk } from '../../redux/features/prof
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
+import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
 
 /* ── Aurora post-signup onboarding flow ────────────────────────────────
  * 8 steps: identity → profile → interests → goals → level → notif →
@@ -993,19 +994,34 @@ export default function AuroraOnboarding({ onClose }) {
   // user straight into a (free) Tape Review. The event is the cross-component
   // bridge — onboarding lives inside HomeScreen, the analyzer in the root.
   // finish() is now synchronous (background persist), so the handoff is instant.
-  const launchFirstReview = useCallback(() => {
+  const launchFirstReview = async () => {
+    // De-stack the pre-upload interstitials: resolve AI consent HERE, while
+    // onboarding is still on screen, instead of letting TapeReview's useAIGate
+    // stack the consent modal on top of the fresh first-review screen (and
+    // remount MobileApp mid-handoff). The global modal resolves instantly if
+    // consent is already on file. A decline continues the rest of onboarding —
+    // TapeReview's gate would bounce a non-consenting user home anyway.
+    // (Plain fn, not useCallback: the decline path needs the current step
+    // index via skipFirstReview.)
+    let ok = false;
+    try { ok = await requestAiConsent(); } catch { ok = false; }
+    if (!ok) {
+      skipFirstReview();
+      return;
+    }
     // STARTED fires at the actual upload (in TapeReview); here we only persist
     // onboarding + hand off. The offer_shown → started → completed funnel then
     // measures real drop-off, not just CTA taps.
     //
-    // The sessionStorage flag is the durable handoff: granting AI consent on
-    // the Tape Review screen remounts MobileApp (resetting its in-memory tab),
-    // so MobileApp re-reads this flag on every mount and re-asserts the
-    // first-review screen. The event covers the immediate (no-remount) case.
+    // The sessionStorage flag is the durable handoff: consent is granted
+    // above now, but the flag still guards any MobileApp remount between here
+    // and the upload (e.g. the BE-403 consent path), so MobileApp re-reads it
+    // on every mount and re-asserts the first-review screen. The event covers
+    // the immediate (no-remount) case.
     try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
     finish({ launchFirstReview: true });
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
-  }, [finish]);
+  };
 
   // Offer now comes early (right after the name step). Skipping CONTINUES the
   // rest of onboarding (profile → interests → … → notif) instead of ending it,
