@@ -20,6 +20,7 @@ export const WHATS_NEW = [
       { emoji: '📹', title: 'Record right in the app', body: 'Practice → Record a take — then send it straight to the AI for casting notes.' },
       { emoji: '⚖️', title: 'Compare Takes, easier to find', body: 'Filmed a few takes? The AI picks the winner — now one tap from Home, More, or right after a review.' },
       { emoji: '🎧', title: 'A more reliable scene partner', body: "The AI reader's voice now recovers automatically after calls and interruptions — plus a sample scene to try it instantly." },
+      { emoji: '🗂️', title: 'Your notes, forever', body: "Tap any past review in My Growth to reread its casting notes — and if the app closes mid-analysis, it picks right back up." },
       { emoji: '🧭', title: 'A cleaner, clearer app', body: 'Five labeled tabs, a calmer Home, live progress while your notes are written, and an honest practice streak.' },
     ],
   },
