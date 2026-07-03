@@ -938,6 +938,10 @@ const MORE_FEATURES = [
   { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#FF8280", section: "AI Studio" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A", section: "Practice" },
   { id: "self-tapes", label: "Self-Tapes", desc: "Record and submit auditions", emoji: "📹", color: "#FFB49A", section: "Practice" },
+  // green-room is also the Connect tab's Chat section — this tile is the
+  // discovery door (it vanished from browse-space after the 5-tab merge;
+  // screenshot-tour QA 2026-07-02).
+  { id: "green-room", label: "Green Room", desc: "Chat with your matched scene partners", emoji: "💬", color: "#A7D6FF", section: "Connect" },
   { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280", section: "Connect" },
   { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072", section: "Connect" },
   { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072", section: "Connect" },
@@ -3404,6 +3408,14 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
   );
 }
 
+// These panels render their own headline inside the content (e.g. "My
+// Self-Tapes", "Reader Marketplace") — PanelScreen skips its header title for
+// them so the name doesn't appear twice stacked.
+const SELF_TITLED_PANELS = new Set([
+  'who-wants-to-read', 'favorites', 'submissions', 'marketplace',
+  'leaderboard', 'scripts', 'self-tapes',
+]);
+
 function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
   // initialSubPanel seeds the sub-screen for a deep-link (e.g. a fresh
   // scene_partner_match → { id: 'its-a-scene', matchId }). It's only read at
@@ -3450,7 +3462,9 @@ function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
   }
 
   return (
-    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 0 24px", minHeight: '100%' }}>
+    // Bottom padding clears the floating tab bar (~64px bar + margins) — panel
+    // content was clipping behind it app-wide (screenshot-tour QA 2026-07-02).
+    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 0 calc(120px + env(safe-area-inset-bottom, 0px))", minHeight: '100%' }}>
       <div style={{
         display: "flex", alignItems: "center", gap: 12, padding: "16px 16px 12px",
       }}>
@@ -3469,9 +3483,14 @@ function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
         >
           <Icon name="back" size={16} color="var(--aurora-text)" />
         </button>
-        <span className="aurora-display" style={{
-          fontSize: 20, color: 'var(--aurora-text)', letterSpacing: '-0.3px',
-        }}>{feature?.label || "Feature"}</span>
+        {/* Panels whose inner component renders its own big title get a bare
+            back button — the doubled title read as a layout bug (screenshot-
+            tour QA 2026-07-02). */}
+        {!SELF_TITLED_PANELS.has(panelId) && (
+          <span className="aurora-display" style={{
+            fontSize: 20, color: 'var(--aurora-text)', letterSpacing: '-0.3px',
+          }}>{feature?.label || "Feature"}</span>
+        )}
       </div>
       <Suspense fallback={
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
