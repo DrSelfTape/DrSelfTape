@@ -544,7 +544,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
                 <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Performance DNA</h3>
                 <div className="space-y-2.5">
-                  {DNA.map((d) => (
+                  {/* The BE now OMITS dimensions the tape gives no evidence for
+                      (e.g. comedy_timing on a straight drama) instead of
+                      guessing a middle number — skip them rather than render
+                      a "0" bar that reads as a terrible score. */}
+                  {DNA.filter((d) => dna[d.key] != null).map((d) => (
                     <ScoreBar key={d.key} label={d.label} value={dna[d.key]} color={d.color} />
                   ))}
                 </div>
