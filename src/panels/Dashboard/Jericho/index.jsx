@@ -53,6 +53,7 @@ const SESSION_TYPE_LABELS = {
   scene_generator: { label: 'Scene Gen', emoji: '✨' },
   audition_prep: { label: 'Audition Prep', emoji: '📋' },
   self_tape_review: { label: 'Tape Review', emoji: '🎥' },
+  take_compare: { label: 'Compare Takes', emoji: '🏆' },
 };
 
 // ─── Review Detail Sheet constants ────────────────────────────────────
@@ -101,10 +102,12 @@ function ReviewDetailSheet({ session, onClose }) {
     axios
       .get(`/v1/ai/session-log/${session.id}/`)
       .then((res) => {
-        // A 200 with a null/empty body would otherwise leave all three body
-        // states false → blank sheet (final-review FIX-SOON).
-        if (!res.data) { setError('Unexpected empty response.'); setLoading(false); return; }
-        setDetail(res.data); setLoading(false);
+        // House envelope is {data, message, success} — unwrap like the rest
+        // of the app (data?.data || data), and guard the null/empty body that
+        // would otherwise leave all three body states false → blank sheet.
+        const body = res.data?.data || res.data;
+        if (!body || typeof body !== 'object') { setError('Unexpected empty response.'); setLoading(false); return; }
+        setDetail(body); setLoading(false);
       })
       .catch((err) => {
         setError(err?.response?.data?.detail || 'Failed to load review details.');
@@ -802,7 +805,7 @@ export default function JerichoDashboard() {
                   </div>
                 ) : recentSessions.length > 0 ? (
                   recentSessions.map((session, i) => {
-                    const typeInfo = SESSION_TYPE_LABELS[session.session_type] || { label: session.session_type, emoji: '🎭' };
+                    const typeInfo = SESSION_TYPE_LABELS[session.session_type] || { label: String(session.session_type || 'Session').replace(/_/g, ' '), emoji: '🎭' };
                     const date = session.created_at ? new Date(session.created_at) : null;
                     // Only tape-review rows open the detail sheet; other types
                     // stay non-tappable to match their current rendering.
