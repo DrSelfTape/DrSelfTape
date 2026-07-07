@@ -91,7 +91,10 @@ function navDetailForPush(notif) {
     case 'tape_review_complete':
     case 'tape-review-complete':
     case 'review_complete':
-      // Tape Review is a primary tab in the mobile shell.
+    case 'tape_review_nudge':
+      // Tape Review is a primary tab in the mobile shell. tape_review_nudge is
+      // the M/W/F re-engagement push (send_audition_nudge) that drives users to
+      // the free first-review aha.
       return { tab: 'tape-review' };
     case 'callback_reminder':
     case 'callback-reminder':
