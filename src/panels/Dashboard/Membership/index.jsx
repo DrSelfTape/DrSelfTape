@@ -142,10 +142,17 @@ function CompareCard({ kind }) {
 /* Before/After comparison — self-review vs AI notes on every take. */
 function ComparisonRings() {
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 18 }}>
-      <CompareCard kind="before" />
-      <CompareCard kind="after" />
-    </div>
+    <>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 8 }}>
+        <CompareCard kind="before" />
+        <CompareCard kind="after" />
+      </div>
+      {/* Honest framing: the rings/bars illustrate what Pro changes (a second set
+          of eyes on every take), NOT a measured booking or callback rate. */}
+      <p style={{ fontSize: 10, color: 'var(--aurora-dim)', textAlign: 'center', marginBottom: 18, letterSpacing: '0.02em', lineHeight: 1.4 }}>
+        Illustrative of what Pro changes — casting-grade eyes on every take, not a measured booking or callback rate.
+      </p>
+    </>
   );
 }
 export default function Membership({ onClose }) {
@@ -354,7 +361,7 @@ export default function Membership({ onClose }) {
             variant: 'info',
           }));
         }
-      } catch (err) {
+      } catch {
         // iapPurchase shouldn't throw, but if the plugin itself is
         // missing or rejects, surface a real error instead of silently
         // hanging on a spinner.

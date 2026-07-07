@@ -170,11 +170,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const [showOptional, setShowOptional] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const inputRef = useRef(null);
+  const recordInputRef = useRef(null); // capture="user" input for the no-tape record path
   // F2: one stable idempotency key per analysis action. Generated on submit,
   // reused if the user re-submits the SAME tape after a lost response (so the
   // BE dedupes instead of double-charging), cleared when the action resets or a
   // new file is chosen.
   const idemKeyRef = useRef(null);
+  const uploadShownRef = useRef(false); // fire first_review_upload_shown once
+  const notesViewedRef = useRef(false); // fire first_review_notes_viewed once
 
   // Staged analysis progress (Tier 2 item 3): once the R2 upload completes,
   // the multi-minute wait is split into two honest, time-based stages —
@@ -207,6 +210,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // hit the early return and skipped this effect).
   useEffect(() => {
     if (!tapeReviewResult) return;
+    // Read the server-synced flag BEFORE markStep sets it, so we can tell a
+    // repeat review (the activation-metric "came back for another") from the
+    // very first one.
+    const alreadyReviewed = !!tutorialProgress.first_review;
     // Any completed review claims the "first AI Tape Review" step — this is
     // the server-synced flag that retires the Home free-review offer + the
     // Get Started checklist entry (markStep no-ops once set).
@@ -218,9 +225,38 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       try {
         if (!localStorage.getItem(TAPE_TUTORIAL_KEY)) setShowTutorial(true);
       } catch { /* private mode — just skip */ }
+    } else if (alreadyReviewed) {
+      // A returning actor finished another review — the repeat half of ACTIVE.
+      trackEvent(Events.REPEAT_REVIEW_COMPLETED);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [firstReview, tapeReviewResult]);
+
+  // Upload-screen reached: the free-review offer was accepted and the actor
+  // landed on the upload step. Fires once; the gap to FIRST_REVIEW_STARTED is
+  // the no-tape "upload dead-end" — the biggest suspected activation leak.
+  useEffect(() => {
+    if (firstReview && !uploadShownRef.current) {
+      uploadShownRef.current = true;
+      trackEvent(Events.FIRST_REVIEW_UPLOAD_SHOWN);
+    }
+  }, [firstReview]);
+
+  // Notes actually SEEN, not just "analysis completed": the multi-minute job
+  // can finish while the app is backgrounded, so gate on visibility and fall
+  // through to the next foreground. This is the real "reached the aha payoff".
+  useEffect(() => {
+    if (!tapeReviewResult || notesViewedRef.current) return;
+    const fire = () => {
+      if (document.visibilityState !== 'visible' || notesViewedRef.current) return;
+      notesViewedRef.current = true;
+      trackEvent(Events.FIRST_REVIEW_NOTES_VIEWED, { first_review: !!firstReview });
+      document.removeEventListener('visibilitychange', fire);
+    };
+    if (document.visibilityState === 'visible') fire();
+    else document.addEventListener('visibilitychange', fire);
+    return () => document.removeEventListener('visibilitychange', fire);
+  }, [tapeReviewResult, firstReview]);
 
   // Resume a job that was actively polling when the user reloaded the page or
   // restarted the app. Runs once on mount; the guard prevents a double-dispatch
@@ -315,6 +351,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       trackEvent(Events.FIRST_REVIEW_STARTED, { source: 'onboarding' });
       // Past the consent-remount window now — retire the durable handoff flag.
       try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+    } else if (tutorialProgress.first_review) {
+      // A returning actor started another review — the repeat half of ACTIVE.
+      trackEvent(Events.REPEAT_REVIEW_STARTED);
     }
     if (!idemKeyRef.current) {
       idemKeyRef.current = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -617,8 +656,31 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           <Film size={16} className="text-[#7A5A18]" /> Submit a self-tape
         </h3>
         <p className="text-xs text-[rgba(10,10,10,0.45)] mb-4 leading-relaxed">
-          Upload a take and Jericho gives you real casting-grade notes — framing, eyeline, your choices, and the performance arc.
+          Upload or record a take and Jericho gives you real casting-grade notes — framing, eyeline, your choices, and the performance arc.
         </p>
+
+        {/* Honest sample: primes what the notes LOOK like for a first-timer who
+            has nothing to compare against. Explicitly labeled "not your tape" —
+            never a fabricated result presented as the user's own. */}
+        {firstReview && (
+          <div className="rounded-xl border border-[#D4A85F]/30 bg-[#D4A85F]/[0.06] p-3 mb-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles size={12} className="text-[#7A5A18]" />
+              <span className="text-[10px] font-bold tracking-wider text-[#7A5A18] uppercase">Example · sample notes, not your tape</span>
+            </div>
+            <div className="flex gap-2 mb-2">
+              {[['Framing', '8'], ['Eyeline', '7'], ['Energy', '9']].map(([k, v]) => (
+                <div key={k} className="flex-1 text-center rounded-lg bg-white/50 py-1.5">
+                  <div className="text-sm font-bold text-[#0A0A0A]">{v}<span className="text-[10px] text-[rgba(10,10,10,0.4)]">/10</span></div>
+                  <div className="text-[9px] text-[rgba(10,10,10,0.5)]">{k}</div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[11px] leading-snug text-[rgba(10,10,10,0.6)]">
+              <span className="font-semibold text-[#0A0A0A]">The one thing:</span> your listening drops on line 3 — let the reader's line land before you react. <span className="text-[rgba(10,10,10,0.45)]">Record or upload your take to get notes like this on YOUR performance.</span>
+            </p>
+          </div>
+        )}
 
         {/* Drop / pick */}
         <button
@@ -642,6 +704,21 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           )}
         </button>
         <input ref={inputRef} type="file" accept="video/*" onChange={onPick} className="hidden" />
+
+        {/* No tape yet? Record one right here — the no-tape user's path to the
+            aha in one session. capture="user" opens the camera on mobile; desktop
+            falls back to a normal picker. Reuses the exact same onPick flow, so a
+            recorded clip lands as a File identical to an uploaded one. */}
+        <button
+          type="button"
+          onClick={() => recordInputRef.current?.click()}
+          onTouchEnd={(e) => { e.preventDefault(); recordInputRef.current?.click(); }}
+          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15"
+        >
+          <Film size={15} /> No tape? Record one now
+        </button>
+        <input ref={recordInputRef} type="file" accept="video/*" capture="user" onChange={onPick} className="hidden" />
 
         {/* Optional context */}
         <button

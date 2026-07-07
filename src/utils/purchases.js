@@ -138,14 +138,24 @@ export async function getAvailablePackages() {
   }
 }
 
+// Google Play returns the RevenueCat product identifier as
+// `<subscriptionId>:<basePlanId>` (e.g. "basic_monthly:monthly"), while Apple
+// returns the bare product id ("basic_monthly"). Strip the base-plan suffix so
+// our `${plan}_${billing}` lookup matches on BOTH stores. No-op on iOS (no colon).
+function baseProductId(identifier) {
+  return String(identifier || '').split(':')[0];
+}
+
 /**
  * Find the package matching our (plan, billing) pair using product IDs
- * configured in App Store Connect (e.g. "basic_monthly", "plus_yearly").
+ * configured in App Store Connect / Google Play (e.g. "basic_monthly",
+ * "plus_yearly"). On Google Play the SDK identifier carries a ":basePlanId"
+ * suffix, which baseProductId() strips before the compare.
  */
 export async function getPackageFor(plan, billing) {
   const productId = `${plan}_${billing}`; // e.g. "premium_monthly"
   const packages = await getAvailablePackages();
-  return packages.find((p) => p?.product?.identifier === productId) || null;
+  return packages.find((p) => baseProductId(p?.product?.identifier) === productId) || null;
 }
 
 /**
@@ -207,7 +217,7 @@ export async function purchase(plan, billing, userId) {
     return { ok: false, reason: 'no_package', detail: 'current_offering_has_zero_packages' };
   }
   const productId = `${plan}_${billing}`;
-  const pkg = packages.find((p) => p?.product?.identifier === productId);
+  const pkg = packages.find((p) => baseProductId(p?.product?.identifier) === productId);
   if (!pkg) {
     return {
       ok: false,
