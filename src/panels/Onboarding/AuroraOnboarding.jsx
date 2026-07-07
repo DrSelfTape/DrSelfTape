@@ -24,8 +24,12 @@ import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
 // Free-first-review onboarding (the Day-0 activation + paywall moment). When
 // off, the flow ends at 'welcome' exactly as before. When on, a final 'offer'
 // step pitches one free Tape Review, then the analyzer's result carries the
-// paywall. Flip VITE_FIRST_REVIEW_FLOW=true once 1.0.7 (the analyzer) is live.
-const FIRST_REVIEW_FLOW = import.meta.env.VITE_FIRST_REVIEW_FLOW === 'true';
+// paywall. Fail-safe ON: the Day-0 flow is enabled unless VITE_FIRST_REVIEW_FLOW
+// is explicitly set to "false". The old `=== 'true'` check went silently DORMANT
+// whenever the gitignored .env flag was absent from a build; this can't regress
+// that way. `.trim()` also survives the "true\n"/"false\n" env-whitespace landmine.
+// Kill-switch: set VITE_FIRST_REVIEW_FLOW=false to disable.
+const FIRST_REVIEW_FLOW = String(import.meta.env.VITE_FIRST_REVIEW_FLOW ?? 'true').trim() !== 'false';
 
 // Three screens, nothing between the ad click and the aha moment. Flag ON:
 // name → free-review offer → notifications (offer-skip continues to notif;
@@ -1010,7 +1014,10 @@ export default function AuroraOnboarding({ onClose }) {
     let ok = false;
     try { ok = await requestAiConsent(); } catch { ok = false; }
     if (!ok) {
-      skipFirstReview();
+      // Consent decline is its OWN funnel drop — distinct from a deliberate
+      // "maybe later" skip. Splitting them tells us whether the leak is the
+      // consent wall or genuine disinterest.
+      skipFirstReview('consent');
       return;
     }
     // STARTED fires at the actual upload (in TapeReview); here we only persist
@@ -1030,8 +1037,8 @@ export default function AuroraOnboarding({ onClose }) {
   // Offer now comes early (right after the name step). Skipping CONTINUES the
   // rest of onboarding (profile → interests → … → notif) instead of ending it,
   // so non-takers still complete their profile. (Plain fn: needs current `i`.)
-  const skipFirstReview = () => {
-    track('FIRST_REVIEW_SKIPPED');
+  const skipFirstReview = (reason) => {
+    track(reason === 'consent' ? 'FIRST_REVIEW_CONSENT_DECLINED' : 'FIRST_REVIEW_SKIPPED');
     // Advance into the rest of onboarding — but finish() if 'offer' is the LAST
     // step (flag-off safety: offer is terminal there, so next() would clamp and
     // trap the user on the offer forever).

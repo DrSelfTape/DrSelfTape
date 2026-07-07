@@ -50,7 +50,7 @@ export async function identifyUser(user) {
       name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
       role: user.role,
     });
-  } catch {}
+  } catch { /* noop */ }
 }
 
 // App event → Meta standard conversion event. These are the optimization
@@ -76,7 +76,7 @@ function readCookie(name) {
 function newEventId() {
   try {
     if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-  } catch {}
+  } catch { /* noop */ }
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
@@ -86,7 +86,7 @@ export function trackEvent(event, properties = {}) {
   // PostHog (lazy — only if a key is configured)
   if (POSTHOG_KEY) {
     loadPostHog()?.then((posthog) => {
-      try { posthog?.capture(event, properties); } catch {}
+      try { posthog?.capture(event, properties); } catch { /* noop */ }
     });
   }
 
@@ -125,7 +125,7 @@ export function trackEvent(event, properties = {}) {
         body: JSON.stringify({ event, properties: enriched, event_id: eventId }),
       }).catch(() => {});
     }
-  } catch {}
+  } catch { /* noop */ }
 }
 
 // Pre-built events for common actions
@@ -156,6 +156,15 @@ export const Events = {
   FIRST_REVIEW_PAYWALL_SHOWN: 'first_review_paywall_shown',
   FIRST_REVIEW_PAYWALL_TAP: 'first_review_paywall_tap',
   FIRST_REVIEW_SKIPPED: 'first_review_skipped',
+  // Added 2026-07-07 — the silent-abort + repeat gaps the activation funnel was
+  // blind to. offer_shown → upload_shown → started → completed → notes_viewed,
+  // plus the two silent drops (consent decline, upload dead-end) and the repeat
+  // half of ACTIVE (a returning actor's second review).
+  FIRST_REVIEW_CONSENT_DECLINED: 'first_review_consent_declined',
+  FIRST_REVIEW_UPLOAD_SHOWN: 'first_review_upload_shown',
+  FIRST_REVIEW_NOTES_VIEWED: 'first_review_notes_viewed',
+  REPEAT_REVIEW_STARTED: 'repeat_review_started',
+  REPEAT_REVIEW_COMPLETED: 'repeat_review_completed',
   // Referral loop — share tap in the Invite panel, and a successful
   // /growth/referral/apply/ after a referred signup.
   REFERRAL_SHARE_TAP: 'referral_share_tap',
