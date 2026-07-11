@@ -172,6 +172,10 @@ export default function Membership({ onClose }) {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(null);
+  // Keeps the CTA disabled while we poll the BE for entitlement after a resolved
+  // purchase/restore — otherwise the ~45s poll leaves the button live and a user
+  // can fire a second purchase. Value is the planId (or 'restore').
+  const [finalizing, setFinalizing] = useState(null);
   const [introOffers, setIntroOffers] = useState({});
   // Real localized store prices keyed `${plan}_${billing}` (e.g. "$9.99",
   // "£8.99"). Populated on native stores from pkg.product.priceString — the
@@ -183,15 +187,22 @@ export default function Membership({ onClose }) {
   // RevenueCat/Stripe webhook, which can lag the client. A single fixed-delay
   // GET races that webhook → a paying user sees their OLD plan with no retry.
   // Poll the status endpoint a bounded number of times until it reports active.
-  const refreshStatusUntilActive = async ({ attempts = 6, delayMs = 2000 } = {}) => {
+  // ~45s window: RevenueCat webhook delivery + processing routinely exceeds the
+  // old 12s, after which a genuinely-charged user was wrongly told to "contact
+  // support". 'trialing' counts as entitled (matches the BE ENTITLED_STATUSES).
+  // expectedPlan: after a PURCHASE/switch, require the status to report THAT plan
+  // so a stale poll of the old plan can't declare a false success; restore passes
+  // no expectedPlan (any entitled plan is a valid restore result).
+  const refreshStatusUntilActive = async ({ attempts = 15, delayMs = 3000, expectedPlan = null } = {}) => {
+    const entitled = (s) => s === 'active' || s === 'trialing';
     for (let i = 0; i < attempts; i++) {
       try {
-        const res = await axiosInstance.get('/v1/subscriptions/status/');
+        const res = await axiosInstance.get('/v1/subscriptions/status/', { timeout: 8000 });
         const data = res.data?.data;
         if (data) setStatus(data);
-        if (data?.status === 'active' && data?.plan) return true;
-      } catch { /* transient — keep polling */ }
-      await new Promise((r) => setTimeout(r, delayMs));
+        if (entitled(data?.status) && data?.plan && (!expectedPlan || data.plan === expectedPlan)) return true;
+      } catch { /* transient / timeout — keep polling */ }
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs));
     }
     return false;
   };
@@ -345,19 +356,27 @@ export default function Membership({ onClose }) {
         // show success once the BE actually reports active. If it never lands,
         // the user was charged but never granted — alert (don't hide it behind a
         // success toast) and show a single honest, actionable message.
-        const granted = await refreshStatusUntilActive();
+        setFinalizing(planId);
+        let granted = false;
+        try {
+          granted = await refreshStatusUntilActive({ expectedPlan: planId });
+        } finally {
+          setFinalizing(null);
+        }
         if (granted) {
           dispatch(showSnackbar({ message: 'Subscription activated. Welcome aboard!', variant: 'success' }));
         } else {
           try {
             const { Sentry } = await import('../../../utils/sentry');
-            Sentry.captureMessage('IAP purchase succeeded but entitlement never granted', {
-              level: 'error',
+            // Timing timeout, not a confirmed failure — the webhook usually lands
+            // shortly after. Warning (not error) so it doesn't page as a lost sale.
+            Sentry.captureMessage('IAP entitlement not confirmed within poll window', {
+              level: 'warning',
               extra: { userId, planId, billing },
             });
           } catch { /* swallow */ }
           dispatch(showSnackbar({
-            message: 'Payment received — your plan is still finalizing. Tap Restore Purchases or contact support if it doesn’t appear shortly.',
+            message: 'Payment received — your plan is activating and can take a minute. It’ll appear automatically; tap Restore Purchases if it doesn’t.',
             variant: 'info',
           }));
         }
@@ -462,19 +481,25 @@ export default function Membership({ onClose }) {
       // webhook. Poll for it; only claim "restored" once the BE reports active.
       // If it never lands, the receipt exists but the grant didn't — alert and
       // show a single honest message instead of a false "restored".
-      const granted = await refreshStatusUntilActive();
+      setFinalizing('restore');
+      let granted = false;
+      try {
+        granted = await refreshStatusUntilActive();
+      } finally {
+        setFinalizing(null);
+      }
       if (granted) {
         dispatch(showSnackbar({ message: 'Purchases restored.', variant: 'success' }));
       } else {
         try {
           const { Sentry } = await import('../../../utils/sentry');
-          Sentry.captureMessage('IAP restore succeeded but entitlement never granted', {
-            level: 'error',
+          Sentry.captureMessage('IAP restore entitlement not confirmed within poll window', {
+            level: 'warning',
             extra: { userId },
           });
         } catch { /* swallow */ }
         dispatch(showSnackbar({
-          message: 'Payment received — your plan is still finalizing. Tap Restore Purchases or contact support if it doesn’t appear shortly.',
+          message: 'Payment received — your plan is activating and can take a minute. It’ll appear automatically.',
           variant: 'info',
         }));
       }
@@ -490,11 +515,14 @@ export default function Membership({ onClose }) {
     }
   };
 
+  // A trialing subscriber is entitled (matches the BE ENTITLED_STATUSES) — the
+  // paywall must treat them as a current subscriber, not offer them the plan.
+  const isEntitledStatus = (s) => s === 'active' || s === 'trialing';
   const currentPlan = status?.plan;
   // Once a user has an active plan the free trial / intro offer is gone for
   // every plan — the stores already block a re-used trial, so hide the badge
   // to match (showing "1 week free" to an existing subscriber is misleading).
-  const hasActivePlan = status?.status === 'active';
+  const hasActivePlan = isEntitledStatus(status?.status);
   const tokenBalance = status?.balance ?? 0;
   // Premium is the "Unlimited" tier — the BE flags it so we show "Unlimited"
   // rather than the frozen balance number (which never deducts for them).
@@ -502,7 +530,7 @@ export default function Membership({ onClose }) {
   const sel = PLANS.find((p) => p.id === selectedPlan);
   const selIntro = introOffers[`${selectedPlan}_${billing}`];
   const selIntroLabel = introOfferLabel(selIntro);
-  const isCurrent = currentPlan === selectedPlan && status?.status === 'active';
+  const isCurrent = currentPlan === selectedPlan && isEntitledStatus(status?.status);
   // Key the CTA price on the selected billing cadence (weekly/monthly/yearly).
   // A binary monthly-vs-yearly check mispriced the weekly option as the YEARLY
   // amount once WEEKLY_ENABLED is flipped. Match the plan-card logic (plan[billing]).
@@ -616,7 +644,7 @@ export default function Membership({ onClose }) {
             const price = plan[billing] ?? plan.monthly;
             const priceDisplay = storePrice || `$${price}`;
             const isActive = currentPlan === plan.id;
-            const planIsCurrent = isActive && status?.status === 'active';
+            const planIsCurrent = isActive && isEntitledStatus(status?.status);
             const selected = selectedPlan === plan.id;
             const planIntro = introOffers[`${plan.id}_${billing}`];
             const planIntroLabel = introOfferLabel(planIntro);
@@ -741,15 +769,15 @@ export default function Membership({ onClose }) {
           ) : (
             <button
               type="button"
-              onClick={() => !checkoutLoading && handleSubscribe(selectedPlan)}
+              onClick={() => !checkoutLoading && !finalizing && handleSubscribe(selectedPlan)}
               onTouchEnd={(e) => {
                 e.preventDefault();
-                if (!checkoutLoading) handleSubscribe(selectedPlan);
+                if (!checkoutLoading && !finalizing) handleSubscribe(selectedPlan);
               }}
-              disabled={!!checkoutLoading || !selectedPlan}
+              disabled={!!checkoutLoading || !!finalizing || !selectedPlan}
               style={{
                 width: '100%', padding: '18px 16px', borderRadius: 100, border: 'none',
-                cursor: checkoutLoading ? 'wait' : 'pointer',
+                cursor: (checkoutLoading || finalizing) ? 'wait' : 'pointer',
                 touchAction: 'manipulation',
                 WebkitTapHighlightColor: 'transparent',
                 position: 'relative', overflow: 'hidden',
@@ -757,10 +785,10 @@ export default function Membership({ onClose }) {
                 color: '#FFFFFF',
                 fontFamily: "'Space Grotesk', sans-serif",
                 boxShadow: '0 12px 30px rgba(10,10,10,0.30), inset 0 1px 0 rgba(255,255,255,0.08)',
-                opacity: checkoutLoading ? 0.7 : 1,
+                opacity: (checkoutLoading || finalizing) ? 0.7 : 1,
               }}
             >
-              {checkoutLoading === selectedPlan ? (
+              {(checkoutLoading === selectedPlan || finalizing === selectedPlan) ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
                   <span style={{
                     width: 16, height: 16, borderRadius: '50%',
