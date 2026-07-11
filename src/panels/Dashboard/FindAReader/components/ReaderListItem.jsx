@@ -1,6 +1,7 @@
 import { MapPin, ChevronRight, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
+import { openReaderProfile } from '../../../../utils/openReaderProfile';
 
 const MAX_GENRES = 3;
 
@@ -9,7 +10,7 @@ const ReaderListItem = ({ match, onClick }) => {
   const other = match?.other_actor || {};
   const openProfile = (e) => {
     e.stopPropagation();
-    if (other?.id) navigate(`/dashboard/reader-profile/${other.id}`);
+    openReaderProfile(other?.id, navigate);
   };
 
   const initials = (other.name || 'A')

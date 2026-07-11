@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { X, Loader2 } from 'lucide-react';
 import { fetchLeaderboard } from '../../../redux/features/leaderboard/leaderboardSlice';
+import { openReaderProfile } from '../../../utils/openReaderProfile';
 
 /* ──────────────────────────────────────────────────────────────────
    Community Leaderboard — handoff §14.11 (screens/v1-leaderboard.jsx).
@@ -291,7 +292,7 @@ export default function Leaderboard({ embedded = false } = {}) {
   // their data so the screen renders without an extra fetch.
   const handleTapLeader = (leader) => {
     if (!leader?.user_id) return;
-    navigate(`/dashboard/reader-profile/${leader.user_id}`);
+    openReaderProfile(leader.user_id, navigate);
   };
 
   // Normalize the wire format (snake_case + is_me flag) into the row

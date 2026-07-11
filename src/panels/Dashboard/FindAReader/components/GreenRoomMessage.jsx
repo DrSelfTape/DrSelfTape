@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import http from '../../../../redux/http';
 import { baseURL } from '../../../../redux/constant';
 import { showSnackbar } from '../../../../redux/features/snackbarSlice/snackbarSlice';
+import { openReaderProfile } from '../../../../utils/openReaderProfile';
 
 const GreenRoomMessage = ({ message, isOwn = false }) => {
   const dispatch = useDispatch();
@@ -16,7 +17,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
   const senderId = message?.senderId || message?.sender_id;
   const openSender = () => {
     if (!senderId || isOwn) return;
-    navigate(`/dashboard/reader-profile/${senderId}`);
+    openReaderProfile(senderId, navigate);
   };
 
   // Per-message flag (Apple guideline 1.2). Only surfaced on partner

@@ -1,6 +1,7 @@
 import { MapPin, Clock, Star, Clapperboard, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
+import { openReaderProfile } from '../../../../utils/openReaderProfile';
 
 const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
   }[actor?.union] || actor?.union;
 
   const openProfile = () => {
-    if (actor?.id) navigate(`/dashboard/reader-profile/${actor.id}`);
+    openReaderProfile(actor?.id, navigate);
   };
 
   return (

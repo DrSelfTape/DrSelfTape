@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { openReaderProfile } from '../../../../utils/openReaderProfile';
 
 /**
  * "Session Complete" recap — the back bookend to the swipe deck (front bookend
@@ -37,7 +38,7 @@ export default function SessionRecap({ swipes, pendingLikes = 0, onSeeLikes, onR
   const passed = swipes.filter((s) => s.action === 'left');
 
   const goToReader = (actor) => {
-    if (actor?.id) navigate(`/dashboard/reader-profile/${actor.id}`);
+    openReaderProfile(actor?.id, navigate);
   };
 
   return (

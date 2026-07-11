@@ -3,6 +3,7 @@ import { MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { tapSelect, tapPrimary } from '../../../../utils/haptics';
 import { ReaderPortrait } from '../../../../components/Aurora';
+import { openReaderProfile } from '../../../../utils/openReaderProfile';
 
 const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   const navigate = useNavigate();
@@ -11,7 +12,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   // stopPropagation so it never registers as a swipe.
   const openProfile = (e) => {
     e?.stopPropagation?.();
-    if (actor?.id) navigate(`/dashboard/reader-profile/${actor.id}`);
+    openReaderProfile(actor?.id, navigate);
   };
   const cardRef = useRef(null);
   const dragState = useRef({ startX: 0, isDragging: false, currentX: 0 });

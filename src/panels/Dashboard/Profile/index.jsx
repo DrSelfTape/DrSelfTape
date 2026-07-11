@@ -417,7 +417,7 @@ export default function Profile() {
                 ref={avatarInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
-                className="hidden"
+                style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
                 onChange={(e) =>
                   handleFilePreview(e.target.files[0], setAvatarPreview, setAvatarFile)
                 }
@@ -890,7 +890,7 @@ export default function Profile() {
                     ref={headshotInputRef}
                     type="file"
                     accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
+                    style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
                     onChange={(e) =>
                       handleFilePreview(e.target.files[0], setHeadshotPreview, setHeadshotFile)
                     }
@@ -927,7 +927,7 @@ export default function Profile() {
                     ref={resumeInputRef}
                     type="file"
                     accept="application/pdf"
-                    className="hidden"
+                    style={{ position: 'absolute', width: 1, height: 1, opacity: 0 }}
                     onChange={(e) => setResumeFile(e.target.files[0] || null)}
                   />
                 </div>

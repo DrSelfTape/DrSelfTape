@@ -5,6 +5,7 @@ import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { openExternal } from '../../../utils/openExternal';
+import { openReaderProfile } from '../../../utils/openReaderProfile';
 
 const DURATIONS = [
   { value: 15, label: '15 min' },
@@ -37,7 +38,7 @@ function ReaderCard({ reader, onBook }) {
   // OR `id` (the ReaderProfile row) — we prefer user_id since the
   // reader-profile route is keyed on User.id everywhere else.
   const targetId = reader?.user_id || reader?.userId || reader?.id;
-  const openProfile = () => { if (targetId) navigate(`/dashboard/reader-profile/${targetId}`); };
+  const openProfile = () => { openReaderProfile(targetId, navigate); };
 
   const rates = reader.rates || {};
   const price = rates[duration] ?? '—';

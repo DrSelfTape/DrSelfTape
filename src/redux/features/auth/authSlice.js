@@ -167,7 +167,9 @@ export const getProfileDetails = createAsyncThunk(
   async (params = {}, { rejectWithValue }) => {
     try {
       const { data } = await axios.get(endPoints.profileDetails);
-      return data?.data?.user;
+      // BE ProfileView returns the user object FLAT at data.data (there is no
+      // nested .user) — reading .user left profileDetails permanently undefined.
+      return data?.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
     }
@@ -179,7 +181,10 @@ export const updateProfile = createAsyncThunk(
   'auth/updateProfile',
   async (formData, { rejectWithValue }) => {
     try {
-      const { data } = await axios.put(endPoints.updateProfile, formData);
+      // BE serves profile edits at PATCH /v1/users/profile/ (ProfileView) —
+      // the old PUT /v1/users/update-profile/ route does not exist and 404'd,
+      // silently dropping every /settings profile save.
+      const { data } = await axios.patch(endPoints.profile, formData);
       return data?.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));

@@ -4,6 +4,7 @@ import { Clapperboard } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { V1Sparkles } from '../../../components/Aurora';
 import { fetchMatches } from '../../../redux/features/readers/readersMatchSlice';
+import { openReaderProfile } from '../../../utils/openReaderProfile';
 
 const ItsAScene = (props = {}) => {
   const navigate = useNavigate();
@@ -50,7 +51,7 @@ const ItsAScene = (props = {}) => {
           type="button"
           onClick={() => {
             const otherActorId = match?.other_actor?.id || match?.reader?.id;
-            if (otherActorId) navigate(`/dashboard/reader-profile/${otherActorId}`);
+            openReaderProfile(otherActorId, navigate);
           }}
           aria-label={`View ${theirName}'s profile`}
           className="w-32 h-32 rounded-full border-4 border-white shadow-2xl flex items-center justify-center -ml-6"
