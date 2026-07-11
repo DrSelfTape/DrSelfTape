@@ -1,0 +1,13 @@
+# Scent-match metadata refresh — bundles into 1.0.14 submission
+# 2026-07-04
+
+SUBTITLE (30 max):
+Casting-grade AI tape notes
+
+KEYWORDS (100 max):
+actor,audition,scene partner,line reader,cold read,headshot,monologue,coach,callback,sides,call,tips
+
+SCREENSHOTS: marketing/exports/*.png (7 screens, 1320x2868, lead = Tape Review)
+
+# Held for Joseph's decision (not applied):
+# APP NAME: "Dr Self Tape" (12/30) — could extend to "Dr Self Tape: AI Reader" for ranking
