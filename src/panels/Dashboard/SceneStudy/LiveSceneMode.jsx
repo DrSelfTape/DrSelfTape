@@ -479,21 +479,24 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       scrollToLine(idx);
       setStatus('thinking');
 
-      let aiText = scriptLine.dialogue; // fallback: use raw script line
-
-      try {
-        const { data } = await axios.post(endPoints.scenePartner, {
-          line: historySnapshot[historySnapshot.length - 1]?.text || '',
-          actor_line: historySnapshot[historySnapshot.length - 1]?.text || '',
-          next_script_line: scriptLine.dialogue,
-          script_context: lines.map((l) => `${l.character}: ${l.dialogue}`).join('\n'),
-          character: scriptLine.character,
-          previous_lines: historySnapshot.slice(-6),
-        });
-        aiText = data?.data?.response || data?.response || scriptLine.dialogue;
-      } catch {
-        // API failed — use raw script line so scene keeps moving
-        aiText = scriptLine.dialogue;
+      let aiText = scriptLine.dialogue || '';
+      // Scripted read: the partner's line is already known, so speak it directly.
+      // The scene-partner endpoint only echoes next_script_line back verbatim
+      // while charging a live_scene token + a Claude call — skip that redundant
+      // cost. Only the improv path (no scripted line) needs a generated line.
+      if (!scriptLine.dialogue) {
+        try {
+          const { data } = await axios.post(endPoints.scenePartner, {
+            line: historySnapshot[historySnapshot.length - 1]?.text || '',
+            actor_line: historySnapshot[historySnapshot.length - 1]?.text || '',
+            script_context: lines.map((l) => `${l.character}: ${l.dialogue}`).join('\n'),
+            character: scriptLine.character,
+            previous_lines: historySnapshot.slice(-6),
+          });
+          aiText = data?.data?.response || data?.response || '';
+        } catch {
+          aiText = '';
+        }
       }
 
       setAiCurrentLine(aiText);

@@ -345,7 +345,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     if (f) { idemKeyRef.current = null; setFile(f); } // new file = new action
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!file || tapeReviewLoading) return;
     if (firstReview) {
       trackEvent(Events.FIRST_REVIEW_STARTED, { source: 'onboarding' });
@@ -358,7 +358,13 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     if (!idemKeyRef.current) {
       idemKeyRef.current = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     }
-    dispatch(reviewTape({ video: file, role, tone, sides, idempotencyKey: idemKeyRef.current }));
+    const res = await dispatch(reviewTape({ video: file, role, tone, sides, idempotencyKey: idemKeyRef.current }));
+    // The server definitively responded and the BE already refunded this attempt
+    // → a retry must RE-CHARGE, so mint a fresh key. Keep the key only on a true
+    // network/timeout (reuseKey), where dedup must protect against a double charge.
+    if (reviewTape.rejected.match(res) && res.payload?.reuseKey === false) {
+      idemKeyRef.current = null;
+    }
   };
 
   const reset = () => {

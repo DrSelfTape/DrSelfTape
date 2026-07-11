@@ -466,13 +466,16 @@ function GeneratorScreen() {
     try {
       // 60s timeout — without it a slow/hung BE leaves the spinner stuck
       // forever with no feedback (the request would never reject).
-      const response = await axios.post(endPoints.cdFeedback, {
-        line: `Write a 1-page dramatic ${genre} scene with ${tone} tone. Format as screenplay with character names in CAPS. Make it emotionally rich. 2 characters, 6-8 lines each.`,
-        type: "scene_gen",
-        character: genre,
-        script_context: tone,
+      // Use the real screenplay generator (SceneGeneratorView, ~800 tokens), not
+      // the line-feedback endpoint (capped at 1-2 sentences) — that was charging a
+      // token for output it structurally cannot produce.
+      const response = await axios.post(endPoints.generateScene, {
+        genre: genre.toLowerCase(),
+        tone: tone.toLowerCase(),
+        character_type: 'actor',
+        free_prompt: `Write a 1-page dramatic ${genre} scene with ${tone} tone. Format as screenplay with character names in CAPS. Make it emotionally rich. 2 characters, 6-8 lines each.`,
       }, { timeout: 60000 });
-      const text = response.data?.data?.feedback || response.data?.feedback || "";
+      const text = response.data?.data?.scene || response.data?.scene || response.data?.data?.feedback || response.data?.feedback || "";
       setSceneText(text);
       if (text) setGenerated(true);
       else setGenError("The generator didn't return a scene. Please try again.");

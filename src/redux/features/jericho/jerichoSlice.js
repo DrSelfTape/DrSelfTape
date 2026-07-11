@@ -327,13 +327,18 @@ export const reviewTape = createAsyncThunk(
       // An empty/partial body charges a token but has nothing to show — take the
       // clean error path instead of fulfilling a hollow result (BUG 3).
       if (!tapeReviewHasContent(result)) {
-        return rejectWithValue('This review came back incomplete — your token was refunded. Please try again.');
+        return rejectWithValue({ message: 'This review came back incomplete — your token was refunded. Please try again.', reuseKey: true });
       }
       trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role, via: r2Key ? 'r2' : 'direct' });
       return result;
     } catch (err) {
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
-      return rejectWithValue(aiErrorMessage(err, 'Tape review failed'));
+      // reuseKey: keep the idempotency key ONLY when the server never responded
+      // (network/timeout — outcome unknown, dedup must protect a retry). A real
+      // server response means the BE already refunded, so a retry must re-charge
+      // → the component rotates the key. Prevents the "free re-analysis after a
+      // refunded failure" leak.
+      return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: err?.response == null });
     }
   }
 );
@@ -373,7 +378,7 @@ export const compareTakes = createAsyncThunk(
       return result;
     } catch (err) {
       captureUploadFailure('compare_takes_upload', err, startedAt, lastLoaded, lastTotal, 900000);
-      return rejectWithValue(aiErrorMessage(err, 'Take comparison failed'));
+      return rejectWithValue({ message: aiErrorMessage(err, 'Take comparison failed'), reuseKey: err?.response == null });
     }
   }
 );
@@ -583,7 +588,7 @@ const jerichoSlice = createSlice({
       })
       .addCase(reviewTape.rejected, (state, action) => {
         state.tapeReviewLoading = false;
-        state.tapeReviewError = action.payload || 'Tape review failed';
+        state.tapeReviewError = action.payload?.message || action.payload || 'Tape review failed';
         state.uploadProgress = 0;
       })
       .addCase(compareTakes.pending, (state) => {
@@ -598,7 +603,7 @@ const jerichoSlice = createSlice({
       })
       .addCase(compareTakes.rejected, (state, action) => {
         state.compareLoading = false;
-        state.compareError = action.payload || 'Take comparison failed';
+        state.compareError = action.payload?.message || action.payload || 'Take comparison failed';
         state.uploadProgress = 0;
       })
 

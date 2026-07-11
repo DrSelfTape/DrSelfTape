@@ -75,12 +75,16 @@ export default function CompareTakes() {
   const files = slots.filter(Boolean);
   const canSubmit = files.length >= 2 && !compareLoading;
 
-  const submit = () => {
+  const submit = async () => {
     if (!canSubmit) return;
     if (!idemKeyRef.current) {
       idemKeyRef.current = (crypto?.randomUUID?.() || `cmp-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     }
-    dispatch(compareTakes({ takes: files, role, tone, sides, idempotencyKey: idemKeyRef.current }));
+    const res = await dispatch(compareTakes({ takes: files, role, tone, sides, idempotencyKey: idemKeyRef.current }));
+    // Definitive server failure (BE already refunded) → retry must re-charge.
+    if (compareTakes.rejected.match(res) && res.payload?.reuseKey === false) {
+      idemKeyRef.current = null;
+    }
   };
 
   const reset = () => {
