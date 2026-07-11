@@ -60,7 +60,11 @@ export const fetchGreenRoomMessages = createAsyncThunk(
   'readersMatch/fetchGreenRoomMessages',
   async (matchId, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${baseURL}/v1/matching/messages/${matchId}/`);
+      // Request the BE's max page (100). The endpoint is paginated (default 50)
+      // and returns the most-recent page in chronological order; asking for 100
+      // keeps every real thread whole (usage runs a handful of messages/match)
+      // while retaining the server's unbounded-growth protection.
+      const { data } = await axios.get(`${baseURL}/v1/matching/messages/${matchId}/?limit=100`);
       return { matchId, messages: data?.data || [] };
     } catch (error) {
       return rejectWithValue(
