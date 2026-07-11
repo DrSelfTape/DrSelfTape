@@ -24,6 +24,7 @@ const DeleteAccountModal = ({ open, onClose }) => {
   const userEmail = user?.email || '';
 
   const [confirmText, setConfirmText] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -38,7 +39,10 @@ const DeleteAccountModal = ({ open, onClose }) => {
     setError('');
     try {
       await axiosInstance.delete('/v1/users/account/', {
-        data: { confirm_email: userEmail },
+        // current_password is required server-side for email/password accounts
+        // (re-auth on an irreversible action); Sign-in-with-Apple accounts have
+        // no usable password and the server skips it.
+        data: { confirm_email: userEmail, current_password: password },
       });
       // Server has scrubbed + deleted the row; lock the client out too.
       await dispatch(performLogout());
@@ -108,6 +112,23 @@ const DeleteAccountModal = ({ open, onClose }) => {
           onChange={(e) => setConfirmText(e.target.value)}
           placeholder="your.email@example.com"
           autoComplete="off"
+          style={{
+            width: '100%', height: 44, padding: '0 14px',
+            border: '1px solid var(--aurora-line, rgba(10,10,10,0.12))',
+            borderRadius: 10, fontSize: 14, color: 'var(--aurora-text)',
+            background: '#FFFFFF', outline: 'none', marginBottom: 12,
+          }}
+        />
+
+        <p style={{ fontSize: 12, color: 'var(--aurora-dim)', margin: 0, marginBottom: 8 }}>
+          If you sign in with an email &amp; password, enter it to confirm. (Skip if you use Sign in with Apple.)
+        </p>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Current password"
+          autoComplete="current-password"
           style={{
             width: '100%', height: 44, padding: '0 14px',
             border: '1px solid var(--aurora-line, rgba(10,10,10,0.12))',
