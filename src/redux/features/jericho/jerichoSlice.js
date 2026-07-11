@@ -66,7 +66,19 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
       throw { response: { status: 502, data: { message: j.error || 'Analysis failed — please try again.' } } };
     }
   }
-  throw { response: { status: 504, data: { message: 'Analysis took too long — please try again.' } } };
+  // Poll TIMEOUT (not a BE failure): the job may still finish, so the outcome is
+  // UNKNOWN. Flag it so the idempotency key is KEPT — a retry must dedup against
+  // the possibly-still-running job rather than start a duplicate paid analysis.
+  throw { response: { status: 504, data: { message: 'Analysis took too long — please try again.' } }, unknownOutcome: true };
+}
+
+// Keep the idempotency key ONLY when the outcome is genuinely unknown — a true
+// network/timeout/abort (no response) or an async poll that timed out on a job
+// that may still complete. A real server response (4xx/5xx from the request, or
+// a job the BE marked 'failed') means the BE already refunded, so a retry must
+// RE-CHARGE → the component rotates the key.
+function shouldReuseKey(err) {
+  return err?.response == null || err?.unknownOutcome === true;
 }
 
 // A tape-review / compare response is either the synchronous result or a pending
@@ -327,18 +339,17 @@ export const reviewTape = createAsyncThunk(
       // An empty/partial body charges a token but has nothing to show — take the
       // clean error path instead of fulfilling a hollow result (BUG 3).
       if (!tapeReviewHasContent(result)) {
-        return rejectWithValue({ message: 'This review came back incomplete — your token was refunded. Please try again.', reuseKey: true });
+        // Definitive server result (a 200 the BE refunds via its sanity gate) —
+        // rotate the key so a retry re-charges instead of dedup-passing into a
+        // free re-analysis. (This branch is currently unreachable: the BE gate
+        // turns a thin result into a refunded error before a 200 reaches here.)
+        return rejectWithValue({ message: 'This review came back incomplete — your token was refunded. Please try again.', reuseKey: false });
       }
       trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role, via: r2Key ? 'r2' : 'direct' });
       return result;
     } catch (err) {
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
-      // reuseKey: keep the idempotency key ONLY when the server never responded
-      // (network/timeout — outcome unknown, dedup must protect a retry). A real
-      // server response means the BE already refunded, so a retry must re-charge
-      // → the component rotates the key. Prevents the "free re-analysis after a
-      // refunded failure" leak.
-      return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: err?.response == null });
+      return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: shouldReuseKey(err) });
     }
   }
 );
@@ -378,7 +389,7 @@ export const compareTakes = createAsyncThunk(
       return result;
     } catch (err) {
       captureUploadFailure('compare_takes_upload', err, startedAt, lastLoaded, lastTotal, 900000);
-      return rejectWithValue({ message: aiErrorMessage(err, 'Take comparison failed'), reuseKey: err?.response == null });
+      return rejectWithValue({ message: aiErrorMessage(err, 'Take comparison failed'), reuseKey: shouldReuseKey(err) });
     }
   }
 );
