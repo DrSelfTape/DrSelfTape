@@ -8,6 +8,21 @@
  */
 export const WHATS_NEW = [
   {
+    id: 4,
+    version: '1.0.14',
+    date: 'July 2026',
+    title: 'Sturdier in all the right places',
+    intro: "This one's about reliability — the app should now just work, everywhere:",
+    highlights: [
+      { emoji: '🧭', title: 'Navigation that never dead-ends', body: 'Fixed the taps that sometimes went nowhere — profiles, notifications, and deep links all land where they should.' },
+      { emoji: '📤', title: 'Uploads that stick', body: 'Picking a tape from your camera roll is now dependable, even on older iPhones.' },
+      { emoji: '💾', title: 'Profile edits that save', body: 'Your changes save the first time, every time.' },
+      { emoji: '💳', title: 'Smoother upgrades', body: 'Going Premium unlocks instantly after purchase — no more waiting or restarting.' },
+      { emoji: '🎭', title: 'Green Room, complete', body: 'Long conversations with your scene partners now load in full.' },
+      { emoji: '🔒', title: 'Tighter account security', body: 'Signing out fully clears your tapes from the device, and deleting your account now confirms it’s really you.' },
+    ],
+  },
+  {
     // 1.0.12 was superseded in review by 1.0.13 (Tier 2+3 folded in) — this
     // entry is the combined release note users actually get.
     id: 3,
