@@ -22,6 +22,17 @@ export function isIOSNative() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 }
 
+// Delete every locally-cached self-tape video. Called on logout AND account
+// deletion so a device never retains a prior user's on-camera PII (Apple
+// 5.1.1 permanent-deletion). No-op on web/Android where nothing is cached.
+export async function wipeAllLocalTapes() {
+  if (!isIOSNative()) return;
+  try {
+    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    await Filesystem.rmdir({ path: ROOT_DIR, directory: Directory.Documents, recursive: true });
+  } catch { /* dir absent or FS unavailable — nothing to wipe */ }
+}
+
 export function makeLocalTapeId() {
   return `local_${nanoid(12)}`;
 }

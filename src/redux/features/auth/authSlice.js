@@ -465,6 +465,20 @@ export const performLogout = () => async (dispatch) => {
   // — must never block or throw into logout.
   try { const { resetPurchases } = await import('../../../utils/purchases'); await resetPurchases(); } catch { /* RC unavailable — don't block logout */ }
   dispatch(logoutUser());
+  // Clear the axios Authorization header now + reset the 401 latch so a stale
+  // bearer can't ride a background request and the next session's expiry still
+  // logs out (don't wait for a route effect to tear the header down).
+  try {
+    const { setAuthToken, resetSessionExpiredLatch } = await import('../../http');
+    setAuthToken(null);
+    resetSessionExpiredLatch();
+  } catch { /* http util unavailable — don't block logout */ }
+  // Wipe device-cached self-tape videos — that PII must not survive logout or
+  // account deletion (Apple 5.1.1 permanent-deletion). No-op on web/Android.
+  try {
+    const { wipeAllLocalTapes } = await import('../../../utils/selfTapeStore');
+    await wipeAllLocalTapes();
+  } catch { /* tape store unavailable — don't block logout */ }
   // Strip onboarding progress + dismissed banner version — none of these are
   // user-scoped, so leaving them carries another user's state forward.
   try {

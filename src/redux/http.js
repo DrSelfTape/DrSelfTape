@@ -32,6 +32,11 @@ const PUBLIC_AUTH_PATHS = [
 // Only handle the first one per session.
 let sessionExpiredHandled = false;
 
+// Reset the one-shot 401 latch on logout/login so a later genuine session
+// expiry still triggers the logout+redirect (the latch otherwise sticks true
+// if a 401 fired while already on /login, permanently disabling expiry logout).
+export const resetSessionExpiredLatch = () => { sessionExpiredHandled = false; };
+
 // Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
