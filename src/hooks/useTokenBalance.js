@@ -9,6 +9,20 @@ let cachedBalance = null;
 let cachedUnlimited = false;
 let lastFetch = 0;
 const CACHE_TTL = 10000;
+// Bumped on logout/reset. An in-flight fetch captures the generation at start and
+// discards its result if the generation changed — so User A's request can never
+// repopulate the cache after A logs out (which would leak A's plan to User B).
+let cacheGen = 0;
+
+// Clear the module-level cache. Called from performLogout so a new user on this
+// device can never inherit the previous user's plan (which would briefly unlock
+// gated Premium content — see the TapeReview full-read gate).
+export function resetTokenCache() {
+  cachedBalance = null;
+  cachedUnlimited = false;
+  lastFetch = 0;
+  cacheGen += 1;
+}
 
 export function useTokenBalance() {
   const [balance, setBalance] = useState(cachedBalance);
@@ -16,6 +30,10 @@ export function useTokenBalance() {
   // unlimited:true so the UI can show "Unlimited" instead of a frozen number.
   const [unlimited, setUnlimited] = useState(cachedUnlimited);
   const [loading, setLoading] = useState(cachedBalance === null);
+  // Whether the LAST plan lookup failed. Entitlement-gated consumers treat an
+  // errored (stale) value as unknown and fail-open, so a network hiccup after a
+  // plan change never locks a paying user out of gated content.
+  const [error, setError] = useState(false);
 
   const refresh = useCallback((force = false) => {
     const now = Date.now();
@@ -23,10 +41,16 @@ export function useTokenBalance() {
       setBalance(cachedBalance);
       setUnlimited(cachedUnlimited);
       setLoading(false);
+      setError(false);
       return;
     }
+    // Hitting the network — mark loading so entitlement-gated consumers know the
+    // cached value may be stale and can fail-open until it resolves.
+    setLoading(true);
+    const gen = cacheGen;
     axiosInstance.get('/v1/subscriptions/tokens/')
       .then(res => {
+        if (gen !== cacheGen) return; // logout/reset happened mid-flight — discard
         const bal = res.data.data?.balance ?? 0;
         const unl = res.data.data?.unlimited ?? false;
         cachedBalance = bal;
@@ -34,9 +58,10 @@ export function useTokenBalance() {
         lastFetch = Date.now();
         setBalance(bal);
         setUnlimited(unl);
+        setError(false);
       })
-      .catch(() => setBalance(cachedBalance))
-      .finally(() => setLoading(false));
+      .catch(() => { if (gen === cacheGen) { setBalance(cachedBalance); setError(true); } })
+      .finally(() => { if (gen === cacheGen) setLoading(false); });
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -59,5 +84,5 @@ export function useTokenBalance() {
     };
   }, [refresh]);
 
-  return { balance, unlimited, loading, refresh };
+  return { balance, unlimited, loading, error, refresh };
 }

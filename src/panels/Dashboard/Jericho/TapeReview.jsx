@@ -6,8 +6,9 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTokenBalance } from '../../../hooks/useTokenBalance';
 import {
-  Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X,
+  Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X, Lock,
   RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater, Trophy, HelpCircle,
 } from 'lucide-react';
 import { reviewTape, clearTapeReview, resumeAnalysisJob } from '../../../redux/features/jericho/jerichoSlice';
@@ -31,16 +32,49 @@ function FirstReviewPaywall({ onUpgrade }) {
   useEffect(() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_SHOWN); }, []);
   return (
     <div className="rounded-2xl border border-[#D4A85F]/30 p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.05))' }}>
-      <h3 className="text-base font-bold text-[#0A0A0A] leading-snug">That&apos;s one take. Get notes like that on every audition.</h3>
+      <h3 className="text-base font-bold text-[#0A0A0A] leading-snug">You got the headline. There&apos;s a full casting read behind it.</h3>
       <p className="text-sm text-[rgba(10,10,10,0.6)] mt-1.5 leading-relaxed">
-        Unlimited Tape Reviews, Compare Takes, Bring Your Own Sides, and your AI scene partner.
+        Premium unlocks the rest — the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape, with no limits.
       </p>
       <button
         onClick={onUpgrade}
         className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
         style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
       >
-        <Sparkles size={15} /> See plans
+        <Sparkles size={15} /> Unlock my full read
+      </button>
+    </div>
+  );
+}
+
+/* Full-read gate for free users outside the first-review flow — the deep casting
+ * read (craft breakdown, scores, Performance DNA) is a Premium unlock, shown in
+ * its place while the value is still fresh on screen. */
+function FullReadLocked({ onUpgrade }) {
+  useEffect(() => { trackEvent('fullread_locked_shown'); }, []);
+  return (
+    <div className="rounded-2xl border border-[#D4A85F]/30 p-5" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
+      <div className="flex items-center gap-2">
+        <Lock size={15} className="text-[#7A5A18]" />
+        <h3 className="text-sm font-bold text-[#0A0A0A]">Your full casting read is ready</h3>
+      </div>
+      <p className="text-sm text-[rgba(10,10,10,0.62)] mt-1.5 leading-relaxed">
+        You&apos;ve got the headline. Premium unlocks the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape, no limits.
+      </p>
+      <div className="mt-3 space-y-2" style={{ filter: 'blur(5px)', opacity: 0.5, pointerEvents: 'none' }} aria-hidden="true">
+        {['Framing', 'Eyeline', 'Listening', 'Emotional arc'].map((l) => (
+          <div key={l} className="flex items-center gap-2">
+            <span className="text-[11px] text-[rgba(10,10,10,0.5)]" style={{ width: 90 }}>{l}</span>
+            <div className="flex-1 h-1.5 rounded-full bg-[#D4A85F]/20"><div className="h-1.5 rounded-full bg-[#D4A85F]" style={{ width: '72%' }} /></div>
+          </div>
+        ))}
+      </div>
+      <button
+        onClick={() => { trackEvent('fullread_locked_tap'); onUpgrade?.(); }}
+        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+        style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+      >
+        <Sparkles size={15} /> Unlock the full read — Premium
       </button>
     </div>
   );
@@ -142,6 +176,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   useAIGate();
   const dispatch = useDispatch();
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult } = useSelector((s) => s.jericho);
+  // Full-read gate: Premium (unlimited) sees the complete casting read; free
+  // users see the headline + an unlock CTA. onUpgrade is passed in the
+  // first-review flow; elsewhere fall back to the global panel-nav event.
+  const { unlimited: isSubscribed, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
+  const handleUpgrade = () => {
+    if (onUpgrade) { onUpgrade(); return; }
+    try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'membership' } })); } catch { /* noop */ }
+  };
   const tutorialProgress = useSelector((s) => s.userSettings?.data?.tutorial_progress || {});
   // Kind of the pending notes-ready cue ('review' | 'compare' | false). Read
   // in the mode initializer below so a compare finished on another tab
@@ -438,23 +480,18 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   // ─── Result ────────────────────────────────────────────────────────
   if (tapeReviewResult) {
-    const r = tapeReviewResult;
-    const working = Array.isArray(r.whats_working) ? r.whats_working : [];
-    const adjustments = Array.isArray(r.adjustments) ? r.adjustments : [];
-    const scores = r.scores || {};
-    const dna = r.performance_dna || {};
-    const tags = Array.isArray(r.tone_tags) ? r.tone_tags : [];
-
-    const hasScores = TECH_SCORES.some((s) => scores[s.key] != null);
-    const hasDna = DNA.some((d) => dna[d.key] != null);
-    const hasPerformance = !!(r.performance && Object.values(r.performance).some(Boolean));
+    const raw = tapeReviewResult;
+    const rawWorking = Array.isArray(raw.whats_working) ? raw.whats_working : [];
+    const rawAdjustments = Array.isArray(raw.adjustments) ? raw.adjustments : [];
+    const rawHasScores = TECH_SCORES.some((s) => (raw.scores || {})[s.key] != null);
+    const rawHasDna = DNA.some((d) => (raw.performance_dna || {})[d.key] != null);
+    const rawHasPerformance = !!(raw.performance && Object.values(raw.performance).some(Boolean));
 
     // Defense in depth (BUG 3): a 200 with an empty/near-empty body resolves
-    // truthy, so the result screen renders. The text blocks self-collapse, but
-    // the score grids would otherwise render every bar at a clamped 0 — fake
-    // "0/10" notes for a token the BE already refunded. If NOTHING real came
-    // back, show the incomplete-result card instead of zeroed scores.
-    if (!r.verdict && working.length === 0 && adjustments.length === 0 && !hasPerformance && !hasScores && !hasDna) {
+    // truthy, so the result screen renders. If NOTHING real came back, show the
+    // incomplete-result card instead of zeroed scores. Judged on the RAW result,
+    // before any free/premium gating.
+    if (!raw.verdict && rawWorking.length === 0 && rawAdjustments.length === 0 && !rawHasPerformance && !rawHasScores && !rawHasDna) {
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-[#FF8280]/30 p-5 text-center" style={SURFACE}>
@@ -470,6 +507,30 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         </div>
       );
     }
+
+    // Free users get the HEADLINE read (verdict + top strength + the one thing);
+    // the full casting read — deep craft, all adjustments, technical scores, and
+    // Performance DNA — is a Premium unlock. Trimming the gated result makes the
+    // deep sections self-hide (their presence-guards go false); a <FullReadLocked/>
+    // teaser takes their place before the actions.
+    // Gate ONLY when we positively know the user is free. Fail-open: while the
+    // plan is still loading, or if the plan lookup failed (balance null), never
+    // gate — better to briefly show a paying user their full read than to lock
+    // one out on a network hiccup. Also require a headline to exist so a rare
+    // deep-only partial response never trims a free user down to nothing.
+    const hasHeadline = !!raw.verdict || rawWorking.length > 0 || rawAdjustments.length > 0;
+    const entitlementKnown = !entitlementLoading && !entitlementError && tokenBalance !== null;
+    const locked = entitlementKnown && !isSubscribed && hasHeadline;
+    const r = locked
+      ? { verdict: raw.verdict, tone_tags: raw.tone_tags, whats_working: rawWorking.slice(0, 1), adjustments: rawAdjustments.slice(0, 1) }
+      : raw;
+    const working = Array.isArray(r.whats_working) ? r.whats_working : [];
+    const adjustments = Array.isArray(r.adjustments) ? r.adjustments : [];
+    const scores = r.scores || {};
+    const dna = r.performance_dna || {};
+    const tags = Array.isArray(r.tone_tags) ? r.tone_tags : [];
+    const hasScores = TECH_SCORES.some((s) => scores[s.key] != null);
+    const hasDna = DNA.some((d) => dna[d.key] != null);
 
     return (
       <div className="space-y-4 sm:space-y-5">
@@ -601,6 +662,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             )}
           </div>
         )}
+
+        {/* Free (non-first-review) users: the deep sections above are gated —
+            offer the full read here, in their place. */}
+        {locked && !firstReview && <FullReadLocked onUpgrade={handleUpgrade} />}
 
         {/* Actions — in first-review mode the paywall leads; otherwise the
             standard "review another take" reset plus the Compare Takes

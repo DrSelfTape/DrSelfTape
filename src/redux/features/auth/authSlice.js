@@ -469,6 +469,9 @@ export const performLogout = () => async (dispatch) => {
   // the stale `configured` flag and B's purchases attribute to A). Best-effort
   // — must never block or throw into logout.
   try { const { resetPurchases } = await import('../../../utils/purchases'); await resetPurchases(); } catch { /* RC unavailable — don't block logout */ }
+  // Clear the token/plan cache so the next user on this device can't inherit
+  // this user's Premium entitlement (which would unlock gated content).
+  try { const { resetTokenCache } = await import('../../../hooks/useTokenBalance'); resetTokenCache(); } catch { /* noop */ }
   dispatch(logoutUser());
   // Clear the axios Authorization header now + reset the 401 latch so a stale
   // bearer can't ride a background request and the next session's expiry still
