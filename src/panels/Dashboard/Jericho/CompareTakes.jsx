@@ -67,10 +67,19 @@ export default function CompareTakes() {
   // tokens; cleared when the set changes or the action resets.
   const idemKeyRef = useRef(null);
 
+  // Identity signature — catches the same take picked into two slots (name +
+  // size + last-modified match is a near-certain duplicate). Near-duplicates
+  // (re-exports of the same performance) are caught by the analyzer itself.
+  const takeSig = (f) => `${f.name}|${f.size}|${f.lastModified}`;
+
   const pickFile = (i, file) => {
     if (!file) return;
     if (file.size > MAX_TAKE_MB * 1024 * 1024) {
       setSizeError(`Take ${i + 1} is ${(file.size / 1048576).toFixed(0)}MB — keep each take under ${MAX_TAKE_MB}MB (a single-scene take exports small).`);
+      return;
+    }
+    if (slots.some((v, idx) => idx !== i && v && takeSig(v) === takeSig(file))) {
+      setSizeError(`That's the same file as another take — Compare needs different takes of the scene, not the same one twice.`);
       return;
     }
     setSizeError('');
@@ -86,6 +95,13 @@ export default function CompareTakes() {
 
   const submit = async () => {
     if (!canSubmit) return;
+    // Backstop: never send identical takes — the compare would otherwise "rank"
+    // a performance against itself.
+    const sigs = files.map(takeSig);
+    if (new Set(sigs).size !== sigs.length) {
+      setSizeError('Two of your takes are the same file — upload different takes of the scene to compare.');
+      return;
+    }
     if (!idemKeyRef.current) {
       idemKeyRef.current = (crypto?.randomUUID?.() || `cmp-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     }
