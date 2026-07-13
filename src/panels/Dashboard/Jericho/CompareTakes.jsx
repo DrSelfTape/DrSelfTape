@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useTokenBalance } from '../../../hooks/useTokenBalance';
 import {
   Upload, Loader2, Film, Trophy, Plus, X, RotateCcw, ChevronDown, Lock,
-  Sparkles, Target, Theater, Scissors,
+  Sparkles, Target, Theater, Scissors, Copy,
 } from 'lucide-react';
 import { compareTakes, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
 
@@ -141,6 +141,10 @@ export default function CompareTakes() {
     const r = compareResult;
     const takesByNum = Object.fromEntries((r.takes || []).map((t) => [t.take, t]));
     const order = (r.ranking || []).filter((n) => takesByNum[n]);
+    // Duplicate/single: the takes are the SAME performance — there is no winner.
+    // Suppress the medal hierarchy + "Winner" framing so we don't crown one copy
+    // over its twin (which would flatly contradict the "same take" headline).
+    const isDup = r.comparison_status === 'duplicate' || r.comparison_status === 'single';
 
     // Defense in depth (BUG 3, analogous): a 200 with an empty/near-empty body
     // charges tokens but has no ranking to show — the winner banner would read
@@ -168,9 +172,9 @@ export default function CompareTakes() {
         {/* Winner banner */}
         <div className="rounded-2xl border border-[#D4A85F]/35 p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.16), rgba(122,90,24,0.05))' }}>
           <div className="w-12 h-12 rounded-2xl bg-[#D4A85F]/20 flex items-center justify-center mx-auto mb-2.5">
-            <Trophy size={22} className="text-[#7A5A18]" />
+            {isDup ? <Copy size={20} className="text-[#7A5A18]" /> : <Trophy size={22} className="text-[#7A5A18]" />}
           </div>
-          <p className="text-[11px] font-bold text-[#7A5A18] uppercase tracking-widest mb-1">Submit this one</p>
+          <p className="text-[11px] font-bold text-[#7A5A18] uppercase tracking-widest mb-1">{isDup ? 'Same take' : 'Submit this one'}</p>
           <h3 className="text-xl font-bold text-[#0A0A0A] leading-snug" style={{ fontFamily: "'Playfair Display', serif" }}>
             {r.headline || `Take ${r.winner} is your strongest`}
           </h3>
@@ -183,7 +187,7 @@ export default function CompareTakes() {
         <div className="space-y-3">
           {order.map((n, idx) => {
             const t = takesByNum[n];
-            const isWinner = n === r.winner;
+            const isWinner = n === r.winner && !isDup;
             const open = expanded === n;
             const a = t.analysis || {};
             return (
@@ -197,7 +201,9 @@ export default function CompareTakes() {
                 }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="text-2xl w-8 text-center flex-shrink-0">{MEDAL[idx] || idx + 1}</div>
+                  <div className="w-8 flex items-center justify-center flex-shrink-0 text-2xl">
+                    {isDup ? <Copy size={18} className="text-[#7A5A18]/60" /> : (MEDAL[idx] || idx + 1)}
+                  </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-bold text-[#0A0A0A]">
