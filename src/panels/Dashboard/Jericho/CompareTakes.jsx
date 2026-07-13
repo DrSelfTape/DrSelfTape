@@ -6,8 +6,9 @@
  */
 import { useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useTokenBalance } from '../../../hooks/useTokenBalance';
 import {
-  Upload, Loader2, Film, Trophy, Plus, X, RotateCcw, ChevronDown,
+  Upload, Loader2, Film, Trophy, Plus, X, RotateCcw, ChevronDown, Lock,
   Sparkles, Target, Theater, Scissors,
 } from 'lucide-react';
 import { compareTakes, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
@@ -43,6 +44,14 @@ function ScoreBar100({ value, gold }) {
 export default function CompareTakes() {
   const dispatch = useDispatch();
   const { compareLoading, compareResult, compareError, uploadProgress } = useSelector((s) => s.jericho);
+  // Full-notes gate: Premium unlocks each take's deep breakdown; free users keep
+  // the winner + ranked scores + per-take highlights. Fail-open (never gate a
+  // paying user on loading/error) — mirrors the Tape Review gate.
+  const { unlimited: isSubscribed, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
+  const notesLocked = !entitlementLoading && !entitlementError && tokenBalance !== null && !isSubscribed;
+  const goPremium = () => {
+    try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'membership' } })); } catch { /* noop */ }
+  };
 
   // Two slots to start; up to four.
   const [slots, setSlots] = useState([null, null]);
@@ -199,7 +208,15 @@ export default function CompareTakes() {
                   </div>
                 )}
 
-                {/* Expand full analysis */}
+                {/* Expand full analysis — Premium unlocks the deep per-take notes */}
+                {notesLocked ? (
+                  <button
+                    onClick={goPremium}
+                    className="w-full flex items-center justify-center gap-1.5 mt-3 py-1.5 text-xs font-semibold text-[#7A5A18]"
+                  >
+                    <Lock size={12} /> Unlock full notes — Premium
+                  </button>
+                ) : (
                 <button
                   onClick={() => setExpanded(open ? null : n)}
                   className="w-full flex items-center justify-center gap-1.5 mt-3 py-1.5 text-xs font-semibold text-[#7A5A18]"
@@ -207,8 +224,9 @@ export default function CompareTakes() {
                   {open ? 'Hide' : 'See full notes for this take'}
                   <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
                 </button>
+                )}
 
-                {open && (
+                {!notesLocked && open && (
                   <div className="mt-2 pt-3 border-t border-[rgba(10,10,10,0.06)] space-y-3">
                     {a.verdict && (
                       <p className="text-sm text-[#0A0A0A] font-medium leading-relaxed">{a.verdict}</p>
