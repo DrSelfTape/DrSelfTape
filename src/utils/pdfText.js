@@ -12,12 +12,24 @@
  * their Y baseline (±4pt). Mirrors the approach CDSim's sides-upload
  * already used successfully.
  */
-import * as pdfjsLib from 'pdfjs-dist';
-import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
-
-pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
+// pdfjs (~326KB) + its worker (~1.3MB) load on FIRST extraction, not at import —
+// so a panel that merely imports this util doesn't pay for pdfjs until a PDF is
+// actually uploaded. Cached so the worker spins up only once.
+let _pdfjsPromise = null;
+function loadPdfjs() {
+  if (!_pdfjsPromise) {
+    _pdfjsPromise = (async () => {
+      const pdfjsLib = await import('pdfjs-dist');
+      const { default: PdfWorker } = await import('pdfjs-dist/build/pdf.worker.min.mjs?worker');
+      pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
+      return pdfjsLib;
+    })();
+  }
+  return _pdfjsPromise;
+}
 
 export async function extractPdfText(file) {
+  const pdfjsLib = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pageTexts = [];

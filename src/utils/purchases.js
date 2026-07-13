@@ -35,8 +35,8 @@ function warnIfKeylessNative() {
     `[purchases] No RevenueCat key for native platform "${platform}" — in-app ` +
     `purchases are DISABLED. Set ${envVar} at build time.`
   );
-  import('./sentry').then(({ Sentry }) => {
-    Sentry.captureMessage(`IAP misconfigured: no RevenueCat key for ${platform}`, {
+  import('./sentry').then(({ captureMessage }) => {
+    captureMessage(`IAP misconfigured: no RevenueCat key for ${platform}`, {
       level: 'error',
       extra: { platform, envVar },
     });

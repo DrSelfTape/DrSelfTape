@@ -11,7 +11,7 @@ import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X, Lock,
   RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater, Trophy, HelpCircle,
 } from 'lucide-react';
-import { reviewTape, clearTapeReview, resumeAnalysisJob } from '../../../redux/features/jericho/jerichoSlice';
+import { reviewTape, clearTapeReview, resumeAnalysisJob, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
@@ -227,6 +227,17 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   });
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
+  // Next Take Mission: carry the original tape + a casting note into Compare Takes
+  // so the actor re-records against the note and sees if the new take improved.
+  const [compareSeed, setCompareSeed] = useState(null);
+  const startNextTakeMission = (note) => {
+    // Clear any stale comparison so Compare Takes opens on the seeded upload form,
+    // not a previous ranked result.
+    dispatch(clearCompare());
+    setCompareSeed({ file, note });
+    trackEvent('next_take_mission_start', { seeded: !!file });
+    setMode('compare');
+  };
   const [role, setRole] = useState('');
   const [tone, setTone] = useState('');
   const [sides, setSides] = useState('');
@@ -426,7 +437,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     return (
       <div>
         {modeToggle}
-        <CompareTakes />
+        <CompareTakes seed={compareSeed} />
       </div>
     );
   }
@@ -696,6 +707,30 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             <p className="text-sm text-[#0A0A0A] leading-relaxed font-medium">{r.the_one_thing}</p>
           </div>
         )}
+
+        {/* Next Take Mission — turn the note into action: re-record against it and
+            compare to this take. Focus = the one thing, else the first fix. */}
+        {(() => {
+          const a0 = adjustments[0];
+          const focus = r.the_one_thing || a0?.note || (typeof a0 === 'string' ? a0 : '');
+          if (!focus) return null;
+          return (
+            <button
+              type="button"
+              onClick={() => startNextTakeMission(focus)}
+              className="w-full text-left rounded-2xl p-4 border border-[#D4A85F]/40"
+              style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Target size={15} className="text-[#7A5A18]" />
+                <span className="text-sm font-bold text-[#0A0A0A]">Next Take Mission</span>
+              </div>
+              <p className="text-xs text-[rgba(10,10,10,0.65)] leading-relaxed">
+                Re-record working on this note{file ? ' and compare it against this take' : ''} — see if your next take lands it. →
+              </p>
+            </button>
+          );
+        })()}
 
         {/* Scores — only render a card when its data actually came back, so an
             empty/partial result never shows a wall of clamped-to-0 bars. */}

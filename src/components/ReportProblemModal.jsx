@@ -8,7 +8,7 @@
  */
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import * as Sentry from '@sentry/react';
+import { captureMessage } from '../utils/sentry';
 import { Bug, X, CheckCircle2 } from 'lucide-react';
 import axiosInstance from '../redux/http';
 import endPoints from '../redux/constant';
@@ -47,7 +47,7 @@ export default function ReportProblemModal({ onClose }) {
     const context = collectContext();
     // Mirror to Sentry first (best-effort) — surfaces it where we triage errors.
     try {
-      Sentry.captureMessage(`User report: ${text.slice(0, 140)}`, {
+      captureMessage(`User report: ${text.slice(0, 140)}`, {
         level: 'info',
         tags: { type: 'user_feedback' },
         extra: { message: text, ...context },

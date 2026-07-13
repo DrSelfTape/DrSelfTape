@@ -32,11 +32,23 @@ import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
-import * as pdfjsLib from "pdfjs-dist";
 import { extractCharacters } from "../../utils/scriptParser";
 
-import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
-pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
+// pdfjs (~326KB) + its worker (~1.3MB) are dynamically imported on FIRST PDF use
+// instead of at module load — most sessions never upload a PDF, so this keeps
+// them off the app's cold-boot path. Cached so the worker spins up only once.
+let _pdfjsPromise = null;
+function loadPdfjs() {
+  if (!_pdfjsPromise) {
+    _pdfjsPromise = (async () => {
+      const pdfjsLib = await import("pdfjs-dist");
+      const { default: PdfWorker } = await import('pdfjs-dist/build/pdf.worker.min.mjs?worker');
+      pdfjsLib.GlobalWorkerOptions.workerPort = new PdfWorker();
+      return pdfjsLib;
+    })();
+  }
+  return _pdfjsPromise;
+}
 
 // Simple hash for caching — avoids re-calling GPT on same content
 function simpleHash(str) {
@@ -49,6 +61,7 @@ function simpleHash(str) {
 }
 
 async function extractPdfText(file) {
+  const pdfjsLib = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   const pageTexts = [];

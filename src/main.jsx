@@ -13,9 +13,10 @@ import { ThemeProvider } from './utils/theme.jsx';
 import { initSentry } from './utils/sentry.js';
 import ForceUpdateGate from './components/ForceUpdateGate.jsx';
 
-// Init Sentry before render so it captures errors from the very first
-// component mount. No-ops in dev (no DSN set).
-initSentry();
+// Kick off Sentry init (dynamically loads the SDK only when a DSN is set, so it
+// stays out of the boot chunk). Fire-and-forget — capture* helpers load the SDK
+// on demand if an error fires before this resolves. No-ops in dev (no DSN).
+initSentry().catch(() => { /* telemetry must never block boot */ });
 
 // Stale-chunk auto-recovery. After we deploy a new build to Vercel, the
 // hashed chunk filenames change. Anyone with the prior index.html cached

@@ -43,7 +43,7 @@ function ScoreBar100({ value, gold }) {
   );
 }
 
-export default function CompareTakes() {
+export default function CompareTakes({ seed = null }) {
   const dispatch = useDispatch();
   const { compareLoading, compareResult, compareError, uploadProgress } = useSelector((s) => s.jericho);
   // Full-notes gate: Premium unlocks each take's deep breakdown; free users keep
@@ -58,6 +58,16 @@ export default function CompareTakes() {
   const [role, setRole] = useState('');
   const [tone, setTone] = useState('');
   const [sides, setSides] = useState('');
+  // Next Take Mission: seeded from a Tape Review — the original take pre-loads as
+  // Take 1 and the casting note becomes the focus the comparison is judged on.
+  const [focusNote, setFocusNote] = useState('');
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (!seed || seededRef.current) return;
+    seededRef.current = true;
+    if (seed.note) setFocusNote(seed.note);
+    if (seed.file) setSlots((s) => { const n = [...s]; n[0] = seed.file; return n; });
+  }, [seed]);
   const [showOptional, setShowOptional] = useState(false);
   const [expanded, setExpanded] = useState(null); // take number whose full notes are open
   const [sizeError, setSizeError] = useState('');
@@ -115,7 +125,12 @@ export default function CompareTakes() {
     if (!idemKeyRef.current) {
       idemKeyRef.current = (crypto?.randomUUID?.() || `cmp-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     }
-    const res = await dispatch(compareTakes({ takes: files, role, tone, sides, idempotencyKey: idemKeyRef.current }));
+    // Fold the Next Take Mission focus into the sides context so the ranker
+    // weighs whether the newer take actually addressed the note.
+    const effectiveSides = focusNote
+      ? `${sides ? sides + '\n\n' : ''}DIRECTOR'S NOTE THE ACTOR IS WORKING ON: ${focusNote}`.trim()
+      : sides;
+    const res = await dispatch(compareTakes({ takes: files, role, tone, sides: effectiveSides, idempotencyKey: idemKeyRef.current }));
     // Definitive server failure (BE already refunded) → retry must re-charge.
     if (compareTakes.rejected.match(res) && res.payload?.reuseKey === false) {
       idemKeyRef.current = null;
@@ -125,6 +140,7 @@ export default function CompareTakes() {
   const reset = () => {
     idemKeyRef.current = null; // next comparison is a new action
     setSlots([null, null]); setRole(''); setTone(''); setSides(''); setExpanded(null);
+    setFocusNote('');
     dispatch(clearCompare());
   };
 
@@ -323,6 +339,23 @@ export default function CompareTakes() {
   // ─── Submit form ───────────────────────────────────────────────────
   return (
     <div className="space-y-4">
+      {/* Next Take Mission — carried in from a Tape Review note */}
+      {focusNote && (
+        <div className="rounded-2xl border border-[#FF8280]/30 p-4" style={{ background: 'rgba(255,130,128,0.06)' }}>
+          <div className="flex items-center gap-2 mb-1">
+            <Target size={14} className="text-[#FF8280]" />
+            <span className="text-xs font-bold text-[#FF8280] uppercase tracking-wide">Next Take Mission</span>
+          </div>
+          <p className="text-sm text-[#0A0A0A] leading-relaxed">
+            Re-record working on this note, then compare against your original take:
+          </p>
+          <p className="text-sm font-semibold text-[#0A0A0A] mt-1.5">“{focusNote}”</p>
+          {slots[0] && (
+            <p className="text-xs text-[rgba(10,10,10,0.5)] mt-2">Your original take is loaded as Take 1 — add your new take below.</p>
+          )}
+        </div>
+      )}
+
       <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
         <h3 className="text-sm font-bold text-[#0A0A0A] mb-1 flex items-center gap-2">
           <Trophy size={16} className="text-[#7A5A18]" /> Compare your takes

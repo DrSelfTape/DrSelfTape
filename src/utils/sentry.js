@@ -1,12 +1,19 @@
 // Sentry init — runs once at app boot, only if VITE_SENTRY_DSN is set.
-// Keeping this in its own module so main.jsx stays readable and so any
-// SDK upgrade only touches one file.
+//
+// The @sentry/react SDK (~462KB) is DYNAMICALLY imported so it stays OUT of the
+// cold-boot chunk. All callers (ErrorBoundary, purchases, redux slices) go
+// through the capture* helpers below rather than importing the SDK statically —
+// a single static import anywhere in the boot tree would drag the whole SDK back
+// in. Captures before init resolves load the SDK on demand (a ~ms race at worst).
 
-import * as Sentry from '@sentry/react';
+let _sentry = null;
 
-export function initSentry() {
+export async function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn) return;
+
+  const Sentry = await import('@sentry/react');
+  _sentry = Sentry;
 
   Sentry.init({
     dsn,
@@ -49,22 +56,35 @@ export function initSentry() {
   });
 }
 
+// Resolve the SDK: the already-inited instance if present, else load it on demand
+// (used for a capture that fires before initSentry's dynamic import resolves).
+function withSentry(run) {
+  if (!import.meta.env.VITE_SENTRY_DSN) return;
+  if (_sentry) { try { run(_sentry); } catch { /* swallow */ } return; }
+  import('@sentry/react').then((S) => { try { run(S); } catch { /* swallow */ } }).catch(() => {});
+}
+
+/** Report a caught exception (ErrorBoundary, redux slices, …). */
+export function captureError(error, ctx) {
+  withSentry((S) => S.captureException(error, ctx));
+}
+
+/** Report a message-level event (e.g. misconfiguration warnings). */
+export function captureMessage(message, ctx) {
+  withSentry((S) => S.captureMessage(message, ctx));
+}
+
 /* Tag every subsequent error with the authenticated user so we can
  * triage beta reports by who hit them. Call from App.jsx after login. */
 export function identifySentryUser(user) {
-  if (!user?.id || !import.meta.env.VITE_SENTRY_DSN) return;
-  try {
-    Sentry.setUser({
-      id: String(user.id),
-      email: user.email,
-      username: user.email,
-    });
-  } catch { /* swallow */ }
+  if (!user?.id) return;
+  withSentry((S) => S.setUser({
+    id: String(user.id),
+    email: user.email,
+    username: user.email,
+  }));
 }
 
 export function clearSentryUser() {
-  if (!import.meta.env.VITE_SENTRY_DSN) return;
-  try { Sentry.setUser(null); } catch { /* swallow */ }
+  withSentry((S) => S.setUser(null));
 }
-
-export { Sentry };
