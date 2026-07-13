@@ -26,14 +26,27 @@ export const swipeOnReader = createAsyncThunk(
         to_user_id: reader_id,
         direction: action,
       });
+      // Normalize the swipe response to ONE shape — the BE has returned mutual
+      // matches under `matched`/`is_match`/`match` and the id under
+      // `match_id`/`match_details.id` in different places; consumers (the swipe
+      // deck's celebration, Favorites) must not each guess. Every reader gets
+      // `{ matched, matchId }` (plus legacy aliases) from here on.
+      const raw = data?.data || data || {};
+      const matched = !!(raw.matched || raw.is_match || raw.match);
+      const matchId = raw.match_id || raw.match_details?.id || null;
       try {
         const { trackEvent, Events } = await import('../../../utils/analytics');
         trackEvent(Events.SWIPE, { direction: action });
-        // If the swipe resulted in a mutual match, fire match_created too.
-        const matched = data?.data?.matched || data?.data?.is_match || data?.matched;
-        if (matched) trackEvent(Events.MATCH, { match_id: data?.data?.match_id || data?.data?.id });
+        if (matched) trackEvent(Events.MATCH, { match_id: matchId });
       } catch { /* swallow */ }
-      return data?.data || data;
+      return {
+        ...raw,
+        matched,
+        matchId,
+        match_id: matchId,               // legacy alias (Favorites)
+        match: matched,                  // legacy alias (swipe deck)
+        match_details: raw.match_details || (matchId ? { id: matchId } : undefined),
+      };
     } catch (error) {
       return rejectWithValue(
         error?.response?.data?.message || error?.message || 'Swipe failed'
@@ -305,7 +318,7 @@ const readersMatchSlice = createSlice({
       .addCase(swipeOnReader.pending, (state) => {
         state.error = null;
       })
-      .addCase(swipeOnReader.fulfilled, (state) => {
+      .addCase(swipeOnReader.fulfilled, () => {
         // handled in component
       })
       .addCase(swipeOnReader.rejected, (state, action) => {

@@ -1,21 +1,47 @@
 import { useState } from 'react';
-import { Star, Send, X, DollarSign } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { Send, DollarSign, RotateCcw, Star, Check } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
+import { submitReaderRating } from '../../redux/features/readers/readersMatchSlice';
 import useHideMobileHeader from '../Shared/useHideMobileHeader';
 import { openExternal } from '../../utils/openExternal';
 
 const TIP_AMOUNTS = [5, 10, 15, 25];
 
-export default function PostCallScreen({ partnerName, onClose }) {
+export default function PostCallScreen({ partnerName, matchId, onClose }) {
   useHideMobileHeader(true);
+  const dispatch = useDispatch();
+  const first = (partnerName || 'them').split(' ')[0];
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [rated, setRated] = useState(false);
+  const [savingRating, setSavingRating] = useState(false);
   const [tipAmount, setTipAmount] = useState(null);
   const [customTip, setCustomTip] = useState('');
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [showTip, setShowTip] = useState(false);
+
+  // Capture the rating the moment a star is tapped — so it's saved even if the
+  // actor leaves without pressing a button. This is the ONE rating for the
+  // session (the green-room modal is no longer opened post-call). Stars fill
+  // optimistically; "saved" only shows after the request actually succeeds, and
+  // a concurrent submit is guarded (sequential re-rates are fine — the BE upserts).
+  const rate = async (s) => {
+    // Ignore taps while a submit is in flight (prevents a phantom star change
+    // with no matching submit); re-rating after it settles works normally.
+    if (!matchId || savingRating) return;
+    setRating(s);
+    setRated(false);          // hide "saved" until THIS rating actually succeeds
+    setSavingRating(true);
+    try {
+      await dispatch(submitReaderRating({ match_id: matchId, rating: s })).unwrap();
+      setRated(true);
+    } catch { /* leave the stars set — they can tap again to retry */ } finally {
+      setSavingRating(false);
+    }
+  };
 
   const handleSendTip = async () => {
     const amount = tipAmount || parseFloat(customTip);
@@ -47,27 +73,29 @@ export default function PostCallScreen({ partnerName, onClose }) {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ background: 'var(--bg-deep)' }}>
       <div className="max-w-md w-full px-6">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-6">
           <div className="w-20 h-20 rounded-full bg-[#D4A85F]/15 flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">🎬</span>
           </div>
           <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--text-primary)', fontFamily: "'Playfair Display', serif" }}>
-            Great Session!
+            Great session with {first}!
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            How was your rehearsal with {partnerName}?
+            {rated ? 'Thanks — your rating is saved.' : `How was your read with ${first}?`}
           </p>
         </div>
 
-        {/* Star Rating */}
+        {/* Star Rating — submits on tap */}
         <div className="flex justify-center gap-2 mb-8">
           {[1, 2, 3, 4, 5].map((s) => (
             <button
               key={s}
-              onClick={() => setRating(s)}
+              onClick={() => rate(s)}
+              disabled={savingRating}
               onMouseEnter={() => setHoverRating(s)}
               onMouseLeave={() => setHoverRating(0)}
-              className="transition-transform hover:scale-110"
+              className="transition-transform hover:scale-110 disabled:opacity-60"
+              aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
             >
               <Star
                 className={`w-10 h-10 transition-colors ${
@@ -87,7 +115,7 @@ export default function PostCallScreen({ partnerName, onClose }) {
             style={{ background: 'rgba(167,236,218,0.1)', border: '1px solid rgba(167,236,218,0.3)', color: '#A7ECDA' }}
           >
             <DollarSign className="w-4 h-4" />
-            Send a Tip to {partnerName}
+            Send a Tip to {first}
           </button>
         ) : !sent ? (
           <div className="rounded-2xl p-5 mb-4" style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)' }}>
@@ -141,14 +169,21 @@ export default function PostCallScreen({ partnerName, onClose }) {
           </div>
         )}
 
-        {/* Done button */}
+        {/* Loop back — the emotional peak after a good read is the strongest
+            moment to line up the next one. Rating is already captured above, so
+            this drops straight back into the chat with no gate. */}
         <button
           onClick={onClose}
-          className="w-full py-3.5 rounded-xl font-bold text-sm transition-all"
-          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-default)', color: 'var(--text-primary)' }}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-sm text-[#0A0A0A] transition-all"
+          style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
         >
-          Back to Dashboard
+          <RotateCcw className="w-4 h-4" /> Read with {first} again
         </button>
+        {rated && (
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
+            <Check className="w-3.5 h-3.5" /> Rating saved
+          </p>
+        )}
       </div>
     </div>
   );

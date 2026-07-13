@@ -97,7 +97,9 @@ export const useNotificationActions = () => {
       if (roomId) {
         if (!notification.is_read) markAsRead(notification.id);
         if (onBeforeNavigate) onBeforeNavigate();
-        navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl } });
+        // Carry the real match id (room slug ≠ match) so the post-call screen
+        // rates the right match and routes back to its chat.
+        navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl, matchId: notification?.data?.match_id || null } });
         return;
       }
     }

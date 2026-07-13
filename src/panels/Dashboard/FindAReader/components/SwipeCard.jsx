@@ -90,6 +90,17 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     }
   };
 
+  // Snap the card back to center — used when a fling's swipe call fails, so a
+  // failed swipe doesn't leave the (still-mounted, index-unchanged) card flung
+  // off-screen and invisible.
+  const resetCard = () => {
+    setFlyDir(null);
+    setTransform('');
+    setSlateOpacity(0);
+    setPassOpacity(0);
+    dragState.current.crossedDir = null;
+  };
+
   const handleDragEnd = () => {
     if (!isTop || !dragState.current.isDragging) return;
     dragState.current.isDragging = false;
@@ -99,11 +110,11 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       // is the rewarded act (seeking a partner), so it gets the satisfying beat.
       setFlyDir('right');
       setTransform('translateX(165%) rotate(32deg) scale(1.03)');
-      setTimeout(() => onSwipeRight?.(), 280);
+      setTimeout(async () => { if ((await onSwipeRight?.()) === false) resetCard(); }, 280);
     } else if (delta < -100) {
       // LEFT — "not now": a quiet, lower-energy glide. No flourish, no penalty.
       setTransform('translateX(-135%) rotate(-16deg)');
-      setTimeout(() => onSwipeLeft?.(), 280);
+      setTimeout(async () => { if ((await onSwipeLeft?.()) === false) resetCard(); }, 280);
     } else {
       setTransform('');
       setSlateOpacity(0);

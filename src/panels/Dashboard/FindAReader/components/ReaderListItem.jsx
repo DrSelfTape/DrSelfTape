@@ -64,16 +64,18 @@ const ReaderListItem = ({ match, onClick }) => {
             initials={initials}
             className="h-14 w-14"
           />
-          {/* Online dot */}
-          <span
-            className="absolute bottom-0 right-0 h-3 w-3 rounded-full"
-            style={{
-              background: '#22C55E',
-              borderWidth: 2,
-              borderStyle: 'solid',
-              borderColor: 'var(--aurora-surface-solid)',
-            }}
-          />
+          {/* Online dot — only when the partner is actually online (was always green) */}
+          {other?.is_online && (
+            <span
+              className="absolute bottom-0 right-0 h-3 w-3 rounded-full"
+              style={{
+                background: '#22C55E',
+                borderWidth: 2,
+                borderStyle: 'solid',
+                borderColor: 'var(--aurora-surface-solid)',
+              }}
+            />
+          )}
           {/* Tiny profile-link badge — top-right, persistent affordance */}
           <span
             className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full"

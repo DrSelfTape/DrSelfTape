@@ -10,9 +10,7 @@ import {
   fetchGreenRoomMessages,
   sendGreenRoomMessage,
   appendMessage,
-  submitReaderRating,
 } from '../../../redux/features/readers/readersMatchSlice';
-import ReaderRatingModal from '../../../components/Shared/ReaderRatingModal';
 import ReportBlockMenu from '../../../components/Shared/ReportBlockMenu';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -108,7 +106,6 @@ const GreenRoomChat = (props = {}) => {
   const [selectedDuration, setSelectedDuration] = useState(30);
   const [bookingLoading, setBookingLoading] = useState(false);
   const [sessionBooked, setSessionBooked] = useState(false);
-  const [showRating, setShowRating] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const actionsRef = useRef(null);
@@ -119,8 +116,9 @@ const GreenRoomChat = (props = {}) => {
       searchParams.delete('booking');
       setSearchParams(searchParams, { replace: true });
     }
-    if (searchParams.get('rehearsal') === 'ended') {
-      setShowRating(true);
+    // (Rating is now captured on the post-call screen; the old ?rehearsal=ended
+    // auto-open of a second rating modal has been removed.)
+    if (searchParams.get('rehearsal')) {
       searchParams.delete('rehearsal');
       setSearchParams(searchParams, { replace: true });
     }
@@ -324,7 +322,9 @@ const GreenRoomChat = (props = {}) => {
 
       sendLocalMsg(`🎬 Live rehearsal started! Joining room...`, 'system');
 
-      navigate(`/meeting/${roomId}`, { state: { roomUrl } });
+      // Carry the real matchId (the URL's :meetingId is the Daily room slug, NOT
+      // the match) so the post-call screen can rate the right match + route back.
+      navigate(`/meeting/${roomId}`, { state: { roomUrl, matchId } });
     } catch (err) {
       // Old code fell into a demo-rehearsal URL when start-rehearsal/
       // failed — that URL points at a Daily room that doesn't exist,
@@ -414,10 +414,15 @@ const GreenRoomChat = (props = {}) => {
 
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate" style={{ color: 'var(--aurora-text)' }}>{partnerName}</p>
-            <p className="text-xs flex items-center gap-1" style={{ color: '#1A8A4A' }}>
-              <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#22C55E' }} />
-              Online
-            </p>
+            {/* Honest presence — only assert "Online now" on a CONFIRMED true.
+                We don't have a presence timestamp, so a stale `false` must not
+                claim "Offline"; render nothing when we can't be sure. */}
+            {otherActor?.is_online === true && (
+              <p className="text-xs flex items-center gap-1" style={{ color: '#1A8A4A' }}>
+                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: '#22C55E' }} />
+                Online now
+              </p>
+            )}
           </div>
         </button>
 
@@ -842,16 +847,6 @@ const GreenRoomChat = (props = {}) => {
         </form>
       </div>
 
-      {showRating && (
-        <ReaderRatingModal
-          partnerName={partnerName}
-          matchId={matchId}
-          onSubmit={async (rating, review) => {
-            await dispatch(submitReaderRating({ match_id: matchId, rating, review })).unwrap();
-          }}
-          onClose={() => setShowRating(false)}
-        />
-      )}
     </div>
   );
 };

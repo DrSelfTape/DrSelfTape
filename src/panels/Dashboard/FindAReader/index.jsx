@@ -19,7 +19,7 @@ import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlic
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
-import { tapPrimary } from '../../../utils/haptics';
+import { tapPrimary, cheer } from '../../../utils/haptics';
 import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 
 const FindAReader = () => {
@@ -121,9 +121,9 @@ const FindAReader = () => {
 
   const handleSwipe = useCallback(
     async (action) => {
-      if (swiping) return;
+      if (swiping) return true;
       const actor = readers[currentIndex];
-      if (!actor) return;
+      if (!actor) return true;
       setSwiping(true);
       try {
         const result = await dispatch(
@@ -133,12 +133,13 @@ const FindAReader = () => {
         // CTA isn't stale next time the user lands there.
         dispatch(fetchMatchingStats());
         // Record the swipe for the end-of-session recap.
-        setSessionSwipes((s) => [...s, { actor, action, matched: !!result?.match }]);
-        if (result?.match && result?.match_details?.id) {
+        setSessionSwipes((s) => [...s, { actor, action, matched: !!result?.matched }]);
+        if (result?.matched && result?.matchId) {
           // Hold the user on the celebration overlay; navigation runs
           // when the burst finishes (MatchCelebration calls onDone).
-          setCelebrating({ matchId: result.match_details.id, actor });
-          return;
+          cheer(); // the biggest moment in the app — make it land in the hand
+          setCelebrating({ matchId: result.matchId, actor });
+          return true;
         }
         // Per-swipe payoff chip — honest, never fabricated. Right/star =
         // the real status ("you're on their list"); left = an occasional,
@@ -156,10 +157,16 @@ const FindAReader = () => {
           message: err?.message || err?.detail || "Swipe didn't go through. Please try again.",
           variant: 'error',
         }));
+        // Swipe failed — keep the card in place instead of silently skipping it.
+        // Returning false lets SwipeCard roll its fling animation back so the
+        // card doesn't stay flung off-screen while the index hasn't advanced.
+        setSwiping(false);
+        return false;
       }
       setLastSwipe({ index: currentIndex });
       setCurrentIndex((prev) => prev + 1);
       setSwiping(false);
+      return true;
     },
     [currentIndex, readers, dispatch, swiping]
   );

@@ -38,6 +38,12 @@ export default function MeetingRoom() {
   // demo room derived from the meetingId, which is only meaningful if
   // someone pre-creates that room on the Daily side.)
   const roomUrl = location.state?.roomUrl || null;
+  // The :meetingId param is the Daily room slug, NOT the match. The real matchId
+  // rides navigation state (from handleStartRehearsal). It's null when we arrived
+  // via a path that doesn't carry it (incoming call / notification) — in which
+  // case we must NOT rate against the wrong id (PostCallScreen skips rating on
+  // null). The return route can still fall back to the slug.
+  const matchId = location.state?.matchId || null;
 
   const containerRef = useRef(null);
   const callRef = useRef(null);
@@ -192,11 +198,14 @@ export default function MeetingRoom() {
     return (
       <PostCallScreen
         partnerName={partnerName}
-        // Route back to the green-room chat so the user lands where they
-        // started — the rating modal opens via ?rehearsal=ended on that
-        // screen. Without /green-room they were dumped onto /dashboard
-        // and the rating UX never appeared on mobile.
-        onClose={() => navigate(`/dashboard/green-room/${meetingId}?rehearsal=ended`)}
+        matchId={matchId}
+        // Rating is now captured ON the post-call screen (submits on tap), so we
+        // drop straight back into the match's chat — no ?rehearsal=ended, which
+        // would pop a second, now-redundant rating modal.
+        // With a real matchId, land in that match's chat; without one (a path
+        // that didn't carry it), go to the matches list rather than a chat keyed
+        // by the Daily room slug, which isn't a valid match id.
+        onClose={() => navigate(matchId ? `/dashboard/green-room/${matchId}` : '/dashboard/green-room')}
       />
     );
   }

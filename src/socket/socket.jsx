@@ -207,19 +207,21 @@ export const SocketProvider = ({ children }) => {
     };
   }, [currentUser, token, handleIncomingMessage]);
 
-  // Parse a Daily room URL → in-app meeting route, and navigate.
-  const joinRoom = useCallback((roomUrl) => {
+  // Parse a Daily room URL → in-app meeting route, and navigate. Carry matchId
+  // in nav state (the URL's room slug is NOT the match id) so the post-call
+  // screen can rate the right match and route back to its chat.
+  const joinRoom = useCallback((roomUrl, matchId = null) => {
     if (!roomUrl) return;
     let roomId;
     try { roomId = new URL(roomUrl).pathname.split('/').filter(Boolean).pop(); } catch { return; }
-    if (roomId) navigate(`/meeting/${roomId}`, { state: { roomUrl } });
+    if (roomId) navigate(`/meeting/${roomId}`, { state: { roomUrl, matchId } });
   }, [navigate]);
 
   const acceptCall = () => {
     if (!incomingCall) return;
-    const { roomUrl } = incomingCall;
+    const { roomUrl, matchId } = incomingCall;
     setIncomingCall(null);
-    joinRoom(roomUrl);
+    joinRoom(roomUrl, matchId);
   };
 
   const declineCall = () => setIncomingCall(null);
@@ -242,7 +244,8 @@ export const SocketProvider = ({ children }) => {
           registerVoip(); // register for VoIP pushes + report token to BE
         }
         subs.push(await VoipCall.addListener('callAnswered', (e) => {
-          if (e?.roomUrl) joinRoom(e.roomUrl);
+          // e.callId is the match id we set on the CallKit call (String(match_id)).
+          if (e?.roomUrl) joinRoom(e.roomUrl, e?.matchId || e?.callId || null);
           // End the CallKit call immediately — the real call lives in the Daily
           // room, so leaving it "active" would show a lingering iOS call bar.
           if (e?.callId) { try { VoipCall.endCall({ callId: e.callId }); } catch { /* noop */ } }
@@ -250,7 +253,7 @@ export const SocketProvider = ({ children }) => {
         // Cold launch: the app was opened by answering a CallKit call before JS
         // was listening — drain the stashed answer.
         const pending = await VoipCall.getPendingAnswer();
-        if (pending?.roomUrl) joinRoom(pending.roomUrl);
+        if (pending?.roomUrl) joinRoom(pending.roomUrl, pending?.matchId || pending?.callId || null);
       } catch { /* plugin unavailable */ }
     })();
     return () => { subs.forEach((s) => { try { s.remove(); } catch { /* noop */ } }); };

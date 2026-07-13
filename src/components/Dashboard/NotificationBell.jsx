@@ -147,10 +147,13 @@ export default function NotificationBell({ onNavigate }) {
           // react-router navigate() no-ops in the Capacitor shell — on mobile
           // route the meeting open through the same onNavigate the rest of this
           // component uses (carry the room info so MeetingRoom can join).
+          // Carry the real match id (room slug ≠ match) so the post-call screen
+          // rates the right match and routes back to its chat.
+          const mId = notification?.data?.match_id || null;
           if (isMobile && onNavigate) {
-            onNavigate({ panel: 'meeting', roomId, roomUrl: liveRoomUrl });
+            onNavigate({ panel: 'meeting', roomId, roomUrl: liveRoomUrl, matchId: mId });
           } else {
-            navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl } });
+            navigate(`/meeting/${roomId}`, { state: { roomUrl: liveRoomUrl, matchId: mId } });
           }
           return;
         }
