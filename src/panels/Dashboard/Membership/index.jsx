@@ -5,6 +5,16 @@ import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlic
 import { Capacitor } from '@capacitor/core';
 import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor, getStorePriceFor } from '../../../utils/purchases';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
+import { consumeUpgradeIntent } from '../../../utils/goUpgrade';
+
+// Human-readable line for the surface an upgrade intent came from — shown as a
+// focused header so the actor sees exactly what they're unlocking.
+const UPGRADE_SOURCE_COPY = {
+  tape_full_read: 'Unlock your full casting read',
+  history_full_read: 'Unlock the full read on this tape',
+  compare_full_notes: 'Unlock the full notes on every take',
+  first_review: 'Unlock your full casting read',
+};
 
 // WEEKLY pricing (added 2026-06-14): the `weekly` amounts below are display
 // only — the real charge comes from the Stripe/ASC/Play products. Keep these
@@ -182,6 +192,19 @@ export default function Membership({ onClose }) {
   // hardcoded PLANS numbers are web/Stripe display only and can diverge from
   // the actual store charge by region/currency.
   const [storePrices, setStorePrices] = useState({});
+
+  // Contextual checkout: a lock CTA elsewhere (Tape Review / Compare / history)
+  // stashed an upgrade intent. Preselect the cheapest unlock (Basic/monthly) so
+  // the actor lands on a $9.99 decision, not the default Plus+yearly ($149.99),
+  // and remember the source for a focused header. Read-and-clear, once, on mount.
+  const [upgradeIntent, setUpgradeIntent] = useState(null);
+  useEffect(() => {
+    const intent = consumeUpgradeIntent();
+    if (!intent) return;
+    setUpgradeIntent(intent);
+    if (intent.plan && PLANS.some((p) => p.id === intent.plan)) setSelectedPlan(intent.plan);
+    if (['weekly', 'monthly', 'yearly'].includes(intent.cycle)) setBilling(intent.cycle);
+  }, []);
 
   // After a purchase/restore the BE entitlement is updated by the
   // RevenueCat/Stripe webhook, which can lag the client. A single fixed-delay
@@ -567,22 +590,25 @@ export default function Membership({ onClose }) {
       )}
 
       <div style={{ padding: '0 22px' }}>
-        {/* Serif headline */}
+        {/* Serif headline — focused on the unlock when arriving from a lock CTA */}
         <div style={{ marginTop: 8, marginBottom: 18 }}>
           <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 8, color: 'var(--aurora-accent-deep)' }}>
-            UNLOCK YOUR STUDIO
+            {upgradeIntent ? "YOU'RE ONE STEP AWAY" : 'UNLOCK YOUR STUDIO'}
           </span>
           <h1 className="aurora-display" style={{
             fontSize: 32, color: 'var(--aurora-text)', margin: 0,
             letterSpacing: '-0.7px', lineHeight: 1.05,
           }}>
-            Book more roles.<br />Go Pro.
+            {upgradeIntent
+              ? (UPGRADE_SOURCE_COPY[upgradeIntent.source] || 'Unlock your full read')
+              : <>Book more roles.<br />Go Pro.</>}
           </h1>
           <p style={{
             fontSize: 14, color: 'var(--aurora-sub)', marginTop: 10, lineHeight: 1.5,
           }}>
-            Casting-grade notes on every take, an AI reader that waits for your beat,
-            <strong style={{ color: 'var(--aurora-text)' }}> and Compare Takes before you submit.</strong>
+            {upgradeIntent
+              ? <>Any plan unlocks it — <strong style={{ color: 'var(--aurora-text)' }}>Basic is $9.99/mo.</strong> Everything below is included too.</>
+              : <>Casting-grade notes on every take, an AI reader that waits for your beat, <strong style={{ color: 'var(--aurora-text)' }}> and Compare Takes before you submit.</strong></>}
           </p>
         </div>
 

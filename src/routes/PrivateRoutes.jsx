@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 
 // Local Imports
 import { setAuthToken } from '../redux/http';
+import BootSplash from '../components/Shared/BootSplash';
 
 const PrivateRoutes = () => {
   // Read persisted auth state
@@ -16,9 +17,10 @@ const PrivateRoutes = () => {
     setAuthToken(token);
   }
 
-  // Wait until redux-persist finishes rehydration to avoid false redirects
+  // Wait until redux-persist finishes rehydration to avoid false redirects.
+  // Show a branded splash rather than null so cold launch doesn't flash blank.
   if (!isRehydrated) {
-    return null;
+    return <BootSplash />;
   }
 
   if (token) {

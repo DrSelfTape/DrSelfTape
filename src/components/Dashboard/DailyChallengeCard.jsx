@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { Flame, Trophy, Check, ChevronRight, Zap } from 'lucide-react';
+import { Flame, Trophy, Check, ChevronRight, Zap, RotateCcw } from 'lucide-react';
 import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
@@ -12,8 +12,10 @@ export default function DailyChallengeCard({ onNavigate }) {
   const [streak, setStreak] = useState({ current: 0, longest: 0, total_xp: 0 });
   const [completing, setCompleting] = useState(false);
   const [justCompleted, setJustCompleted] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoadError(false);
     axios.get(`${baseURL}/v1/growth/challenge/today/`)
       .then(({ data }) => {
         const d = data?.data || {};
@@ -21,8 +23,10 @@ export default function DailyChallengeCard({ onNavigate }) {
         setCompleted(d.completed);
         setStreak(d.streak || {});
       })
-      .catch(() => {});
+      .catch(() => setLoadError(true));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const handleComplete = async () => {
     if (completing || completed) return;
@@ -46,7 +50,27 @@ export default function DailyChallengeCard({ onNavigate }) {
     setCompleting(false);
   };
 
-  if (!challenge) return null;
+  if (!challenge) {
+    // A failed fetch shouldn't make a key retention surface silently disappear —
+    // offer a small retry. A successful-but-empty response still returns null.
+    if (!loadError) return null;
+    return (
+      <div className="relative rounded-2xl overflow-hidden px-5 py-4 flex items-center justify-between gap-3"
+        style={{ background: 'var(--bg-card)', border: '1px solid var(--border-default)' }}>
+        <div className="flex items-center gap-2 min-w-0">
+          <Flame size={16} className="text-[#7A5A18] flex-shrink-0" />
+          <span className="text-sm font-medium text-[var(--text-secondary,#666)] truncate">Couldn&apos;t load today&apos;s challenge.</span>
+        </div>
+        <button
+          type="button"
+          onClick={load}
+          className="flex items-center gap-1.5 text-xs font-semibold text-[#7A5A18] flex-shrink-0"
+        >
+          <RotateCcw size={13} /> Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="relative rounded-2xl overflow-hidden" style={{

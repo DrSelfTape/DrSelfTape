@@ -65,23 +65,24 @@ const GRADIENT_TRACK = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)
 // the TutorialChecklist's auto-detect effect.
 const ONBOARDING_STEPS = [
   {
-    key: 'headshot',
-    title: 'Complete your profile',
-    description: 'Add a headshot so scene partners can find you.',
-    cta: 'Add Headshot',
-    path: '/dashboard/profile',
-    icon: Users2,
-    gradient: GRADIENT_WELCOME,
-  },
-  {
-    // The activation aha — completed via markStep('first_review') when any
-    // Tape Review result lands (TapeReview.jsx).
+    // The activation aha — leads the sequence (ahead of profile) so every new
+    // actor is routed to the moment that hooks them first. Completed via
+    // markStep('first_review') when any Tape Review result lands (TapeReview.jsx).
     key: 'first_review',
     title: 'Get your first AI Tape Review',
     description: 'Submit a self-tape — casting-grade notes on your performance in minutes.',
     cta: 'Get My Notes',
     path: '/dashboard/jericho?tab=tape',
     icon: Sparkles,
+    gradient: GRADIENT_WELCOME,
+  },
+  {
+    key: 'headshot',
+    title: 'Complete your profile',
+    description: 'Add a headshot so scene partners can find you.',
+    cta: 'Add Headshot',
+    path: '/dashboard/profile',
+    icon: Users2,
     gradient: GRADIENT_WELCOME,
   },
   {

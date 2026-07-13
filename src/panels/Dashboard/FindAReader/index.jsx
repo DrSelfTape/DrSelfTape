@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Filter, Loader2, Users, Camera } from 'lucide-react';
+import { Filter, Loader2, Users, Camera, WifiOff } from 'lucide-react';
 import SwipeCard from './components/SwipeCard';
 import SwipeActions from './components/SwipeActions';
 import SwipeTutorial from './components/SwipeTutorial';
@@ -26,7 +26,7 @@ const FindAReader = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { readers = [], readersLoading, onlineCount, matchingStats } = useSelector(
+  const { readers = [], readersLoading, onlineCount, matchingStats, readersError } = useSelector(
     (state) => state.readersMatch || {}
   );
   const pendingLikes = matchingStats?.pending_likes_count || 0;
@@ -353,7 +353,39 @@ const FindAReader = () => {
           />
         )}
 
-        {!readersLoading && noMore && sessionSwipes.length === 0 && (
+        {/* Load FAILED — a network error must not masquerade as an empty deck
+            ("you're caught up"). Offer a real retry. */}
+        {!readersLoading && readersError && readers.length === 0 && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+            <div
+              className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
+              style={{
+                background: 'var(--aurora-glass)',
+                border: '1px solid var(--aurora-glass-border)',
+                backdropFilter: 'blur(12px)',
+              }}
+            >
+              <WifiOff size={26} color="var(--aurora-sub)" />
+            </div>
+            <p className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>Couldn&apos;t load readers</p>
+            <p className="text-sm mb-5" style={{ color: 'var(--aurora-sub)' }}>
+              Check your connection and try again.
+            </p>
+            <button
+              onClick={() => { setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
+              className="aurora-mono px-6 py-2.5 rounded-full text-white transition-transform active:scale-95"
+              style={{
+                background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
+                fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+                boxShadow: 'var(--aurora-shadow-coral)',
+              }}
+            >
+              Try again
+            </button>
+          </div>
+        )}
+
+        {!readersLoading && !readersError && noMore && sessionSwipes.length === 0 && (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
             <div
               className="w-20 h-20 rounded-full flex items-center justify-center mb-4"

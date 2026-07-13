@@ -4,7 +4,7 @@
  * naming the strongest to submit and exactly why — beat for beat. Powered by
  * /ai/jericho/compare-takes/.
  */
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTokenBalance } from '../../../hooks/useTokenBalance';
 import {
@@ -12,6 +12,8 @@ import {
   Sparkles, Target, Theater, Scissors, Copy,
 } from 'lucide-react';
 import { compareTakes, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
+import { goUpgrade } from '../../../utils/goUpgrade';
+import { tapSelect, cheer, warn } from '../../../utils/haptics';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 const GOLD = '#D4A85F';
@@ -49,9 +51,7 @@ export default function CompareTakes() {
   // paying user on loading/error) — mirrors the Tape Review gate.
   const { isPaid, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
   const notesLocked = !entitlementLoading && !entitlementError && tokenBalance !== null && !isPaid;
-  const goPremium = () => {
-    try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'membership' } })); } catch { /* noop */ }
-  };
+  const goPremium = () => goUpgrade({ source: 'compare_full_notes', returnTo: 'jericho' });
 
   // Two slots to start; up to four.
   const [slots, setSlots] = useState([null, null]);
@@ -67,6 +67,13 @@ export default function CompareTakes() {
   // tokens; cleared when the set changes or the action resets.
   const idemKeyRef = useRef(null);
 
+  // Success haptic the moment the ranked result lands.
+  const cheeredRef = useRef(false);
+  useEffect(() => {
+    if (compareResult && !cheeredRef.current) { cheeredRef.current = true; cheer(); }
+    if (!compareResult) cheeredRef.current = false;
+  }, [compareResult]);
+
   // Identity signature — catches the same take picked into two slots (name +
   // size + last-modified match is a near-certain duplicate). Near-duplicates
   // (re-exports of the same performance) are caught by the analyzer itself.
@@ -75,14 +82,17 @@ export default function CompareTakes() {
   const pickFile = (i, file) => {
     if (!file) return;
     if (file.size > MAX_TAKE_MB * 1024 * 1024) {
+      warn();
       setSizeError(`Take ${i + 1} is ${(file.size / 1048576).toFixed(0)}MB — keep each take under ${MAX_TAKE_MB}MB (a single-scene take exports small).`);
       return;
     }
     if (slots.some((v, idx) => idx !== i && v && takeSig(v) === takeSig(file))) {
+      warn();
       setSizeError(`That's the same file as another take — Compare needs different takes of the scene, not the same one twice.`);
       return;
     }
     setSizeError('');
+    tapSelect();
     setSlot(i, file);
   };
 
@@ -230,15 +240,9 @@ export default function CompareTakes() {
                   </div>
                 )}
 
-                {/* Expand full analysis — Premium unlocks the deep per-take notes */}
-                {notesLocked ? (
-                  <button
-                    onClick={goPremium}
-                    className="w-full flex items-center justify-center gap-1.5 mt-3 py-1.5 text-xs font-semibold text-[#7A5A18]"
-                  >
-                    <Lock size={12} /> Unlock full notes — any plan
-                  </button>
-                ) : (
+                {/* Expand full analysis — the deep per-take notes are a paid unlock,
+                    surfaced once as a single card below rather than a link per take. */}
+                {!notesLocked && (
                 <button
                   onClick={() => setExpanded(open ? null : n)}
                   className="w-full flex items-center justify-center gap-1.5 mt-3 py-1.5 text-xs font-semibold text-[#7A5A18]"
@@ -275,6 +279,25 @@ export default function CompareTakes() {
             );
           })}
         </div>
+
+        {/* One prominent unlock for the deep per-take notes — replaces the old
+            per-take lock links so the total hidden value is sold once, clearly. */}
+        {notesLocked && (
+          <button
+            type="button"
+            onClick={goPremium}
+            className="w-full text-left rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/35"
+            style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.04))' }}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <Lock size={14} className="text-[#7A5A18]" />
+              <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read on all {order.length} takes — any plan</span>
+            </div>
+            <p className="text-xs text-[rgba(10,10,10,0.6)] leading-relaxed">
+              The deep per-take breakdown — performance, what to fix, and what to steal from each.
+            </p>
+          </button>
+        )}
 
         {/* What to do */}
         {r.what_to_do && (

@@ -1227,7 +1227,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           {firstReviewPending ? 'Your first review is free →' : 'Casting-grade notes on your self-tape →'}
         </div>
         <span style={{ fontSize: 'var(--type-sm)', color: 'rgba(255,255,255,0.72)', marginTop: 6, fontWeight: 500 }}>
-          Submit a take · notes in seconds
+          Submit a take · we'll notify you when your notes are ready
         </span>
       </div>
       <div style={{ position: 'absolute', right: 18, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>

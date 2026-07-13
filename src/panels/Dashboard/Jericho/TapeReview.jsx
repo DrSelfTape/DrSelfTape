@@ -16,11 +16,18 @@ import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { trackEvent, Events } from '../../../utils/analytics';
+import { goUpgrade } from '../../../utils/goUpgrade';
+import { tapSelect, cheer, warn } from '../../../utils/haptics';
+import { useShareImageCapture } from '../../../hooks/useShareImageCapture';
+import { saveBlobUrl } from '../../../utils/saveMedia';
+import TapeReviewShareCard from './TapeReviewShareCard';
+import { Share2 } from 'lucide-react';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { Capacitor } from '@capacitor/core';
 import { usePushNotifications, isCapacitorNative, openNotificationSettings } from '../../../hooks/usePushNotifications';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
+const MAX_TAPE_MB = 500; // matches the advertised cap; reject before a doomed upload
 
 // Matches the key and TTL used in jerichoSlice's persistence helpers.
 const PENDING_JOB_KEY = 'dst_pending_analysis';
@@ -50,8 +57,19 @@ function FirstReviewPaywall({ onUpgrade }) {
 /* Full-read gate for free users outside the first-review flow — the deep casting
  * read (craft breakdown, scores, Performance DNA) is a Premium unlock, shown in
  * its place while the value is still fresh on screen. */
-function FullReadLocked({ onUpgrade }) {
+function FullReadLocked({ onUpgrade, hidden }) {
   useEffect(() => { trackEvent('fullread_locked_shown'); }, []);
+  // Personalize the pitch with what THIS tape actually generated, so the reason
+  // to upgrade is concrete ("3 more adjustments · your technical scorecard · …")
+  // rather than a fixed benefits paragraph. Free shows 1 adjustment, so the
+  // remainder is what's hidden.
+  const extra = Math.max(0, (hidden?.nAdjustments || 0) - 1);
+  const bits = [
+    extra > 0 && `${extra} more adjustment${extra > 1 ? 's' : ''}`,
+    hidden?.hasPerformance && 'the full craft read',
+    hidden?.hasScores && 'your technical scorecard',
+    hidden?.hasDna && 'your Performance DNA',
+  ].filter(Boolean);
   return (
     <div className="rounded-2xl border border-[#D4A85F]/30 p-5" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
       <div className="flex items-center gap-2">
@@ -59,7 +77,9 @@ function FullReadLocked({ onUpgrade }) {
         <h3 className="text-sm font-bold text-[#0A0A0A]">Your full casting read is ready</h3>
       </div>
       <p className="text-sm text-[rgba(10,10,10,0.62)] mt-1.5 leading-relaxed">
-        You&apos;ve got the headline. Unlock the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape. Any plan.
+        {bits.length > 0
+          ? `You've got the headline. This tape also has ${bits.join(' · ')} — unlock it on every tape. Any plan.`
+          : "You've got the headline. Unlock the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape. Any plan."}
       </p>
       <div className="mt-3 space-y-2" style={{ filter: 'blur(5px)', opacity: 0.5, pointerEvents: 'none' }} aria-hidden="true">
         {['Framing', 'Eyeline', 'Listening', 'Emotional arc'].map((l) => (
@@ -182,7 +202,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const { isPaid, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
   const handleUpgrade = () => {
     if (onUpgrade) { onUpgrade(); return; }
-    try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'membership' } })); } catch { /* noop */ }
+    goUpgrade({ source: 'tape_full_read', returnTo: 'jericho' });
   };
   const tutorialProgress = useSelector((s) => s.userSettings?.data?.tutorial_progress || {});
   // Kind of the pending notes-ready cue ('review' | 'compare' | false). Read
@@ -206,6 +226,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     return wantsCompare && !firstReview ? 'compare' : 'single';
   });
   const [file, setFile] = useState(null);
+  const [fileError, setFileError] = useState('');
   const [role, setRole] = useState('');
   const [tone, setTone] = useState('');
   const [sides, setSides] = useState('');
@@ -213,6 +234,27 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const [showTutorial, setShowTutorial] = useState(false);
   const inputRef = useRef(null);
   const recordInputRef = useRef(null); // capture="user" input for the no-tape record path
+
+  // Share card — render an actor's result as a branded image for social. Free
+  // distribution: an actor posting their casting-grade read is our UGC engine.
+  const shareRef = useRef(null);
+  const [sharing, setSharing] = useState(false);
+  const { captureImage } = useShareImageCapture({ onError: () => {} });
+  const handleShare = async () => {
+    if (sharing || !shareRef.current) return;
+    setSharing(true);
+    tapSelect();
+    trackEvent('tape_review_share_tap');
+    let url = null;
+    try {
+      url = await captureImage(shareRef.current, { width: 1080, height: 1080, scale: 1 });
+      const res = await saveBlobUrl(url, 'my-tape-review.png');
+      if (res?.ok) cheer(); else warn();
+    } catch { warn(); } finally {
+      if (url) setTimeout(() => { try { URL.revokeObjectURL(url); } catch { /* noop */ } }, 3000);
+      setSharing(false);
+    }
+  };
   // F2: one stable idempotency key per analysis action. Generated on submit,
   // reused if the user re-submits the SAME tape after a lost response (so the
   // BE dedupes instead of double-charging), cleared when the action resets or a
@@ -300,6 +342,13 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     return () => document.removeEventListener('visibilitychange', fire);
   }, [tapeReviewResult, firstReview]);
 
+  // Success haptic the moment notes land — the app's payoff should feel native.
+  const cheeredRef = useRef(false);
+  useEffect(() => {
+    if (tapeReviewResult && !cheeredRef.current) { cheeredRef.current = true; cheer(); }
+    if (!tapeReviewResult) cheeredRef.current = false;
+  }, [tapeReviewResult]);
+
   // Resume a job that was actively polling when the user reloaded the page or
   // restarted the app. Runs once on mount; the guard prevents a double-dispatch
   // if Redux already carries an in-flight or completed result from the current
@@ -384,7 +433,23 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   const onPick = (e) => {
     const f = e.target.files?.[0];
-    if (f) { idemKeyRef.current = null; setFile(f); } // new file = new action
+    // Clear the input value so re-selecting the SAME file still fires onChange
+    // (iOS/Safari dedupes an identical pick otherwise — the retry looks dead).
+    e.target.value = '';
+    if (!f) return;
+    if (f.type && !f.type.startsWith('video/')) {
+      warn();
+      setFileError("That doesn't look like a video — upload an mp4, mov, or webm.");
+      return;
+    }
+    if (f.size > MAX_TAPE_MB * 1024 * 1024) {
+      warn();
+      setFileError(`That tape is ${(f.size / 1048576).toFixed(0)}MB — keep it under ${MAX_TAPE_MB}MB (a single-scene take exports small).`);
+      return;
+    }
+    setFileError('');
+    tapSelect();
+    idemKeyRef.current = null; setFile(f); // new file = new action
   };
 
   const submit = async () => {
@@ -411,7 +476,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   const reset = () => {
     idemKeyRef.current = null; // next analysis is a new action
-    setFile(null); setRole(''); setTone(''); setSides('');
+    setFile(null); setFileError(''); setRole(''); setTone(''); setSides('');
     dispatch(clearTapeReview());
   };
 
@@ -665,7 +730,31 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Free (non-first-review) users: the deep sections above are gated —
             offer the full read here, in their place. */}
-        {locked && !firstReview && <FullReadLocked onUpgrade={handleUpgrade} />}
+        {locked && !firstReview && (
+          <FullReadLocked
+            onUpgrade={handleUpgrade}
+            hidden={{ nAdjustments: rawAdjustments.length, hasScores: rawHasScores, hasDna: rawHasDna, hasPerformance: rawHasPerformance }}
+          />
+        )}
+
+        {/* Share your read — a branded card for social. Offered to everyone
+            (free too): an actor posting their casting-grade read is free
+            distribution. The template renders far offscreen; the button captures
+            it to an image and opens the native share sheet. */}
+        {(r.verdict || tags.length > 0) && (
+          <>
+            <button
+              type="button"
+              disabled={sharing}
+              onClick={handleShare}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60"
+            >
+              {sharing ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
+              {sharing ? 'Preparing your card…' : 'Share my read'}
+            </button>
+            <TapeReviewShareCard ref={shareRef} verdict={r.verdict} tags={tags} />
+          </>
+        )}
 
         {/* Actions — in first-review mode the paywall leads; otherwise the
             standard "review another take" reset plus the Compare Takes
@@ -790,6 +879,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           <Film size={15} /> No tape? Record one now
         </button>
         <input ref={recordInputRef} type="file" accept="video/*" capture="user" onChange={onPick} className="hidden" />
+
+        {fileError && <p className="text-xs text-red-500 mt-3 text-center">{fileError}</p>}
 
         {/* Optional context */}
         <button

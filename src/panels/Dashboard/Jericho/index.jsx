@@ -2,7 +2,7 @@
  * Jericho — Actor Growth Dashboard
  * Shows performance DNA, coaching insights, evolution timeline, and session history.
  */
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -21,6 +21,9 @@ import useAIGate from '../../../components/AIConsent/useAIGate';
 import TapeReview from './TapeReview';
 import axios from '../../../redux/http';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
+import { useTokenBalance } from '../../../hooks/useTokenBalance';
+import { goUpgrade } from '../../../utils/goUpgrade';
+import { Lock } from 'lucide-react';
 
 // ─── Performance DNA Metrics ───────────────────────────────────────────
 
@@ -91,6 +94,12 @@ const TAPE_REVIEW_KEYS = ['verdict', 'scores', 'performance', 'the_one_thing', '
 function ReviewDetailSheet({ session, onClose }) {
   // Suppress the persistent Aurora top bar while this overlay is open.
   useHideMobileHeader(true);
+
+  // Entitlement — the deep read is a paid unlock, in history too. Without this,
+  // a free user could bypass the live-result paywall just by reopening a past
+  // session. Fail-open: only gate when we positively know the user is free.
+  const { isPaid, loading: entLoading, error: entError, balance } = useTokenBalance();
+  const locked = !entLoading && !entError && balance !== null && !isPaid;
 
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -197,8 +206,8 @@ function ReviewDetailSheet({ session, onClose }) {
                   </div>
                 )}
 
-                {/* Scores — labeled 1–10 progress bars */}
-                {feedback.scores && Object.keys(feedback.scores).length > 0 && (
+                {/* Scores — labeled 1–10 progress bars (deep read → paid) */}
+                {!locked && feedback.scores && Object.keys(feedback.scores).length > 0 && (
                   <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                     <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Scores</h3>
                     <div className="space-y-3">
@@ -220,8 +229,8 @@ function ReviewDetailSheet({ session, onClose }) {
                   </div>
                 )}
 
-                {/* Performance — readable-label sections */}
-                {feedback.performance && Object.keys(feedback.performance).length > 0 && (
+                {/* Performance — readable-label sections (deep read → paid) */}
+                {!locked && feedback.performance && Object.keys(feedback.performance).length > 0 && (
                   <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                     <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Performance</h3>
                     <div className="space-y-4">
@@ -237,8 +246,8 @@ function ReviewDetailSheet({ session, onClose }) {
                   </div>
                 )}
 
-                {/* The One Thing — highlighted callout */}
-                {feedback.the_one_thing && (
+                {/* The One Thing — highlighted callout (deep read → paid) */}
+                {!locked && feedback.the_one_thing && (
                   <div
                     className="rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/30"
                     style={{ background: 'rgba(212,168,95,0.08)' }}
@@ -249,6 +258,33 @@ function ReviewDetailSheet({ session, onClose }) {
                     <p className="text-sm font-semibold text-[#0A0A0A] leading-relaxed">{feedback.the_one_thing}</p>
                   </div>
                 )}
+
+                {/* Deep read locked → personalized unlock CTA in its place */}
+                {locked && (() => {
+                  const nScores = feedback.scores ? Object.keys(feedback.scores).length : 0;
+                  const nPerf = feedback.performance ? Object.keys(feedback.performance).length : 0;
+                  const bits = [
+                    nScores && `${nScores} technical scores`,
+                    nPerf && `${nPerf} performance notes`,
+                    feedback.the_one_thing && 'the one thing that books it',
+                  ].filter(Boolean);
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => goUpgrade({ source: 'history_full_read', returnTo: 'jericho' })}
+                      className="w-full text-left rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/35"
+                      style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.04))' }}
+                    >
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Lock size={14} className="text-[#7A5A18]" />
+                        <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read — any plan</span>
+                      </div>
+                      <p className="text-xs text-[rgba(10,10,10,0.6)] leading-relaxed">
+                        {bits.length ? `Includes ${bits.join(' · ')}.` : 'The full casting read on this tape.'}
+                      </p>
+                    </button>
+                  );
+                })()}
 
                 {/* Tone tags — chips */}
                 {feedback.tone_tags && feedback.tone_tags.length > 0 && (
@@ -406,7 +442,7 @@ export default function JerichoDashboard() {
   const {
     memory, memoryLoading, memoryHasFetched, memoryError,
     insights, insightsLoading,
-    evolution, evolutionLoading,
+    evolution,
     recentSessions, sessionsLoading,
   } = useSelector((s) => s.jericho);
 
@@ -425,14 +461,28 @@ export default function JerichoDashboard() {
   // the Tape tab, which works without any prior sessions.
   const [entered, setEntered] = useState(deepTab === 'tape');
 
-  useEffect(() => {
+  // The growth-dashboard data (memory, insights, evolution, sessions) is four
+  // requests that NONE of the Tape Review tab needs. When an actor deep-links
+  // straight to Tape Review — the most common path — defer them until they
+  // actually open a data tab, then fetch once.
+  const growthFetchedRef = useRef(false);
+  const loadGrowthData = useCallback(() => {
+    if (growthFetchedRef.current) return;
+    growthFetchedRef.current = true;
     dispatch(fetchActorMemory());
     dispatch(fetchInsights());
     dispatch(fetchEvolution());
     dispatch(fetchRecentSessions(10));
   }, [dispatch]);
 
-  const loading = !memoryHasFetched || (memoryLoading && !memory);
+  useEffect(() => {
+    if (activeTab !== 'tape') loadGrowthData();
+  }, [activeTab, loadGrowthData]);
+
+  // The Tape Review tab needs NO growth data. Since that fetch is now deferred
+  // while on 'tape', don't block the tab on memory loading/error — a ?tab=tape
+  // deep link would otherwise hang on the skeleton forever (memory never fetched).
+  const loading = activeTab !== 'tape' && (!memoryHasFetched || (memoryLoading && !memory));
   const dna = memory?.performance_dna || {};
   const totalSessions = memory?.total_sessions || 0;
   const strengths = memory?.strengths || [];
@@ -450,8 +500,9 @@ export default function JerichoDashboard() {
     );
   }
 
-  // ── Fetch failed — surface a retry so users don't think the screen is broken. ──
-  if (memoryError && !memory) {
+  // ── Fetch failed — surface a retry so users don't think the screen is broken.
+  //    Not on the Tape tab, which doesn't need memory at all. ──
+  if (memoryError && !memory && activeTab !== 'tape') {
     return (
       <div className="min-h-screen px-4 py-6 sm:p-8" style={{ background: 'var(--aurora-bg)' }}>
         <div className="max-w-md mx-auto text-center py-20">

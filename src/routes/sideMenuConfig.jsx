@@ -1,4 +1,12 @@
-// Local imports
+// Side-menu navigation config — PURE DATA (path / text / icon / child only).
+//
+// This module is imported by routeHelpers (used at login) and the SideMenu /
+// Header. It must stay lightweight: it previously also imported and attached a
+// heavy `element: <Panel/>` to each row, which dragged Dashboard, AuditionTracker,
+// Notifications, Collaboration, LiveRehearsal, ScriptUploadAndListing and
+// CoachCollaboration (and their MUI/chart deps) into the login/cold-boot chunk —
+// even though NOTHING renders `route.element` (SideMenu/Header use path/text/icon;
+// the real routes live in config.jsx). Removing them keeps the boot path slim.
 import {
   AnalysisIcon,
   AuditionTrackerIcon,
@@ -9,13 +17,6 @@ import {
   SparklesIcon,
   VedioIcon,
 } from '../assets/icons';
-import Dashboard from '../panels/UserPanel/Dashboard';
-import { AuditionTracker } from '../panels/UserPanel/Actor/AuditionTracker';
-import Notifications from '../panels/UserPanel/Notifications';
-import { Collaboration } from '../panels/UserPanel/Actor/SeceneStudy/Collaboration';
-import { LiveRehearsal } from '../panels/UserPanel/Actor/SeceneStudy/Collaboration/LiveRehearsal.jsx';
-import ScriptUploadAndListing from '../panels/UserPanel/Actor/SeceneStudy/SceneStudyAnalysis/ScriptUploadAndListing';
-import CoachCollaboration from '../panels/UserPanel/Coach/Collaboration';
 
 const adminMenu = [
   {
@@ -27,7 +28,6 @@ const adminMenu = [
     path: '/notifications',
     text: 'Notifications',
     icon: <NotificationIcon height={19} width={19} />,
-    element: <Notifications />,
   },
 ];
 
@@ -41,7 +41,6 @@ const actorMenu = [
     path: '/auditions-tracker',
     text: 'Audition Tracker',
     icon: <AuditionTrackerIcon height={19} width={19} />,
-    element: <AuditionTracker />,
   },
   {
     path: '/dashboard/casting-director-ai',
@@ -92,25 +91,21 @@ const actorMenu = [
     path: '/scene-study',
     text: 'Scene Study',
     icon: <SceneStudyIcon height={19} width={19} />,
-    element: <Dashboard />,
     child: [
       {
         path: '/scene-study/analysis',
         moduleName: 'Analysis',
         childIcon: <AnalysisIcon height={18} width={18} />,
-        element: <ScriptUploadAndListing />,
       },
       {
         path: '/scene-study/collaboration',
         moduleName: 'Collaboration',
         childIcon: <CollaborationIcon height={19} width={19} />,
-        element: <Collaboration />,
       },
       {
         path: '/scene-study/live-rehearsal',
         moduleName: 'Live Rehearsal',
         childIcon: <VedioIcon height={19} width={19} strokeWidth={1.2} />,
-        element: <LiveRehearsal />,
       },
     ],
   },
@@ -118,7 +113,6 @@ const actorMenu = [
     path: '/notifications',
     text: 'Notifications',
     icon: <NotificationIcon height={19} width={19} />,
-    element: <Notifications />,
   },
 ];
 
@@ -132,13 +126,11 @@ const castingDirectorMenu = [
     path: '/auditions-tracker',
     text: 'Audition Tracker',
     icon: <AuditionTrackerIcon height={19} width={19} />,
-    element: <AuditionTracker />,
   },
   {
     path: '/notifications',
     text: 'Notifications',
     icon: <NotificationIcon height={19} width={19} />,
-    element: <Notifications />,
   },
 ];
 
@@ -147,13 +139,11 @@ const coachMenu = [
     path: '/collaboration',
     text: 'Collaboration',
     icon: <CollaborationIcon height={19} width={19} />,
-    element: <CoachCollaboration />,
   },
   {
     path: '/notifications',
     text: 'Notifications',
     icon: <NotificationIcon height={19} width={19} />,
-    element: <Notifications />,
   },
 ];
 

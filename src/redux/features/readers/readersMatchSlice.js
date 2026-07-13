@@ -286,13 +286,19 @@ const readersMatchSlice = createSlice({
       .addCase(fetchAvailableReaders.pending, (state) => {
         state.readersLoading = true;
         state.error = null;
+        state.readersError = null;
       })
       .addCase(fetchAvailableReaders.fulfilled, (state, action) => {
         state.readersLoading = false;
         state.readers = action.payload || [];
+        state.readersError = null;
       })
-      .addCase(fetchAvailableReaders.rejected, (state) => {
+      .addCase(fetchAvailableReaders.rejected, (state, action) => {
         state.readersLoading = false;
+        // Dedicated flag (not the shared `error`, which other thunks write) so the
+        // UI can show a retry state instead of an empty deck — a network error
+        // must not read as "no readers available".
+        state.readersError = action.error?.message || 'Failed to load readers';
       })
 
       // swipeOnReader

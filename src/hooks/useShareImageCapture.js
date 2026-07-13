@@ -97,24 +97,16 @@ export const useShareImageCapture = ({ onError }) => {
         removeContainer: false,
         imageTimeout: 15000,
         onclone: (clonedDoc) => {
-          // Ensure clone is visible in cloned document with all styles
+          // Just guarantee the clone is visible for capture — render whatever the
+          // template's own (explicit, inline) styles are. (This previously forced
+          // a purple gradient + white text, which is why the hook was unusable for
+          // a branded card. Templates should use explicit hex colors so
+          // html2canvas renders them faithfully.)
           const clonedEl = clonedDoc.getElementById(cloneId);
           if (clonedEl) {
             clonedEl.style.visibility = 'visible';
             clonedEl.style.opacity = '1';
             clonedEl.style.display = 'flex';
-            // Ensure gradient background is preserved
-            clonedEl.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)';
-            clonedEl.style.color = '#ffffff';
-            
-            // Ensure all text elements have white color
-            const textElements = clonedEl.querySelectorAll('h1, h2, p, div');
-            textElements.forEach((el) => {
-              const computedColor = window.getComputedStyle(el).color;
-              if (computedColor === 'rgb(0, 0, 0)' || computedColor === 'rgba(0, 0, 0, 0)' || !computedColor) {
-                el.style.color = '#ffffff';
-              }
-            });
           }
         },
       });

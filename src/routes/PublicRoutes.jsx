@@ -7,6 +7,7 @@ import { useSelector } from 'react-redux';
 import { getFirstRouteByRole } from './routeHelpers';
 import { setAuthToken } from '../redux/http';
 import { RoleSelectionModal } from '../components/Auth/RoleSelectionModal';
+import BootSplash from '../components/Shared/BootSplash';
 
 const PublicRoutes = () => {
   const user = useSelector((state) => state?.auth?.user);
@@ -30,9 +31,10 @@ const PublicRoutes = () => {
     setAuthToken(token);
   }, [token]);
 
-  // Avoid redirecting while state is still loading from storage
+  // Avoid redirecting while state is still loading from storage. Branded splash
+  // rather than null so cold launch doesn't flash a blank white screen.
   if (!isRehydrated) {
-    return null;
+    return <BootSplash />;
   }
 
   // Single-role user: redirect straight to their dashboard.
