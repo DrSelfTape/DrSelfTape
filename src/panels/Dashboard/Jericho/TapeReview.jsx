@@ -34,7 +34,7 @@ function FirstReviewPaywall({ onUpgrade }) {
     <div className="rounded-2xl border border-[#D4A85F]/30 p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.05))' }}>
       <h3 className="text-base font-bold text-[#0A0A0A] leading-snug">You got the headline. There&apos;s a full casting read behind it.</h3>
       <p className="text-sm text-[rgba(10,10,10,0.6)] mt-1.5 leading-relaxed">
-        Premium unlocks the rest — the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape, with no limits.
+        Unlock the rest — the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape. Any plan.
       </p>
       <button
         onClick={onUpgrade}
@@ -59,7 +59,7 @@ function FullReadLocked({ onUpgrade }) {
         <h3 className="text-sm font-bold text-[#0A0A0A]">Your full casting read is ready</h3>
       </div>
       <p className="text-sm text-[rgba(10,10,10,0.62)] mt-1.5 leading-relaxed">
-        You&apos;ve got the headline. Premium unlocks the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape, no limits.
+        You&apos;ve got the headline. Unlock the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape. Any plan.
       </p>
       <div className="mt-3 space-y-2" style={{ filter: 'blur(5px)', opacity: 0.5, pointerEvents: 'none' }} aria-hidden="true">
         {['Framing', 'Eyeline', 'Listening', 'Emotional arc'].map((l) => (
@@ -74,7 +74,7 @@ function FullReadLocked({ onUpgrade }) {
         className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
         style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
       >
-        <Sparkles size={15} /> Unlock the full read — Premium
+        <Sparkles size={15} /> Unlock the full read
       </button>
     </div>
   );
@@ -179,7 +179,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // Full-read gate: Premium (unlimited) sees the complete casting read; free
   // users see the headline + an unlock CTA. onUpgrade is passed in the
   // first-review flow; elsewhere fall back to the global panel-nav event.
-  const { unlimited: isSubscribed, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
+  const { isPaid, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
   const handleUpgrade = () => {
     if (onUpgrade) { onUpgrade(); return; }
     try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'membership' } })); } catch { /* noop */ }
@@ -520,7 +520,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // deep-only partial response never trims a free user down to nothing.
     const hasHeadline = !!raw.verdict || rawWorking.length > 0 || rawAdjustments.length > 0;
     const entitlementKnown = !entitlementLoading && !entitlementError && tokenBalance !== null;
-    const locked = entitlementKnown && !isSubscribed && hasHeadline;
+    const locked = entitlementKnown && !isPaid && hasHeadline;
     const r = locked
       ? { verdict: raw.verdict, tone_tags: raw.tone_tags, whats_working: rawWorking.slice(0, 1), adjustments: rawAdjustments.slice(0, 1) }
       : raw;

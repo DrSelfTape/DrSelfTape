@@ -7,6 +7,8 @@ import axiosInstance from '../redux/http';
 // so the cache never hides a real "you're out" state.
 let cachedBalance = null;
 let cachedUnlimited = false;
+let cachedPlan = null;
+let cachedStatus = null;
 let lastFetch = 0;
 const CACHE_TTL = 10000;
 // Bumped on logout/reset. An in-flight fetch captures the generation at start and
@@ -20,6 +22,8 @@ let cacheGen = 0;
 export function resetTokenCache() {
   cachedBalance = null;
   cachedUnlimited = false;
+  cachedPlan = null;
+  cachedStatus = null;
   lastFetch = 0;
   cacheGen += 1;
 }
@@ -29,6 +33,10 @@ export function useTokenBalance() {
   // Premium ("Unlimited") users never deduct from the balance — the BE returns
   // unlimited:true so the UI can show "Unlimited" instead of a frozen number.
   const [unlimited, setUnlimited] = useState(cachedUnlimited);
+  // Subscription plan + status power the "any paid plan unlocks the deep read"
+  // gate (distinct from `unlimited`, which is Premium-only).
+  const [plan, setPlan] = useState(cachedPlan);
+  const [status, setStatus] = useState(cachedStatus);
   const [loading, setLoading] = useState(cachedBalance === null);
   // Whether the LAST plan lookup failed. Entitlement-gated consumers treat an
   // errored (stale) value as unknown and fail-open, so a network hiccup after a
@@ -40,6 +48,8 @@ export function useTokenBalance() {
     if (!force && cachedBalance !== null && (now - lastFetch) < CACHE_TTL) {
       setBalance(cachedBalance);
       setUnlimited(cachedUnlimited);
+      setPlan(cachedPlan);
+      setStatus(cachedStatus);
       setLoading(false);
       setError(false);
       return;
@@ -48,16 +58,23 @@ export function useTokenBalance() {
     // cached value may be stale and can fail-open until it resolves.
     setLoading(true);
     const gen = cacheGen;
-    axiosInstance.get('/v1/subscriptions/tokens/')
+    // /status is a superset of /tokens (balance + unlimited) and also carries the
+    // subscription plan + status, so the "any paid plan" gate needs no extra call.
+    axiosInstance.get('/v1/subscriptions/status/')
       .then(res => {
         if (gen !== cacheGen) return; // logout/reset happened mid-flight — discard
-        const bal = res.data.data?.balance ?? 0;
-        const unl = res.data.data?.unlimited ?? false;
+        const d = res.data.data || {};
+        const bal = d.balance ?? 0;
+        const unl = d.unlimited ?? false;
         cachedBalance = bal;
         cachedUnlimited = unl;
+        cachedPlan = d.plan ?? null;
+        cachedStatus = d.status ?? null;
         lastFetch = Date.now();
         setBalance(bal);
         setUnlimited(unl);
+        setPlan(cachedPlan);
+        setStatus(cachedStatus);
         setError(false);
       })
       .catch(() => { if (gen === cacheGen) { setBalance(cachedBalance); setError(true); } })
@@ -84,5 +101,8 @@ export function useTokenBalance() {
     };
   }, [refresh]);
 
-  return { balance, unlimited, loading, error, refresh };
+  // Any active/trialing paid plan unlocks gated depth; `unlimited` (Premium)
+  // additionally lifts token limits.
+  const isPaid = !!plan && (status === 'active' || status === 'trialing');
+  return { balance, unlimited, plan, status, isPaid, loading, error, refresh };
 }

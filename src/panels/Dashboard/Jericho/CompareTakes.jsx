@@ -47,8 +47,8 @@ export default function CompareTakes() {
   // Full-notes gate: Premium unlocks each take's deep breakdown; free users keep
   // the winner + ranked scores + per-take highlights. Fail-open (never gate a
   // paying user on loading/error) — mirrors the Tape Review gate.
-  const { unlimited: isSubscribed, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
-  const notesLocked = !entitlementLoading && !entitlementError && tokenBalance !== null && !isSubscribed;
+  const { isPaid, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
+  const notesLocked = !entitlementLoading && !entitlementError && tokenBalance !== null && !isPaid;
   const goPremium = () => {
     try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'membership' } })); } catch { /* noop */ }
   };
@@ -214,7 +214,7 @@ export default function CompareTakes() {
                     onClick={goPremium}
                     className="w-full flex items-center justify-center gap-1.5 mt-3 py-1.5 text-xs font-semibold text-[#7A5A18]"
                   >
-                    <Lock size={12} /> Unlock full notes — Premium
+                    <Lock size={12} /> Unlock full notes — any plan
                   </button>
                 ) : (
                 <button
