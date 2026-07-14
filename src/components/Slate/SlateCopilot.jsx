@@ -43,6 +43,9 @@ const SLATE_CSS = `
 @keyframes v1cRec { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
 @keyframes v1AiGlow { 0%,100% { box-shadow: 0 10px 22px #D4A85F66, inset 0 1px 0 rgba(255,255,255,0.55); } 50% { box-shadow: 0 12px 30px #D4A85FAA, inset 0 1px 0 rgba(255,255,255,0.55); } }
 @keyframes v1AiRipple { 0% { transform: scale(1); opacity:.5; } 100% { transform: scale(1.9); opacity:0; } }
+@keyframes slateBob { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-4px) rotate(1.5deg); } }
+@keyframes slateHalo { 0%,100% { opacity:0.5; transform: scale(1); } 50% { opacity:0.85; transform: scale(1.1); } }
+@media (prefers-reduced-motion: reduce) { .slate-bob, .slate-halo, .slate-ripple { animation: none !important; } }
 .v1-slate-scroll::-webkit-scrollbar { display: none; }
 .v1-slate-scroll { scrollbar-width: none; }
 `;
@@ -66,16 +69,26 @@ export function SlateFAB({ onOpen }) {
         onClick={() => { tapPrimary(); onOpen(); }}
         aria-label="Ask Slate"
         style={{
-          position: 'absolute', right: 20, bottom: 96, zIndex: 29,
-          width: 62, height: 62, borderRadius: 100, cursor: 'pointer',
-          border: '3px solid #FFFFFF', background: `linear-gradient(150deg, ${T.goldLight}, ${T.accent} 58%, ${T.goldMid})`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          animation: 'v1AiGlow 3.2s ease-in-out infinite', WebkitTapHighlightColor: 'transparent',
+          // Include the home-indicator safe area so the button clears the
+          // floating tab bar (which is itself inset by env(safe-area-inset-bottom)).
+          position: 'absolute', right: 14, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 98px)', zIndex: 29,
+          width: 76, height: 76, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0,
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
-        <span style={{ position: 'absolute', inset: -3, borderRadius: 100, border: `2px solid ${T.accent}`,
+        {/* Soft gold halo behind the character (breathes) + expanding ripple. */}
+        <span className="slate-halo" style={{ position: 'absolute', inset: '2%', borderRadius: 100,
+          background: 'radial-gradient(circle, rgba(212,168,95,0.5), transparent 66%)',
+          animation: 'slateHalo 3.2s ease-in-out infinite', pointerEvents: 'none' }} />
+        <span className="slate-ripple" style={{ position: 'absolute', inset: '14%', borderRadius: 100, border: `2px solid ${T.accent}66`,
           animation: 'v1AiRipple 2.6s ease-out infinite', pointerEvents: 'none' }} />
-        <SlateAurora size={42} mood="wink" accent="#FFFFFF" />
+        <img
+          src={`${import.meta.env.BASE_URL}slate-mascot.png`}
+          alt=""
+          className="slate-bob"
+          style={{ position: 'relative', width: '100%', height: '100%', objectFit: 'contain',
+            filter: 'drop-shadow(0 6px 14px rgba(122,90,24,0.42))', animation: 'slateBob 2.8s ease-in-out infinite' }}
+        />
       </button>
     </>
   );
@@ -324,7 +337,7 @@ export default function SlateCopilot({ minimized, onClose, onMinimize, onExpand,
   if (minimized) {
     return (
       <div onClick={() => { tapSelect(); onExpand(); }} style={{
-        position: 'absolute', left: 14, right: 14, bottom: 88, zIndex: 80, cursor: 'pointer',
+        position: 'absolute', left: 14, right: 14, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)', zIndex: 80, cursor: 'pointer',
         background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(24px) saturate(1.5)', WebkitBackdropFilter: 'blur(24px) saturate(1.5)',
         border: '1px solid rgba(255,255,255,0.6)', borderRadius: 100, padding: '9px 12px',
         boxShadow: '0 12px 34px rgba(122,90,24,0.16)', display: 'flex', alignItems: 'center', gap: 10,
