@@ -23,7 +23,7 @@ import DeleteAccountModal from "../../components/Dashboard/DeleteAccountModal";
 import ReaderOnboardingModal from "../../components/Dashboard/ReaderOnboardingModal";
 import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
-import { V1HeroGraph, V1FAB, V1Sparkles } from "../../components/Aurora";
+import { V1HeroGraph, V1Sparkles } from "../../components/Aurora";
 import { AuroraHUD, AuroraQuests, AuroraStreakGuard, AuroraSeason, AuroraProgressCard, auroraCelebrate, SlateTip } from "../../components/Aurora/game";
 import SlateCopilot, { SlateFAB } from "../../components/Slate/SlateCopilot";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
@@ -1960,46 +1960,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       )}
       </>)}
 
-      {/* ── V1FAB radial quick-actions ──
-           First action is the money feature. The old "Record take" → cd-sim
-           was a lying label twice over: there is no in-app recorder yet
-           (SelfTapesPanel is upload-only) and cd-sim isn't a camera. */}
-      <V1FAB
-        actions={[
-          {
-            k: 'notes',
-            label: 'Get tape notes',
-            short: 'NOTES',
-            color: '#D4A85F',
-            icon: <Icon name="tape" size={16} />,
-            onClick: () => setTab('tape-review'),
-          },
-          {
-            k: 'aud',
-            label: 'Log audition',
-            short: 'LOG',
-            color: '#A7D6FF',
-            icon: <Icon name="target" size={16} />,
-            onClick: () => setTab('auditions'),
-          },
-          {
-            k: 'find',
-            label: 'Find reader',
-            short: 'FIND',
-            color: '#FFC9A3',
-            icon: <Icon name="community" size={16} />,
-            onClick: () => setTab('find-a-reader'),
-          },
-          {
-            k: 'script',
-            label: 'Upload script',
-            short: 'SCRIPT',
-            color: '#9FE6B4',
-            icon: <Icon name="sparkle" size={16} />,
-            onClick: () => setCurrentPanel('scripts'),
-          },
-        ]}
-      />
+      {/* The old V1FAB radial quick-actions ("+") button was removed — Slate is
+          now the single floating action entry point (its cards cover the same
+          jobs: tape notes, log audition, find reader, sides). */}
     </div>
   );
 }
