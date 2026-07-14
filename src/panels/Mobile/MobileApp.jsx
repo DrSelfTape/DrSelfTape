@@ -25,6 +25,7 @@ import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import { V1HeroGraph, V1FAB, V1Sparkles } from "../../components/Aurora";
 import { AuroraHUD, AuroraQuests, AuroraStreakGuard, AuroraSeason, AuroraProgressCard, auroraCelebrate, SlateTip } from "../../components/Aurora/game";
+import SlateCopilot, { SlateFAB } from "../../components/Slate/SlateCopilot";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
@@ -3650,6 +3651,12 @@ export default function DrSelfTapeApp() {
   const [showNoTokens, setShowNoTokens] = useState(false);
   const [whatsNewForce, setWhatsNewForce] = useState(false);
   const [showReport, setShowReport] = useState(false);
+  // Slate copilot: console mounted (`copilotOpen`) and collapsed-to-dock
+  // (`copilotMin`). Minimizing keeps the console mounted so the conversation
+  // survives; closing unmounts it (fresh chat next open).
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  const [copilotMin, setCopilotMin] = useState(false);
+  const openSlate = () => { setCopilotOpen(true); setCopilotMin(false); };
   // Top bar is now pinned at the top — the previous scroll-driven hide
   // confused users who tried to tap the bell / avatar after scrolling
   // down. The bar still slides away for modals (driven by the modal-
@@ -4156,6 +4163,23 @@ export default function DrSelfTapeApp() {
               );
             })}
           </div>
+
+          {/* Slate copilot — gold FAB on the tab screens (hidden inside a panel,
+              a modal, or when the console is up); full console / dock overlay. */}
+          {!copilotOpen && !currentPanel && !tabBarHidden && (
+            <SlateFAB onOpen={openSlate} />
+          )}
+          {copilotOpen && (
+            <SlateCopilot
+              minimized={copilotMin}
+              onClose={() => { setCopilotOpen(false); setCopilotMin(false); }}
+              onMinimize={() => setCopilotMin(true)}
+              onExpand={() => setCopilotMin(false)}
+              onLogAudition={() => handleSetTab('auditions')}
+              onFindReader={() => handleSetTab('find-a-reader')}
+              onOpenScript={() => handleSetTab('scenes')}
+            />
+          )}
         </div>
       ) : (
         <div style={{ display: "flex", minHeight: "100vh" }}>

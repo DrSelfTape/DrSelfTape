@@ -1,9 +1,14 @@
 import { Clapperboard } from 'lucide-react';
 import { usePrefersReducedMotion } from './gameStore';
 
-export function SlateAurora({ size = 72, mood = 'steady', className = '', style = {} }) {
+export function SlateAurora({ size = 72, mood = 'steady', accent, className = '', style = {} }) {
   const reducedMotion = usePrefersReducedMotion();
   const px = Number(size) || 72;
+  // `accent` colors the clapper stripes (copilot FAB passes '#FFFFFF' for white
+  // stripes on the gold orb; the console passes the brand gold). Falls back to
+  // the original translucent white so existing usages are unchanged.
+  const stripeFill = accent || 'rgba(255,255,255,.72)';
+  const wink = mood === 'wink';
 
   return (
     <div
@@ -31,11 +36,15 @@ export function SlateAurora({ size = 72, mood = 'steady', className = '', style 
         <rect x="12" y="24" width="88" height="76" rx="20" fill="url(#slateIvory)" />
         <rect x="12" y="24" width="88" height="76" rx="20" fill="none" stroke="rgba(122,90,24,.34)" />
         <path d="M20 36h72v16H20z" fill="url(#slateGold)" />
-        <path d="M30 24h22l-16 28H14zM58 24h22L64 52H42zM86 24h14v18L94 52H72z" fill="rgba(255,255,255,.72)" />
+        <path d="M30 24h22l-16 28H14zM58 24h22L64 52H42zM86 24h14v18L94 52H72z" fill={stripeFill} />
         <path d="M28 70c6-7 16-7 22 0M62 70c6-7 16-7 22 0" stroke="#7A5A18" strokeWidth="5" strokeLinecap="round" />
         <g className={reducedMotion ? '' : 'aurora-slate-eyes'}>
           <circle cx="40" cy="68" r="4" fill="#0A0A0A" />
-          <circle cx="74" cy="68" r="4" fill="#0A0A0A" />
+          {wink ? (
+            <path d="M70 68h8" stroke="#0A0A0A" strokeWidth="4" strokeLinecap="round" />
+          ) : (
+            <circle cx="74" cy="68" r="4" fill="#0A0A0A" />
+          )}
         </g>
         <path
           d={mood === 'proud' ? 'M44 83c8 7 18 7 26 0' : 'M46 84c7 4 15 4 22 0'}
