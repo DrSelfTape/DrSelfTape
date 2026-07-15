@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
@@ -3591,6 +3591,30 @@ export default function DrSelfTapeApp() {
   // a mint dot on the Review tab; visiting the tab acknowledges + clears it.
   const reduxDispatch = useDispatch();
   const notesReady = useSelector((s) => !!s.jericho?.notesReady);
+  // Live context fed to Slate so it can be specific ("your detective read for
+  // the CBS pilot") instead of generic ("your tape").
+  const slateProfile = useSelector((s) => s.profile?.profile);
+  const slateAuditions = useSelector((s) => s.auditions?.data || []);
+  const slateScripts = useSelector((s) => s.scripts?.scripts || []);
+  const slateFallbackScripts = useSelector((s) => s.sceneStudyScripts?.scripts || []);
+  const slateContext = useMemo(() => {
+    const closed = new Set(['booked', 'passed', 'declined', 'rejected']);
+    const live = (Array.isArray(slateAuditions) ? slateAuditions : [])
+      .filter((a) => a && !closed.has(String(a.status || '').toLowerCase()))
+      .slice(0, 4)
+      .map((a) => ({
+        project: a.project, role: a.role, character: a.character,
+        casting_director: a.casting_director, status: a.status,
+      }));
+    // The most recently worked script stands in for "the scene they have open".
+    // Title only — `characters` lists every role, not reliably the actor's own.
+    const allScripts = (Array.isArray(slateScripts) && slateScripts.length)
+      ? slateScripts : (Array.isArray(slateFallbackScripts) ? slateFallbackScripts : []);
+    const recent = [...allScripts].sort(
+      (a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0))[0];
+    const scene = recent?.title ? { title: recent.title } : undefined;
+    return { name: slateProfile?.first_name || '', tab, auditions: live, scene };
+  }, [slateProfile, slateAuditions, slateScripts, slateFallbackScripts, tab]);
   useEffect(() => {
     if (notesReady && tab === 'tape-review' && !currentPanel) {
       reduxDispatch(clearNotesReady());
@@ -4135,12 +4159,21 @@ export default function DrSelfTapeApp() {
           {copilotOpen && (
             <SlateCopilot
               minimized={copilotMin}
+              context={slateContext}
               onClose={() => { setCopilotOpen(false); setCopilotMin(false); }}
               onMinimize={() => setCopilotMin(true)}
               onExpand={() => setCopilotMin(false)}
               onLogAudition={() => handleSetTab('auditions')}
               onFindReader={() => handleSetTab('find-a-reader')}
               onOpenScript={() => handleSetTab('scenes')}
+              onOpenReview={() => handleSetTab('tape-review')}
+              onOpenCompare={() => {
+                // Compare Takes is not its own tab: land on Tape Review with the
+                // compare flag set (TapeReview reads it in its mode initializer).
+                try { window.sessionStorage.setItem('dst_compare_takes', '1'); } catch { /* noop */ }
+                handleSetTab('tape-review');
+              }}
+              onOpenCoach={() => setCurrentPanel('cd-sim')}
             />
           )}
         </div>

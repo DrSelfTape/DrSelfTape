@@ -6,10 +6,9 @@
  * deep-link into the app. Brain: POST /v1/ai/slate/chat → {reply, chips, card}.
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Mic, X, ChevronDown, ChevronUp, Plus, Check, MessageCircle, BadgeCheck } from 'lucide-react';
+import { Send, Mic, X, ChevronDown, ChevronUp, Plus, Check, MessageCircle, BadgeCheck, Film, Trophy, GraduationCap } from 'lucide-react';
 import axiosInstance from '../../redux/http';
 import { baseURL } from '../../redux/constant';
-import { SlateAurora } from '../Aurora/game/Slate';
 import { tapSelect, tapPrimary, warn } from '../../utils/haptics';
 
 // ── Design tokens (Aurora — from the Slate handoff) ──────────────────────────
@@ -30,7 +29,7 @@ const SANS = "'Space Grotesk', system-ui, sans-serif";
 const SERIF = "'Instrument Serif', serif";
 
 const OPENER = "Hey, I'm Slate. Your take, your audition, your nerves, whatever's in front of you tonight. What are we working on?";
-const OPENER_CHIPS = ['Prep an audition', 'Calm my nerves', 'Find me a reader', 'Help with my sides'];
+const OPENER_CHIPS = ['Get notes on my tape', 'Which take should I send?', 'Run my sides', 'Calm my nerves'];
 
 // Keyframes injected once.
 const SLATE_CSS = `
@@ -45,28 +44,88 @@ const SLATE_CSS = `
 @keyframes v1AiRipple { 0% { transform: scale(1); opacity:.5; } 100% { transform: scale(1.9); opacity:0; } }
 @keyframes slateBob { 0%,100% { transform: translateY(0) rotate(-1.5deg); } 50% { transform: translateY(-4px) rotate(1.5deg); } }
 @keyframes slateHalo { 0%,100% { opacity:0.5; transform: scale(1); } 50% { opacity:0.85; transform: scale(1.1); } }
-@media (prefers-reduced-motion: reduce) { .slate-bob, .slate-halo, .slate-ripple { animation: none !important; } }
+/* Rest is nearly-shut (the approved icon). Slow windup open, then a fast SNAP
+   back to closed — the snap landing on rest reads as the clapperboard clap. */
+@keyframes slateClap { 0%,54% { transform: rotate(0deg); } 73% { transform: rotate(19deg); } 79%,100% { transform: rotate(0deg); } }
+/* A quick wink lands just after the clap snap — one "snap-and-wink" beat. */
+@keyframes slateWink { 0%,83%,93%,100% { opacity:0; } 86%,90% { opacity:1; } }
+/* First-run hint bubble: pops in above the FAB, then fades on dismiss. */
+@keyframes slateHintIn { 0% { opacity:0; transform: translateY(8px) scale(0.9); } 60% { transform: translateY(-1px) scale(1.02); } 100% { opacity:1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .slate-bob, .slate-halo, .slate-ripple, .slate-clap, .slate-wink { animation: none !important; } }
 .v1-slate-scroll::-webkit-scrollbar { display: none; }
 .v1-slate-scroll { scrollbar-width: none; }
 `;
 
 function Avatar({ size = 40 }) {
+  // Same 3D mascot as the FAB so Slate looks identical everywhere.
   return (
     <div style={{ width: size, height: size, borderRadius: 10, overflow: 'hidden', flex: '0 0 auto',
       background: 'linear-gradient(160deg,#FFFDF8,#F1E9D8)', boxShadow: 'inset 0 0 0 1px rgba(212,168,95,0.3)',
       display: 'grid', placeItems: 'center' }}>
-      <SlateAurora size={Math.round(size * 0.82)} mood="happy" accent={T.accent} />
+      <img src={`${import.meta.env.BASE_URL}slate-mascot.png`} alt="Slate"
+        style={{ width: '94%', height: '94%', objectFit: 'contain' }} />
     </div>
   );
 }
 
 // ── The floating action button (entry point) ─────────────────────────────────
 export function SlateFAB({ onOpen }) {
+  // First-run hint: a one-time speech bubble that says what Slate is, then
+  // gets out of the way. Shows up to a few times until the user opens Slate.
+  const [hint, setHint] = useState(false);
+  useEffect(() => {
+    let showT, hideT;
+    try {
+      if (localStorage.getItem('slate_hint_done') === '1') return;
+      const n = parseInt(localStorage.getItem('slate_hint_count') || '0', 10) || 0;
+      if (n >= 3) return;
+      showT = setTimeout(() => {
+        setHint(true);
+        try { localStorage.setItem('slate_hint_count', String(n + 1)); } catch { /* private mode */ }
+        hideT = setTimeout(() => setHint(false), 6500);
+      }, 1500);
+    } catch { /* private mode — just skip the hint */ }
+    return () => { clearTimeout(showT); clearTimeout(hideT); };
+  }, []);
+  const openSlate = () => {
+    setHint(false);
+    try { localStorage.setItem('slate_hint_done', '1'); } catch { /* private mode */ }
+    tapPrimary();
+    onOpen();
+  };
   return (
     <>
       <style>{SLATE_CSS}</style>
+      {hint && (
+        <button
+          onClick={openSlate}
+          aria-label="Meet Slate, your on-set assistant"
+          style={{
+            position: 'absolute', right: 12, zIndex: 30,
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 182px)',
+            maxWidth: 232, textAlign: 'left', cursor: 'pointer',
+            border: '1px solid rgba(212,168,95,0.42)', borderRadius: 16,
+            padding: '10px 14px', background: 'rgba(255,253,248,0.96)',
+            backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)',
+            boxShadow: '0 10px 26px rgba(122,90,24,0.22)',
+            animation: 'slateHintIn 0.42s cubic-bezier(.34,1.56,.64,1) both',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          <div style={{ font: '700 13.5px/1.25 "Space Grotesk", sans-serif', color: '#2A2115' }}>
+            Hey, I'm Slate <span style={{ color: T.accent }}>✦</span>
+          </div>
+          <div style={{ marginTop: 2, font: '500 12px/1.35 "Space Grotesk", sans-serif', color: '#6B5B3E' }}>
+            Need a reader, some notes, or wanna run lines? Just ask.
+          </div>
+          {/* Tail pointing down toward the mascot. */}
+          <span style={{ position: 'absolute', right: 30, bottom: -6, width: 12, height: 12,
+            background: 'rgba(255,253,248,0.96)', borderRight: '1px solid rgba(212,168,95,0.42)',
+            borderBottom: '1px solid rgba(212,168,95,0.42)', transform: 'rotate(45deg)' }} />
+        </button>
+      )}
       <button
-        onClick={() => { tapPrimary(); onOpen(); }}
+        onClick={openSlate}
         aria-label="Ask Slate"
         style={{
           // Include the home-indicator safe area so the button clears the
@@ -82,13 +141,20 @@ export function SlateFAB({ onOpen }) {
           animation: 'slateHalo 3.2s ease-in-out infinite', pointerEvents: 'none' }} />
         <span className="slate-ripple" style={{ position: 'absolute', inset: '14%', borderRadius: 100, border: `2px solid ${T.accent}66`,
           animation: 'v1AiRipple 2.6s ease-out infinite', pointerEvents: 'none' }} />
-        <img
-          src={`${import.meta.env.BASE_URL}slate-mascot.png`}
-          alt=""
-          className="slate-bob"
-          style={{ position: 'relative', width: '100%', height: '100%', objectFit: 'contain',
-            filter: 'drop-shadow(0 6px 14px rgba(122,90,24,0.42))', animation: 'slateBob 2.8s ease-in-out infinite' }}
-        />
+        {/* Three layers so the clapstick + wink animate independently of the body:
+            base (body + face + arms + fixed lower bar), the winking-eye overlay
+            that flashes over the face, and the clapstick on top rotating around
+            its hinge. All bob together. Clap + wink share a 3.4s phase. */}
+        <div className="slate-bob" style={{ position: 'relative', width: '100%', height: '100%',
+          filter: 'drop-shadow(0 6px 14px rgba(122,90,24,0.42))', animation: 'slateBob 2.8s ease-in-out infinite' }}>
+          <img src={`${import.meta.env.BASE_URL}slate-base.png`} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain' }} />
+          <img src={`${import.meta.env.BASE_URL}slate-wink.png`} alt="" className="slate-wink"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain',
+              opacity: 0, animation: 'slateWink 3.4s ease-in-out infinite' }} />
+          <img src={`${import.meta.env.BASE_URL}slate-clap.png`} alt="" className="slate-clap"
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain',
+              transformOrigin: '21% 35%', animation: 'slateClap 3.4s ease-in-out infinite' }} />
+        </div>
       </button>
     </>
   );
@@ -101,19 +167,26 @@ function ActionCard({ card, onAct }) {
   useEffect(() => () => clearTimeout(timerRef.current), []); // clear if unmounted mid-animation
   const CARDS = {
     // Honest done labels — these only NAVIGATE, they don't log/award anything.
-    log: { eyebrow: 'DRAFT · NEW AUDITION', icon: Plus, label: 'Log this audition', doneLabel: 'Opening tracker…', act: 'log' },
-    reader: { eyebrow: (card.tag || 'READER · AVAILABLE'), icon: MessageCircle, label: `Hold a slot with ${(card.name || 'a reader')}`, doneLabel: 'Opening match…', act: 'reader' },
+    review: { eyebrow: 'AI TAPE REVIEW · FIRST IS FREE', icon: Film, label: 'Get casting notes', doneLabel: 'Opening Tape Review…', act: 'review' },
+    compare: { eyebrow: 'COMPARE TAKES', icon: Trophy, label: 'Pick my best take', doneLabel: 'Opening Compare Takes…', act: 'compare' },
     script: { eyebrow: 'SIDES · READY', icon: Mic, label: 'Open in Studio', doneLabel: 'Opening studio…', act: 'script' },
+    coach: { eyebrow: 'ACTING COACH', icon: GraduationCap, label: 'Get coaching notes', doneLabel: 'Opening coach…', act: 'coach' },
+    reader: { eyebrow: (card.tag || 'READER · AVAILABLE'), icon: MessageCircle, label: `Hold a slot with ${(card.name || 'a reader')}`, doneLabel: 'Opening match…', act: 'reader' },
+    log: { eyebrow: 'DRAFT · NEW AUDITION', icon: Plus, label: 'Log this audition', doneLabel: 'Opening tracker…', act: 'log' },
   };
   const c = CARDS[card.kind];
   if (!c) return null;
   const Icon = c.icon;
   const title = card.kind === 'log' ? (card.title || 'New audition')
     : card.kind === 'reader' ? (card.name || 'A reader')
-      : (card.title || 'Your scene');
+      : card.kind === 'compare' ? 'Your takes'
+        : card.kind === 'review' ? (card.title || 'Your self-tape')
+          : (card.title || 'Your scene');
   const sub = card.kind === 'log' ? [card.role, card.cd].filter(Boolean).join(' · ')
     : card.kind === 'script' ? [card.role, card.tone].filter(Boolean).join(' · ')
-      : '';
+      : card.kind === 'compare' ? 'AI picks the strongest and says why'
+        : (card.kind === 'review' || card.kind === 'coach') ? (card.focus || '')
+          : '';
   const fire = () => {
     if (done) return;
     tapPrimary();
@@ -186,7 +259,7 @@ function Message({ m, onAct }) {
 }
 
 // ── The console ──────────────────────────────────────────────────────────────
-export default function SlateCopilot({ minimized, onClose, onMinimize, onExpand, onLogAudition, onFindReader, onOpenScript }) {
+export default function SlateCopilot({ minimized, context, onClose, onMinimize, onExpand, onLogAudition, onFindReader, onOpenScript, onOpenReview, onOpenCompare, onOpenCoach }) {
   const [msgs, setMsgs] = useState([{ from: 'ai', text: OPENER }]);
   const [chips, setChips] = useState(OPENER_CHIPS);
   const [typing, setTyping] = useState(false);
@@ -201,6 +274,8 @@ export default function SlateCopilot({ minimized, onClose, onMinimize, onExpand,
   const recGen = useRef(0);         // record-request generation; bumped per press + on unmount
   const inFlightRef = useRef(false); // a chat request is in flight (sync send-lock)
   const msgsRef = useRef(msgs);     // latest history for the async request (avoids stale closure)
+  const contextRef = useRef(context); // latest app context (avoids re-creating ask())
+  contextRef.current = context;
   const [voiceErr, setVoiceErr] = useState('');
   const voiceUnsupported = typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === 'undefined';
   useEffect(() => { msgsRef.current = msgs; }, [msgs]);
@@ -233,7 +308,7 @@ export default function SlateCopilot({ minimized, onClose, onMinimize, onExpand,
     setChips([]);
     setTyping(true);
     try {
-      const { data } = await axiosInstance.post(`${baseURL}/v1/ai/slate/chat/`, { text: clean, messages: history });
+      const { data } = await axiosInstance.post(`${baseURL}/v1/ai/slate/chat/`, { text: clean, messages: history, context: contextRef.current || undefined });
       const d = data?.data ?? data ?? {}; // tolerate the house envelope OR a flat body
       setMsgs((s) => [...s, { from: 'ai', text: d.reply || "I'm here. What's up?", card: d.card || null }]);
       setChips(Array.isArray(d.chips) ? d.chips : []);
@@ -252,6 +327,9 @@ export default function SlateCopilot({ minimized, onClose, onMinimize, onExpand,
     if (kind === 'log') onLogAudition?.();
     else if (kind === 'reader') onFindReader?.();
     else if (kind === 'script') onOpenScript?.();
+    else if (kind === 'review') onOpenReview?.();
+    else if (kind === 'compare') onOpenCompare?.();
+    else if (kind === 'coach') onOpenCoach?.();
   };
 
   // ── Push-to-talk: record → Whisper transcribe → send ──

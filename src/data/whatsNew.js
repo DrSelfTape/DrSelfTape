@@ -8,6 +8,19 @@
  */
 export const WHATS_NEW = [
   {
+    id: 5,
+    version: '1.0.16',
+    date: 'July 2026',
+    title: 'Meet Slate, your on-set assistant',
+    intro: "Say hi to Slate, the little clapperboard in the corner. Tap it any time you need a hand:",
+    highlights: [
+      { emoji: '🎬', title: 'Ask Slate anything', body: 'Notes on a tape, which take to send, running lines, calming nerves. Slate points you to the right tool in a tap.' },
+      { emoji: '🎙️', title: 'Talk or type', body: 'Hold to talk or just type. Slate answers like a coach who actually knows the work.' },
+      { emoji: '🧠', title: 'Knows what you are working on', body: 'Slate sees your current auditions and scenes, so its help is specific to you, not generic.' },
+      { emoji: '💛', title: 'Remembers you', body: 'Pick up where you left off. Slate remembers what you worked on last time.' },
+    ],
+  },
+  {
     id: 4,
     version: '1.0.14',
     date: 'July 2026',
