@@ -17,6 +17,7 @@ export const WHATS_NEW = [
       { emoji: '🎬', title: 'Ask Slate anything', body: 'Notes on a tape, which take to send, running lines, calming nerves. Slate points you to the right tool in a tap.' },
       { emoji: '🎙️', title: 'Talk or type', body: 'Hold to talk or just type. Slate answers like a coach who actually knows the work.' },
       { emoji: '🧠', title: 'Knows what you are working on', body: 'Slate sees your current auditions and scenes, so its help is specific to you, not generic.' },
+      { emoji: '📎', title: 'Reads your sides', body: 'Attach a scene and Slate gives you a quick read: the spine, the want, one strong choice, and one trap to avoid.' },
       { emoji: '💛', title: 'Remembers you', body: 'Pick up where you left off. Slate remembers what you worked on last time.' },
     ],
   },
