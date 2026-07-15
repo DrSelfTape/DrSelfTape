@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Outlet } from 'react-router-dom'
 import Sidebar from '../../components/Sidebar.jsx'
 import MobileApp from '../Mobile/MobileApp.jsx'
+import AnnouncementBanner from '../../components/AnnouncementBanner.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile';
 
 export default function DashboardLayout() {
@@ -23,6 +24,7 @@ export default function DashboardLayout() {
           <img src="/logo.png" alt="" className="w-[500px] h-auto select-none" draggable={false} />
         </div>
         <div className="relative z-[1]">
+          <AnnouncementBanner />
           <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" /></div>}>
             <Outlet />
           </Suspense>
