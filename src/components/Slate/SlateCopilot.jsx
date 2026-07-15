@@ -10,6 +10,7 @@ import { Send, Mic, X, ChevronDown, ChevronUp, Plus, Check, MessageCircle, Badge
 import axiosInstance from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import { tapSelect, tapPrimary, warn } from '../../utils/haptics';
+import { pdfVisionFallback } from '../../utils/pdfToScript';
 
 // ── Design tokens (Aurora — from the Slate handoff) ──────────────────────────
 const T = {
@@ -49,6 +50,7 @@ const SLATE_CSS = `
 @keyframes slateClap { 0%,54% { transform: rotate(0deg); } 73% { transform: rotate(19deg); } 79%,100% { transform: rotate(0deg); } }
 /* A quick wink lands just after the clap snap — one "snap-and-wink" beat. */
 @keyframes slateWink { 0%,83%,93%,100% { opacity:0; } 86%,90% { opacity:1; } }
+@keyframes slateSpin { to { transform: rotate(360deg); } }
 /* First-run hint bubble: pops in above the FAB, then fades on dismiss. */
 @keyframes slateHintIn { 0% { opacity:0; transform: translateY(8px) scale(0.9); } 60% { transform: translateY(-1px) scale(1.02); } 100% { opacity:1; transform: translateY(0) scale(1); } }
 @media (prefers-reduced-motion: reduce) { .slate-bob, .slate-halo, .slate-ripple, .slate-clap, .slate-wink { animation: none !important; } }
@@ -173,6 +175,7 @@ function ActionCard({ card, onAct }) {
     coach: { eyebrow: 'ACTING COACH', icon: GraduationCap, label: 'Get coaching notes', doneLabel: 'Opening coach…', act: 'coach' },
     reader: { eyebrow: (card.tag || 'READER · AVAILABLE'), icon: MessageCircle, label: `Hold a slot with ${(card.name || 'a reader')}`, doneLabel: 'Opening match…', act: 'reader' },
     log: { eyebrow: 'DRAFT · NEW AUDITION', icon: Plus, label: 'Log this audition', doneLabel: 'Opening tracker…', act: 'log' },
+    attach: { eyebrow: 'YOUR SIDES', icon: Paperclip, label: 'Attach your sides', doneLabel: 'Opening…', act: 'attach' },
   };
   const c = CARDS[card.kind];
   if (!c) return null;
@@ -181,12 +184,14 @@ function ActionCard({ card, onAct }) {
     : card.kind === 'reader' ? (card.name || 'A reader')
       : card.kind === 'compare' ? 'Your takes'
         : card.kind === 'review' ? (card.title || 'Your self-tape')
-          : (card.title || 'Your scene');
+          : card.kind === 'attach' ? 'Let Slate read your sides'
+            : (card.title || 'Your scene');
   const sub = card.kind === 'log' ? [card.role, card.cd].filter(Boolean).join(' · ')
     : card.kind === 'script' ? [card.role, card.tone].filter(Boolean).join(' · ')
       : card.kind === 'compare' ? 'AI picks the strongest and says why'
-        : (card.kind === 'review' || card.kind === 'coach') ? (card.focus || '')
-          : '';
+        : card.kind === 'attach' ? 'Pick a saved scene or upload a PDF'
+          : (card.kind === 'review' || card.kind === 'coach') ? (card.focus || '')
+            : '';
   const fire = () => {
     if (done) return;
     tapPrimary();
@@ -278,8 +283,31 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
   contextRef.current = context;
   const [attachedSides, setAttachedSides] = useState(null); // { title, content }
   const [showSidesPicker, setShowSidesPicker] = useState(false);
+  const [uploadingSides, setUploadingSides] = useState(false);
+  const [sidesUploadErr, setSidesUploadErr] = useState('');
+  const sidesFileRef = useRef(null);
   const attachRef = useRef(null);   // latest attached sides for the async request
   attachRef.current = attachedSides;
+  const onUploadSides = async (e) => {
+    const file = e.target.files?.[0];
+    if (sidesFileRef.current) sidesFileRef.current.value = '';
+    if (!file || uploadingSides) return;
+    if (!file.name.toLowerCase().endsWith('.pdf')) { setSidesUploadErr('Please upload a PDF of your sides.'); return; }
+    if (file.size > 15 * 1024 * 1024) { setSidesUploadErr('That PDF is over 15MB. Export just the sides pages.'); return; }
+    setSidesUploadErr(''); setUploadingSides(true);
+    try {
+      const text = await pdfVisionFallback(file);   // Claude-vision parse → "CHARACTER: line"
+      if (!text || !text.trim()) throw new Error('empty');
+      setAttachedSides({ title: file.name.replace(/\.pdf$/i, '').slice(0, 80) || 'Uploaded sides', content: text });
+      setShowSidesPicker(false);
+    } catch (err) {
+      const sc = err?.response?.status;
+      if (sc === 402) setSidesUploadErr("You're out of AI tokens. Top up to read new sides.");
+      else if (sc === 403) setSidesUploadErr('Turn on AI features to read sides, then try again.');
+      else if (sc === 429) setSidesUploadErr("You've hit today's AI limit. Try again in a few hours.");
+      else setSidesUploadErr("Couldn't read that PDF. Make sure it's your sides and try again.");
+    } finally { setUploadingSides(false); }
+  };
   const [voiceErr, setVoiceErr] = useState('');
   const voiceUnsupported = typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === 'undefined';
   useEffect(() => { msgsRef.current = msgs; }, [msgs]);
@@ -331,6 +359,7 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
   const onSend = () => { const t = draft.trim(); if (!t || inFlightRef.current) return; setDraft(''); ask(t); };
   const onChip = (c) => { tapSelect(); ask(c); };
   const onAct = (kind) => {
+    if (kind === 'attach') { setShowSidesPicker(true); return; } // stay in the chat
     onClose();
     if (kind === 'log') onLogAudition?.();
     else if (kind === 'reader') onFindReader?.();
@@ -576,9 +605,25 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
               <button onClick={() => setShowSidesPicker(false)} aria-label="Close" style={{ ...hdrBtn }}><X size={16} color={T.sub} /></button>
             </div>
             <div className="v1-slate-scroll" style={{ overflowY: 'auto', padding: '0 12px 8px' }}>
+              {/* Upload a brand-new PDF right here; Slate reads it via vision. */}
+              <input ref={sidesFileRef} type="file" accept="application/pdf" onChange={onUploadSides} style={{ display: 'none' }} />
+              <button onClick={() => { if (!uploadingSides) { tapSelect(); sidesFileRef.current?.click(); } }} disabled={uploadingSides}
+                style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 11, padding: '12px', borderRadius: 14, marginBottom: 6,
+                  border: `1px dashed ${T.accent}88`, background: `${T.accent}12`, cursor: uploadingSides ? 'default' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: T.surface, flex: '0 0 auto' }}>
+                  {uploadingSides
+                    ? <span style={{ width: 15, height: 15, borderRadius: 100, border: `2px solid ${T.accent}`, borderTopColor: 'transparent', animation: 'slateSpin 0.8s linear infinite' }} />
+                    : <Plus size={18} color={T.accent} />}
+                </span>
+                <span style={{ minWidth: 0, flex: 1, textAlign: 'left' }}>
+                  <span style={{ display: 'block', fontFamily: SANS, fontSize: 14, fontWeight: 700, color: T.text }}>{uploadingSides ? 'Reading your sides…' : 'Upload new sides (PDF)'}</span>
+                  <span style={{ display: 'block', fontFamily: SANS, fontSize: 12, color: T.sub }}>{uploadingSides ? 'This can take up to a minute' : 'Slate reads it and gives you a quick take'}</span>
+                </span>
+              </button>
+              {sidesUploadErr && <p style={{ fontFamily: SANS, fontSize: 12.5, color: T.rec, padding: '0 6px 8px' }}>{sidesUploadErr}</p>}
               {scripts.length === 0 ? (
-                <p style={{ fontFamily: SANS, fontSize: 13.5, color: T.sub, padding: '10px 8px 20px', lineHeight: 1.5 }}>
-                  No sides yet. Add a scene in the Studio or upload your sides, and they will show up here for Slate to read.
+                <p style={{ fontFamily: SANS, fontSize: 13, color: T.sub, padding: '6px 8px 20px', lineHeight: 1.5 }}>
+                  Or pick a saved scene. You have none yet, upload a PDF above and Slate will read it.
                 </p>
               ) : scripts.map((s) => (
                 <button key={s.id} onClick={() => { tapPrimary(); setAttachedSides({ title: s.title, content: s.content }); setShowSidesPicker(false); }}
