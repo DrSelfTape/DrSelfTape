@@ -6,7 +6,7 @@
  * deep-link into the app. Brain: POST /v1/ai/slate/chat → {reply, chips, card}.
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Mic, X, ChevronDown, ChevronUp, Plus, Check, MessageCircle, BadgeCheck, Film, Trophy, GraduationCap } from 'lucide-react';
+import { Send, Mic, X, ChevronDown, ChevronUp, Plus, Check, MessageCircle, BadgeCheck, Film, Trophy, GraduationCap, Paperclip, FileText } from 'lucide-react';
 import axiosInstance from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import { tapSelect, tapPrimary, warn } from '../../utils/haptics';
@@ -259,7 +259,7 @@ function Message({ m, onAct }) {
 }
 
 // ── The console ──────────────────────────────────────────────────────────────
-export default function SlateCopilot({ minimized, context, onClose, onMinimize, onExpand, onLogAudition, onFindReader, onOpenScript, onOpenReview, onOpenCompare, onOpenCoach }) {
+export default function SlateCopilot({ minimized, context, scripts = [], onClose, onMinimize, onExpand, onLogAudition, onFindReader, onOpenScript, onOpenReview, onOpenCompare, onOpenCoach }) {
   const [msgs, setMsgs] = useState([{ from: 'ai', text: OPENER }]);
   const [chips, setChips] = useState(OPENER_CHIPS);
   const [typing, setTyping] = useState(false);
@@ -276,6 +276,10 @@ export default function SlateCopilot({ minimized, context, onClose, onMinimize, 
   const msgsRef = useRef(msgs);     // latest history for the async request (avoids stale closure)
   const contextRef = useRef(context); // latest app context (avoids re-creating ask())
   contextRef.current = context;
+  const [attachedSides, setAttachedSides] = useState(null); // { title, content }
+  const [showSidesPicker, setShowSidesPicker] = useState(false);
+  const attachRef = useRef(null);   // latest attached sides for the async request
+  attachRef.current = attachedSides;
   const [voiceErr, setVoiceErr] = useState('');
   const voiceUnsupported = typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === 'undefined';
   useEffect(() => { msgsRef.current = msgs; }, [msgs]);
@@ -308,7 +312,11 @@ export default function SlateCopilot({ minimized, context, onClose, onMinimize, 
     setChips([]);
     setTyping(true);
     try {
-      const { data } = await axiosInstance.post(`${baseURL}/v1/ai/slate/chat/`, { text: clean, messages: history, context: contextRef.current || undefined });
+      const att = attachRef.current;
+      const sides = att && att.content
+        ? { title: (att.title || '').slice(0, 120), content: String(att.content).slice(0, 8000) }
+        : undefined;
+      const { data } = await axiosInstance.post(`${baseURL}/v1/ai/slate/chat/`, { text: clean, messages: history, context: contextRef.current || undefined, sides });
       const d = data?.data ?? data ?? {}; // tolerate the house envelope OR a flat body
       setMsgs((s) => [...s, { from: 'ai', text: d.reply || "I'm here. What's up?", card: d.card || null }]);
       setChips(Array.isArray(d.chips) ? d.chips : []);
@@ -488,39 +496,61 @@ export default function SlateCopilot({ minimized, context, onClose, onMinimize, 
 
       {/* Composer / push-to-talk */}
       <div style={{ position: 'relative', zIndex: 2, padding: '8px 14px calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: `1px solid ${T.line}`,
-        background: `linear-gradient(${T.bg}00, ${T.bg} 40%)`, display: 'flex', gap: 9, alignItems: 'center' }}>
-        {listening ? (
-          <div style={{ ...GLASS, flex: 1, borderRadius: 100, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 9, height: 9, borderRadius: 100, background: T.rec, animation: 'v1cRec 1.1s ease-in-out infinite' }} />
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, height: 20 }}>
-              {Array.from({ length: 22 }).map((_, i) => (
-                <span key={i} style={{ flex: 1, height: '100%', background: T.accent, borderRadius: 2, transformOrigin: 'center',
-                  animation: `v1cEq ${0.7 + (i % 5) * 0.12}s ease-in-out ${(i % 7) * 0.05}s infinite` }} />
-              ))}
+        background: `linear-gradient(${T.bg}00, ${T.bg} 40%)`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Attached-sides chip — Slate reads these when you send. */}
+        {attachedSides && (
+          <div style={{ ...GLASS, alignSelf: 'flex-start', maxWidth: '100%', display: 'flex', alignItems: 'center', gap: 7,
+            borderRadius: 100, padding: '5px 8px 5px 12px', border: `1px solid ${T.accent}55` }}>
+            <FileText size={13} color={T.accent} style={{ flex: '0 0 auto' }} />
+            <span style={{ fontFamily: SANS, fontSize: 12.5, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
+              {attachedSides.title || 'Sides attached'}
+            </span>
+            <button onClick={() => { tapSelect(); setAttachedSides(null); }} aria-label="Remove sides"
+              style={{ display: 'grid', placeItems: 'center', width: 20, height: 20, borderRadius: 100, border: 'none', background: 'transparent', cursor: 'pointer', flex: '0 0 auto' }}>
+              <X size={13} color={T.sub} />
+            </button>
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 9, alignItems: 'center' }}>
+          {!listening && (
+            <button onClick={() => { tapSelect(); setShowSidesPicker(true); }} aria-label="Attach sides"
+              style={{ ...GLASS, display: 'grid', placeItems: 'center', width: 42, height: 42, borderRadius: 100, border: 'none', cursor: 'pointer', flex: '0 0 auto' }}>
+              <Paperclip size={18} color={attachedSides ? T.accent : T.sub} />
+            </button>
+          )}
+          {listening ? (
+            <div style={{ ...GLASS, flex: 1, borderRadius: 100, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ width: 9, height: 9, borderRadius: 100, background: T.rec, animation: 'v1cRec 1.1s ease-in-out infinite' }} />
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 2, height: 20 }}>
+                {Array.from({ length: 22 }).map((_, i) => (
+                  <span key={i} style={{ flex: 1, height: '100%', background: T.accent, borderRadius: 2, transformOrigin: 'center',
+                    animation: `v1cEq ${0.7 + (i % 5) * 0.12}s ease-in-out ${(i % 7) * 0.05}s infinite` }} />
+                ))}
+              </div>
+              <span style={{ fontFamily: MONO, fontSize: 12, color: T.deep }}>{fmt(secs)}</span>
             </div>
-            <span style={{ fontFamily: MONO, fontSize: 12, color: T.deep }}>{fmt(secs)}</span>
-          </div>
-        ) : (
-          <div style={{ ...GLASS, flex: 1, borderRadius: 100, padding: '6px 6px 6px 16px', display: 'flex', alignItems: 'center' }}>
-            <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onSend(); }}
-              placeholder="Ask Slate anything…" style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: SANS, fontSize: 14, color: T.text }} />
-          </div>
-        )}
-        {draft.trim() && !listening ? (
-          <button onClick={onSend} aria-label="Send" style={sendBtn}><Send size={18} color={T.onGold} /></button>
-        ) : (
-          <button
-            aria-label="Hold to talk"
-            onPointerDown={(e) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* noop */ } startRec(); }}
-            onPointerUp={() => stopRec(false)}
-            onPointerCancel={() => stopRec(true)}
-            style={{ ...sendBtn, background: listening ? T.rec : sendBtn.background,
-              transform: listening ? 'scale(1.06)' : 'none', boxShadow: listening ? '0 0 0 6px rgba(229,72,77,0.18)' : sendBtn.boxShadow,
-              transition: 'transform .15s, box-shadow .15s', touchAction: 'none', userSelect: 'none' }}
-          >
-            <Mic size={19} color="#FFFFFF" />
-          </button>
-        )}
+          ) : (
+            <div style={{ ...GLASS, flex: 1, borderRadius: 100, padding: '6px 6px 6px 16px', display: 'flex', alignItems: 'center' }}>
+              <input value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') onSend(); }}
+                placeholder={attachedSides ? 'Ask about your sides…' : 'Ask Slate anything…'} style={{ flex: 1, border: 'none', outline: 'none', background: 'transparent', fontFamily: SANS, fontSize: 14, color: T.text }} />
+            </div>
+          )}
+          {draft.trim() && !listening ? (
+            <button onClick={onSend} aria-label="Send" style={sendBtn}><Send size={18} color={T.onGold} /></button>
+          ) : (
+            <button
+              aria-label="Hold to talk"
+              onPointerDown={(e) => { try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* noop */ } startRec(); }}
+              onPointerUp={() => stopRec(false)}
+              onPointerCancel={() => stopRec(true)}
+              style={{ ...sendBtn, background: listening ? T.rec : sendBtn.background,
+                transform: listening ? 'scale(1.06)' : 'none', boxShadow: listening ? '0 0 0 6px rgba(229,72,77,0.18)' : sendBtn.boxShadow,
+                transition: 'transform .15s, box-shadow .15s', touchAction: 'none', userSelect: 'none' }}
+            >
+              <Mic size={19} color="#FFFFFF" />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Release-to-send hint + off-button catcher */}
@@ -530,6 +560,42 @@ export default function SlateCopilot({ minimized, context, onClose, onMinimize, 
           <div style={{ position: 'absolute', bottom: 86, left: 0, right: 0, textAlign: 'center', zIndex: 6, pointerEvents: 'none',
             fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', color: T.deep }}>RELEASE TO SEND</div>
         </>
+      )}
+
+      {/* Attach-sides picker — pick a scene for Slate to read. */}
+      {showSidesPicker && (
+        <div onClick={() => setShowSidesPicker(false)}
+          style={{ position: 'absolute', inset: 0, zIndex: 20, background: 'rgba(20,16,10,0.32)',
+            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div onClick={(e) => e.stopPropagation()}
+            style={{ background: T.bg, borderTopLeftRadius: 22, borderTopRightRadius: 22, borderTop: `1px solid ${T.line}`,
+              maxHeight: '62%', display: 'flex', flexDirection: 'column',
+              paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0px))', boxShadow: '0 -12px 40px rgba(0,0,0,0.18)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 10px' }}>
+              <span style={{ fontFamily: SANS, fontWeight: 700, fontSize: 15, color: T.text }}>Attach sides for Slate to read</span>
+              <button onClick={() => setShowSidesPicker(false)} aria-label="Close" style={{ ...hdrBtn }}><X size={16} color={T.sub} /></button>
+            </div>
+            <div className="v1-slate-scroll" style={{ overflowY: 'auto', padding: '0 12px 8px' }}>
+              {scripts.length === 0 ? (
+                <p style={{ fontFamily: SANS, fontSize: 13.5, color: T.sub, padding: '10px 8px 20px', lineHeight: 1.5 }}>
+                  No sides yet. Add a scene in the Studio or upload your sides, and they will show up here for Slate to read.
+                </p>
+              ) : scripts.map((s) => (
+                <button key={s.id} onClick={() => { tapPrimary(); setAttachedSides({ title: s.title, content: s.content }); setShowSidesPicker(false); }}
+                  style={{ width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 11, padding: '12px', borderRadius: 14,
+                    border: 'none', background: 'transparent', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
+                  <span style={{ display: 'grid', placeItems: 'center', width: 34, height: 34, borderRadius: 10, background: T.surface, flex: '0 0 auto' }}>
+                    <FileText size={16} color={T.accent} />
+                  </span>
+                  <span style={{ minWidth: 0, flex: 1 }}>
+                    <span style={{ display: 'block', fontFamily: SANS, fontSize: 14, fontWeight: 600, color: T.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.title || 'Untitled scene'}</span>
+                    <span style={{ display: 'block', fontFamily: SANS, fontSize: 12, color: T.sub, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{(s.content || '').replace(/\s+/g, ' ').slice(0, 52).trim()}…</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

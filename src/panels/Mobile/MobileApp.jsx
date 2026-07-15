@@ -3615,6 +3615,16 @@ export default function DrSelfTapeApp() {
     const scene = recent?.title ? { title: recent.title } : undefined;
     return { name: slateProfile?.first_name || '', tab, auditions: live, scene };
   }, [slateProfile, slateAuditions, slateScripts, slateFallbackScripts, tab]);
+  // Scripts the actor can attach so Slate reads the actual sides (title + text).
+  const slateScriptList = useMemo(() => {
+    const raw = (Array.isArray(slateScripts) && slateScripts.length)
+      ? slateScripts : (Array.isArray(slateFallbackScripts) ? slateFallbackScripts : []);
+    return raw
+      .map((s) => ({ id: s.id, title: s.title || 'Untitled scene',
+        content: s.content || s.script_content || s.text || '' }))
+      .filter((s) => s.content && s.content.trim())
+      .slice(0, 25);
+  }, [slateScripts, slateFallbackScripts]);
   useEffect(() => {
     if (notesReady && tab === 'tape-review' && !currentPanel) {
       reduxDispatch(clearNotesReady());
@@ -4160,6 +4170,7 @@ export default function DrSelfTapeApp() {
             <SlateCopilot
               minimized={copilotMin}
               context={slateContext}
+              scripts={slateScriptList}
               onClose={() => { setCopilotOpen(false); setCopilotMin(false); }}
               onMinimize={() => setCopilotMin(true)}
               onExpand={() => setCopilotMin(false)}
