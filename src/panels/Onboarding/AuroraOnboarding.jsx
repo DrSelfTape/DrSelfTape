@@ -856,13 +856,14 @@ function Offer({ onTry, onSkip }) {
         <h1 style={{
           fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700,
           letterSpacing: '-0.6px', lineHeight: 1.04, marginTop: 8,
-        }}>Your first Tape<br />Review is free.</h1>
+        }}>Get casting notes<br />on any take. Free.</h1>
         <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 320 }}>
-          Upload a take and Jericho gives you real casting-grade notes — your
-          performance, framing, eyeline, and the moves that book the room. ~30 seconds.
+          Grab any take you already have. An old monologue, a practice clip, even a rough one.
+          In about 30 seconds Jericho scores your performance, framing, and eyeline, then names
+          your strongest beat and the one fix that books the room.
         </p>
         <div style={{ marginTop: 20, textAlign: 'left', maxWidth: 300, width: '100%' }}>
-          {['Casting-grade acting notes', 'Your strongest beat + the one fix', 'Framing, eyeline & lighting scored'].map((t) => (
+          {['Notes like a casting read, not a vibe check', 'Your strongest beat + the one fix', 'Framing, eyeline & lighting scored'].map((t) => (
             <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
               <span style={{
                 width: 20, height: 20, borderRadius: 100, background: 'var(--aurora-mint)',
@@ -881,8 +882,18 @@ function Offer({ onTry, onSkip }) {
         position: 'relative', zIndex: 5,
         padding: '0 26px calc(env(safe-area-inset-bottom, 0px) + 38px)',
       }}>
-        <GoldBtn onClick={onTry}>Try my free review →</GoldBtn>
-        <GhostBtn onClick={onSkip} style={{ marginTop: 6 }}>Maybe later</GhostBtn>
+        <GoldBtn onClick={onTry}>Upload a take, free review →</GoldBtn>
+        {/* Skip demoted from a peer ghost button to a quiet text link — the
+            offer→skip funnel showed 57% taking the equal-weight "Maybe later".
+            The upload path is the one CTA; "Not now" is the low-emphasis exit. */}
+        <button
+          onClick={onSkip}
+          style={{
+            display: 'block', margin: '16px auto 0', padding: 8,
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: 'inherit', fontSize: 13, color: 'var(--aurora-sub)', opacity: 0.65,
+          }}
+        >Not now</button>
       </div>
     </div>
   );
