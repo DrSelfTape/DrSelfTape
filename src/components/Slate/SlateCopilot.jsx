@@ -92,6 +92,7 @@ export function SlateFAB({ onOpen }) {
   const openSlate = () => {
     setHint(false);
     try { localStorage.setItem('slate_hint_done', '1'); } catch { /* private mode */ }
+    try { import('../../utils/analytics').then(({ trackEvent, Events }) => trackEvent(Events.SLATE_OPENED)).catch(() => {}); } catch { /* noop */ }
     tapPrimary();
     onOpen();
   };
@@ -334,6 +335,10 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
     const clean = (text || '').trim();
     if (!clean || inFlightRef.current) return; // sync lock — `typing` state isn't synchronous
     inFlightRef.current = true;
+    // Slate is free (not in the token usage report) — track engagement so the
+    // launch is measurable. Lazy import so analytics can never break the send.
+    try { import('../../utils/analytics').then(({ trackEvent, Events }) =>
+      trackEvent(Events.SLATE_MESSAGE, { voice: !!voice, hasSides: !!(attachRef.current && attachRef.current.content) })).catch(() => {}); } catch { /* noop */ }
     const userMsg = voice ? { from: 'me', text: clean, voice: true, dur: voice } : { from: 'me', text: clean };
     const history = msgsRef.current.slice(-16).map((m) => ({ from: m.from, text: m.text }));
     setMsgs((s) => [...s, userMsg]);

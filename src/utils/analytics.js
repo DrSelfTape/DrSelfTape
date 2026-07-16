@@ -148,6 +148,8 @@ export const Events = {
   TAPE_REVIEW: 'tape_review',
   COMPARE_TAKES: 'compare_takes',
   SIDES_UPLOADED: 'sides_uploaded',
+  SLATE_OPENED: 'slate_opened',
+  SLATE_MESSAGE: 'slate_message',
   PURCHASE: 'purchase',
   // Free-first-review onboarding funnel (Day-0 activation → paywall).
   FIRST_REVIEW_OFFER_SHOWN: 'first_review_offer_shown',
