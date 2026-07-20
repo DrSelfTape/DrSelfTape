@@ -8,6 +8,16 @@
  */
 export const WHATS_NEW = [
   {
+    id: 6,
+    version: '1.0.17',
+    date: 'July 2026',
+    title: 'You stay signed in now',
+    intro: "One big quality-of-life fix this round:",
+    highlights: [
+      { emoji: '🔐', title: 'No more surprise sign-outs', body: 'The app used to quietly end your session after an hour and bounce you back to the login screen. Fixed — sign in once and you stay signed in.' },
+    ],
+  },
+  {
     id: 5,
     version: '1.0.16',
     date: 'July 2026',
