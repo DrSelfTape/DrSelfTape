@@ -58,7 +58,9 @@ export const registerUser = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const { data } = await axios.post(endPoints.register, formData);
-      try { const { trackEvent, Events } = await import('../../../utils/analytics'); trackEvent(Events.SIGNUP, { method: 'email' }); } catch { /* swallow */ }
+      // user_signup is now fired SERVER-SIDE at user creation (BE
+      // posthog_capture.py) — the canonical counter covering email AND Apple
+      // paths. Firing it here too would double-count email signups.
       return data?.data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
