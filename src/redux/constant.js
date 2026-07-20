@@ -15,6 +15,9 @@ const endPoints = {
   // Login User
   login: `${baseURL}/v1/users/login/`,
 
+  // Exchange refresh token for a new access+refresh pair
+  refreshToken: `${baseURL}/v1/users/token/refresh/`,
+
   // Register User
   register: `${baseURL}/v1/users/personal-info-registration/`,
 

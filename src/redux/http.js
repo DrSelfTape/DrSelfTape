@@ -25,6 +25,7 @@ const PUBLIC_AUTH_PATHS = [
   '/v1/users/personal-info-registration/',
   '/v1/users/forgotpassword/',
   '/v1/users/reset-password/',
+  '/v1/users/token/refresh/',
 ];
 
 // Guard against the post-logout 401 cascade: once we kick a user out,
@@ -36,6 +37,43 @@ let sessionExpiredHandled = false;
 // expiry still triggers the logout+redirect (the latch otherwise sticks true
 // if a 401 fired while already on /login, permanently disabling expiry logout).
 export const resetSessionExpiredLatch = () => { sessionExpiredHandled = false; };
+
+// Silent session refresh. Access tokens live 60 minutes; the refresh token
+// (30 days, rotated on every use) is exchanged here for a new pair so the
+// user never sees a login wall mid-session. Single-flight: when a burst of
+// requests 401s together (dashboard fires 10-15 calls per page), only ONE
+// refresh hits the BE — the rest await the same promise. This matters
+// beyond politeness: rotation blacklists the used refresh token, so a
+// second concurrent refresh with the same token would 401 and log the
+// user out.
+let refreshPromise = null;
+
+const refreshSession = async () => {
+  // Sequential dynamic imports for the same circular-dep reason as the
+  // logout path below.
+  const storeMod = await import('./store');
+  const store = storeMod?.store;
+  const refresh = store?.getState?.()?.auth?.user?.refresh;
+  if (!refresh) throw new Error('no refresh token stored');
+  // Bare axios, NOT axiosInstance: skips this interceptor (no recursion)
+  // and doesn't carry the expired Bearer header.
+  const { data } = await axios.post(`${baseURL}/v1/users/token/refresh/`, { refresh });
+  if (!data?.access) throw new Error('refresh response missing access token');
+  const authMod = await import('./features/auth/authSlice');
+  store.dispatch(authMod.setTokens({ access: data.access, refresh: data.refresh }));
+  setAuthToken(data.access);
+  return data.access;
+};
+
+const trySessionRefresh = async (failedConfig) => {
+  refreshPromise = refreshPromise || refreshSession().finally(() => { refreshPromise = null; });
+  const access = await refreshPromise;
+  const retryConfig = {
+    ...failedConfig,
+    headers: { ...(failedConfig?.headers || {}), Authorization: `Bearer ${access}` },
+  };
+  return axiosInstance(retryConfig);
+};
 
 // Response Interceptor
 axiosInstance.interceptors.response.use(
@@ -80,6 +118,19 @@ axiosInstance.interceptors.response.use(
       // Only treat 401 as session-expired when the caller was actually
       // authenticated AND wasn't hitting a public auth endpoint.
       if (hadAuthHeader && !isPublicAuth && !sessionExpiredHandled) {
+        // First line of defense: the access token likely just expired
+        // (60-min lifetime). Try one silent refresh + retry of the failed
+        // request. Only when THAT fails (refresh token expired/blacklisted/
+        // absent, or the retried request 401s again) fall through to the
+        // logout below. _authRetried guards the retried request itself from
+        // looping back in here.
+        if (error.config && !error.config._authRetried) {
+          error.config._authRetried = true;
+          try {
+            return await trySessionRefresh(error.config);
+          } catch { /* refresh failed — fall through to session-expired logout */ }
+        }
+        if (sessionExpiredHandled) return Promise.reject(error);
         sessionExpiredHandled = true;
         // Sequential awaits, not Promise.all — the modules form a small
         // circular dep graph (store ↔ http.js indirectly through the

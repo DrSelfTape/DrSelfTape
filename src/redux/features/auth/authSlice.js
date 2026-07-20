@@ -242,6 +242,14 @@ export const authSlice = createSlice({
     setDateOfBirth: (state, action) => {
       if (state.user) state.user.date_of_birth = action.payload || null;
     },
+    // Silent session refresh (http.js): persist the rotated pair. The BE
+    // blacklists the old refresh token on rotation, so dropping the new one
+    // here would strand the session at the next refresh.
+    setTokens: (state, action) => {
+      if (!state.user) return;
+      if (action.payload?.access) state.user.token = action.payload.access;
+      if (action.payload?.refresh) state.user.refresh = action.payload.refresh;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -260,6 +268,9 @@ export const authSlice = createSlice({
           phone_no: src?.phone_no,
           email: src?.email,
           token: src?.token?.access || src?.token,
+          // Kept for the silent session-refresh flow in http.js — without it
+          // the session hard-expires when the 60-min access token dies.
+          refresh: src?.token?.refresh || null,
           all_user_permissions: src?.all_user_permissions,
           role: src?.active_role || src?.role,
           is_active: src?.is_active,
@@ -295,6 +306,7 @@ export const authSlice = createSlice({
           phone_no: action.payload?.phone_no,
           email: action.payload?.email,
           token: action.payload?.token?.access || action.payload?.token,
+          refresh: action.payload?.token?.refresh || null,
           all_user_permissions: action.payload?.all_user_permissions,
           role: action.payload?.active_role || action.payload?.role, // Use active_role if available
           is_active: action.payload?.is_active,
@@ -332,6 +344,7 @@ export const authSlice = createSlice({
           phone_no: action.payload?.phone_no,
           email: action.payload?.email,
           token: action.payload?.token?.access || action.payload?.token,
+          refresh: action.payload?.token?.refresh || null,
           all_user_permissions: action.payload?.all_user_permissions,
           role: action.payload?.active_role || action.payload?.role,
           is_active: action.payload?.is_active,
@@ -438,6 +451,7 @@ export const authSlice = createSlice({
           const userData = {
             ...state.user,
             token: action.payload?.token?.access || action.payload?.access || state.user?.token,
+            refresh: action.payload?.token?.refresh || state.user?.refresh || null,
             role: action.payload?.role || state.user?.role,
             all_user_permissions: action.payload?.all_user_permissions || state.user?.all_user_permissions,
           };
@@ -451,7 +465,7 @@ export const authSlice = createSlice({
   },
 });
 
-export const { logoutUser, clearTempSession, setAiConsentAcceptedAt, setDateOfBirth } = authSlice.actions;
+export const { logoutUser, clearTempSession, setAiConsentAcceptedAt, setDateOfBirth, setTokens } = authSlice.actions;
 
 // Logout that ALSO clears persisted data slices (auditions, submissions,
 // scripts, etc.) so the next user on this device starts clean. Call this
