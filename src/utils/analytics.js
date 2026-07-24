@@ -33,6 +33,9 @@ export async function initAnalytics() {
       // landing-page / signup-page activity from our beta funnels.
       person_profiles: 'always',
       persistence: 'localStorage',
+      // Client-side error tracking — without this, $exception never fires and
+      // a broken deploy is invisible until users complain.
+      capture_exceptions: true,
       loaded: () => { initialized = true; },
     });
   } catch (e) {

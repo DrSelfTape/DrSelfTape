@@ -48,6 +48,18 @@ export const resetSessionExpiredLatch = () => { sessionExpiredHandled = false; }
 // user out.
 let refreshPromise = null;
 
+// The refresh token as last written to localStorage by ANY tab. Rotation
+// blacklists the used token, so when two tabs share a session the copy in
+// this tab's redux store can already be dead — the persisted one is the
+// live one.
+const readPersistedRefresh = () => {
+  try {
+    const root = JSON.parse(localStorage.getItem('persist:root') || '{}');
+    const auth = JSON.parse(root?.auth || '{}');
+    return auth?.user?.refresh || null;
+  } catch { return null; }
+};
+
 const refreshSession = async () => {
   // Sequential dynamic imports for the same circular-dep reason as the
   // logout path below.
@@ -57,7 +69,22 @@ const refreshSession = async () => {
   if (!refresh) throw new Error('no refresh token stored');
   // Bare axios, NOT axiosInstance: skips this interceptor (no recursion)
   // and doesn't carry the expired Bearer header.
-  const { data } = await axios.post(`${baseURL}/v1/users/token/refresh/`, { refresh });
+  const postRefresh = (tok) =>
+    axios.post(`${baseURL}/v1/users/token/refresh/`, { refresh: tok }, { timeout: 15000 });
+  let data;
+  try {
+    ({ data } = await postRefresh(refresh));
+  } catch (err) {
+    // 401 here can mean another tab already rotated this token. Retry once
+    // with the persisted copy before giving up — otherwise this tab's
+    // failure purges the OTHER tab's perfectly valid session.
+    const persisted = readPersistedRefresh();
+    if (err?.response?.status === 401 && persisted && persisted !== refresh) {
+      ({ data } = await postRefresh(persisted));
+    } else {
+      throw err;
+    }
+  }
   if (!data?.access) throw new Error('refresh response missing access token');
   const authMod = await import('./features/auth/authSlice');
   store.dispatch(authMod.setTokens({ access: data.access, refresh: data.refresh }));

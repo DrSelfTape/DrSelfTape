@@ -9,6 +9,7 @@ import { VoipCall, isVoipNative, registerVoip } from "../utils/voipCall";
 import { fetchMatches, fetchWhoWantsToRead, fetchMatchingStats, fetchGreenRoomMessages, fetchActivityFeed } from "../redux/features/readers/readersMatchSlice";
 import { getNotifications } from "../redux/features/notifications/notificationsSlice";
 import { baseURL } from "../redux/constant";
+import axiosInstance from "../redux/http";
 
 const SocketContext = React.createContext(null);
 const isMobile = () => window.innerWidth < 768;
@@ -159,24 +160,35 @@ export const SocketProvider = ({ children }) => {
       // burning a one-shot ticket on a connection nobody's going to use.
       if (cancelled) return `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
       try {
-        const res = await fetch(`${baseURL}/v1/users/ws-ticket/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        // axiosInstance, not bare fetch: its 401 interceptor runs the silent
+        // refresh (and, when the session is truly dead, the logout redirect
+        // that ends the reconnect loop). A stale pre-refresh session on bare
+        // fetch used to 401 here every ~11s forever.
+        const { data: body } = await axiosInstance.post('/v1/users/ws-ticket/');
         if (cancelled) return `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
-        if (res.ok) {
-          const body = await res.json();
-          if (body?.ticket) return `${wsProto}://${wsHost}/ws/notifications/?ticket=${body.ticket}`;
+        if (body?.ticket) return `${wsProto}://${wsHost}/ws/notifications/?ticket=${body.ticket}`;
+      } catch (err) {
+        // Auth is dead (interceptor already tried refresh) — the legacy
+        // ?token= form would just 403 at the consumer. Return it anyway as
+        // the required URL, but the capped backoff below keeps this quiet
+        // until the interceptor's logout redirect lands.
+        if (err?.response?.status === 401) {
+          return `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
         }
-      } catch { /* network down or endpoint missing — use legacy form */ }
+        /* network down or endpoint missing — use legacy form */
+      }
       return `${wsProto}://${wsHost}/ws/notifications/?token=${token}`;
     };
 
     if (cancelled) return;
-    const ws = new ReconnectingWebSocket(urlProvider);
+    // Backoff: first retries stay snappy for real network blips, but a
+    // persistently-failing connection decays to one attempt per minute
+    // instead of hammering ws-ticket + the WS consumer every ~11s.
+    const ws = new ReconnectingWebSocket(urlProvider, [], {
+      minReconnectionDelay: 1000,
+      maxReconnectionDelay: 60000,
+      reconnectionDelayGrowFactor: 2,
+    });
     socketRef.current = ws;
 
     ws.onopen = () => setIsSocketReady(true);
@@ -189,11 +201,13 @@ export const SocketProvider = ({ children }) => {
     // Auto-offline when user leaves the app/tab
     const handleVisibility = () => {
       const presenceUrl = `${baseURL}/v1/matching/presence/`;
-      const headers = { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
       if (document.visibilityState === 'hidden') {
+        // sendBeacon can't carry an Authorization header — best-effort only.
         navigator.sendBeacon?.(presenceUrl, new Blob([JSON.stringify({ is_online: false })], { type: 'application/json' }));
       } else {
-        fetch(presenceUrl, { method: 'POST', headers, body: JSON.stringify({ is_online: true }) }).catch(() => {});
+        // Refresh-aware client (see urlProvider note) instead of a raw fetch
+        // pinned to this effect's possibly-stale access token.
+        axiosInstance.post('/v1/matching/presence/', { is_online: true }).catch(() => {});
       }
     };
     document.addEventListener('visibilitychange', handleVisibility);
