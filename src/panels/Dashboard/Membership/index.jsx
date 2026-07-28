@@ -480,7 +480,7 @@ export default function Membership({ onClose }) {
     // Same invariant as the subscribe path above.
     if (Capacitor.isNativePlatform()) {
       dispatch(showSnackbar({
-        message: 'Manage your subscription at drselftapes.com.',
+        message: 'Manage your subscription at drselftape.app.',
         variant: 'info',
       }));
       return;

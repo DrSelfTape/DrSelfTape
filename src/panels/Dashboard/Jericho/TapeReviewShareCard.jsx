@@ -71,7 +71,7 @@ const TapeReviewShareCard = forwardRef(function TapeReviewShareCard({ verdict, t
         </span>
         <span style={{
           fontFamily: "'JetBrains Mono', monospace", fontSize: 26, color: '#FCE072', letterSpacing: 1,
-        }}>drselftapes.com</span>
+        }}>drselftape.app</span>
       </div>
     </div>
   );
