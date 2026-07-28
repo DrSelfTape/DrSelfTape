@@ -84,7 +84,7 @@ export default function TapeAnalyzerTutorial({ onClose }) {
 
         <button
           onClick={dismiss}
-          className="w-full py-3.5 rounded-2xl transition-all hover:shadow-lg"
+          className="w-full py-3.5 rounded-2xl transition-all hover:shadow-lg dst-press"
           style={{
             background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
             color: '#0E0D0A', fontSize: 14, fontWeight: 800, border: 'none', cursor: 'pointer',

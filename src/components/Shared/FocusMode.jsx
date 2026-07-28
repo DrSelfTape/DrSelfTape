@@ -74,7 +74,7 @@ export default function FocusMode({ onComplete }) {
           </p>
           <button
             onClick={start}
-            className="flex items-center justify-center gap-2 mx-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-[#D4A85F]/30"
+            className="flex items-center justify-center gap-2 mx-auto px-8 py-3 rounded-full text-sm font-bold text-white transition-all hover:shadow-lg hover:shadow-[#D4A85F]/30 dst-press"
             style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
           >
             <Play className="w-4 h-4" />

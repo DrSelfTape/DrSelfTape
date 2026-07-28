@@ -548,7 +548,7 @@ export default function JerichoDashboard() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => { setActiveTab('tape'); setEntered(true); }}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
               style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
             >
               <Film size={16} /> Review a Self-Tape

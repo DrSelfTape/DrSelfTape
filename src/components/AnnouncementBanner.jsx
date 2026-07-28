@@ -61,7 +61,7 @@ export default function AnnouncementBanner() {
   };
 
   return (
-    <div style={{
+    <div className="dst-banner-in" style={{
       margin: "4px 12px 12px",
       background: "linear-gradient(135deg, #FFF7E6, #FCEFCf)",
       border: "1px solid rgba(212,168,95,0.55)", borderRadius: 16,

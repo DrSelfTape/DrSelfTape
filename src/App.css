@@ -235,6 +235,14 @@
   transform: scale(0.94);
 }
 
+/* Tactile press feedback for gradient CTAs — extends the aurora-tab-btn pattern. */
+.dst-press {
+  transition: transform 160ms cubic-bezier(.2,.7,.3,1);
+}
+.dst-press:active {
+  transform: scale(0.97);
+}
+
 html,
 body {
   margin: 0;
@@ -688,6 +696,35 @@ button:not(:disabled):active,
 }
 @media (prefers-reduced-motion: reduce) {
   .aurora-page-in {
+    animation: none !important;
+  }
+}
+
+/* Tape Review result reveal — staged card entrance. Index set inline via --tr-i. */
+@keyframes tr-reveal {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tr-reveal {
+  animation: tr-reveal 380ms cubic-bezier(.2,.7,.3,1) both;
+  animation-delay: calc(var(--tr-i, 0) * 60ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tr-reveal {
+    animation: none !important;
+  }
+}
+
+/* Server-driven banner entrance (UpdateBanner, AnnouncementBanner). */
+@keyframes dst-banner-in {
+  0%   { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.dst-banner-in {
+  animation: dst-banner-in 200ms cubic-bezier(.2,.7,.3,1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dst-banner-in {
     animation: none !important;
   }
 }

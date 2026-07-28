@@ -88,6 +88,7 @@ export default function UpdateBanner() {
 
   return (
     <div
+      className="dst-banner-in"
       style={{
         position: "fixed",
         top: 0,

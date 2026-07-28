@@ -44,7 +44,7 @@ export default function FindAReaderCTA() {
             </div>
           )}
         </div>
-        <button className="bg-[#A7ECDA] hover:bg-[#8ed4c2] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer text-sm group-hover:shadow-lg group-hover:shadow-[#A7ECDA]/20" style={{ color: 'var(--bg-deep)' }}>
+        <button className="bg-[#A7ECDA] hover:bg-[#8ed4c2] font-semibold px-5 py-2.5 rounded-xl transition-all duration-200 whitespace-nowrap cursor-pointer text-sm group-hover:shadow-lg group-hover:shadow-[#A7ECDA]/20 dst-press" style={{ color: 'var(--bg-deep)' }}>
           Find Readers &rarr;
         </button>
       </div>

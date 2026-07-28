@@ -38,14 +38,14 @@ const PENDING_JOB_TTL_MS = 30 * 60 * 1000; // 30 minutes
 function FirstReviewPaywall({ onUpgrade }) {
   useEffect(() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_SHOWN); }, []);
   return (
-    <div className="rounded-2xl border border-[#D4A85F]/30 p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.05))' }}>
+    <div className="rounded-2xl border border-[#D4A85F]/30 p-5 text-center tr-reveal" style={{ '--tr-i': 7, background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.05))' }}>
       <h3 className="text-base font-bold text-[#0A0A0A] leading-snug">You got the headline. There&apos;s a full casting read behind it.</h3>
       <p className="text-sm text-[rgba(10,10,10,0.6)] mt-1.5 leading-relaxed">
         Unlock the rest — the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape. Any plan.
       </p>
       <button
         onClick={onUpgrade}
-        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
         style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
       >
         <Sparkles size={15} /> Unlock my full read
@@ -71,7 +71,7 @@ function FullReadLocked({ onUpgrade, hidden }) {
     hidden?.hasDna && 'your Performance DNA',
   ].filter(Boolean);
   return (
-    <div className="rounded-2xl border border-[#D4A85F]/30 p-5" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
+    <div className="rounded-2xl border border-[#D4A85F]/30 p-5 tr-reveal" style={{ '--tr-i': 7, background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
       <div className="flex items-center gap-2">
         <Lock size={15} className="text-[#7A5A18]" />
         <h3 className="text-sm font-bold text-[#0A0A0A]">Your full casting read is ready</h3>
@@ -91,7 +91,7 @@ function FullReadLocked({ onUpgrade, hidden }) {
       </div>
       <button
         onClick={() => { trackEvent('fullread_locked_tap'); onUpgrade?.(); }}
-        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
         style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
       >
         <Sparkles size={15} /> Unlock the full read
@@ -575,7 +575,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
           <button
             onClick={reset}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
             style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
           >
             <RotateCcw size={15} /> Try again
@@ -620,7 +620,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Verdict */}
         {r.verdict && (
-          <div className="rounded-2xl border border-[#D4A85F]/25 p-4 sm:p-5" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
+          <div className="rounded-2xl border border-[#D4A85F]/25 p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 0, background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-xl bg-[#D4A85F]/15 flex items-center justify-center flex-shrink-0">
                 <Sparkles size={16} className="text-[#7A5A18]" />
@@ -642,7 +642,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* What's working */}
         {working.length > 0 && (
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
+          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 1, ...SURFACE }}>
             <h3 className="text-sm font-bold text-[#0A0A0A] mb-3 flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-500" /> What&apos;s working
             </h3>
@@ -662,7 +662,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Performance read — the deep craft analysis */}
         {r.performance && Object.values(r.performance).some(Boolean) && (
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
+          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 2, ...SURFACE }}>
             <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
               <Theater size={16} className="text-[#7A5A18]" /> Performance read
             </h3>
@@ -679,7 +679,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Adjustments */}
         {adjustments.length > 0 && (
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
+          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 3, ...SURFACE }}>
             <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
               <Target size={16} className="text-[#7A5A18]" /> Your next take
             </h3>
@@ -700,7 +700,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* The one thing */}
         {r.the_one_thing && (
-          <div className="rounded-2xl border border-[#FF8280]/25 p-4" style={{ background: 'rgba(255,130,128,0.06)' }}>
+          <div className="rounded-2xl border border-[#FF8280]/25 p-4 tr-reveal" style={{ '--tr-i': 4, background: 'rgba(255,130,128,0.06)' }}>
             <h3 className="text-xs font-bold text-[#FF8280] uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
               <Flame size={13} /> The one thing
             </h3>
@@ -718,8 +718,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             <button
               type="button"
               onClick={() => startNextTakeMission(focus)}
-              className="w-full text-left rounded-2xl p-4 border border-[#D4A85F]/40"
-              style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}
+              className="w-full text-left rounded-2xl p-4 border border-[#D4A85F]/40 tr-reveal"
+              style={{ '--tr-i': 5, background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}
             >
               <div className="flex items-center gap-2 mb-1">
                 <Target size={15} className="text-[#7A5A18]" />
@@ -735,7 +735,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {/* Scores — only render a card when its data actually came back, so an
             empty/partial result never shows a wall of clamped-to-0 bars. */}
         {(hasScores || hasDna) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 tr-reveal" style={{ '--tr-i': 6 }}>
             {hasScores && (
               <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
                 <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Tape scores</h3>
@@ -782,7 +782,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               type="button"
               disabled={sharing}
               onClick={handleShare}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60 tr-reveal"
+              style={{ '--tr-i': 7 }}
             >
               {sharing ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
               {sharing ? 'Preparing your card…' : 'Share my read'}
@@ -800,7 +801,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             <FirstReviewPaywall onUpgrade={() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_TAP); onUpgrade?.(); }} />
             <button
               onClick={reset}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-[rgba(10,10,10,0.55)]"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-[rgba(10,10,10,0.55)] tr-reveal"
+              style={{ '--tr-i': 7 }}
             >
               <RotateCcw size={14} /> Review another take
             </button>
@@ -813,15 +815,15 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               type="button"
               onClick={() => setMode('compare')}
               onTouchEnd={(e) => { e.preventDefault(); setMode('compare'); }}
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15"
+              style={{ '--tr-i': 7, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 tr-reveal"
             >
               <Trophy size={15} /> Compare this take against another →
             </button>
             <button
               onClick={reset}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg tr-reveal dst-press"
+              style={{ '--tr-i': 7, background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
             >
               <RotateCcw size={15} /> Review another take
             </button>
@@ -960,7 +962,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         <button
           onClick={submit}
           disabled={!file}
-          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
           style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
         >
           <Sparkles size={15} /> Get my notes

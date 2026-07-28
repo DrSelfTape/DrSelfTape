@@ -112,7 +112,7 @@ export default function TutorialAchievement({ show, onClose }) {
 
         <button
           onClick={handleCta}
-          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF8280] to-[#A7ECDA] text-white font-bold text-sm transition-all hover:shadow-lg"
+          className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#FF8280] to-[#A7ECDA] text-white font-bold text-sm transition-all hover:shadow-lg dst-press"
         >
           Let's Go!
         </button>

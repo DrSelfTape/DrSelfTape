@@ -184,7 +184,7 @@ export default function CompareTakes({ seed = null }) {
           </div>
           <button
             onClick={reset}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
             style={{ background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
           >
             <RotateCcw size={15} /> Try again
@@ -196,7 +196,7 @@ export default function CompareTakes({ seed = null }) {
     return (
       <div className="space-y-4 sm:space-y-5">
         {/* Winner banner */}
-        <div className="rounded-2xl border border-[#D4A85F]/35 p-5 text-center" style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.16), rgba(122,90,24,0.05))' }}>
+        <div className="rounded-2xl border border-[#D4A85F]/35 p-5 text-center tr-reveal" style={{ '--tr-i': 0, background: 'linear-gradient(135deg, rgba(212,168,95,0.16), rgba(122,90,24,0.05))' }}>
           <div className="w-12 h-12 rounded-2xl bg-[#D4A85F]/20 flex items-center justify-center mx-auto mb-2.5">
             {isDup ? <Copy size={20} className="text-[#7A5A18]" /> : <Trophy size={22} className="text-[#7A5A18]" />}
           </div>
@@ -219,8 +219,9 @@ export default function CompareTakes({ seed = null }) {
             return (
               <div
                 key={n}
-                className="rounded-2xl border p-4 sm:p-5"
+                className="rounded-2xl border p-4 sm:p-5 tr-reveal"
                 style={{
+                  '--tr-i': idx + 1,
                   ...SURFACE,
                   borderColor: isWinner ? 'rgba(212,168,95,0.5)' : 'rgba(10,10,10,0.08)',
                   boxShadow: isWinner ? '0 4px 24px rgba(212,168,95,0.18)' : 'none',
@@ -302,8 +303,8 @@ export default function CompareTakes({ seed = null }) {
           <button
             type="button"
             onClick={goPremium}
-            className="w-full text-left rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/35"
-            style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.04))' }}
+            className="w-full text-left rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/35 tr-reveal"
+            style={{ '--tr-i': order.length + 1, background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.04))' }}
           >
             <div className="flex items-center gap-2 mb-1.5">
               <Lock size={14} className="text-[#7A5A18]" />
@@ -317,7 +318,7 @@ export default function CompareTakes({ seed = null }) {
 
         {/* What to do */}
         {r.what_to_do && (
-          <div className="rounded-2xl border border-[#FF8280]/25 p-4" style={{ background: 'rgba(255,130,128,0.06)' }}>
+          <div className="rounded-2xl border border-[#FF8280]/25 p-4 tr-reveal" style={{ '--tr-i': order.length + 1, background: 'rgba(255,130,128,0.06)' }}>
             <h3 className="text-xs font-bold text-[#FF8280] uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
               <Sparkles size={13} /> Your move
             </h3>
@@ -327,8 +328,8 @@ export default function CompareTakes({ seed = null }) {
 
         <button
           onClick={reset}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg"
-          style={{ background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg tr-reveal dst-press"
+          style={{ '--tr-i': order.length + 1, background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
         >
           <RotateCcw size={15} /> Compare another set
         </button>
@@ -457,7 +458,7 @@ export default function CompareTakes({ seed = null }) {
         <button
           onClick={submit}
           disabled={!canSubmit}
-          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
           style={{ background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
         >
           <Trophy size={15} /> {files.length >= 2 ? `Rank my ${files.length} takes` : 'Rank my takes'}

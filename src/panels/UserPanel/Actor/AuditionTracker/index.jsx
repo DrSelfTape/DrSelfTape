@@ -440,7 +440,7 @@ export const AuditionTracker = () => {
                     <div
                       key={milestone?.id}
                       onClick={() => handleBadgeClick(milestone)}
-                      className={`relative overflow-hidden transition-all duration-300 rounded-xl hover:scale-105 hover:shadow-lg !cursor-pointer ${milestone?.earned
+                      className={`relative overflow-hidden transition-all duration-300 rounded-xl hover:scale-105 hover:shadow-lg !cursor-pointer dst-press ${milestone?.earned
                         ? `${[gradiant[index]]} border border-white shadow-lg`
                         : 'bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200'
                         }`}

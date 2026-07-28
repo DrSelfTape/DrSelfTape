@@ -126,7 +126,7 @@ const RecordingPreview = ({
             console.log('[RecordingPreview] Play button clicked, index:', index);
             playRecordingForIndex(index);
           }}
-          className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg ${
+          className={`flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg dst-press ${
             isPlayingIndex === index
               ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-lg'
               : 'bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 hover:from-blue-50 hover:to-indigo-50 hover:text-blue-600'
