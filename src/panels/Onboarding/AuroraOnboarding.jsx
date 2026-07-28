@@ -829,9 +829,26 @@ function Welcome({ data, onDone }) {
 }
 
 /* The offer — the activation moment. Pitches one free Tape Review right after
- * the welcome celebration, while intent is highest (Day-0 converts best). */
+ * the welcome celebration, while intent is highest (Day-0 converts best).
+ * Two-card guaranteed win (Duolingo's pre-blessed default): "record our
+ * practice scene" is preselected + RECOMMENDED so the no-tape/no-sides user —
+ * the common case for a brand-new signup — still has a one-tap path to the
+ * aha. Both cards terminate at the analyzer; only the variant differs. */
 function Offer({ onTry, onSkip }) {
   useEffect(() => { track('FIRST_REVIEW_OFFER_SHOWN'); }, []);
+  const [variant, setVariant] = useState('record');
+  const cards = [
+    {
+      id: 'record', emoji: '🎬', badge: 'RECOMMENDED',
+      title: 'Record our 30-second practice scene',
+      desc: 'We give you the lines — read them once, tape it, get casting notes.',
+    },
+    {
+      id: 'upload', emoji: '📼', badge: null,
+      title: 'I have my own tape or sides',
+      desc: 'Upload any take you already have. An old monologue, even a rough one.',
+    },
+  ];
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'absolute', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
@@ -858,31 +875,57 @@ function Offer({ onTry, onSkip }) {
           letterSpacing: '-0.6px', lineHeight: 1.04, marginTop: 8,
         }}>Get casting notes<br />on any take. Free.</h1>
         <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 320 }}>
-          Grab any take you already have. An old monologue, a practice clip, even a rough one.
-          In about 30 seconds Jericho scores your performance, framing, and eyeline, then names
-          your strongest beat and the one fix that books the room.
+          Jericho scores your performance, framing, and eyeline, then names your
+          strongest beat and the one fix that books the room.
         </p>
-        <div style={{ marginTop: 20, textAlign: 'left', maxWidth: 300, width: '100%' }}>
-          {['Notes like a casting read, not a vibe check', 'Your strongest beat + the one fix', 'Framing, eyeline & lighting scored'].map((t) => (
-            <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0' }}>
-              <span style={{
-                width: 20, height: 20, borderRadius: 100, background: 'var(--aurora-mint)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-              }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1A1408" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M5 12l5 5 9-11" />
-                </svg>
-              </span>
-              <span style={{ fontSize: 14, color: 'var(--aurora-text)' }}>{t}</span>
-            </div>
-          ))}
+        <div style={{ marginTop: 20, textAlign: 'left', maxWidth: 320, width: '100%' }}>
+          {cards.map((c) => {
+            const selected = variant === c.id;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => setVariant(c.id)}
+                style={{
+                  width: '100%', display: 'flex', alignItems: 'flex-start', gap: 12,
+                  padding: '14px 14px', marginBottom: 10, borderRadius: 16, cursor: 'pointer',
+                  textAlign: 'left', fontFamily: 'inherit',
+                  background: selected
+                    ? 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)'
+                    : 'rgba(255,255,255,0.35)',
+                  border: selected
+                    ? '2px solid var(--aurora-heritage-gold)'
+                    : '2px solid rgba(255,255,255,0.5)',
+                  boxShadow: selected ? '0 6px 18px rgba(212,168,95,0.25)' : 'none',
+                  touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <span style={{ fontSize: 24, flexShrink: 0, lineHeight: 1.2 }}>{c.emoji}</span>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--aurora-text)' }}>{c.title}</span>
+                    {c.badge && (
+                      <span style={{
+                        fontFamily: "'JetBrains Mono', monospace", fontSize: 8.5, fontWeight: 700,
+                        letterSpacing: '0.12em', padding: '3px 7px', borderRadius: 100,
+                        background: 'var(--aurora-mint)', color: '#1A1408',
+                      }}>{c.badge}</span>
+                    )}
+                  </span>
+                  <span style={{ display: 'block', fontSize: 12, color: 'var(--aurora-sub)', marginTop: 3, lineHeight: 1.45 }}>
+                    {c.desc}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
       <div style={{
         position: 'relative', zIndex: 5,
         padding: '0 26px calc(env(safe-area-inset-bottom, 0px) + 38px)',
       }}>
-        <GoldBtn onClick={onTry}>Upload a take, free review →</GoldBtn>
+        <GoldBtn onClick={() => onTry(variant)}>Get my free review →</GoldBtn>
         {/* Skip demoted from a peer ghost button to a quiet text link — the
             offer→skip funnel showed 57% taking the equal-weight "Maybe later".
             The upload path is the one CTA; "Not now" is the low-emphasis exit. */}
@@ -1013,7 +1056,8 @@ export default function AuroraOnboarding({ onClose }) {
   // user straight into a (free) Tape Review. The event is the cross-component
   // bridge — onboarding lives inside HomeScreen, the analyzer in the root.
   // finish() is now synchronous (background persist), so the handoff is instant.
-  const launchFirstReview = async () => {
+  const launchFirstReview = async (variant = 'upload') => {
+    track('FIRST_REVIEW_OFFER_TAPPED', { variant });
     // De-stack the pre-upload interstitials: resolve AI consent HERE, while
     // onboarding is still on screen, instead of letting TapeReview's useAIGate
     // stack the consent modal on top of the fresh first-review screen (and
@@ -1041,6 +1085,10 @@ export default function AuroraOnboarding({ onClose }) {
     // on every mount and re-asserts the first-review screen. The event covers
     // the immediate (no-remount) case.
     try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
+    // Which offer card was chosen. TapeReview reads this once in firstReview
+    // mode: 'record' prefills the bundled practice sides and promotes the
+    // record button to primary; 'upload' keeps the classic upload emphasis.
+    try { window.sessionStorage.setItem('dst_first_review_variant', variant); } catch { /* noop */ }
     finish({ launchFirstReview: true });
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
   };

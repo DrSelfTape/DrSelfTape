@@ -31,6 +31,7 @@ import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
 import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
+import CameraPresell, { needsCameraPresell, markCameraPresellSeen } from "../../components/Shared/CameraPresell";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -2597,6 +2598,13 @@ function ScenesScreen({ setTab }) {
   const [confirmDelete, setConfirmDelete] = useState(null); // script object to confirm
   // Full-screen in-app recorder — script-less "Record a take" (Tier 2 item 4).
   const [showRecorder, setShowRecorder] = useState(false);
+  // First-ever record attempt: pre-sell the camera/mic OS prompts before the
+  // recorder's getUserMedia fires them (same gate TapeReview uses).
+  const [showCamPresell, setShowCamPresell] = useState(false);
+  const openRecorder = () => {
+    if (needsCameraPresell()) { setShowCamPresell(true); return; }
+    setShowRecorder(true);
+  };
 
   // Craft Journey (and other panels) dispatch this event to drop an
   // AI-generated script directly into Scene Study without going
@@ -2755,6 +2763,12 @@ function ScenesScreen({ setTab }) {
           <SelfTapeRecorder lines={[]} userRole={null} onClose={() => setShowRecorder(false)} />
         </Suspense>
       )}
+      {showCamPresell && (
+        <CameraPresell
+          onReady={() => { markCameraPresellSeen(); setShowCamPresell(false); setShowRecorder(true); }}
+          onDismiss={() => { markCameraPresellSeen(); setShowCamPresell(false); }}
+        />
+      )}
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--aurora-text)', margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
         <button style={{
@@ -2866,8 +2880,8 @@ function ScenesScreen({ setTab }) {
           the record→review loop finally closes without the native camera app. */}
       <button
         type="button"
-        onClick={() => setShowRecorder(true)}
-        onTouchEnd={(e) => { e.preventDefault(); setShowRecorder(true); }}
+        onClick={openRecorder}
+        onTouchEnd={(e) => { e.preventDefault(); openRecorder(); }}
         className="aurora-card"
         style={{
           width: '100%', display: 'flex', alignItems: 'center', gap: 12,

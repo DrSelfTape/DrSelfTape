@@ -23,6 +23,8 @@ import { saveBlobUrl } from '../../../utils/saveMedia';
 import TapeReviewShareCard from './TapeReviewShareCard';
 import { Share2 } from 'lucide-react';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { PRACTICE_SCENE_TITLE, PRACTICE_SCENE_CONTENT } from '../../../data/practiceScene';
+import CameraPresell, { needsCameraPresell, markCameraPresellSeen } from '../../../components/Shared/CameraPresell';
 import { Capacitor } from '@capacitor/core';
 import { usePushNotifications, isCapacitorNative, openNotificationSettings } from '../../../hooks/usePushNotifications';
 
@@ -238,13 +240,27 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     trackEvent('next_take_mission_start', { seeded: !!file });
     setMode('compare');
   };
-  const [role, setRole] = useState('');
+  // Which onboarding offer card was chosen (AuroraOnboarding sets it just
+  // before the handoff). 'record' = "record our practice scene": show the
+  // bundled sides in-screen and promote the record CTA to primary. Read once
+  // at mount — the flag outlives remounts (same rationale as dst_first_review).
+  const [practiceVariant] = useState(() => {
+    try { return firstReview && window.sessionStorage.getItem('dst_first_review_variant') === 'record'; } catch { return false; }
+  });
+  const [role, setRole] = useState(practiceVariant ? 'Morgan' : '');
   const [tone, setTone] = useState('');
-  const [sides, setSides] = useState('');
+  const [sides, setSides] = useState(practiceVariant ? PRACTICE_SCENE_CONTENT : '');
   const [showOptional, setShowOptional] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const inputRef = useRef(null);
   const recordInputRef = useRef(null); // capture="user" input for the no-tape record path
+  // First-ever record attempt on native: pre-sell the camera/mic OS prompts
+  // before capture="user" fires them (a denial here is unrecoverable in-app).
+  const [showCamPresell, setShowCamPresell] = useState(false);
+  const startRecord = () => {
+    if (needsCameraPresell()) { setShowCamPresell(true); return; }
+    recordInputRef.current?.click();
+  };
 
   // Share card — render an actor's result as a branded image for social. Free
   // distribution: an actor posting their casting-grade read is our UGC engine.
@@ -837,6 +853,17 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   return (
     <div className="space-y-4">
       {modeToggle}
+      {showCamPresell && (
+        <CameraPresell
+          onReady={() => {
+            markCameraPresellSeen();
+            setShowCamPresell(false);
+            // Synchronous within the tap gesture, so WKWebView honors the click.
+            recordInputRef.current?.click();
+          }}
+          onDismiss={() => { markCameraPresellSeen(); setShowCamPresell(false); }}
+        />
+      )}
       {/* Escape hatch for the free-first-review flow: a user who declines AI
           consent or doesn't want to upload must be able to leave instead of
           being pinned here on every remount. */}
@@ -879,6 +906,38 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
         )}
 
+        {/* Practice-scene path: the onboarding "record our scene" card landed
+            here. The actor needs the LINES before the camera opens, so the
+            sides render in-screen with the record CTA as the primary action.
+            The sides/role fields are already prefilled for sharper notes. */}
+        {practiceVariant && (
+          <div className="rounded-xl border border-[#D4A85F]/40 bg-[#D4A85F]/[0.08] p-4 mb-4">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Film size={12} className="text-[#7A5A18]" />
+              <span className="text-[10px] font-bold tracking-wider text-[#7A5A18] uppercase">{PRACTICE_SCENE_TITLE}</span>
+            </div>
+            <p className="text-[11px] text-[rgba(10,10,10,0.5)] mb-2">
+              You're Morgan, leaving a voicemail you weren't supposed to leave. Read it once, then tape it — any way you feel it.
+            </p>
+            <div className="rounded-lg bg-white/60 p-3 max-h-44 overflow-y-auto">
+              {PRACTICE_SCENE_CONTENT.split('\n\n').map((line, k) => (
+                <p key={k} className="text-[12.5px] leading-relaxed text-[#0A0A0A] mb-2 last:mb-0">
+                  {line.replace(/^MORGAN: /, '')}
+                </p>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={startRecord}
+              onTouchEnd={(e) => { e.preventDefault(); startRecord(); }}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+              className="w-full mt-3 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:shadow-lg"
+            >
+              <Film size={15} /> Ready? Record your take
+            </button>
+          </div>
+        )}
+
         {/* Drop / pick */}
         <button
           onClick={() => inputRef.current?.click()}
@@ -905,16 +964,19 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {/* No tape yet? Record one right here — the no-tape user's path to the
             aha in one session. capture="user" opens the camera on mobile; desktop
             falls back to a normal picker. Reuses the exact same onPick flow, so a
-            recorded clip lands as a File identical to an uploaded one. */}
+            recorded clip lands as a File identical to an uploaded one. Hidden on
+            the practice-scene variant, whose card above owns the record CTA. */}
+        {!practiceVariant && (
         <button
           type="button"
-          onClick={() => recordInputRef.current?.click()}
-          onTouchEnd={(e) => { e.preventDefault(); recordInputRef.current?.click(); }}
+          onClick={startRecord}
+          onTouchEnd={(e) => { e.preventDefault(); startRecord(); }}
           style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15"
         >
           <Film size={15} /> No tape? Record one now
         </button>
+        )}
         <input ref={recordInputRef} type="file" accept="video/*" capture="user" onChange={onPick} className="hidden" />
 
         {fileError && <p className="text-xs text-red-500 mt-3 text-center">{fileError}</p>}
