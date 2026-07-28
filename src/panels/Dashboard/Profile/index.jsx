@@ -683,7 +683,7 @@ export default function Profile() {
                   }} />
                 </button>
                 <span className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>
-                  {readerForm.is_paid_reader ? 'Paid Reader — Active' : 'Not offering paid sessions'}
+                  {readerForm.is_paid_reader ? 'Paid Reader · Active' : 'Not offering paid sessions'}
                 </span>
               </div>
 
@@ -731,7 +731,7 @@ export default function Profile() {
                       style={{ background: 'rgba(167,236,218,0.12)', border: '1px solid rgba(167,236,218,0.35)', color: 'var(--aurora-mint)' }}
                     >
                       <Check className="w-4 h-4" />
-                      Bank Account Connected — Payouts Active
+                      Bank Account Connected · Payouts Active
                     </div>
                   ) : stripeStatus === 'pending' ? (
                     <div>
@@ -739,7 +739,7 @@ export default function Profile() {
                         style={{ background: 'rgba(252,224,114,0.1)', border: '1px solid rgba(252,224,114,0.3)', color: 'var(--aurora-heritage-gold)' }}
                       >
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Verification Pending — Stripe is reviewing your account
+                        Verification Pending. Stripe is reviewing your account
                       </div>
                       <div className="flex items-center gap-3 mb-2">
                         <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>
@@ -779,7 +779,7 @@ export default function Profile() {
                         style={{ background: 'rgba(255,130,128,0.10)', border: '1px solid rgba(255,130,128,0.30)', color: 'var(--aurora-rose)' }}
                       >
                         <AlertCircle className="w-4 h-4" />
-                        Unable to verify — {stripeDetails?.error || 'Unknown error'}
+                        Unable to verify: {stripeDetails?.error || 'Unknown error'}
                       </div>
                       <button
                         type="button"
@@ -802,7 +802,7 @@ export default function Profile() {
                         style={{ background: 'rgba(255,130,128,0.10)', border: '1px solid rgba(255,130,128,0.30)', color: 'var(--aurora-rose)' }}
                       >
                         <AlertCircle className="w-4 h-4" />
-                        Setup Incomplete — Finish connecting your bank
+                        Setup Incomplete. Finish connecting your bank
                       </div>
                       <button
                         type="button"

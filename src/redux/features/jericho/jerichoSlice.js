@@ -17,11 +17,11 @@ function aiErrorMessage(err, fallback) {
   }
   const st = err?.response?.status;
   const msg = err?.response?.data?.message || err?.response?.data?.detail;
-  if (st === 402) return "You're out of AI tokens — top up to keep going.";
+  if (st === 402) return "You're out of AI tokens. Top up to keep going.";
   if (st === 403) return 'Turn on AI features in Settings to use this.';
-  if (st === 413) return 'That file is too large — try a shorter / smaller export.';
-  if (st === 400) return msg || "Those files couldn't be read — try exporting as mp4 or mov.";
-  if (st === 504) return msg || 'That took too long — please try again.';
+  if (st === 413) return 'That file is too large. Try a shorter or smaller export.';
+  if (st === 400) return msg || "Those files couldn't be read. Try exporting as mp4 or mov.";
+  if (st === 504) return msg || 'That took too long. Please try again.';
   return msg || fallback;
 }
 
@@ -63,13 +63,13 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
     const j = data?.data || data;
     if (j?.status === 'done') return j.result;
     if (j?.status === 'failed') {
-      throw { response: { status: 502, data: { message: j.error || 'Analysis failed — please try again.' } } };
+      throw { response: { status: 502, data: { message: j.error || 'Analysis failed. Please try again.' } } };
     }
   }
   // Poll TIMEOUT (not a BE failure): the job may still finish, so the outcome is
   // UNKNOWN. Flag it so the idempotency key is KEPT — a retry must dedup against
   // the possibly-still-running job rather than start a duplicate paid analysis.
-  throw { response: { status: 504, data: { message: 'Analysis took too long — please try again.' } }, unknownOutcome: true };
+  throw { response: { status: 504, data: { message: 'Analysis took too long. Please try again.' } }, unknownOutcome: true };
 }
 
 // Keep the idempotency key ONLY when the outcome is genuinely unknown — a true
@@ -343,7 +343,7 @@ export const reviewTape = createAsyncThunk(
         // rotate the key so a retry re-charges instead of dedup-passing into a
         // free re-analysis. (This branch is currently unreachable: the BE gate
         // turns a thin result into a refunded error before a 200 reaches here.)
-        return rejectWithValue({ message: 'This review came back incomplete — your token was refunded. Please try again.', reuseKey: false });
+        return rejectWithValue({ message: 'This review came back incomplete. Your token was refunded. Please try again.', reuseKey: false });
       }
       trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role, via: r2Key ? 'r2' : 'direct' });
       return result;

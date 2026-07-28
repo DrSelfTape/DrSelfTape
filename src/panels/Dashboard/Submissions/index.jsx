@@ -364,7 +364,7 @@ export default function Submissions() {
                     </h4>
                     {sub.role && (
                       <span className="text-xs text-[rgba(10,10,10,0.62)] truncate">
-                        — {sub.role}
+                        · {sub.role}
                       </span>
                     )}
                   </div>

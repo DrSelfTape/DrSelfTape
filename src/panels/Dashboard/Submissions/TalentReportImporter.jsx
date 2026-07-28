@@ -180,7 +180,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
                 <Upload size={24} color="#FF8280" />
               </div>
               <p style={{ color: '#f2f0ed', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Drop your talent report PDF here</p>
-              <p style={{ color: '#8a9a96', fontSize: 13, margin: '0 0 16px' }}>Eco Cast, agency submission reports — any standard format</p>
+              <p style={{ color: '#8a9a96', fontSize: 13, margin: '0 0 16px' }}>Eco Cast, agency submission reports, any standard format</p>
               <div style={{ display: 'inline-block', background: 'rgba(255,130,128,0.12)', border: '1px solid rgba(255,130,128,0.25)', borderRadius: 20, padding: '6px 18px', fontSize: 12, color: '#FF8280', fontWeight: 600 }}>
                 Choose PDF
               </div>

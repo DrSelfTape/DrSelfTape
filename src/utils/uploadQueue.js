@@ -162,7 +162,7 @@ async function runOne(task) {
   const cached = await getLocalTapeBlob(task.localTapeId);
   if (!cached?.blob) {
     task.status = 'failed';
-    task.error = 'Local cache missing — cannot resume upload.';
+    task.error = 'Local cache missing. Cannot resume upload.';
     saveToDisk();
     notify();
     try { cb.onFailure?.(new Error(task.error)); } catch { /* */ }

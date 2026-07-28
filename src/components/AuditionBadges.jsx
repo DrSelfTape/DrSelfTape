@@ -159,7 +159,7 @@ export default function AuditionBadges({ stats, compact = false }) {
       {earned.length > 0 && (
         <div>
           <h4 className="text-xs font-bold text-[#999999] uppercase tracking-wider mb-3">
-            Earned — {earned.length}/{BADGES.length}
+            Earned · {earned.length}/{BADGES.length}
           </h4>
           <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
             {earned.map((b) => <Badge key={b.id} badge={b} earned={true} />)}

@@ -193,7 +193,7 @@ export default function AuditionGenerator() {
     // into a Blob and hand the object URL to openExternal — which uses the
     // in-app browser on iOS and a plain new tab on web/desktop.
     const html = `<!DOCTYPE html><html><head>
-      <title>Dr Self Tape — ${genre} Scene</title>
+      <title>Dr Self Tape · ${genre} Scene</title>
       <style>
         @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
         * { margin:0; padding:0; box-sizing:border-box; }

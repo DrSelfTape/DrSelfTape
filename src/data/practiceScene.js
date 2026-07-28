@@ -7,7 +7,7 @@
 // would strand a brand-new user acting opposite nobody.
 export const PRACTICE_SCENE_TITLE = 'Practice Sides: The Voicemail';
 
-export const PRACTICE_SCENE_CONTENT = `MORGAN: Hey. It's me. I know you said don't call, and I'm calling, so — already off to a great start.
+export const PRACTICE_SCENE_CONTENT = `MORGAN: Hey. It's me. I know you said don't call, and I'm calling, so... already off to a great start.
 
 MORGAN: I found the watch. It was in the coat you made me return. The one you said made me look like a magician.
 

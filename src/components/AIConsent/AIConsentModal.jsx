@@ -37,7 +37,7 @@ const PROVIDERS = [
   {
     name: 'ElevenLabs',
     role: "Reader voice synthesis (the AI's own dialogue, not yours)",
-    data: 'The AI line text only — your voice and video are never sent.',
+    data: 'The AI line text only. Your voice and video are never sent.',
   },
 ];
 
@@ -183,7 +183,7 @@ export default function AIConsentModal() {
             fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px',
             color: '#1A1612', lineHeight: 1.2,
           }}>
-            We send some of your data to AI providers — okay?
+            We send some of your data to AI providers. Okay?
           </h2>
           <p style={{
             margin: '10px 0 0',

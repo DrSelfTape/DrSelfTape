@@ -146,7 +146,7 @@ function StatusIndicator({ status, compact = false }) {
 
 const STATUS_MESSAGES = {
   idle: 'Ready to start',
-  listening: 'Your turn — say your line',
+  listening: 'Your turn. Say your line',
   thinking: 'is responding...',
   playing: 'Playing response...',
   error: 'Something went wrong',
@@ -412,7 +412,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         // Even HTMLAudio couldn't start — tell the actor instead of reading
         // the scene in silence. A screen tap is a gesture, so the next line's
         // resume() attempt will succeed.
-        setErrorMsg("The reader's voice couldn't play — tap the screen once and continue; the next line will have audio.");
+        setErrorMsg("The reader's voice couldn't play. Tap the screen once and continue; the next line will have audio.");
       }
       return;
     }
@@ -1208,9 +1208,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   }
 
   const statusLabel = status === 'listening' && readerMode === 'listen'
-    ? '🎧 Your line — I\'m listening'
+    ? '🎧 Your line. I\'m listening'
     : status === 'listening' && readerMode === 'pretimed'
-    ? '🎬 Your line — deliver it now'
+    ? '🎬 Your line. Deliver it now'
     : status === 'thinking'
     ? `${partnerName} ${STATUS_MESSAGES.thinking}`
     : STATUS_MESSAGES[status];
@@ -1311,7 +1311,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#7A5A18] animate-pulse" />
-              {readerMode === 'listen' ? 'Listening — say your line (tap to skip)' : 'Your line — tap when done'}
+              {readerMode === 'listen' ? 'Listening. Say your line (tap to skip)' : 'Your line. Tap when done'}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 5l7 7-7 7" />
               </svg>
@@ -1415,7 +1415,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 Begin
               </button>
               <p className="text-[rgba(10,10,10,0.4)] text-xs mt-5 leading-relaxed">
-                Say your line, then pause — the AI handles the rest.
+                Say your line, then pause. The AI handles the rest.
               </p>
             </div>
           )}

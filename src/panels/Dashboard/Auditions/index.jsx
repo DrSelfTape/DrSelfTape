@@ -394,7 +394,7 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
           />
         )
       ) : (
-        <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>{form[field] || '—'}</p>
+        <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>{form[field] || '·'}</p>
       )}
     </div>
   );
@@ -624,7 +624,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       }));
       setMode('manual');
     } catch {
-      setParseError('Could not parse breakdown — please fill in manually.');
+      setParseError('Could not parse breakdown. Please fill it in manually.');
     } finally {
       setParsing(false);
     }
@@ -643,7 +643,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       const text = cleanScriptText(await extractPdfText(file));
       await parseWithAI(text);
     } catch {
-      setParseError('Could not read PDF — try pasting the text instead.');
+      setParseError('Could not read PDF. Try pasting the text instead.');
       setParsing(false);
     }
   };
@@ -672,7 +672,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       }));
       setMode('manual');
     } catch {
-      setParseError('Could not read screenshot — try pasting the text instead.');
+      setParseError('Could not read screenshot. Try pasting the text instead.');
     } finally {
       setParsing(false);
     }
@@ -748,7 +748,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
             {mode === 'paste' && (
               <div className="space-y-3">
                 <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
-                  Paste the full casting breakdown — the AI will extract project, role, CD, and notes automatically.
+                  Paste the full casting breakdown. The AI will extract project, role, CD, and notes automatically.
                 </p>
                 <textarea
                   value={pasteText}
@@ -780,7 +780,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
             {mode === 'screenshot' && (
               <div className="space-y-3">
                 <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
-                  Upload a screenshot of your audition breakdown — AI will read it and fill in the details.
+                  Upload a screenshot of your audition breakdown. The AI will read it and fill in the details.
                 </p>
                 <label
                   className="block p-8 text-center cursor-pointer transition-colors hover:border-[color:var(--aurora-heritage-gold)]"
@@ -813,7 +813,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
             {mode === 'pdf' && (
               <div className="space-y-3">
                 <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
-                  Upload the breakdown PDF — the AI will pull out all the key details.
+                  Upload the breakdown PDF. The AI will pull out the key details.
                 </p>
                 <label
                   className="block p-8 text-center cursor-pointer transition-colors hover:border-[color:var(--aurora-heritage-gold)]"
@@ -851,7 +851,7 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                     style={{ background: 'rgba(159,230,180,0.15)', border: '1px solid rgba(159,230,180,0.35)' }}
                   >
                     <span className="text-sm" style={{ color: '#1A6A38' }}>✓</span>
-                    <p className="text-xs" style={{ color: '#1A6A38' }}>Fields populated from breakdown — review and edit below</p>
+                    <p className="text-xs" style={{ color: '#1A6A38' }}>Fields populated from breakdown. Review and edit below</p>
                   </div>
                 )}
                 <input placeholder="Project name *" value={form.project_title} onChange={(e) => setForm({ ...form, project_title: e.target.value })} className={inputCls} style={inputStyle} required />

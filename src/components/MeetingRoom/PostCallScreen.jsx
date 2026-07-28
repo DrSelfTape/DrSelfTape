@@ -81,7 +81,7 @@ export default function PostCallScreen({ partnerName, matchId, onClose }) {
             Great session with {first}!
           </h1>
           <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-            {rated ? 'Thanks — your rating is saved.' : `How was your read with ${first}?`}
+            {rated ? 'Thanks. Your rating is saved.' : `How was your read with ${first}?`}
           </p>
         </div>
 

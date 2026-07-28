@@ -25,7 +25,7 @@ const MAX_PDF_BYTES = 5 * 1024 * 1024;
 async function extractPdfText(file) {
   if (file.size > MAX_PDF_BYTES) {
     const mb = (file.size / 1024 / 1024).toFixed(1);
-    throw new Error(`PDF is ${mb}MB — please use a smaller file (max 5MB) or paste your script.`);
+    throw new Error(`PDF is ${mb}MB. Please use a smaller file (max 5MB) or paste your script.`);
   }
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({
@@ -34,7 +34,7 @@ async function extractPdfText(file) {
     password: '',
   }).promise.catch((err) => {
     if (err?.name === 'PasswordException') {
-      throw new Error('This PDF is password-protected — please remove the password or paste your script.');
+      throw new Error('This PDF is password-protected. Please remove the password or paste your script.');
     }
     throw err;
   });
@@ -138,14 +138,14 @@ export default function ScriptUpload({ onSubmit }) {
         }
 
         if (!finalText) {
-          setPdfError("Couldn't read text from this PDF — paste your script, or use the “Upload your audition sides” tile.");
+          setPdfError("Couldn't read text from this PDF. Paste your script, or use the “Upload your audition sides” tile.");
           setFileName('');
         } else {
           setScriptText(finalText);
         }
         setPdfStatus('');
       } catch (err) {
-        setPdfError(err?.message || 'Could not parse PDF — please paste your script manually.');
+        setPdfError(err?.message || 'Could not parse PDF. Please paste your script manually.');
         setFileName('');
         setPdfStatus('');
       } finally {
@@ -194,7 +194,7 @@ export default function ScriptUpload({ onSubmit }) {
         <div className="bg-white rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
           <div className="flex items-center justify-between mb-2">
             <p className="text-xs font-semibold text-[rgba(10,10,10,0.62)] uppercase tracking-wide">
-              {fileName ? `Script Preview — ${fileName}` : 'Script Preview'}
+              {fileName ? `Script Preview · ${fileName}` : 'Script Preview'}
             </p>
             <button
               type="button"
@@ -230,7 +230,7 @@ export default function ScriptUpload({ onSubmit }) {
                   <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
                 </svg>
                 <p className="text-sm font-medium text-[#0A0A0A]">{pdfStatus || 'Processing...'}</p>
-                <p className="text-xs text-[rgba(10,10,10,0.4)]">Image-based PDFs can take up to 90 seconds — hang tight</p>
+                <p className="text-xs text-[rgba(10,10,10,0.4)]">Image-based PDFs can take up to 90 seconds. Hang tight</p>
               </div>
             ) : (
               <>

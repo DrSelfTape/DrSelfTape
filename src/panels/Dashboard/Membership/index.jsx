@@ -34,7 +34,7 @@ const PLANS = [
     yearlySaving: '2 months free',
     features: [
       'The full casting read on every tape',
-      'Compare Takes — full per-take notes',
+      'Compare Takes · full per-take notes',
       '10 AI tokens / month',
       'Acting Coach + Live Study + Scene Gen',
       'Audition Tracker',
@@ -69,9 +69,9 @@ const PLANS = [
     yearly: 249.99,
     yearlySaving: '2 months free',
     features: [
-      'Unlimited AI — no token limits',
+      'Unlimited AI · no token limits',
       'The full casting read + Performance DNA',
-      'Compare Takes — full per-take notes',
+      'Compare Takes · full per-take notes',
       'Everything in Plus',
       'Early access to new features',
     ],
@@ -160,7 +160,7 @@ function ComparisonRings() {
       {/* Honest framing: the rings/bars illustrate what Pro changes (a second set
           of eyes on every take), NOT a measured booking or callback rate. */}
       <p style={{ fontSize: 10, color: 'var(--aurora-dim)', textAlign: 'center', marginBottom: 18, letterSpacing: '0.02em', lineHeight: 1.4 }}>
-        Illustrative of what Pro changes — casting-grade eyes on every take, not a measured booking or callback rate.
+        Illustrative of what Pro changes: casting-grade eyes on every take, not a measured booking or callback rate.
       </p>
     </>
   );
@@ -269,7 +269,7 @@ export default function Membership({ onClose }) {
       }, 1500);
       window.history.replaceState({}, '', window.location.pathname);
     } else if (params.get('canceled') === 'true') {
-      dispatch(showSnackbar({ message: 'Checkout canceled — no changes to your subscription.', variant: 'info' }));
+      dispatch(showSnackbar({ message: 'Checkout canceled. Your subscription is unchanged.', variant: 'info' }));
       import('../../../utils/analytics').then(({ trackEvent, Events }) => {
         trackEvent(Events.PURCHASE, {
           status: 'cancelled',
@@ -399,7 +399,7 @@ export default function Membership({ onClose }) {
             });
           } catch { /* swallow */ }
           dispatch(showSnackbar({
-            message: 'Payment received — your plan is activating and can take a minute. It’ll appear automatically; tap Restore Purchases if it doesn’t.',
+            message: 'Payment received. Your plan is activating and can take a minute. It’ll appear automatically; tap Restore Purchases if it doesn’t.',
             variant: 'info',
           }));
         }
@@ -522,7 +522,7 @@ export default function Membership({ onClose }) {
           });
         } catch { /* swallow */ }
         dispatch(showSnackbar({
-          message: 'Payment received — your plan is activating and can take a minute. It’ll appear automatically.',
+          message: 'Payment received. Your plan is activating and can take a minute. It’ll appear automatically.',
           variant: 'info',
         }));
       }
@@ -607,7 +607,7 @@ export default function Membership({ onClose }) {
             fontSize: 14, color: 'var(--aurora-sub)', marginTop: 10, lineHeight: 1.5,
           }}>
             {upgradeIntent
-              ? <>Any plan unlocks it — <strong style={{ color: 'var(--aurora-text)' }}>Basic is $9.99/mo.</strong> Everything below is included too.</>
+              ? <>Any plan unlocks it. <strong style={{ color: 'var(--aurora-text)' }}>Basic is $9.99/mo.</strong> Everything below is included too.</>
               : <>Casting-grade notes on every take, an AI reader that waits for your beat, <strong style={{ color: 'var(--aurora-text)' }}> and Compare Takes before you submit.</strong></>}
           </p>
         </div>

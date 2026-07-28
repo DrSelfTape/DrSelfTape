@@ -62,10 +62,10 @@ export class ErrorBoundary extends Component {
           </h1>
           <p style={{ fontSize: 14, color: 'rgba(10,10,10,0.62)', marginBottom: 24, maxWidth: 360, lineHeight: 1.5 }}>
             {isChunkError
-              ? 'Dr Self Tape just got an update. Tap below to load the latest version — your work is safe.'
+              ? 'Dr Self Tape just got an update. Tap below to load the latest version. Your work is safe.'
               : (
                 <>
-                  Something tripped us up. We logged the error and the team has been notified — no action needed on your end.
+                  Something tripped us up. We logged the error and the team has been notified. No action needed on your end.
                   <br />
                   Tap below to reload and try again.
                 </>

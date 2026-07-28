@@ -105,7 +105,7 @@ function AnalyzingPhase({ error, onRetry }) {
           color: 'var(--aurora-dim)', lineHeight: 1.5,
           maxWidth: 300, marginLeft: 'auto', marginRight: 'auto',
         }}>
-          Longer scenes take a little more time to analyze — hang tight, this can
+          Longer scenes take a little more time to analyze. Hang tight, this can
           take up to a minute. Keep the app open.
         </p>
       )}

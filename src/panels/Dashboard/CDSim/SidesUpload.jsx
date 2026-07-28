@@ -23,7 +23,7 @@ const MAX_PDF_BYTES = 5 * 1024 * 1024;
 async function extractPdfText(file) {
   if (file.size > MAX_PDF_BYTES) {
     const mb = (file.size / 1024 / 1024).toFixed(1);
-    throw new Error(`PDF is ${mb}MB — please use a smaller file (max 5MB) or paste your sides.`);
+    throw new Error(`PDF is ${mb}MB. Please use a smaller file (max 5MB) or paste your sides.`);
   }
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({
@@ -31,7 +31,7 @@ async function extractPdfText(file) {
     password: '',
   }).promise.catch((err) => {
     if (err?.name === 'PasswordException') {
-      throw new Error('This PDF is password-protected — please remove the password or paste your sides.');
+      throw new Error('This PDF is password-protected. Please remove the password or paste your sides.');
     }
     throw err;
   });
@@ -98,7 +98,7 @@ async function extractPdfText(file) {
 
 /* Aurora warm-up missions — pre-recording ritual cards */
 const WARMUPS = [
-  { id: 'cold', label: 'Cold read', desc: 'Jump in raw — no prep, pure instinct.', tint: 'var(--aurora-heritage-gold)', shadow: 'rgba(212,168,95,0.40)', hot: true },
+  { id: 'cold', label: 'Cold read', desc: 'Jump in raw: no prep, pure instinct.', tint: 'var(--aurora-heritage-gold)', shadow: 'rgba(212,168,95,0.40)', hot: true },
   { id: 'emo',  label: 'Emotional prep', desc: 'Two breaths into the moment before the slate.', tint: 'var(--aurora-sky)', shadow: 'rgba(167,214,255,0.40)' },
   { id: 'phys', label: 'Physical warm-up', desc: 'Shake it out, drop into the body first.', tint: 'var(--aurora-mint)', shadow: 'rgba(159,230,180,0.40)' },
 ];
@@ -279,7 +279,7 @@ export default function SidesUpload({ onSubmit }) {
       // extractor's own guard runs.
       if (file.size > MAX_PDF_BYTES) {
         const mb = (file.size / 1024 / 1024).toFixed(1);
-        setPdfError(`PDF is ${mb}MB — please use a smaller file (max 5MB) or paste your sides.`);
+        setPdfError(`PDF is ${mb}MB. Please use a smaller file (max 5MB) or paste your sides.`);
         return;
       }
       setPdfLoading(true);
@@ -331,12 +331,12 @@ export default function SidesUpload({ onSubmit }) {
 
         const quality = detectScriptQuality(finalText);
         if (aiFormatFellBack) {
-          setQualityWarning('AI formatting unavailable — using raw text. Format may be inconsistent.');
+          setQualityWarning('AI formatting unavailable. Using raw text, so format may be inconsistent.');
         } else if (quality.warning) {
           setQualityWarning(quality.warning);
         }
       } catch (err) {
-        setPdfError(err?.message || 'Could not parse PDF — please paste your script manually.');
+        setPdfError(err?.message || 'Could not parse PDF. Please paste your script manually.');
         setFileName('');
         setPdfStatus('');
       } finally {
@@ -395,7 +395,7 @@ export default function SidesUpload({ onSubmit }) {
           <div className="bg-[#F4F4EE] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-xs font-semibold text-[rgba(10,10,10,0.4)] uppercase tracking-wide">
-                {fileName ? `Sides Preview — ${fileName}` : 'Sides Preview'}
+                {fileName ? `Sides Preview · ${fileName}` : 'Sides Preview'}
               </p>
               <button
                 type="button"

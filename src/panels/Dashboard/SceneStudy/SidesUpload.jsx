@@ -64,7 +64,7 @@ export default function SidesUpload({ onReady }) {
       return;
     }
     if (file.size > 15 * 1024 * 1024) {
-      setError('That PDF is over 15MB — try exporting just the sides pages.');
+      setError('That PDF is over 15MB. Try exporting just the sides pages.');
       return;
     }
     setError('');
@@ -86,18 +86,18 @@ export default function SidesUpload({ onReady }) {
     } catch (err) {
       const sc = err?.response?.status;
       const beMsg = err?.response?.data?.message;
-      if (sc === 402) setError("You're out of AI tokens — top up to read your sides.");
+      if (sc === 402) setError("You're out of AI tokens. Top up to read your sides.");
       else if (sc === 403) {
         // Open the consent modal inline instead of dead-ending.
         requestAiConsent();
         setError('Turn on AI features to read your sides, then upload again.');
       } else if (sc === 429) {
         // fair_use_limit — daily soft cap.
-        setError(beMsg || "You've hit today's AI limit — resets in a few hours.");
+        setError(beMsg || "You've hit today's AI limit. It resets in a few hours.");
       } else if (sc === 503 || !err?.response) {
         // token_check_failed, or a client-side timeout / network drop (no
         // response object). Not a bad-PDF problem — don't blame the file.
-        setError(beMsg || "Couldn't reach the server — try again.");
+        setError(beMsg || "Couldn't reach the server. Try again.");
       } else setError(beMsg || "Couldn't read those sides. Make sure it's a text PDF (not a photo) and try again.");
     } finally {
       setLoading(false);
@@ -142,7 +142,7 @@ export default function SidesUpload({ onReady }) {
                 <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
               </svg>
               <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--aurora-text, #0A0A0A)', margin: 0 }}>Reading your sides…</p>
-              <p style={{ fontSize: 11, color: 'var(--aurora-sub, rgba(10,10,10,0.5))', margin: 0 }}>Finding your role + the other parts — this can take up to 90 seconds</p>
+              <p style={{ fontSize: 11, color: 'var(--aurora-sub, rgba(10,10,10,0.5))', margin: 0 }}>Finding your role + the other parts. This can take up to 90 seconds</p>
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -154,7 +154,7 @@ export default function SidesUpload({ onReady }) {
               <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--aurora-text, #0A0A0A)', margin: 0, letterSpacing: '-0.2px' }}>Upload your audition sides</p>
                 <p style={{ fontSize: 12, color: 'var(--aurora-sub, rgba(10,10,10,0.55))', margin: '4px 0 0', lineHeight: 1.35 }}>
-                  Actors Access, Backstage, any PDF — we read the other part for you
+                  Actors Access, Backstage, any PDF: we read the other part for you
                 </p>
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function SidesUpload({ onReady }) {
             </select>
 
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>
-              <Chip label={`AI reads: ${readers.length ? readers.join(', ') : '—'}`} />
+              <Chip label={`AI reads: ${readers.length ? readers.join(', ') : 'none'}`} />
               <Chip label={`${scene.scenes.length} scene${scene.scenes.length > 1 ? 's' : ''}`} />
               <Chip label={`${lineCount} lines`} />
             </div>

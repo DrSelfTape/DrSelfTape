@@ -227,7 +227,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       if (!isTokenGate) {
         dispatch(showSnackbar({
           message: err?.response?.data?.message
-            || (status === 429 ? 'Too many TTS requests — please slow down.' : 'Couldn\'t generate the audio. Please try again.'),
+            || (status === 429 ? 'Too many audio requests. Please slow down.' : 'Couldn\'t generate the audio. Please try again.'),
           variant: 'error',
         }));
       }
@@ -250,7 +250,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       sectionToText(s.label, report?.[s.key])
     ).filter(Boolean).join('. ');
     if (!fullText) {
-      dispatch(showSnackbar({ message: 'Report is still loading — try again in a moment.', variant: 'info' }));
+      dispatch(showSnackbar({ message: 'Report is still loading. Try again in a moment.', variant: 'info' }));
       return;
     }
     primeAudio();

@@ -36,7 +36,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
         reason: 'inappropriate',
         details: 'Reported from chat thread.',
       });
-      dispatch(showSnackbar({ message: 'Thanks — our team will review this.', variant: 'success' }));
+      dispatch(showSnackbar({ message: 'Thanks. Our team will review this.', variant: 'success' }));
     } catch (err) {
       const msg = err?.response?.data?.message || 'Could not submit report.';
       dispatch(showSnackbar({ message: msg, variant: 'error' }));
@@ -129,7 +129,7 @@ const GreenRoomMessage = ({ message, isOwn = false }) => {
               if (!isTrustedFileUrl(fileUrl)) {
                 e.preventDefault();
                 dispatch(showSnackbar({
-                  message: "Can't open this file — link looks untrusted.",
+                  message: "Can't open this file. The link looks untrusted.",
                   variant: 'error',
                 }));
               }

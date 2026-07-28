@@ -89,7 +89,7 @@ export default function SessionRecap({ swipes, pendingLikes = 0, onSeeLikes, onR
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div className="truncate" style={{ fontWeight: 600, color: 'var(--aurora-text)', fontSize: 14 }}>{cleanName(s.actor.name)}</div>
-                  <div style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>{s.matched ? 'Matched — chat in the Green Room' : "Liked — they'll see it"}</div>
+                  <div style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>{s.matched ? 'Matched. Chat in the Green Room' : "Liked. They'll see it"}</div>
                 </div>
                 <span style={{ fontSize: 12, color: 'var(--aurora-accent-deep)', fontWeight: 600, whiteSpace: 'nowrap' }}>View →</span>
               </button>

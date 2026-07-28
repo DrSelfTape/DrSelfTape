@@ -108,7 +108,7 @@ export default function TutorialAchievement({ show, onClose }) {
             }}
           />
         </div>
-        <p className="text-xs text-[#888] font-medium">7 of 7 — 100% Complete</p>
+        <p className="text-xs text-[#888] font-medium">7 of 7 · 100% Complete</p>
 
         <button
           onClick={handleCta}

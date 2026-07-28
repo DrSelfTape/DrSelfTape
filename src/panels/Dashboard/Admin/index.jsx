@@ -114,7 +114,7 @@ export default function AdminDashboard() {
             </div>
             <div>
               <h2 className="text-lg font-bold" style={{ color: 'var(--aurora-text)' }}>Send Broadcast</h2>
-              <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>Push to all users — bell, toast, and web push</p>
+              <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>Push to all users: bell, toast, and web push</p>
             </div>
           </div>
 

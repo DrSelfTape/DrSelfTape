@@ -75,7 +75,7 @@ export default function TermsOfService() {
         </p>
         <p>
           You represent that Your Content does not infringe any third-party rights and that you
-          have the necessary permissions to upload it — including, where required, permissions
+          have the necessary permissions to upload it, including, where required, permissions
           from copyright holders of scripts you analyze and scene partners you record with.
         </p>
       </Section>
@@ -149,7 +149,7 @@ export default function TermsOfService() {
         </p>
       </Section>
 
-      <Section heading="14. Apple App Store — additional terms (iOS users)">
+      <Section heading="14. Apple App Store: additional terms (iOS users)">
         <p>
           The following terms apply when you download and use the Dr Self Tape application (the
           "Licensed Application") from the Apple App Store on an Apple-branded device. These terms
@@ -166,7 +166,7 @@ export default function TermsOfService() {
         <p>
           <strong>14.2 Scope of license.</strong> Dr Self Tape LLC grants you a non-transferable
           license to use the Licensed Application on any Apple-branded products that you own or
-          control, as permitted by the Apple App Store Terms of Service — including Family Sharing
+          control, as permitted by the Apple App Store Terms of Service, including Family Sharing
           and volume purchasing where Apple makes those features available.
         </p>
 
@@ -222,7 +222,7 @@ export default function TermsOfService() {
 
         <p>
           <strong>14.9 Third-party terms of agreement.</strong> You must comply with applicable
-          third-party terms of agreement when using the Licensed Application — including, where
+          third-party terms of agreement when using the Licensed Application, including, where
           applicable, your wireless carrier's data plan terms and any third-party service the
           Licensed Application interacts with (for example, casting platforms, video processing
           services, or AI providers).

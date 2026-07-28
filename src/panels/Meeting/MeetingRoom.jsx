@@ -90,7 +90,7 @@ export default function MeetingRoom() {
     if (!roomUrl) {
       setStatus('error');
       setError(
-        "We couldn't find your rehearsal room — start the call again from your match's chat.",
+        "We couldn't find your rehearsal room. Start the call again from your match's chat.",
       );
       return undefined;
     }

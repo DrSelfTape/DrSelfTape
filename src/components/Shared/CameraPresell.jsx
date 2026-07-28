@@ -1,32 +1,21 @@
 import useHideMobileHeader from './useHideMobileHeader';
-import { Capacitor } from '@capacitor/core';
 
 /**
  * Camera/mic permission pre-sell — shown ONCE, right before the first-ever
  * record attempt fires the iOS permission prompts. A denied camera or mic is
  * an unrecoverable session-1 kill (Settings round-trip), so we sell the value
  * before the OS asks (same benefit-first pattern the push soft-ask uses).
- * The proceed callback runs synchronously in the button's tap handler so the
- * downstream input .click() stays inside the user gesture (WKWebView drops
- * synthetic clicks outside one).
+ * Gate helpers live in cameraPresellGate.js (react-refresh: component-only
+ * exports here). The proceed callback runs synchronously in the button's tap
+ * handler so the downstream input .click() stays inside the user gesture
+ * (WKWebView drops synthetic clicks outside one).
  */
-const SEEN_KEY = 'dst_cam_presell_seen';
-
-export function needsCameraPresell() {
-  if (!Capacitor.isNativePlatform()) return false; // web pickers don't hard-prompt
-  try { return window.localStorage.getItem(SEEN_KEY) !== '1'; } catch { return false; }
-}
-
-export function markCameraPresellSeen() {
-  try { window.localStorage.setItem(SEEN_KEY, '1'); } catch { /* noop */ }
-}
-
 export default function CameraPresell({ onReady, onDismiss }) {
   useHideMobileHeader(true);
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(10,10,10,0.72)', backdropFilter: 'blur(6px)',
+      background: 'rgba(10,10,10,0.72)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
     }}>
       <div style={{
@@ -55,7 +44,7 @@ export default function CameraPresell({ onReady, onDismiss }) {
           Your AI reader needs to see and hear you
         </h2>
         <p style={{ fontSize: 13.5, color: 'var(--text-secondary, rgba(10,10,10,0.55))', margin: '10px 0 0', lineHeight: 1.5 }}>
-          Next screen, tap <strong>Allow</strong> twice — camera, then mic — and you're rolling.
+          Next screen, tap <strong>Allow</strong> twice (camera, then mic) and you're rolling.
         </p>
         <button
           type="button"

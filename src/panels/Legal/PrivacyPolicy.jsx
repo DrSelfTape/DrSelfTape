@@ -10,14 +10,14 @@ export default function PrivacyPolicy() {
     <LegalLayout title="Privacy Policy" lastUpdated="May 14, 2026">
       <p>
         This Privacy Policy explains how Dr Self Tape LLC ("we," "us," "our") collects, uses, and
-        shares information when you use Dr Self Tape — our website, mobile app, and related
+        shares information when you use Dr Self Tape: our website, mobile app, and related
         services (the "Service").
       </p>
 
       <Section heading="Information we collect">
         <p><strong>Account information.</strong> When you create an account: name, email, phone
         number, role (actor / casting director / coach / agent), and password (stored as a
-        cryptographic hash — we never see your raw password).</p>
+        cryptographic hash; we never see your raw password).</p>
 
         <p><strong>Date of birth.</strong> We collect your date of birth solely to verify that you
         meet our minimum age requirement (you must be at least 13 years old to create an account).
@@ -29,7 +29,7 @@ export default function PrivacyPolicy() {
 
         <p><strong>Practice content.</strong> Scripts you upload, scenes you generate with AI,
         rehearsal recordings, journal entries, and audition tracking notes. This is your
-        content — we host it so you can access it across devices.</p>
+        content. We host it so you can access it across devices.</p>
 
         <p><strong>Communications.</strong> Messages you send to scene partners, coaches, or
         casting directors through the Service.</p>
@@ -48,10 +48,10 @@ export default function PrivacyPolicy() {
 
       <Section heading="How we use information">
         <ul style={{ paddingLeft: 22, margin: '8px 0' }}>
-          <li>Provide the Service — let you log in, store your content, match you with scene partners, run AI features.</li>
+          <li>Provide the Service: let you log in, store your content, match you with scene partners, run AI features.</li>
           <li>Process payments and manage subscriptions.</li>
           <li>Send service emails (account activity, password resets, billing receipts).</li>
-          <li>Improve the product — understand which features are used, fix bugs, develop new functionality.</li>
+          <li>Improve the product: understand which features are used, fix bugs, develop new functionality.</li>
           <li>Detect fraud and enforce our Terms of Service.</li>
           <li>Comply with legal obligations.</li>
         </ul>
@@ -66,14 +66,14 @@ export default function PrivacyPolicy() {
           by its own privacy policy, which we encourage you to review:
         </p>
         <ul style={{ paddingLeft: 22, margin: '8px 0' }}>
-          <li><strong>Stripe</strong> — payment processing and subscription management.</li>
-          <li><strong>OpenAI and Anthropic</strong> — AI scene generation, feedback, and transcription. Inputs you submit to AI features (scripts, audio, prompts) are sent to these providers.</li>
-          <li><strong>Daily.co</strong> — real-time video sessions for the AI Scene Partner and live rehearsals.</li>
-          <li><strong>Sentry</strong> — error monitoring. Stack traces and a limited set of breadcrumbs are sent on crash.</li>
-          <li><strong>PostHog</strong> — product analytics. Pseudonymous event data is sent so we can understand feature usage. Personally identifiable info is not attached unless you are logged in (in which case we send your user ID).</li>
-          <li><strong>Railway and Vercel</strong> — infrastructure hosting.</li>
-          <li><strong>Amazon S3 / Cloudflare R2</strong> — storage for headshots, recordings, and other media.</li>
-          <li><strong>Wix</strong> — booking integration for coaching sessions.</li>
+          <li><strong>Stripe</strong>: payment processing and subscription management.</li>
+          <li><strong>OpenAI and Anthropic</strong>: AI scene generation, feedback, and transcription. Inputs you submit to AI features (scripts, audio, prompts) are sent to these providers.</li>
+          <li><strong>Daily.co</strong>: real-time video sessions for the AI Scene Partner and live rehearsals.</li>
+          <li><strong>Sentry</strong>: error monitoring. Stack traces and a limited set of breadcrumbs are sent on crash.</li>
+          <li><strong>PostHog</strong>: product analytics. Pseudonymous event data is sent so we can understand feature usage. Personally identifiable info is not attached unless you are logged in (in which case we send your user ID).</li>
+          <li><strong>Railway and Vercel</strong>: infrastructure hosting.</li>
+          <li><strong>Amazon S3 / Cloudflare R2</strong>: storage for headshots, recordings, and other media.</li>
+          <li><strong>Wix</strong>: booking integration for coaching sessions.</li>
         </ul>
       </Section>
 
@@ -110,7 +110,7 @@ export default function PrivacyPolicy() {
 
       <Section heading="Security">
         <p>
-          We use industry-standard practices to protect your data — TLS in transit, encrypted
+          We use industry-standard practices to protect your data: TLS in transit, encrypted
           storage at rest, JWT-based authentication, and limited employee access. No system is
           perfectly secure, and we cannot guarantee absolute protection. If we become aware of a
           breach affecting your data, we will notify you as required by law.

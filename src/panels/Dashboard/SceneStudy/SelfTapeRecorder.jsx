@@ -160,7 +160,7 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
         if (recorder.state !== 'inactive') recorder.stop();
       } catch { /* already stopped */ }
       setRecording(false);
-      setRecordError('Recording failed mid-capture. Your take was not saved — please try again.');
+      setRecordError('Recording failed mid-capture. Your take was not saved. Please try again.');
     };
 
     recorder.start(1000);

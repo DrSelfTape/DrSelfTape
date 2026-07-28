@@ -90,7 +90,7 @@ export default function SwipeTutorial() {
           <Row
             glyph="→" glyphColor="#FCE072" badge={<Stamp text="SLATE" gold />}
             title="Swipe right to connect"
-            sub="You both want to run sides — say hi in the Green Room"
+            sub="You both want to run sides. Say hi in the Green Room"
           />
           <Row
             glyph="←" glyphColor="rgba(255,255,255,0.7)" badge={<Stamp text="PASS" gold={false} />}
@@ -100,7 +100,7 @@ export default function SwipeTutorial() {
           <Row
             glyph="👆" glyphColor="#FFFDF8" badge={null}
             title="Tap a card"
-            sub="Open their full profile — reels, genres & availability"
+            sub="Open their full profile: reels, genres & availability"
           />
         </div>
 
@@ -116,7 +116,7 @@ export default function SwipeTutorial() {
             touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
           }}
         >
-          Got it — start swiping →
+          Got it. Start swiping →
         </button>
       </div>
     </div>

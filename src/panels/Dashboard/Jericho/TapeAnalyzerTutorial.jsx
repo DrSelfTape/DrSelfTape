@@ -10,8 +10,8 @@ import { Film, Trophy } from 'lucide-react';
 export const TAPE_TUTORIAL_KEY = 'dst_tape_analyzer_tutorial_seen_v1';
 
 const ROWS = [
-  { e: '🎥', title: 'Review a take', body: 'Upload any self-tape — Jericho reads your framing, eyeline, lighting and the performance arc, then gives notes for your next take.' },
-  { e: '🏆', title: 'Compare takes', body: 'Shot a few? Drop in 2–4 takes of the same scene and it ranks them — telling you which to submit and exactly why.' },
+  { e: '🎥', title: 'Review a take', body: 'Upload any self-tape. Jericho reads your framing, eyeline, lighting and the performance arc, then gives notes for your next take.' },
+  { e: '🏆', title: 'Compare takes', body: 'Shot a few? Drop in 2-4 takes of the same scene and it ranks them, telling you which to submit and exactly why.' },
   { e: '🎯', title: 'Sharper notes', body: 'Add your character, the tone from the brief, or paste the sides for feedback tuned to the actual audition.' },
   { e: '💡', title: 'Best results', body: 'One clean, continuous take, framed chest-up, with your reader close to the lens. Good light beats an expensive camera.' },
 ];
@@ -63,7 +63,7 @@ export default function TapeAnalyzerTutorial({ onClose }) {
             Notes like a casting director
           </h2>
           <p style={{ color: 'var(--aurora-sub, rgba(10,10,10,0.55))', fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>
-            Jericho watches your tape and gives real, specific acting notes — then helps you pick the take to send.
+            Jericho watches your tape and gives real, specific acting notes, then helps you pick the take to send.
           </p>
         </div>
 

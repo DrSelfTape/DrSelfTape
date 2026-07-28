@@ -121,7 +121,7 @@ export default function AgeGateModal() {
             fontSize: 13, color: 'rgba(26,22,18,0.78)', lineHeight: 1.5,
           }}>
             Dr Self Tape requires members to be at least {MIN_SIGNUP_AGE} years
-            old. Enter your date of birth to continue — we only use it to verify
+            old. Enter your date of birth to continue. We only use it to verify
             your age.
           </p>
         </div>

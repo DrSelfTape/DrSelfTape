@@ -274,7 +274,7 @@ function Identity({ data, set, onNext, nameLocked }) {
   // lock the inputs read-only so Apple's Authentication Services framework
   // remains the only source of name truth (Apple HIG: never re-ask for data
   // SiwA already provided). The user can still change it later from Profile.
-  const nameHint = nameLocked ? 'SYNCED FROM YOUR ACCOUNT — EDIT FROM PROFILE LATER' : null;
+  const nameHint = nameLocked ? 'SYNCED FROM YOUR ACCOUNT · EDIT FROM PROFILE LATER' : null;
   return (
     <div style={{ padding: '12px 26px 30px' }}>
       <h1 style={{
@@ -403,7 +403,7 @@ function ProfileStep({ data, set, onNext }) {
             }} />
             <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.4px', marginBottom: 4 }}>Add your headshot</div>
             <div style={{ fontSize: 13, color: 'var(--aurora-sub)', lineHeight: 1.45, marginBottom: 18 }}>
-              Use a clean, current headshot — shoulders up, neutral background reads best.
+              Use a clean, current headshot. Shoulders up with a neutral background reads best.
             </div>
             <button onClick={() => fileRef.current && fileRef.current.click()} style={{
               width: '100%', padding: 14, borderRadius: 16, cursor: 'pointer',
@@ -801,7 +801,7 @@ function Welcome({ data, onDone }) {
           letterSpacing: '-0.6px', lineHeight: 1.0, marginTop: 8,
         }}>Welcome,<br />{name}.</h1>
         <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 300 }}>
-          Your studio is ready. Log an audition, run a take, or find a reader — your callback rate starts climbing today.
+          Your studio is ready. Log an audition, run a take, or find a reader. Your callback rate starts climbing today.
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 20 }}>
           {[
@@ -841,7 +841,7 @@ function Offer({ onTry, onSkip }) {
     {
       id: 'record', emoji: '🎬', badge: 'RECOMMENDED',
       title: 'Record our 30-second practice scene',
-      desc: 'We give you the lines — read them once, tape it, get casting notes.',
+      desc: 'We give you the lines. Read them once, tape it, get casting notes.',
     },
     {
       id: 'upload', emoji: '📼', badge: null,
@@ -853,12 +853,17 @@ function Offer({ onTry, onSkip }) {
     <div className="aurora-orbs aurora-orbs-live" style={{
       position: 'absolute', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
     }}>
+      {/* Safe-center: margin-auto bookends instead of justify-center, plus
+          overflow-y — the two offer cards make this column taller than a
+          667pt iPhone, and a centered flex column that overflows clips from
+          BOTH ends with no scroll. */}
       <div style={{
-        position: 'relative', zIndex: 5, flex: 1, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', padding: '0 30px', textAlign: 'center',
+        position: 'relative', zIndex: 5, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
+        alignItems: 'center', padding: '0 30px', textAlign: 'center',
+        overflowY: 'auto', WebkitOverflowScrolling: 'touch',
       }}>
         <div style={{
-          width: 100, height: 100, borderRadius: 30,
+          width: 100, height: 100, borderRadius: 30, marginTop: 'auto', flexShrink: 0,
           background: 'linear-gradient(135deg,#C99A4E,var(--aurora-heritage-gold) 45%,var(--aurora-heritage-gold-light))',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 16px 40px rgba(212,168,95,0.55), inset 0 1px 0 rgba(255,255,255,0.6)',
@@ -878,7 +883,7 @@ function Offer({ onTry, onSkip }) {
           Jericho scores your performance, framing, and eyeline, then names your
           strongest beat and the one fix that books the room.
         </p>
-        <div style={{ marginTop: 20, textAlign: 'left', maxWidth: 320, width: '100%' }}>
+        <div style={{ margin: '20px 0 auto', textAlign: 'left', maxWidth: 320, width: '100%', flexShrink: 0 }}>
           {cards.map((c) => {
             const selected = variant === c.id;
             return (

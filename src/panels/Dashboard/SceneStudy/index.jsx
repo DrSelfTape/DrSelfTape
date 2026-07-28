@@ -152,7 +152,7 @@ export default function SceneStudy() {
                 <h3 className="font-bold text-base" style={{ color: 'var(--aurora-text)' }}>Live Study Mode</h3>
               </div>
               <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>
-                Hands-free real-time AI scene partner. Say your lines — the AI responds with voice instantly.
+                Hands-free real-time AI scene partner. Say your lines. The AI responds with voice instantly.
               </p>
             </div>
             <button

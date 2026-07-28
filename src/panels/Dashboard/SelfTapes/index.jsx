@@ -464,7 +464,7 @@ function SyncChip({ syncState, progress, onRetry }) {
         className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
         style={{ background: 'rgba(255,130,128,0.15)', color: 'var(--aurora-rose)' }}
       >
-        <AlertCircle className="w-3 h-3" /> Failed — retry
+        <AlertCircle className="w-3 h-3" /> Failed. Retry
       </button>
     );
   }
@@ -530,7 +530,7 @@ function TapeCard({
             onClick={(e) => { e.stopPropagation(); onFreeUpSpace?.(tape); }}
             className="absolute top-2 left-2 p-1.5 rounded-full transition-colors"
             style={{ background: 'var(--aurora-glass-strong)' }}
-            title="Free up space — keep cloud copy, delete local cache"
+            title="Free up space: keep cloud copy, delete local cache"
           >
             <HardDriveDownload className="w-3.5 h-3.5" style={{ color: 'var(--aurora-text)' }} />
           </button>

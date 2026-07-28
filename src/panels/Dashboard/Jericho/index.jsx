@@ -277,7 +277,7 @@ function ReviewDetailSheet({ session, onClose }) {
                     >
                       <div className="flex items-center gap-2 mb-1.5">
                         <Lock size={14} className="text-[#7A5A18]" />
-                        <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read — any plan</span>
+                        <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read with any plan</span>
                       </div>
                       <p className="text-xs text-[rgba(10,10,10,0.6)] leading-relaxed">
                         {bits.length ? `Includes ${bits.join(' · ')}.` : 'The full casting read on this tape.'}
@@ -538,8 +538,8 @@ export default function JerichoDashboard() {
           </div>
           <h1 className="text-2xl font-bold text-[#0A0A0A] mb-3">Meet Jericho</h1>
           <p className="text-[rgba(10,10,10,0.62)] text-sm mb-2 max-w-md mx-auto leading-relaxed">
-            Your self-evolving AI acting coach. Jericho learns from every session —
-            your strengths, patterns, and growth areas — to give you increasingly
+            Your self-evolving AI acting coach. Jericho learns your strengths,
+            patterns, and growth areas from every session to give you increasingly
             personalized coaching.
           </p>
           <p className="text-[rgba(10,10,10,0.4)] text-xs mb-8">
@@ -587,7 +587,7 @@ export default function JerichoDashboard() {
             </div>
             <p className="text-sm text-[rgba(10,10,10,0.4)]">
               {totalSessions > 0
-                ? `${totalSessions} session${totalSessions !== 1 ? 's' : ''} analyzed — always evolving`
+                ? `${totalSessions} session${totalSessions !== 1 ? 's' : ''} analyzed · always evolving`
                 : 'Your personal acting coach is learning...'}
             </p>
           </div>

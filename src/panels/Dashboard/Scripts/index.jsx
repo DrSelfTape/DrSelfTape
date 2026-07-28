@@ -173,7 +173,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
           setContent(text);
         }
       } catch {
-        setFileError('Could not parse PDF — try a different file or paste your script.');
+        setFileError('Could not parse PDF. Try a different file or paste your script.');
         setFileName('');
       } finally {
         setPdfLoading(false);
@@ -230,7 +230,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="e.g. Breaking Bad — Pilot"
+          placeholder="e.g. Breaking Bad: Pilot"
           className="w-full px-3 py-2 text-sm outline-none focus:border-[color:var(--aurora-heritage-gold)] mb-4"
           style={inputStyle}
         />
@@ -279,7 +279,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
               <div className="flex flex-col items-center gap-2">
                 <FileText size={28} style={{ color: 'var(--aurora-heritage-gold-deep)' }} />
                 <p className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{fileName}</p>
-                <p className="text-xs" style={{ color: '#1A6A38' }}>✓ Loaded — {content.length.toLocaleString()} characters</p>
+                <p className="text-xs" style={{ color: '#1A6A38' }}>✓ Loaded · {content.length.toLocaleString()} characters</p>
                 <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>Tap to replace</p>
               </div>
             ) : (
@@ -502,7 +502,7 @@ export default function Scripts() {
     // a clear message instead of a dead-end handoff.
     const content = (script.content || '').trim();
     if (!content) {
-      toast.error('This script has no readable text yet — open it and paste or re-upload the sides before practicing.');
+      toast.error('This script has no readable text yet. Open it and paste or re-upload the sides before practicing.');
       return;
     }
     sessionStorage.setItem(

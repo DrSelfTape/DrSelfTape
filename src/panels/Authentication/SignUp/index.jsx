@@ -42,7 +42,7 @@ async function applyStoredReferral(toast) {
     if (res?.data?.success) {
       try { localStorage.removeItem(REF_CODE_KEY); } catch { /* noop */ }
       trackEvent(Events.REFERRAL_APPLIED, { code });
-      toast.success('+50 tokens — referral bonus added! 🎁');
+      toast.success('Referral bonus added: +50 tokens 🎁');
     }
   } catch (err) {
     console.warn('Referral apply failed:', err?.response?.data?.message || err?.message);

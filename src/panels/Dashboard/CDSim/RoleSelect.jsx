@@ -4,7 +4,7 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-[#0A0A0A]">Pick Your Role</h2>
         <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
-          Select the character you'll be reading for — the AI will play all other roles as your Casting Director.
+          Select the character you'll be reading for. The AI will play all other roles as your Casting Director.
         </p>
       </div>
 

@@ -157,6 +157,6 @@ export function detectScriptQuality(text) {
   const ratio = totalLines > 0 ? allCapsLines / totalLines : 0;
 
   if (totalLines < 5) return { ok: false, warning: 'Too little text detected. Please check your PDF.' };
-  if (ratio < 0.03) return { ok: true, warning: 'No character cues detected — make sure the script has CHARACTER: Dialogue format.' };
+  if (ratio < 0.03) return { ok: true, warning: 'No character cues detected. Make sure the script has CHARACTER: Dialogue format.' };
   return { ok: true, warning: null };
 }

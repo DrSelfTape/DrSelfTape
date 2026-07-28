@@ -57,7 +57,7 @@ export default function ReportProblemModal({ onClose }) {
       await axiosInstance.post(endPoints.feedback, { message: text, kind: 'bug', context });
       setSent(true);
     } catch (err) {
-      setError(err?.response?.data?.message || "Couldn't send that — please try again.");
+      setError(err?.response?.data?.message || "Couldn't send that. Please try again.");
     } finally {
       setSending(false);
     }
@@ -90,7 +90,7 @@ export default function ReportProblemModal({ onClose }) {
               <CheckCircle2 size={26} color="#22c55e" />
             </div>
             <h3 className="aurora-display" style={{ fontSize: 20, color: 'var(--aurora-text, #0A0A0A)', margin: '0 0 6px', fontFamily: "'Playfair Display', serif" }}>
-              Got it — thank you
+              Got it, thank you
             </h3>
             <p style={{ fontSize: 13.5, color: 'var(--aurora-sub, rgba(10,10,10,0.6))', margin: '0 0 18px', lineHeight: 1.5 }}>
               This went straight to the team. If it needs a follow-up, we'll reach out.
@@ -118,7 +118,7 @@ export default function ReportProblemModal({ onClose }) {
               Something not working?
             </h3>
             <p style={{ fontSize: 13, color: 'var(--aurora-sub, rgba(10,10,10,0.6))', margin: '0 0 14px', lineHeight: 1.5 }}>
-              Tell us what happened — the more detail the better. It goes straight to the team.
+              Tell us what happened. The more detail the better. It goes straight to the team.
             </p>
 
             <textarea

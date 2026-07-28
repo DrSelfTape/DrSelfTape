@@ -73,15 +73,15 @@ My friend doesn't keep regular hours.
 CRUZ
 Neither do the people we found moving product through the east loading dock.
 
-A beat. Maya looks away, then back — harder now.
+A beat. Maya looks away, then back, harder now.
 
 MAYA
 I want a lawyer.`;
 
 const BREAKDOWN_DATA = {
-  objective: "Cruz needs Maya to slip — reveal whether she's a witness or an accomplice. Maya needs to survive the interrogation without incriminating herself or her contact.",
+  objective: "Cruz needs Maya to slip: reveal whether she's a witness or an accomplice. Maya needs to survive the interrogation without incriminating herself or her contact.",
   characters: [
-    { name: "Detective Cruz", motivation: "Seeking confession or leverage; under pressure from superiors", tactic: "Strategic escalation — starts calm, introduces evidence incrementally", archetype: "The Persistent Interrogator" },
+    { name: "Detective Cruz", motivation: "Seeking confession or leverage; under pressure from superiors", tactic: "Strategic escalation: starts calm, introduces evidence incrementally", archetype: "The Persistent Interrogator" },
     { name: "Maya", motivation: "Self-preservation; protecting someone she cares about", tactic: "Deflection through composure until cornered, then retreats to legal shield", archetype: "The Cornered Loyalist" },
   ],
   beats: [
@@ -92,32 +92,32 @@ const BREAKDOWN_DATA = {
     { id: 5, line: "Neither do the people moving product.", beat: "The reveal", tactic: "Implication without accusation", emotion: "Calculated threat", intensity: 7 },
     { id: 6, line: "I want a lawyer.", beat: "Wall goes up", tactic: "Legal retreat", emotion: "Fear breaking through composure", intensity: 8 },
   ],
-  subtext: "The scene is really about trust — Maya trusted someone who put her in this room. Cruz senses Maya isn't a criminal but needs her to flip. Every line is a negotiation neither can afford to lose.",
-  arc: "Tension builds through a slow escalation from 3→8. The key turn is Beat 5 when Cruz drops 'moving product' — Maya's composure fractures and the audience sees her real vulnerability.",
+  subtext: "The scene is really about trust. Maya trusted someone who put her in this room. Cruz senses Maya isn't a criminal but needs her to flip. Every line is a negotiation neither can afford to lose.",
+  arc: "Tension builds through a slow escalation from 3→8. The key turn is Beat 5 when Cruz drops 'moving product'. Maya's composure fractures and the audience sees her real vulnerability.",
 };
 
 const NOTES_DATA = [
-  { line: "I was picking up a friend.", score: 7, note: "Good instinct to stay flat here. Try a micro-beat before 'friend' — a half-second where you consider lying vs. telling the truth. Let us see the choice.", type: "adjustment" },
-  { line: "My friend doesn't keep regular hours.", score: 8, note: "The lean-in is working. This is where Maya shows teeth. You could push it further — let a small smile escape. She's almost enjoying outmaneuvering Cruz.", type: "positive" },
-  { line: "I want a lawyer.", score: 6, note: "This landed too flat. This is the most emotionally loaded moment in the scene — Maya is giving up the fight. We need to see the cost. Try: hold eye contact with Cruz for a full beat, then look down, then say the line quieter than everything before it.", type: "redirect" },
+  { line: "I was picking up a friend.", score: 7, note: "Good instinct to stay flat here. Try a micro-beat before 'friend': a half-second where you consider lying vs. telling the truth. Let us see the choice.", type: "adjustment" },
+  { line: "My friend doesn't keep regular hours.", score: 8, note: "The lean-in is working. This is where Maya shows teeth. You could push it further: let a small smile escape. She's almost enjoying outmaneuvering Cruz.", type: "positive" },
+  { line: "I want a lawyer.", score: 6, note: "This landed too flat. This is the most emotionally loaded moment in the scene. Maya is giving up the fight. We need to see the cost. Try: hold eye contact with Cruz for a full beat, then look down, then say the line quieter than everything before it.", type: "redirect" },
 ];
 
 const PREP_DATA = {
   wardrobe: {
-    suggestion: "Worn leather jacket (character-specific), dark solid tee underneath. No patterns, no logos. Jewelry: one small stud earring or thin chain — something personal Maya would actually wear. Hair slightly undone — she's been sitting here for hours.",
+    suggestion: "Worn leather jacket (character-specific), dark solid tee underneath. No patterns, no logos. Jewelry: one small stud earring or thin chain, something personal Maya would actually wear. Hair slightly undone. She's been sitting here for hours.",
     avoid: "Bright colors, business wear, anything too polished. Maya isn't put-together right now.",
     colorPalette: ["var(--aurora-text)", "var(--aurora-heritage-gold-deep)", "var(--aurora-sky)", "var(--aurora-peach)"],
   },
   lighting: {
-    setup: "Single overhead key light (harsh, slightly warm). This is an interrogation room — the light should feel institutional and unflattering. If self-taping at home: position one light directly above and slightly in front. No fill light. Let shadows form under your eyes and jaw.",
+    setup: "Single overhead key light (harsh, slightly warm). This is an interrogation room. The light should feel institutional and unflattering. If self-taping at home: position one light directly above and slightly in front. No fill light. Let shadows form under your eyes and jaw.",
     background: "Solid neutral gray or dark blue. No texture, no visible furniture. The room should feel empty and cold.",
-    eyeline: "Camera at eye level. Reader sits directly behind camera — this is an intimate two-person scene, eyeline should be just barely off-lens.",
+    eyeline: "Camera at eye level. Reader sits directly behind camera. This is an intimate two-person scene, so keep your eyeline just barely off-lens.",
   },
   framing: {
-    shot: "Medium close-up — chest to top of head. Tighter is better for this scene. The performance lives in micro-expressions.",
-    movement: "Minimal — Maya is physically contained. The lean-forward on 'My friend doesn't keep regular hours' is the one physical choice. Make it count by being still everywhere else.",
+    shot: "Medium close-up, chest to top of head. Tighter is better for this scene. The performance lives in micro-expressions.",
+    movement: "Minimal. Maya is physically contained. The lean-forward on 'My friend doesn't keep regular hours' is the one physical choice. Make it count by being still everywhere else.",
   },
-  slate: "State your name, then pause. Don't rush into the scene. Take a breath after slate — let the casting director see you transform into Maya.",
+  slate: "State your name, then pause. Don't rush into the scene. Take a breath after slate. Let the casting director see you transform into Maya.",
 };
 
 function Badge({ text, color }) {
@@ -149,7 +149,7 @@ function HubScreen({ setMode }) {
           <Ic d={icons.star} size={28} color={CORAL} />
         </div>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: TEXT, margin: 0, fontFamily: "'Playfair Display', serif" }}>Casting Director AI</h1>
-        <p style={{ fontSize: 13, color: TEXT2, margin: "6px 0 0", maxWidth: 300, marginLeft: "auto", marginRight: "auto" }}>Your AI acting instructor — scene analysis, live rehearsal, performance notes, and audition prep</p>
+        <p style={{ fontSize: 13, color: TEXT2, margin: "6px 0 0", maxWidth: 300, marginLeft: "auto", marginRight: "auto" }}>Your AI acting instructor: scene analysis, live rehearsal, performance notes, and audition prep</p>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 24 }}>
@@ -482,7 +482,7 @@ function GeneratorScreen() {
     } catch (err) {
       setGenError(
         err?.code === 'ECONNABORTED'
-          ? "This is taking too long — please try again."
+          ? "This is taking too long. Please try again."
           : "Couldn't generate a scene right now. Please try again."
       );
     } finally {
@@ -604,7 +604,7 @@ function RehearseScreen() {
         ) : (
           <>
             <p style={{ fontSize: 15, fontWeight: 600, color: TEXT }}>Ready to rehearse</p>
-            <p style={{ fontSize: 12, color: TEXT2, margin: "4px 0 0" }}>Scene breakdown loaded — AI reads with informed intent</p>
+            <p style={{ fontSize: 12, color: TEXT2, margin: "4px 0 0" }}>Scene breakdown loaded. AI reads with informed intent</p>
           </>
         )}
       </div>
@@ -612,7 +612,7 @@ function RehearseScreen() {
       {/* Context-aware direction */}
       <div style={{ background: GOLD_DIM, padding: "14px 18px", marginBottom: 16, borderLeft: `3px solid ${GOLD}` }}>
         <p style={{ fontSize: 11, fontWeight: 600, color: GOLD, margin: "0 0 4px", textTransform: "uppercase" }}>Direction for this take</p>
-        <p style={{ fontSize: 13, color: TEXT, margin: 0 }}>Try playing the subtext — Maya is protecting someone, not defying authority. Let the loyalty drive the deflection.</p>
+        <p style={{ fontSize: 13, color: TEXT, margin: 0 }}>Try playing the subtext. Maya is protecting someone, not defying authority. Let the loyalty drive the deflection.</p>
       </div>
 
       <button onClick={() => navigate("/dashboard/scene-study")} style={{

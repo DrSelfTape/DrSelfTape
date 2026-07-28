@@ -31,7 +31,8 @@ import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
 import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
-import CameraPresell, { needsCameraPresell, markCameraPresellSeen } from "../../components/Shared/CameraPresell";
+import CameraPresell from "../../components/Shared/CameraPresell";
+import { needsCameraPresell, markCameraPresellSeen } from "../../components/Shared/cameraPresellGate";
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
@@ -1105,6 +1106,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   // survives the AI-consent remount; the event covers the immediate case).
   const launchFreeReview = () => {
     try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
+    // Home-card entry made no offer-card choice — drop any leftover variant
+    // so a stale 'record' pick can't resurrect the practice-scene prefill.
+    try { window.sessionStorage.removeItem('dst_first_review_variant'); } catch { /* noop */ }
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
   };
 
@@ -3836,6 +3840,7 @@ export default function DrSelfTapeApp() {
     if (id !== 'tape-review') {
       setFirstReviewActive(false);
       try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+      try { window.sessionStorage.removeItem('dst_first_review_variant'); } catch { /* noop */ }
     }
     setTab(id);
     setCurrentPanel(null);
@@ -3886,11 +3891,13 @@ export default function DrSelfTapeApp() {
             firstReview={firstReviewActive}
             onUpgrade={() => {
               try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+              try { window.sessionStorage.removeItem('dst_first_review_variant'); } catch { /* noop */ }
               setFirstReviewActive(false);
               setCurrentPanel('membership');
             }}
             onExitFirstReview={() => {
               try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+              try { window.sessionStorage.removeItem('dst_first_review_variant'); } catch { /* noop */ }
               setFirstReviewActive(false);
               setTab('home');
             }}

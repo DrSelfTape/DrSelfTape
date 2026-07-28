@@ -93,12 +93,12 @@ export default function CompareTakes({ seed = null }) {
     if (!file) return;
     if (file.size > MAX_TAKE_MB * 1024 * 1024) {
       warn();
-      setSizeError(`Take ${i + 1} is ${(file.size / 1048576).toFixed(0)}MB — keep each take under ${MAX_TAKE_MB}MB (a single-scene take exports small).`);
+      setSizeError(`Take ${i + 1} is ${(file.size / 1048576).toFixed(0)}MB. Keep each take under ${MAX_TAKE_MB}MB (a single-scene take exports small).`);
       return;
     }
     if (slots.some((v, idx) => idx !== i && v && takeSig(v) === takeSig(file))) {
       warn();
-      setSizeError(`That's the same file as another take — Compare needs different takes of the scene, not the same one twice.`);
+      setSizeError(`That's the same file as another take. Compare needs different takes of the scene, not the same one twice.`);
       return;
     }
     setSizeError('');
@@ -119,7 +119,7 @@ export default function CompareTakes({ seed = null }) {
     // a performance against itself.
     const sigs = files.map(takeSig);
     if (new Set(sigs).size !== sigs.length) {
-      setSizeError('Two of your takes are the same file — upload different takes of the scene to compare.');
+      setSizeError('Two of your takes are the same file. Upload different takes of the scene to compare.');
       return;
     }
     if (!idemKeyRef.current) {
@@ -155,8 +155,8 @@ export default function CompareTakes({ seed = null }) {
         </p>
         <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1.5 max-w-xs mx-auto leading-relaxed">
           {uploading
-            ? 'Several large takes can take a few minutes to upload on a mobile connection — keep the app open.'
-            : 'Reading each take’s arc, choices and truth — then picking the one to submit. This takes ~1–2 minutes.'}
+            ? 'Several large takes can take a few minutes to upload on a mobile connection. Keep the app open.'
+            : 'Reading each take’s arc, choices and truth, then picking the one to submit. This takes ~1-2 minutes.'}
         </p>
       </div>
     );
@@ -180,7 +180,7 @@ export default function CompareTakes({ seed = null }) {
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-[#FF8280]/30 p-5 text-center" style={SURFACE}>
-            <p className="text-sm font-bold text-[#0A0A0A]">This comparison came back incomplete — your tokens were refunded. Please try again.</p>
+            <p className="text-sm font-bold text-[#0A0A0A]">This comparison came back incomplete. Your tokens were refunded. Please try again.</p>
           </div>
           <button
             onClick={reset}
@@ -236,7 +236,7 @@ export default function CompareTakes({ seed = null }) {
                       <p className="text-sm font-bold text-[#0A0A0A]">
                         Take {n}{isWinner && <span className="ml-2 text-[10px] font-bold text-[#7A5A18] uppercase tracking-wide">Winner</span>}
                       </p>
-                      <span className="text-sm font-extrabold text-[#0A0A0A]">{t.score != null ? t.score : '—'}<span className="text-[10px] text-[rgba(10,10,10,0.4)] font-medium">/100</span></span>
+                      <span className="text-sm font-extrabold text-[#0A0A0A]">{t.score != null ? t.score : '·'}<span className="text-[10px] text-[rgba(10,10,10,0.4)] font-medium">/100</span></span>
                     </div>
                     <div className="mt-1.5"><ScoreBar100 value={t.score} gold={isWinner} /></div>
                     {t.one_line && <p className="text-xs text-[rgba(10,10,10,0.6)] italic mt-1.5">{t.one_line}</p>}
@@ -245,7 +245,7 @@ export default function CompareTakes({ seed = null }) {
 
                 {t.best_moment && (
                   <p className="text-sm text-[rgba(10,10,10,0.72)] leading-relaxed mt-3">
-                    <span className="font-semibold text-[#0A0A0A]">Best moment — </span>{t.best_moment}
+                    <span className="font-semibold text-[#0A0A0A]">Best moment: </span>{t.best_moment}
                   </p>
                 )}
                 {t.steal && (
@@ -308,10 +308,10 @@ export default function CompareTakes({ seed = null }) {
           >
             <div className="flex items-center gap-2 mb-1.5">
               <Lock size={14} className="text-[#7A5A18]" />
-              <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read on all {order.length} takes — any plan</span>
+              <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read on all {order.length} takes, on any plan</span>
             </div>
             <p className="text-xs text-[rgba(10,10,10,0.6)] leading-relaxed">
-              The deep per-take breakdown — performance, what to fix, and what to steal from each.
+              The deep per-take breakdown: performance, what to fix, and what to steal from each.
             </p>
           </button>
         )}
@@ -352,7 +352,7 @@ export default function CompareTakes({ seed = null }) {
           </p>
           <p className="text-sm font-semibold text-[#0A0A0A] mt-1.5">“{focusNote}”</p>
           {slots[0] && (
-            <p className="text-xs text-[rgba(10,10,10,0.5)] mt-2">Your original take is loaded as Take 1 — add your new take below.</p>
+            <p className="text-xs text-[rgba(10,10,10,0.5)] mt-2">Your original take is loaded as Take 1. Add your new take below.</p>
           )}
         </div>
       )}
@@ -362,7 +362,7 @@ export default function CompareTakes({ seed = null }) {
           <Trophy size={16} className="text-[#7A5A18]" /> Compare your takes
         </h3>
         <p className="text-xs text-[rgba(10,10,10,0.45)] mb-4 leading-relaxed">
-          Upload 2–4 takes of the <span className="font-semibold">same</span> scene. Jericho ranks them and tells you which to submit — and why it beats the others.
+          Upload 2-4 takes of the <span className="font-semibold">same</span> scene. Jericho ranks them and tells you which to submit, and why it beats the others.
         </p>
 
         {/* Take slots */}
@@ -385,7 +385,7 @@ export default function CompareTakes({ seed = null }) {
                 ) : (
                   <>
                     <Upload size={16} className="text-[rgba(10,10,10,0.4)] flex-shrink-0" />
-                    <span className="text-sm font-medium text-[rgba(10,10,10,0.55)] flex-1 text-left">Take {i + 1} — choose a video</span>
+                    <span className="text-sm font-medium text-[rgba(10,10,10,0.55)] flex-1 text-left">Take {i + 1} · choose a video</span>
                   </>
                 )}
               </button>
@@ -409,7 +409,7 @@ export default function CompareTakes({ seed = null }) {
           </button>
         )}
         <p className="text-[11px] text-[rgba(10,10,10,0.4)] text-center mt-1.5">
-          Best with short takes of one scene — they upload fast and compare cleanly.
+          Best with short takes of one scene. They upload fast and compare cleanly.
         </p>
         {sizeError && (
           <p className="text-xs text-red-500 mt-2 text-center">{sizeError}</p>
@@ -450,7 +450,7 @@ export default function CompareTakes({ seed = null }) {
 
         {files.reduce((s, f) => s + (f?.size || 0), 0) > 60 * 1024 * 1024 && (
           <p className="text-[11px] text-[#7A5A18] mt-3 text-center leading-relaxed">
-            Heads up — these are large takes ({(files.reduce((s, f) => s + (f?.size || 0), 0) / (1024 * 1024)).toFixed(0)} MB total).
+            Heads up: these are large takes ({(files.reduce((s, f) => s + (f?.size || 0), 0) / (1024 * 1024)).toFixed(0)} MB total).
             On a slower connection the upload can take a few minutes; keep the app open and watch the progress.
           </p>
         )}

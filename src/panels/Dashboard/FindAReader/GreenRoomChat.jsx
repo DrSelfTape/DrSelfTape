@@ -28,7 +28,7 @@ function smartReplies(text, partnerFirstName) {
   const has = (...words) => words.some((w) => t.includes(w));
 
   if (has('tonight', 'after 8', 'around', 'free', 'available', 'work for you', 'this week')) {
-    return ['Tonight works — send me a time and I’m there.', 'Could we do a little earlier? Say 7?', 'Perfect. Want to do it over video or in person?'];
+    return ['Tonight works. Send me a time and I’m there.', 'Could we do a little earlier? Say 7?', 'Perfect. Want to do it over video or in person?'];
   }
   if (has('sides', 'prep', 'scene', 'script', 'lines')) {
     return ['Sending the sides now.', 'Let’s run it cold first, then trade notes.', 'I’ll mark my lines and share before we meet.'];
@@ -37,10 +37,10 @@ function smartReplies(text, partnerFirstName) {
     return ['That means a lot, thank you 🙏', 'Right back at you.', 'Can’t wait to actually work the scene with you.'];
   }
   if (has('coffee', 'energy', '☕', 'haha', 'lol', '😂')) {
-    return ['Deal — coffee’s on me ☕', 'Ha, I’ll bring my A-game and the caffeine.', 'You’re going to be a great scene partner, I can tell.'];
+    return ['Deal, coffee’s on me ☕', 'Ha, I’ll bring my A-game and the caffeine.', 'You’re going to be a great scene partner, I can tell.'];
   }
   if (has('?', 'how', 'what', 'when', 'where', 'want')) {
-    return ['Whatever’s easiest for you works for me.', 'Good question — let me check and get right back to you.', 'Let’s figure it out on a quick call?'];
+    return ['Whatever’s easiest for you works for me.', 'Good question, let me check and get right back to you.', 'Let’s figure it out on a quick call?'];
   }
   return [`Hey ${name}! Thanks for reaching out 👋`, 'Totally down to run sides this week.', 'When are you usually free to rehearse?'];
 }
@@ -335,7 +335,7 @@ const GreenRoomChat = (props = {}) => {
         err?.response?.data?.message
         || err?.response?.data?.detail
         || (err?.code === 'ECONNABORTED' || !err?.response
-            ? 'Could not reach our servers — check your connection and try again.'
+            ? 'Could not reach our servers. Check your connection and try again.'
             : 'Could not start the rehearsal room. Please try again.');
       setRehearsalError(msg);
       sendLocalMsg(`Couldn't start the call: ${msg}`, 'system');
@@ -561,7 +561,7 @@ const GreenRoomChat = (props = {}) => {
         >
           <Users size={14} />
           {isPaidReader && !sessionBooked
-            ? `Book Session — from $${readerRates[15]}`
+            ? `Book Session · from $${readerRates[15]}`
             : `Live Session with ${partnerName.split(' ')[0]}`
           }
         </button>
@@ -643,7 +643,7 @@ const GreenRoomChat = (props = {}) => {
           <div className="flex flex-col items-center text-center px-6 gap-4 mt-2">
             <p className="text-sm" style={{ color: 'var(--aurora-sub)' }}>
               Say hi to {partnerName.split(' ')[0] || 'your partner'}, share your sides,
-              then start a live rehearsal — or practice with the AI first.
+              then start a live rehearsal, or practice with the AI first.
             </p>
             {/* Tap-to-send icebreakers — addresses the 6 matches/7d that
                 produced 8 messages total. Most matches went silent after
@@ -653,9 +653,9 @@ const GreenRoomChat = (props = {}) => {
             </div>
             <div className="flex flex-wrap justify-center gap-2 w-full max-w-md">
               {[
-                `Hey ${partnerName.split(' ')[0] || 'there'} — want to run sides this week?`,
+                `Hey ${partnerName.split(' ')[0] || 'there'}, want to run sides this week?`,
                 `Down for a quick read whenever you're free.`,
-                `I'm prepping for an audition — wanna swap reads?`,
+                `I'm prepping for an audition, wanna swap reads?`,
                 `Cold read sometime? I've got a few minutes today.`,
               ].map((text) => (
                 <button

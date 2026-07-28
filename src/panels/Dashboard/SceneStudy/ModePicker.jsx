@@ -20,7 +20,7 @@ export default function ModePicker({ prePauseSeconds, setPrePauseSeconds, onPreT
               <div className="flex-1">
                 <h3 className="text-[#0A0A0A] font-bold text-lg mb-1">Pre-Timed Reader</h3>
                 <p className="text-[#888] text-sm leading-relaxed">
-                  The AI reads each partner line automatically, then pauses so you can deliver yours — then auto-advances. No mic needed. Perfect for memorization.
+                  The AI reads each partner line automatically, pauses so you can deliver yours, then auto-advances. No mic needed. Perfect for memorization.
                 </p>
               </div>
             </div>

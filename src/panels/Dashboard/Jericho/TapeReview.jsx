@@ -24,7 +24,8 @@ import TapeReviewShareCard from './TapeReviewShareCard';
 import { Share2 } from 'lucide-react';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { PRACTICE_SCENE_TITLE, PRACTICE_SCENE_CONTENT } from '../../../data/practiceScene';
-import CameraPresell, { needsCameraPresell, markCameraPresellSeen } from '../../../components/Shared/CameraPresell';
+import CameraPresell from '../../../components/Shared/CameraPresell';
+import { needsCameraPresell, markCameraPresellSeen } from '../../../components/Shared/cameraPresellGate';
 import { Capacitor } from '@capacitor/core';
 import { usePushNotifications, isCapacitorNative, openNotificationSettings } from '../../../hooks/usePushNotifications';
 
@@ -43,7 +44,7 @@ function FirstReviewPaywall({ onUpgrade }) {
     <div className="rounded-2xl border border-[#D4A85F]/30 p-5 text-center tr-reveal" style={{ '--tr-i': 7, background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.05))' }}>
       <h3 className="text-base font-bold text-[#0A0A0A] leading-snug">You got the headline. There&apos;s a full casting read behind it.</h3>
       <p className="text-sm text-[rgba(10,10,10,0.6)] mt-1.5 leading-relaxed">
-        Unlock the rest — the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape. Any plan.
+        Unlock the rest on every tape: the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA. Any plan.
       </p>
       <button
         onClick={onUpgrade}
@@ -80,8 +81,8 @@ function FullReadLocked({ onUpgrade, hidden }) {
       </div>
       <p className="text-sm text-[rgba(10,10,10,0.62)] mt-1.5 leading-relaxed">
         {bits.length > 0
-          ? `You've got the headline. This tape also has ${bits.join(' · ')} — unlock it on every tape. Any plan.`
-          : "You've got the headline. Unlock the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA — on every tape. Any plan."}
+          ? `You've got the headline. This tape also has ${bits.join(' · ')}. Unlock it on every tape. Any plan.`
+          : "You've got the headline. Unlock the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA, on every tape. Any plan."}
       </p>
       <div className="mt-3 space-y-2" style={{ filter: 'blur(5px)', opacity: 0.5, pointerEvents: 'none' }} aria-hidden="true">
         {['Framing', 'Eyeline', 'Listening', 'Emotional arc'].map((l) => (
@@ -247,6 +248,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const [practiceVariant] = useState(() => {
     try { return firstReview && window.sessionStorage.getItem('dst_first_review_variant') === 'record'; } catch { return false; }
   });
+  // Mutable: uploading an OWN tape via the generic picker exits the practice
+  // framing (card + prefill), otherwise an unrelated take would be graded
+  // against the bundled Morgan sides. Recording via the card keeps it.
+  const [practiceActive, setPracticeActive] = useState(practiceVariant);
   const [role, setRole] = useState(practiceVariant ? 'Morgan' : '');
   const [tone, setTone] = useState('');
   const [sides, setSides] = useState(practiceVariant ? PRACTICE_SCENE_CONTENT : '');
@@ -466,15 +471,21 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     if (!f) return;
     if (f.type && !f.type.startsWith('video/')) {
       warn();
-      setFileError("That doesn't look like a video — upload an mp4, mov, or webm.");
+      setFileError("That doesn't look like a video. Upload an mp4, mov, or webm.");
       return;
     }
     if (f.size > MAX_TAPE_MB * 1024 * 1024) {
       warn();
-      setFileError(`That tape is ${(f.size / 1048576).toFixed(0)}MB — keep it under ${MAX_TAPE_MB}MB (a single-scene take exports small).`);
+      setFileError(`That tape is ${(f.size / 1048576).toFixed(0)}MB. Keep it under ${MAX_TAPE_MB}MB (a single-scene take exports small).`);
       return;
     }
     setFileError('');
+    // Own tape via the generic picker: drop the practice-scene framing so the
+    // bundled sides never grade an unrelated take. Card-recorded takes
+    // (recordInputRef) keep the prefill.
+    if (practiceActive && e.target === inputRef.current) {
+      setPracticeActive(false); setRole(''); setSides('');
+    }
     tapSelect();
     idemKeyRef.current = null; setFile(f); // new file = new action
   };
@@ -485,6 +496,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       trackEvent(Events.FIRST_REVIEW_STARTED, { source: 'onboarding' });
       // Past the consent-remount window now — retire the durable handoff flag.
       try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
+      try { window.sessionStorage.removeItem('dst_first_review_variant'); } catch { /* noop */ }
     } else if (tutorialProgress.first_review) {
       // A returning actor started another review — the repeat half of ACTIVE.
       trackEvent(Events.REPEAT_REVIEW_STARTED);
@@ -503,7 +515,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   const reset = () => {
     idemKeyRef.current = null; // next analysis is a new action
-    setFile(null); setFileError(''); setRole(''); setTone(''); setSides('');
+    setFile(null); setFileError(''); setTone('');
+    // Practice framing still up ("Review another take" on the practice scene):
+    // re-seed the sides so take #2 gets the same text-aware notes as take #1.
+    setRole(practiceActive ? 'Morgan' : '');
+    setSides(practiceActive ? PRACTICE_SCENE_CONTENT : '');
     dispatch(clearTapeReview());
   };
 
@@ -562,8 +578,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
           <p className="text-xs text-[rgba(10,10,10,0.4)] mt-6 leading-relaxed">
             {uploading
-              ? 'Large tapes can take a few minutes to upload on a mobile connection — keep the app open until the upload finishes.'
-              : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. You can close the app — we’ll notify you when your notes are ready.'}
+              ? 'Large tapes can take a few minutes to upload on a mobile connection. Keep the app open until the upload finishes.'
+              : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. You can close the app. We’ll notify you when your notes are ready.'}
           </p>
         </div>
       </div>
@@ -587,7 +603,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-[#FF8280]/30 p-5 text-center" style={SURFACE}>
-            <p className="text-sm font-bold text-[#0A0A0A]">This review came back incomplete — your token was refunded. Please try again.</p>
+            <p className="text-sm font-bold text-[#0A0A0A]">This review came back incomplete, so your token was refunded. Please try again.</p>
           </div>
           <button
             onClick={reset}
@@ -742,7 +758,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
                 <span className="text-sm font-bold text-[#0A0A0A]">Next Take Mission</span>
               </div>
               <p className="text-xs text-[rgba(10,10,10,0.65)] leading-relaxed">
-                Re-record working on this note{file ? ' and compare it against this take' : ''} — see if your next take lands it. →
+                Re-record working on this note{file ? ' and compare it against this take' : ''}. See if your next take lands it. →
               </p>
             </button>
           );
@@ -872,7 +888,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           onClick={onExitFirstReview}
           className="w-full text-center text-xs font-medium text-[rgba(10,10,10,0.45)] py-1 hover:text-[#7A5A18]"
         >
-          Maybe later — explore the app first →
+          Maybe later. Explore the app first →
         </button>
       )}
       <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
@@ -880,7 +896,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           <Film size={16} className="text-[#7A5A18]" /> Submit a self-tape
         </h3>
         <p className="text-xs text-[rgba(10,10,10,0.45)] mb-4 leading-relaxed">
-          Upload or record a take and Jericho gives you real casting-grade notes — framing, eyeline, your choices, and the performance arc.
+          Upload or record a take and Jericho gives you real casting-grade notes: framing, eyeline, your choices, and the performance arc.
         </p>
 
         {/* Honest sample: primes what the notes LOOK like for a first-timer who
@@ -901,7 +917,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               ))}
             </div>
             <p className="text-[11px] leading-snug text-[rgba(10,10,10,0.6)]">
-              <span className="font-semibold text-[#0A0A0A]">The one thing:</span> your listening drops on line 3 — let the reader's line land before you react. <span className="text-[rgba(10,10,10,0.45)]">Record or upload your take to get notes like this on YOUR performance.</span>
+              <span className="font-semibold text-[#0A0A0A]">The one thing:</span> your listening drops on line 3. Let the reader's line land before you react. <span className="text-[rgba(10,10,10,0.45)]">Record or upload your take to get notes like this on YOUR performance.</span>
             </p>
           </div>
         )}
@@ -910,14 +926,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             here. The actor needs the LINES before the camera opens, so the
             sides render in-screen with the record CTA as the primary action.
             The sides/role fields are already prefilled for sharper notes. */}
-        {practiceVariant && (
+        {practiceActive && (
           <div className="rounded-xl border border-[#D4A85F]/40 bg-[#D4A85F]/[0.08] p-4 mb-4">
             <div className="flex items-center gap-1.5 mb-2">
               <Film size={12} className="text-[#7A5A18]" />
               <span className="text-[10px] font-bold tracking-wider text-[#7A5A18] uppercase">{PRACTICE_SCENE_TITLE}</span>
             </div>
             <p className="text-[11px] text-[rgba(10,10,10,0.5)] mb-2">
-              You're Morgan, leaving a voicemail you weren't supposed to leave. Read it once, then tape it — any way you feel it.
+              You're Morgan, leaving a voicemail you weren't supposed to leave. Read it once, then tape it any way you feel it.
             </p>
             <div className="rounded-lg bg-white/60 p-3 max-h-44 overflow-y-auto">
               {PRACTICE_SCENE_CONTENT.split('\n\n').map((line, k) => (
@@ -966,7 +982,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             falls back to a normal picker. Reuses the exact same onPick flow, so a
             recorded clip lands as a File identical to an uploaded one. Hidden on
             the practice-scene variant, whose card above owns the record CTA. */}
-        {!practiceVariant && (
+        {!practiceActive && (
         <button
           type="button"
           onClick={startRecord}
@@ -1016,7 +1032,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {file && file.size > 60 * 1024 * 1024 && (
           <p className="text-[11px] text-[#7A5A18] mt-3 text-center leading-relaxed">
-            Heads up — this is a large tape ({(file.size / (1024 * 1024)).toFixed(0)} MB). On a slower
+            Heads up: this is a large tape ({(file.size / (1024 * 1024)).toFixed(0)} MB). On a slower
             connection the upload can take a few minutes; keep the app open and watch the progress.
           </p>
         )}
