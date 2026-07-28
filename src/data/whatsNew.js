@@ -8,6 +8,18 @@
  */
 export const WHATS_NEW = [
   {
+    id: 7,
+    version: '1.0.19',
+    date: 'July 2026',
+    title: 'Your first review, faster',
+    intro: 'This round is all about getting eyes on your work sooner:',
+    highlights: [
+      { emoji: '🎬', title: 'A practice scene, on us', body: "New here and no tape handy? Record our 30-second practice scene and get real casting notes on it. We give you the lines." },
+      { emoji: '📷', title: 'Smoother first recording', body: 'A quick heads-up screen before the camera asks for permission, so you know exactly what to tap.' },
+      { emoji: '⭐', title: 'Tape Review front and center', body: 'Your first review is now the top item on the getting-started list, and the share card links to the right place.' },
+    ],
+  },
+  {
     id: 6,
     version: '1.0.17',
     date: 'July 2026',
