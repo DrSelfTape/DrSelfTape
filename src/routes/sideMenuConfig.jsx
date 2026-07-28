@@ -48,6 +48,13 @@ const actorMenu = [
     icon: <SparklesIcon height={19} width={19} />,
   },
   {
+    // The aha feature gets its own door — it was only reachable buried
+    // inside My Growth. Deep-links straight onto the Tape tab.
+    path: '/dashboard/jericho?tab=tape',
+    text: 'Tape Review',
+    icon: <SparklesIcon height={19} width={19} />,
+  },
+  {
     path: '/dashboard/jericho',
     text: 'My Growth',
     icon: <SparklesIcon height={19} width={19} />,

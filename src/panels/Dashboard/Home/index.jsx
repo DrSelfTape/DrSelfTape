@@ -7,6 +7,7 @@ const HomeAnalytics = lazy(() => import('./HomeAnalytics'));
 import StatsCard from '../../../components/StatsCard.jsx';
 import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card.jsx';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
+import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
 import { fetchSubmissionsThunk } from '../../../redux/features/submissions/submissionsSlice';
 import { fetchMatchingStats } from '../../../redux/features/readers/readersMatchSlice';
 import AuditionBadges from '../../../components/AuditionBadges';
@@ -230,12 +231,21 @@ export default function DashboardHome() {
   // Server-synced onboarding flag — see notes in Mobile HomeScreen.
   const onboardingSeen = useSelector((state) => state.userSettings?.data?.reader_onboarding_seen);
   const settingsLoaded = useSelector((state) => state.userSettings?.loaded);
+  const firstReviewDone = useSelector((state) => !!state.userSettings?.data?.tutorial_progress?.first_review);
   useEffect(() => {
-    if (settingsLoaded && !onboardingSeen) {
-      const timer = setTimeout(() => setShowOnboarding(true), 2000);
-      return () => clearTimeout(timer);
+    if (!settingsLoaded || onboardingSeen) return;
+    // New user who hasn't had their first Tape Review: skip the legacy tour
+    // modal and route straight into the free first review (the web port of
+    // the mobile offer step — Jericho mounts TapeReview in firstReview mode).
+    // Marked seen server-side so neither surface fires twice.
+    if (!firstReviewDone) {
+      dispatch(patchUserSettings({ reader_onboarding_seen: true }));
+      navigate('/dashboard/jericho?tab=tape');
+      return;
     }
-  }, [settingsLoaded, onboardingSeen]);
+    const timer = setTimeout(() => setShowOnboarding(true), 2000);
+    return () => clearTimeout(timer);
+  }, [settingsLoaded, onboardingSeen, firstReviewDone, dispatch, navigate]);
 
   const recentSubs = Array.isArray(submissions) ? submissions.slice(0, 4) : [];
 

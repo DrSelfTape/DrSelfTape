@@ -3,7 +3,7 @@
  * Shows performance DNA, coaching insights, evolution timeline, and session history.
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Brain, TrendingUp, Zap, Target, Star, ChevronRight, X,
@@ -453,6 +453,18 @@ export default function JerichoDashboard() {
   const [searchParams] = useSearchParams();
   const deepTab = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(deepTab || 'overview');
+  const navigate = useNavigate();
+  // Web port of the forced first review (mobile does this via MobileApp):
+  // a user who has never had a Tape Review gets the firstReview flow (free
+  // review + post-result paywall) on the tape tab. Captured ONCE per mount —
+  // completing the review marks tutorial_progress.first_review, and a live
+  // prop would flip mid-flow and hide the paywall while the result is up.
+  const settingsLoaded = useSelector((s) => !!s.userSettings?.loaded);
+  const firstReviewDone = useSelector((s) => !!s.userSettings?.data?.tutorial_progress?.first_review);
+  const [webFirstReview, setWebFirstReview] = useState(null); // null = undecided
+  useEffect(() => {
+    if (webFirstReview === null && settingsLoaded) setWebFirstReview(!firstReviewDone);
+  }, [webFirstReview, settingsLoaded, firstReviewDone]);
   const [showStylePicker, setShowStylePicker] = useState(false);
   // Detail sheet — null when closed, or the session object to show.
   const [selectedSession, setSelectedSession] = useState(null);
@@ -785,7 +797,13 @@ export default function JerichoDashboard() {
             )}
 
             {/* ═══ TAPE REVIEW TAB ═══ */}
-            {activeTab === 'tape' && <TapeReview />}
+            {activeTab === 'tape' && (
+              <TapeReview
+                firstReview={webFirstReview === true}
+                onUpgrade={() => { setWebFirstReview(false); navigate('/dashboard/membership'); }}
+                onExitFirstReview={() => { setWebFirstReview(false); navigate('/dashboard'); }}
+              />
+            )}
 
             {/* ═══ INSIGHTS TAB ═══ */}
             {activeTab === 'insights' && (

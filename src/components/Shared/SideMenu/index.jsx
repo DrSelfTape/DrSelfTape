@@ -60,8 +60,15 @@ const SideMenu = ({ sideMenuOpen, setSideMenuOpen }) => {
 
       {/* Menu Items */}
       <div className='overflow-y-auto flex pt-2 flex-col transition-all duration-300 gap-2 max-h-[calc(100dvh-7rem)] h-full'>
-        {sideMenuRoutes(role)?.map((route, index) => {
-          const isMainActive = currentPath.startsWith(route.path);
+        {sideMenuRoutes(role)?.map((route, index, routes) => {
+          // Query-bearing paths (e.g. /dashboard/jericho?tab=tape) match on
+          // pathname + search; a plain path yields to a query-bearing sibling
+          // that matches, so Tape Review and My Growth never light up together.
+          const fullPath = currentPath + location.search;
+          const isMainActive = route.path.includes('?')
+            ? fullPath.startsWith(route.path)
+            : currentPath.startsWith(route.path) &&
+              !routes.some((r) => r.path.includes('?') && r.path.startsWith(route.path) && fullPath.startsWith(r.path));
           const isChild = Array.isArray(route.child) && route.child.length > 0;
           const isExpanded = childRoute === route.path;
 
