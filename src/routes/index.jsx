@@ -39,7 +39,7 @@ export const Router = () => {
   }, [currentRole]);
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#ff6b35] border-t-transparent rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" /></div>}>
       <Routes>
 
         <Route element={<PrivateRoutes />}>

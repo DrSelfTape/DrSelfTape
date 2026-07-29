@@ -1,6 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+/* Fonts load from the single consolidated <link> in index.html (Ring 0). */
 @import 'tailwindcss';
 
 /* ── Theme Variables ─────────────────────────────────────────────────
@@ -83,6 +81,74 @@
   --aurora-shadow-dock:  0 10px 30px rgba(10,10,10,0.06);
   --aurora-shadow-coral: 0 12px 30px rgba(212,168,95,0.30);
   --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.30);
+}
+
+/* ── AURORA NOIR — the web console surface (Ring 0) ──────────────────────
+ * Stamped as data-surface="console" on <html> by theme.jsx on DESKTOP WEB
+ * ONLY, behind VITE_CONSOLE_THEME (or localStorage dst_console_preview=1
+ * for prod previewing before the flip). Native + mobile web keep the light
+ * aurora surface untouched. Same gold, lights down.
+ * Spec: docs/web-platform-direction-aurora-noir-2026-07-28.md */
+[data-surface="console"] {
+  /* Legacy tokens — noir values */
+  --bg-deepest: #0B0A08;
+  --bg-deep: #0B0A08;
+  --bg-card: #141210;
+  --bg-elevated: #1B1815;
+  --bg-surface: #141210;
+  --bg-input: #1B1815;
+  --border-default: rgba(245,237,220,0.08);
+  --border-active: rgba(245,237,220,0.16);
+  --text-primary: #F5EDDC;
+  --text-secondary: #A69C89;
+  --text-muted: rgba(245,237,220,0.45);
+  --text-dim: rgba(245,237,220,0.30);
+  --sidebar-bg: #141210;
+  --topbar-bg: rgba(11,10,8,0.88);
+  --card-shadow: rgba(0,0,0,0.5);
+
+  /* Aurora — noir values. Gold accent tokens intentionally NOT overridden:
+   * same accent both surfaces, the one-light law does the differentiation. */
+  --aurora-bg: #0B0A08;
+  --aurora-page: #0B0A08;
+  --aurora-surface-solid: #141210;
+  --aurora-glass: rgba(20,18,16,0.72);
+  --aurora-glass-strong: rgba(20,18,16,0.85);
+  --aurora-glass-border: rgba(245,237,220,0.10);
+  --aurora-text: #F5EDDC;
+  --aurora-sub: #A69C89;
+  --aurora-dim: rgba(245,237,220,0.40);
+  --aurora-line: rgba(245,237,220,0.08);
+  --aurora-line-soft: rgba(245,237,220,0.05);
+  --aurora-shadow-card: 0 1px 2px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.35);
+  --aurora-shadow-modal: 0 24px 60px rgba(0,0,0,0.6);
+  --aurora-shadow-dock: 0 10px 30px rgba(0,0,0,0.4);
+
+  /* Console-only tokens: desktop type scale + motion signature */
+  --console-type-body: 14px;
+  --console-type-label: 12px;
+  --console-type-h3: 20px;
+  --console-type-h1: 32px;
+  --console-type-display: 56px;
+  --console-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --console-dur-press: 120ms;
+  --console-dur-enter: 200ms;
+  --console-dur-exit: 140ms;
+
+  background: #0B0A08;
+  color-scheme: dark;
+}
+
+/* Reduced motion on the console: transitions collapse to quick fades and no
+ * animation loops (the analyzing pulse goes static). Scoped to the console
+ * surface only — mobile/native keep their own reduced-motion handling. */
+@media (prefers-reduced-motion: reduce) {
+  [data-surface="console"] *,
+  [data-surface="console"] *::before,
+  [data-surface="console"] *::after {
+    transition-duration: 120ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 [data-theme="dark"] {
@@ -296,7 +362,7 @@ button, a, [role="button"] {
 /* Primary Theme (Purple) */
 --color-primary: #FF8280;
 --color-primary-light: rgba(255, 130, 128,0.1);
---color-primary-dark: #A040C8;
+--color-primary-dark: #7A5A18; /* was #A040C8 — purple remnant retired (Ring 0) */
 
 /* Secondary (Dark Neutrals) */
 --color-secondary: #6B7280;
@@ -365,8 +431,8 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0px 1000px #1E1E1E inset !important;
-  box-shadow: 0 0 0px 1000px #1E1E1E inset !important;
+  -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
+  box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
   -webkit-text-fill-color: #fff !important;
 }
 
@@ -429,7 +495,7 @@ input:-webkit-autofill:active {
 }
 
 .topbar-style {
-  @apply border-b border-[#1E1E1E] min-h-[55px] flex items-center justify-between px-4 bg-[#0D0D0D] overflow-auto;
+  @apply border-b border-[var(--border-default)] min-h-[55px] flex items-center justify-between px-4 bg-[var(--bg-deep)] overflow-auto;
 }
 
 .edit-booking-style {

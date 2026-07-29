@@ -47,7 +47,10 @@
     <meta name="twitter:description" content="AI casting director simulation, live rehearsals, scene generator, and audition tracking. Built for actors who are serious about booking." />
     <meta name="twitter:image" content="https://drselftape.app/og-image.jpg" />
 
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
+    <!-- One consolidated font pipeline (Ring 0): replaces the App.css @imports
+         and LoginPage's injected links. Playfair stays for the mobile shell;
+         Instrument Serif is the web console display face. -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
 
     <!-- Meta Pixel (Joseph Harold's Pixel) — web conversion tracking for ads.
          Native apps don't run this; firing happens via src/utils/analytics.js. -->

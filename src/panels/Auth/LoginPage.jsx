@@ -154,10 +154,8 @@ export default function LoginPage() {
       background: "#0E0D0A", color: TEXT,
       fontFamily: "'Space Grotesk', system-ui, sans-serif",
     }}>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
-
+      {/* Fonts (Space Grotesk / JetBrains Mono / Instrument Serif) come from
+          the consolidated index.html pipeline — no per-page injection. */}
       {/* Washed-out video background. Hidden under prefers-reduced-motion;
           the wash gradient below still renders, so the screen never looks bare. */}
       {!reducedMotion && (
