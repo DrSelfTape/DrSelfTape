@@ -139,6 +139,43 @@
   color-scheme: dark;
 }
 
+/* The paper island (Ring 2): shared feature panels hardcode dark-on-light
+ * colors, so inside the console they render on a light "script page" floating
+ * over the noir stage instead of breaking on dark tokens. This block resets
+ * the token surface back to the light values for everything inside a
+ * .console-paper container. Values mirror the :root light block above —
+ * update BOTH if the light palette ever changes. */
+[data-surface="console"] .console-paper {
+  --bg-deepest: #FAFAF7;
+  --bg-deep: #FAFAF7;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F4F4EE;
+  --bg-surface: #FFFFFF;
+  --bg-input: #FFFFFF;
+  --border-default: rgba(10,10,10,0.08);
+  --border-active: rgba(10,10,10,0.14);
+  --text-primary: #0A0A0A;
+  --text-secondary: rgba(10,10,10,0.62);
+  --text-muted: rgba(10,10,10,0.40);
+  --text-dim: rgba(10,10,10,0.28);
+  --card-shadow: rgba(10,10,10,0.06);
+  --aurora-bg: #FAFAF7;
+  --aurora-page: #FAFAF7;
+  --aurora-surface-solid: #FFFFFF;
+  --aurora-glass: rgba(255,255,255,0.62);
+  --aurora-glass-strong: rgba(255,255,255,0.78);
+  --aurora-glass-border: rgba(255,255,255,0.55);
+  --aurora-text: #0A0A0A;
+  --aurora-sub: rgba(10,10,10,0.62);
+  --aurora-dim: rgba(10,10,10,0.40);
+  --aurora-line: rgba(10,10,10,0.06);
+  --aurora-line-soft: rgba(10,10,10,0.04);
+  --aurora-shadow-card: 0 4px 20px rgba(10,10,10,0.04), inset 0 1px 0 rgba(255,255,255,0.70);
+  --aurora-shadow-modal: 0 24px 60px rgba(10,10,10,0.18);
+  --aurora-shadow-dock: 0 10px 30px rgba(10,10,10,0.06);
+  color-scheme: light;
+}
+
 /* Reduced motion on the console: transitions collapse to quick fades and no
  * animation loops (the analyzing pulse goes static). Scoped to the console
  * surface only — mobile/native keep their own reduced-motion handling. */

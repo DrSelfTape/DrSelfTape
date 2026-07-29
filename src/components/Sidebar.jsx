@@ -5,100 +5,13 @@ import { performLogout } from '../redux/features/auth/authSlice'
 import ProfilePhoto from './Shared/ProfilePhoto'
 import AvailabilityToggle from './Dashboard/AvailabilityToggle'
 import {
-  Monitor,
-  BookOpen,
-  Target,
-  Send,
-  LayoutDashboard,
-  Users2,
-  MessageSquare,
-  HeartHandshake,
-  UserCircle,
   LogOut,
   Clapperboard,
   Shield,
   ChevronDown,
-  Sparkles,
-  Video,
-  Crown,
-  Film,
-  Brain,
-  FileText,
-  Store,
-  Trophy,
-  Gift,
+  Search,
 } from 'lucide-react'
-
-/* ── Grouped navigation structure ── */
-const NAV_GROUPS = [
-  {
-    key: 'home',
-    items: [
-      { label: 'Home', path: '/dashboard', icon: LayoutDashboard, end: true },
-    ],
-  },
-  {
-    // The AI suite — flagship. These were already routed but never surfaced in
-    // the desktop sidebar (they live in the mobile shell), so desktop/iPad web
-    // users couldn't reach Tape Review, Compare Takes, or Jericho. Tape Review
-    // deep-links to the Jericho hub's Tape tab.
-    key: 'studio',
-    label: 'AI Studio',
-    icon: Sparkles,
-    items: [
-      { label: 'Tape Review', path: '/dashboard/jericho?tab=tape', icon: Film },
-      { label: 'My Growth', path: '/dashboard/jericho', icon: Brain },
-      { label: 'Scene Generator', path: '/dashboard/generator', icon: Clapperboard },
-    ],
-  },
-  {
-    key: 'practice',
-    label: 'Practice',
-    icon: BookOpen,
-    items: [
-      { label: 'Acting Coach', path: '/dashboard/cd-sim', icon: Monitor },
-      { label: 'Scene Study', path: '/dashboard/scene-study', icon: BookOpen },
-      { label: 'Scripts', path: '/dashboard/scripts', icon: FileText },
-      { label: 'Self-Tapes', path: '/dashboard/self-tapes', icon: Video },
-    ],
-  },
-  {
-    key: 'connect',
-    label: 'Connect',
-    icon: Users2,
-    items: [
-      { label: 'Find a Reader', path: '/dashboard/find-a-reader', icon: Users2, badgeKey: 'find-a-reader' },
-      { label: 'Green Room', path: '/dashboard/green-room', icon: MessageSquare },
-      { label: 'Who Wants to Read', path: '/dashboard/who-wants-to-read', icon: HeartHandshake, badgeKey: 'who-wants-to-read' },
-      { label: 'Reader Market', path: '/dashboard/marketplace', icon: Store },
-    ],
-  },
-  {
-    key: 'work',
-    label: 'My Work',
-    icon: Target,
-    items: [
-      { label: 'Audition Tracker', path: '/dashboard/auditions', icon: Target },
-      { label: 'Submissions', path: '/dashboard/submissions', icon: Send },
-    ],
-  },
-  {
-    key: 'community',
-    label: 'Community',
-    icon: Trophy,
-    items: [
-      { label: 'Leaderboard', path: '/dashboard/leaderboard', icon: Trophy },
-      { label: 'Invite Friends', path: '/dashboard/referral', icon: Gift },
-    ],
-  },
-  {
-    key: 'profile',
-    items: [
-      { label: 'My Profile', path: '/dashboard/profile', icon: UserCircle },
-      { label: 'Subscription', path: '/dashboard/membership', icon: Crown },
-    ],
-  },
-]
+import { NAV_GROUPS } from './navGroups'
 
 function SidebarGroup({ group, pendingLikes, expanded, onToggle }) {
   const location = useLocation()
@@ -279,6 +192,29 @@ export default function Sidebar() {
           <Clapperboard className="w-4 h-4" />
         </div>
         <span className="text-base font-bold tracking-tight" style={{ color: 'var(--aurora-text)' }}>Dr. Self Tape</span>
+      </div>
+
+      {/* Find anything — opens the ⌘K palette. Keyboard culture is the
+          desktop tell: the visible shortcut hint IS the step-above signal. */}
+      <div className="px-3 pt-3">
+        <button
+          type="button"
+          onClick={() => { try { window.dispatchEvent(new CustomEvent('drst-open-palette')); } catch { /* noop */ } }}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl border text-sm transition-colors hover:bg-[var(--aurora-glass)]"
+          style={{
+            borderColor: 'var(--aurora-line)', color: 'var(--aurora-dim)',
+            background: 'var(--aurora-glass)', cursor: 'pointer',
+            fontFamily: "'Space Grotesk', system-ui, sans-serif",
+          }}
+        >
+          <Search className="w-3.5 h-3.5 shrink-0" />
+          <span className="flex-1 text-left">Find anything</span>
+          <span style={{
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 10,
+            padding: '2px 6px', borderRadius: 6, border: '1px solid var(--aurora-line)',
+            color: 'var(--aurora-dim)',
+          }}>⌘K</span>
+        </button>
       </div>
 
       {/* Navigation */}
