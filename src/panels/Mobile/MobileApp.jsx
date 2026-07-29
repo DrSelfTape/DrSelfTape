@@ -616,15 +616,25 @@ function AuroraPracticeStrip() {
  * a 180deg gradient, a 2px white inner top highlight, and a colored
  * drop shadow. Numbers in JetBrains Mono on top. */
 function AuroraPipeline({ stats, auditions, setTab }) {
-  const counts = {
-    sub: auditions.filter(a => a.status === 'submitted').length,
-    rev: auditions.filter(a => a.status === 'in_review').length,
-    cb:  auditions.filter(a => a.status === 'callback' || a.status === 'audition').length,
-    bk:  stats?.total_booked || auditions.filter(a => a.status === 'booked').length,
+  // Canonical funnel from the server metrics module (P1-02): total →
+  // reached audition → reached callback → reached booked. The old lanes
+  // mixed local current-status counts (REV filtered 'in_review', a status
+  // that doesn't exist, so it was permanently 0) with one server number.
+  const p = stats?.pipeline;
+  const counts = p ? {
+    sub: p.total,
+    aud: p.reached_audition,
+    cb:  p.reached_callback,
+    bk:  p.reached_booked,
+  } : {
+    sub: auditions.length,
+    aud: auditions.filter(a => ['audition', 'callback', 'booked'].includes(a.status)).length,
+    cb:  auditions.filter(a => ['callback', 'booked'].includes(a.status)).length,
+    bk:  auditions.filter(a => a.status === 'booked').length,
   };
   const blocks = [
     { id: 'sub', label: 'SUB', val: counts.sub, color: '#A7D6FF', shadow: 'rgba(167,214,255,0.45)' },
-    { id: 'rev', label: 'REV', val: counts.rev, color: '#D8C5F2', shadow: 'rgba(216,197,242,0.45)' },
+    { id: 'aud', label: 'AUD', val: counts.aud, color: '#D8C5F2', shadow: 'rgba(216,197,242,0.45)' },
     { id: 'cb',  label: 'CB',  val: counts.cb,  color: '#D4A85F', shadow: 'rgba(212,168,95,0.45)' },
     { id: 'bk',  label: 'BK',  val: counts.bk,  color: '#9FE6B4', shadow: 'rgba(159,230,180,0.45)' },
   ];

@@ -253,11 +253,21 @@ export default function DashboardHome() {
   const isLoading = stats.loading;
   const hasStats = (s.total || 0) > 0;
 
+  // Pipeline numbers come from the ONE server metrics module (P1-02) —
+  // reached-or-beyond semantics, so a booked row still counts as a callback
+  // and this card can never disagree with Submissions or the Tracker again.
+  // Rate display rule: under 10 submissions a percentage is noise, show the
+  // fraction; either way the denominator is stated in words.
+  const p = s.pipeline;
+  const bookedChange = !p || !p.total ? ''
+    : p.use_fraction
+      ? `${p.reached_booked} of ${p.total} submissions`
+      : `${p.booked_rate}% of ${p.total} submissions`;
   const statCards = [
     { title: 'Total Submissions', value: isLoading ? '...' : String(s.total || 0), change: '', positive: true },
     { title: 'This Month', value: isLoading ? '...' : String(s.this_month || 0), change: '', positive: true },
-    { title: 'Callbacks', value: isLoading ? '...' : String(s.by_status?.callback || 0), change: '', positive: true },
-    { title: 'Booked', value: isLoading ? '...' : String(s.by_status?.booked || 0), change: s.booked_rate ? `${s.booked_rate}%` : '', positive: true },
+    { title: 'Callbacks', value: isLoading ? '...' : String(p?.reached_callback ?? s.by_status?.callback ?? 0), change: '', positive: true },
+    { title: 'Booked', value: isLoading ? '...' : String(p?.reached_booked ?? s.by_status?.booked ?? 0), change: bookedChange, positive: true },
   ];
 
   // Type breakdown chart data

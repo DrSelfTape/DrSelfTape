@@ -130,16 +130,24 @@ export default function Submissions() {
 
   useEffect(() => {
     dispatch(fetchSubmissionsThunk());
+    dispatch(fetchAuditionStatsThunk());
   }, [dispatch]);
 
   // --- Stats ---
+  // Pipeline numbers come from the ONE server-side metrics module (P1-02),
+  // never recomputed locally: this page used to count current statuses over
+  // its own list and showed "0 callbacks" while the tracker showed 6 for
+  // the same user. `reached_*` semantics: a booked row still counts as a
+  // callback. Local list math survives only for thisWeek (a list-scoped
+  // display detail, not a pipeline metric).
+  const pipelineStats = useSelector((state) => state.auditions.stats?.data?.pipeline);
   const list = Array.isArray(submissions) ? submissions : [];
   const now = new Date();
   const weekAgo = new Date(now - 7 * 86400000);
 
-  const totalSent = list.length;
-  const callbacks = list.filter((s) => s.status === 'callback').length;
-  const booked = list.filter((s) => s.status === 'booked').length;
+  const totalSent = pipelineStats?.total ?? list.length;
+  const callbacks = pipelineStats?.reached_callback ?? 0;
+  const booked = pipelineStats?.reached_booked ?? 0;
   const thisWeek = list.filter((s) => new Date(s.submitted_at) >= weekAgo).length;
 
   // --- Filter + Sort ---
