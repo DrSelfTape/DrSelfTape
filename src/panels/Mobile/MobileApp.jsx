@@ -31,6 +31,7 @@ import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
 import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
+import TakesDeck from "../../components/Dashboard/TakesDeck";
 import CameraPresell from "../../components/Shared/CameraPresell";
 import { needsCameraPresell, markCameraPresellSeen } from "../../components/Shared/cameraPresellGate";
 import { logo } from "../../assets/images";
@@ -2917,6 +2918,20 @@ function ScenesScreen({ setTab }) {
           REC →
         </span>
       </button>
+
+      {/* The takes deck — record→pending→reveal loop pinned beside the
+          record button (Lapse's developing-deck pattern). Renders nothing
+          for a user with no takes and no reviews. */}
+      <TakesDeck
+        onOpenReview={() => setTab('tape-review')}
+        onCompare={() => {
+          try { window.sessionStorage.setItem('dst_compare_takes', '1'); } catch { /* noop */ }
+          setTab('tape-review');
+        }}
+        onOpenLibrary={() => {
+          try { window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'self-tapes' } })); } catch { /* noop */ }
+        }}
+      />
 
       <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--aurora-dim)', margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "1px" }}>Your Scripts</p>
 
