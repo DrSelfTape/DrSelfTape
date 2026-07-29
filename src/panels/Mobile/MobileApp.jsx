@@ -1045,7 +1045,10 @@ function getMobileNextStep({ profile, stats, submissions, scripts, firstReviewPe
     // across 57 users in 7 days — the Tracker needs an active CTA.
     return { title: 'Log your last audition', desc: 'Start your pipeline — Snap a breakdown screenshot or add manually.', cta: 'Add Audition', icon: 'plus', action: 'audition' };
   }
-  return { title: 'Ready to work?', desc: 'Jump back into scene study or try the acting coach.', cta: 'Continue', icon: 'play', action: 'live' };
+  // Veteran terminal state: route back into the review loop (the aha
+  // feature), not a generic "jump back in" — every card above is a one-time
+  // setup step, this one is the habit.
+  return { title: 'Record your next take', desc: 'Tape it, get casting notes, then compare it against your last one.', cta: 'Tape It', icon: 'play', action: 'tape-review' };
 }
 
 // Aurora gamification stack (HUD / quests / streak guard / season pass) —
@@ -1072,6 +1075,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const { balance, unlimited: tokensUnlimited, refresh: refreshTokens } = useTokenBalance();
   const rawAuditions = useSelector((state) => state.auditions.data || []);
   const rawScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
+  // Server-side scripts live in the scripts slice; sceneStudyScripts is the
+  // fallback store. Checking only the fallback made every server-scripts user
+  // read as script-less, so Home pitched veterans "Generate your FIRST scene".
+  const serverScripts = useSelector((state) => state.scripts.scripts || []);
+  const allScripts = serverScripts.length > 0 ? serverScripts : rawScripts;
   const s = useSelector((state) => state.auditions.stats?.data || {});
   const submissions = useSelector((state) => state.submissions.submissions || []);
   const matchingStats = useSelector((state) => state.readersMatch.matchingStats);
@@ -1100,7 +1108,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   // we render the minimal variant too: the calmer wrong guess.
   const firstSession = !settingsLoadedForSteps || firstReviewPending;
 
-  const nextStep = getMobileNextStep({ profile, stats: s, submissions, scripts: rawScripts, firstReviewPending });
+  const nextStep = getMobileNextStep({ profile, stats: s, submissions, scripts: allScripts, firstReviewPending });
 
   // Drop the user into the Tape Review tab with the first-review flow active —
   // the exact handoff AuroraOnboarding's offer step uses (sessionStorage flag
@@ -1207,6 +1215,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     else if (nextStep.action === 'live') setTab('scenes');
     else if (nextStep.action === 'audition') setTab('auditions');
     else if (nextStep.action === 'first-review') launchFreeReview();
+    else if (nextStep.action === 'tape-review') setTab('tape-review');
   };
 
   const firstCallback = callbacks[0];
