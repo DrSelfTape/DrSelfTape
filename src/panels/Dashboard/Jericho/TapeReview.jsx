@@ -103,6 +103,60 @@ function FullReadLocked({ onUpgrade, hidden }) {
   );
 }
 
+/* Actor-native grade bands for the gauge hero — the headline read of the
+ * whole tape in the language of the room, not a school grade. */
+function gradeBand(avg) {
+  if (avg >= 8) return { label: 'Book It', color: '#22c55e' };
+  if (avg >= 5.5) return { label: 'Callback Range', color: '#D4A85F' };
+  return { label: 'Keep Taping', color: '#FF8280' };
+}
+
+/* Staged-reveal hero: animated semicircle gauge + the band verdict, addressed
+ * by first name. The arc sweep (800ms, strong ease-out) is the moment; the
+ * number and band land on staggered delays behind it. Reduced motion gets the
+ * final state without the sweep. */
+function GaugeHero({ avg, firstName }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+  const band = gradeBand(avg);
+  const R = 62;
+  const C = Math.PI * R;
+  const frac = Math.max(0, Math.min(1, avg / 10));
+  const landed = (delay) => ({
+    opacity: mounted ? 1 : 0,
+    transform: mounted ? 'translateY(0)' : 'translateY(6px)',
+    transition: `opacity 300ms ease-out ${delay}ms, transform 300ms cubic-bezier(0.23,1,0.32,1) ${delay}ms`,
+  });
+  return (
+    <div className="rounded-2xl border border-[#D4A85F]/25 p-5 text-center tr-reveal" style={{ '--tr-i': 0, background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
+      <p className="text-xs font-medium text-[rgba(10,10,10,0.5)]">
+        {firstName ? `The verdict on your take, ${firstName}` : 'The verdict on your take'}
+      </p>
+      <div style={{ position: 'relative', width: 172, height: 96, margin: '10px auto 0' }}>
+        <svg width="172" height="96" viewBox="0 0 172 96">
+          <path d="M 24 90 A 62 62 0 0 1 148 90" fill="none" stroke="rgba(10,10,10,0.08)" strokeWidth="10" strokeLinecap="round" />
+          <path
+            d="M 24 90 A 62 62 0 0 1 148 90" fill="none" stroke={band.color} strokeWidth="10" strokeLinecap="round"
+            strokeDasharray={C} strokeDashoffset={mounted ? C * (1 - frac) : C}
+            className="dst-gauge-arc"
+          />
+        </svg>
+        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, ...landed(350) }}>
+          <span className="text-3xl font-bold text-[#0A0A0A]">{avg.toFixed(1)}</span>
+          <span className="text-xs text-[rgba(10,10,10,0.4)]"> /10</span>
+        </div>
+      </div>
+      <p className="text-base font-bold mt-1" style={{ color: band.color, ...landed(550) }}>
+        {band.label}
+      </p>
+      <style>{`.dst-gauge-arc{transition:stroke-dashoffset 800ms cubic-bezier(0.23,1,0.32,1) 150ms;}@media (prefers-reduced-motion: reduce){.dst-gauge-arc{transition:none;}}`}</style>
+    </div>
+  );
+}
+
 const NOTIF_NUDGE_KEY = 'dst_notif_nudge_dismissed';
 
 /* Denied-state recovery — once a user has denied push, iOS never re-prompts,
@@ -178,11 +232,25 @@ const PERF_FIELDS = [
   { key: 'truth_vs_indicated', label: 'Truth vs. indicated' },
 ];
 
-function ScoreBar({ label, value, color = '#D4A85F' }) {
+// Verdict chip for a rubric row — the score in the language of the room.
+function scoreChip(v) {
+  const n = Number(v);
+  if (!Number.isFinite(n)) return null;
+  if (n >= 8) return { text: 'Casting-ready', color: '#15803d', bg: 'rgba(34,197,94,0.12)' };
+  if (n >= 6) return { text: 'Solid', color: '#7A5A18', bg: 'rgba(212,168,95,0.14)' };
+  return { text: 'Needs work', color: '#b91c1c', bg: 'rgba(255,130,128,0.14)' };
+}
+
+function ScoreBar({ label, value, color = '#D4A85F', chip = null }) {
   const v = Math.max(0, Math.min(10, Number(value) || 0));
   return (
     <div className="flex items-center gap-3">
       <span className="text-xs text-[rgba(10,10,10,0.62)] flex-1 truncate">{label}</span>
+      {chip && (
+        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ color: chip.color, background: chip.bg }}>
+          {chip.text}
+        </span>
+      )}
       <div className="w-28 h-2 rounded-full bg-[#F4F4EE] overflow-hidden">
         <div className="h-full rounded-full transition-all duration-700" style={{ width: `${v * 10}%`, background: color }} />
       </div>
@@ -257,6 +325,12 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const [sides, setSides] = useState(practiceVariant ? PRACTICE_SCENE_CONTENT : '');
   const [showOptional, setShowOptional] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  // Staged reveal of the result: 0 = gauge + quick read, 1 = + what's working,
+  // 2 = + the fix (adjustments/one thing/mission), 3 = everything (scores,
+  // share, paywall, actions). Progressive disclosure makes the notes land as
+  // a moment instead of a wall; "Show everything" skips for repeat readers.
+  const [revealStage, setRevealStage] = useState(0);
+  const firstName = useSelector((s) => s.profile?.profile?.first_name || '');
   const inputRef = useRef(null);
   const recordInputRef = useRef(null); // capture="user" input for the no-tape record path
   // First-ever record attempt on native: pre-sell the camera/mic OS prompts
@@ -515,6 +589,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   const reset = () => {
     idemKeyRef.current = null; // next analysis is a new action
+    setRevealStage(0); // next result gets its own staged reveal
     setFile(null); setFileError(''); setTone('');
     // Practice framing still up ("Review another take" on the practice scene):
     // re-seed the sides so take #2 gets the same text-aware notes as take #1.
@@ -650,9 +725,17 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {/* Push-denied recovery — notifications just became obviously useful */}
         <NotificationsNudge />
 
+        {/* Gauge hero — headline grade from the RAW scores (a single teaser
+            number never leaks the gated per-dimension scorecard). */}
+        {(() => {
+          const vals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));
+          if (!vals.length) return null;
+          return <GaugeHero avg={vals.reduce((a, b) => a + b, 0) / vals.length} firstName={firstName} />;
+        })()}
+
         {/* Verdict */}
         {r.verdict && (
-          <div className="rounded-2xl border border-[#D4A85F]/25 p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 0, background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
+          <div className="rounded-2xl border border-[#D4A85F]/25 p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 1, background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
             <div className="flex items-start gap-3">
               <div className="w-9 h-9 rounded-xl bg-[#D4A85F]/15 flex items-center justify-center flex-shrink-0">
                 <Sparkles size={16} className="text-[#7A5A18]" />
@@ -672,9 +755,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
         )}
 
-        {/* What's working */}
-        {working.length > 0 && (
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 1, ...SURFACE }}>
+        {/* What's working — reveal stage 1 */}
+        {revealStage >= 1 && working.length > 0 && (
+          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 0, ...SURFACE }}>
             <h3 className="text-sm font-bold text-[#0A0A0A] mb-3 flex items-center gap-2">
               <CheckCircle2 size={16} className="text-emerald-500" /> What&apos;s working
             </h3>
@@ -692,9 +775,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
         )}
 
-        {/* Performance read — the deep craft analysis */}
-        {r.performance && Object.values(r.performance).some(Boolean) && (
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 2, ...SURFACE }}>
+        {/* Performance read — the deep craft analysis (reveal stage 2) */}
+        {revealStage >= 2 && r.performance && Object.values(r.performance).some(Boolean) && (
+          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 0, ...SURFACE }}>
             <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
               <Theater size={16} className="text-[#7A5A18]" /> Performance read
             </h3>
@@ -709,9 +792,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
         )}
 
-        {/* Adjustments */}
-        {adjustments.length > 0 && (
-          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 3, ...SURFACE }}>
+        {/* Adjustments (reveal stage 2) */}
+        {revealStage >= 2 && adjustments.length > 0 && (
+          <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5 tr-reveal" style={{ '--tr-i': 1, ...SURFACE }}>
             <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
               <Target size={16} className="text-[#7A5A18]" /> Your next take
             </h3>
@@ -730,9 +813,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
         )}
 
-        {/* The one thing */}
-        {r.the_one_thing && (
-          <div className="rounded-2xl border border-[#FF8280]/25 p-4 tr-reveal" style={{ '--tr-i': 4, background: 'rgba(255,130,128,0.06)' }}>
+        {/* The one thing (reveal stage 2) */}
+        {revealStage >= 2 && r.the_one_thing && (
+          <div className="rounded-2xl border border-[#FF8280]/25 p-4 tr-reveal" style={{ '--tr-i': 2, background: 'rgba(255,130,128,0.06)' }}>
             <h3 className="text-xs font-bold text-[#FF8280] uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
               <Flame size={13} /> The one thing
             </h3>
@@ -743,6 +826,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {/* Next Take Mission — turn the note into action: re-record against it and
             compare to this take. Focus = the one thing, else the first fix. */}
         {(() => {
+          if (revealStage < 2) return null;
           const a0 = adjustments[0];
           const focus = r.the_one_thing || a0?.note || (typeof a0 === 'string' ? a0 : '');
           if (!focus) return null;
@@ -751,7 +835,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               type="button"
               onClick={() => startNextTakeMission(focus)}
               className="w-full text-left rounded-2xl p-4 border border-[#D4A85F]/40 tr-reveal"
-              style={{ '--tr-i': 5, background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}
+              style={{ '--tr-i': 3, background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}
             >
               <div className="flex items-center gap-2 mb-1">
                 <Target size={15} className="text-[#7A5A18]" />
@@ -766,14 +850,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Scores — only render a card when its data actually came back, so an
             empty/partial result never shows a wall of clamped-to-0 bars. */}
-        {(hasScores || hasDna) && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 tr-reveal" style={{ '--tr-i': 6 }}>
+        {revealStage >= 3 && (hasScores || hasDna) && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 tr-reveal" style={{ '--tr-i': 0 }}>
             {hasScores && (
               <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
                 <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Tape scores</h3>
                 <div className="space-y-2.5">
                   {TECH_SCORES.map((s) => (
-                    <ScoreBar key={s.key} label={s.label} value={scores[s.key]} />
+                    <ScoreBar key={s.key} label={s.label} value={scores[s.key]} chip={scoreChip(scores[s.key])} />
                   ))}
                 </div>
               </div>
@@ -797,7 +881,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Free (non-first-review) users: the deep sections above are gated —
             offer the full read here, in their place. */}
-        {locked && !firstReview && (
+        {revealStage >= 3 && locked && !firstReview && (
           <FullReadLocked
             onUpgrade={handleUpgrade}
             hidden={{ nAdjustments: rawAdjustments.length, hasScores: rawHasScores, hasDna: rawHasDna, hasPerformance: rawHasPerformance }}
@@ -808,14 +892,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             (free too): an actor posting their casting-grade read is free
             distribution. The template renders far offscreen; the button captures
             it to an image and opens the native share sheet. */}
-        {(r.verdict || tags.length > 0) && (
+        {revealStage >= 3 && (r.verdict || tags.length > 0) && (
           <>
             <button
               type="button"
               disabled={sharing}
               onClick={handleShare}
               className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60 tr-reveal"
-              style={{ '--tr-i': 7 }}
+              style={{ '--tr-i': 1 }}
             >
               {sharing ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
               {sharing ? 'Preparing your card…' : 'Share my read'}
@@ -828,7 +912,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             standard "review another take" reset plus the Compare Takes
             handoff (hidden during the free first review for the same
             token-wall reason as the mode toggle). */}
-        {firstReview ? (
+        {revealStage >= 3 && (firstReview ? (
           <>
             <FirstReviewPaywall onUpgrade={() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_TAP); onUpgrade?.(); }} />
             <button
@@ -860,6 +944,33 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               <RotateCcw size={15} /> Review another take
             </button>
           </>
+        ))}
+
+        {/* Staged-reveal advance — one primary CTA that walks the notes in
+            three beats (worked → the fix → full read + share), with a quiet
+            skip for repeat readers. onClick only: a tap-belt double-fire here
+            would advance two stages. */}
+        {revealStage < 3 && (
+          <div className="space-y-1">
+            <button
+              type="button"
+              onClick={() => {
+                trackEvent('reveal_stage_advance', { to: revealStage + 1 });
+                setRevealStage((v) => Math.min(3, v + 1));
+              }}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
+              style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            >
+              {revealStage === 0 ? "See what's working →" : revealStage === 1 ? 'The one thing to fix →' : 'See your full casting notes →'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { trackEvent('reveal_stage_advance', { to: 3, skipped: true }); setRevealStage(3); }}
+              className="w-full text-center text-xs font-medium text-[rgba(10,10,10,0.4)] py-1.5"
+            >
+              Show everything
+            </button>
+          </div>
         )}
       </div>
     );
