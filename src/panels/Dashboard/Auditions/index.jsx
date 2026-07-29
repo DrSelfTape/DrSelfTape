@@ -84,9 +84,14 @@ const TYPE_BADGES = {
 function callbackLabel(dateStr) {
   if (!dateStr) return null;
   const cb = new Date(dateStr);
+  if (isNaN(cb.getTime())) return null;
   const now = new Date();
   const diffMs = cb.setHours(0, 0, 0, 0) - now.setHours(0, 0, 0, 0);
   const days = Math.round(diffMs / 86400000);
+  // Garbage guard: a null/epoch/typo'd date used to render "13697d ago"
+  // (~37 years) — an actor reading trust signals sees a broken product.
+  // Anything implausibly far past renders no label at all.
+  if (days < -365) return null;
   if (days < 0) return { text: `${Math.abs(days)}d ago`, urgent: false };
   if (days === 0) return { text: 'Today!', urgent: true };
   if (days === 1) return { text: 'Tomorrow', urgent: true };
