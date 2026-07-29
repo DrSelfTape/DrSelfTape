@@ -7,6 +7,7 @@ import { setAuthToken } from "../../redux/http";
 import { warn as hapticWarn } from "../../utils/haptics";
 import AppleSignInButton from "../../components/Auth/AppleSignInButton";
 import { Capacitor } from "@capacitor/core";
+import { useIsMobile } from "../../hooks/useIsMobile";
 
 const COOLDOWN_AFTER = 5;
 const COOLDOWN_SECONDS = 30;
@@ -82,6 +83,16 @@ export default function LoginPage() {
     v.play?.().catch(() => {});
   }, [reducedMotion]);
 
+  // Aurora Noir Ring 1 — desktop web renders the backstage-door split.
+  const isMobile = useIsMobile();
+  const [wideViewport, setWideViewport] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 900);
+  useEffect(() => {
+    const onResize = () => setWideViewport(window.innerWidth >= 900);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const desktopWeb = !Capacitor.isNativePlatform() && !isMobile && wideViewport;
+
   useEffect(() => {
     if (cooldownLeft <= 0) return;
     const id = setInterval(() => setCooldownLeft((s) => (s <= 1 ? 0 : s - 1)), 1000);
@@ -146,102 +157,10 @@ export default function LoginPage() {
     };
   }, []);
 
-  return (
-    <div style={{
-      // 100dvh shrinks with the iOS virtual keyboard so the Sign In button
-      // stays reachable when the password field is focused.
-      minHeight: "100dvh", position: "relative", overflow: "hidden",
-      background: "#0E0D0A", color: TEXT,
-      fontFamily: "'Space Grotesk', system-ui, sans-serif",
-    }}>
-      {/* Fonts (Space Grotesk / JetBrains Mono / Instrument Serif) come from
-          the consolidated index.html pipeline — no per-page injection. */}
-      {/* Washed-out video background. Hidden under prefers-reduced-motion;
-          the wash gradient below still renders, so the screen never looks bare. */}
-      {!reducedMotion && (
-        <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#0E0D0A" }}>
-          <video
-            ref={videoRef}
-            src={BG_VIDEO}
-            autoPlay
-            loop
-            muted
-            playsInline
-            preload="auto"
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              objectFit: "cover",
-              filter: "saturate(0.65) brightness(1.06) contrast(0.92)",
-              opacity: 0.42,
-            }}
-          />
-        </div>
-      )}
-
-      {/* Aurora wash — always renders, regardless of video presence. */}
-      <div aria-hidden="true" style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        background: `
-          linear-gradient(180deg, rgba(250,250,247,0.55) 0%, rgba(250,250,247,0.30) 32%, rgba(250,250,247,0.62) 70%, rgba(250,250,247,0.96) 100%),
-          radial-gradient(70% 45% at 80% 12%, rgba(212,168,95,0.30) 0%, transparent 55%),
-          radial-gradient(60% 40% at 0% 38%, rgba(167,214,255,0.30) 0%, transparent 55%),
-          radial-gradient(60% 45% at 60% 90%, rgba(159,230,180,0.28) 0%, transparent 55%)
-        `,
-      }} />
-
-      {/* Fine grain texture for tactility. */}
-      <div aria-hidden="true" style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        opacity: 0.4, mixBlendMode: "soft-light",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")`,
-      }} />
-
-      {/* Content layer */}
-      <div ref={scrollRef} style={{
-        position: "relative", zIndex: 10,
-        minHeight: "100dvh",
-        display: "flex", flexDirection: "column",
-        padding: "max(96px, env(safe-area-inset-top, 24px) + 80px) 24px max(40px, env(safe-area-inset-bottom, 24px)) 24px",
-        maxWidth: 460, margin: "0 auto",
-        // Allow vertical scroll when the keyboard pushes the form upward —
-        // otherwise Password + Sign In button get pinned under the keyboard.
-        overflowY: "auto",
-        WebkitOverflowScrolling: "touch",
-      }}>
-        {/* Full Dr Self Tape logo — the mark already contains the wordmark, so
-            we drop the previous tiny mark + "DR · SELF · TAPE" text row. */}
-        <div style={{ display: "flex", justifyContent: "center" }}>
-          <img
-            src={`${import.meta.env.BASE_URL}logo-black.png`}
-            alt="Dr Self Tape"
-            style={{
-              width: "min(180px, 44vw)", height: "auto", display: "block",
-              filter: "drop-shadow(0 6px 16px rgba(10,10,10,0.12))",
-            }}
-          />
-        </div>
-
-        {/* Hero text + auth card pinned to the bottom of the viewport */}
-        <div style={{ marginTop: "auto" }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-            fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DEEP,
-          }}>FOR ACTORS WHO BOOK</div>
-
-          <h1 style={{
-            fontFamily: "'Instrument Serif', serif",
-            fontSize: "clamp(40px, 11vw, 52px)", lineHeight: 0.98, letterSpacing: "-1px",
-            color: TEXT, margin: "14px 0 0", fontWeight: 500,
-          }}>
-            Your craft,<br /><em>in motion.</em>
-          </h1>
-
-          <p style={{
-            fontSize: 14, color: SUB, lineHeight: 1.5, marginTop: 16, maxWidth: 300,
-          }}>
-            Track auditions, run sides with verified readers, and get AI notes on every take.
-          </p>
-
+  // Shared between the mobile layout and the desktop console rail. One auth
+  // card, one legal foot, one keyframe block, zero duplicated form logic.
+  const authCard = (
+    <>
           {/* Glass auth card */}
           <div ref={cardRef} style={{
             marginTop: 26, borderRadius: 26, padding: 20, position: "relative", overflow: "hidden",
@@ -408,7 +327,10 @@ export default function LoginPage() {
 
             </form>
           </div>
-
+    </>
+  );
+  const legalFoot = (
+    <>
           {/* Legal foot — matches the EULA path enforced by App Store guidelines */}
           <div style={{
             textAlign: "center", marginTop: 18,
@@ -419,9 +341,10 @@ export default function LoginPage() {
             <a href="/terms" style={{ color: DIM, textDecoration: "underline" }}>TERMS</a>{" "}&{" "}
             <a href="/privacy" style={{ color: DIM, textDecoration: "underline" }}>PRIVACY POLICY</a>
           </div>
-        </div>
-      </div>
-
+    </>
+  );
+  const styleBlock = (
+    <>
       <style>{`
         @keyframes drst-spin { to { transform: rotate(360deg); } }
         @keyframes drst-sheen {
@@ -442,6 +365,172 @@ export default function LoginPage() {
         }
         input::placeholder { color: ${DIM}; }
       `}</style>
+    </>
+  );
+
+  // ── Aurora Noir Ring 1: the backstage door (desktop web only) ─────────
+  // Left: noir form rail reusing the exact auth card + handlers above.
+  // Right: full-bleed plate, the existing login video warm-regraded in CSS,
+  // credited like a slate, one gold light source, zero 3D. Spec:
+  // docs/web-platform-direction-aurora-noir-2026-07-28.md. Native + mobile
+  // web fall through to the original layout below.
+  if (desktopWeb) {
+    return (
+      <div style={{ minHeight: "100dvh", display: "flex", background: "#0B0A08", color: "#F5EDDC", fontFamily: "'Space Grotesk', system-ui, sans-serif" }}>
+        {/* Form rail */}
+        <div style={{ width: 470, flexShrink: 0, position: "relative", zIndex: 10, display: "flex", flexDirection: "column", padding: "44px 48px 30px", background: "#141210", borderRight: "1px solid rgba(245,237,220,0.08)", overflowY: "auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "#1B1815", border: "1px solid rgba(245,237,220,0.10)", boxShadow: "inset 0 1px 0 rgba(245,237,220,0.06), 0 6px 18px rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <img src={`${import.meta.env.BASE_URL}logo-black.png`} alt="Dr Self Tape" style={{ width: 30, height: "auto", filter: "invert(0.92)" }} />
+            </div>
+            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: "0.22em", color: "rgba(245,237,220,0.55)" }}>DR · SELF · TAPE</span>
+          </div>
+          <div style={{ marginTop: "auto", paddingTop: 28 }}>
+            <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: ACCENT }}>FOR ACTORS WHO BOOK</div>
+            <h1 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 44, lineHeight: 1.0, letterSpacing: "-0.8px", color: "#F5EDDC", margin: "14px 0 0", fontWeight: 500 }}>
+              Sign in to<br /><em>the studio.</em>
+            </h1>
+            <p style={{ fontSize: 14, color: "#A69C89", lineHeight: 1.55, marginTop: 14, maxWidth: 330 }}>
+              Run sides with an AI reader, tape in the app, and get casting-grade notes on every take.
+            </p>
+            {authCard}
+            <div style={{ marginTop: 18, display: "flex", gap: 10, flexWrap: "wrap", fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: "0.1em", color: "rgba(245,237,220,0.40)" }}>
+              <span>BUILT BY WORKING ACTORS</span>
+              <span>·</span>
+              <span>AI NOTES ON EVERY TAKE</span>
+              <span>·</span>
+              <span>LOS ANGELES</span>
+            </div>
+            {legalFoot}
+          </div>
+        </div>
+        {/* The plate */}
+        <div aria-hidden="true" style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0B0A08" }}>
+          {!reducedMotion && (
+            <video
+              src={BG_VIDEO} autoPlay loop muted playsInline preload="auto"
+              style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: "sepia(0.28) saturate(1.05) brightness(0.66) contrast(1.06)" }}
+            />
+          )}
+          {/* Blend into the rail + floor vignette */}
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(90deg, #0B0A08 0%, rgba(11,10,8,0.35) 16%, transparent 44%), linear-gradient(180deg, rgba(11,10,8,0.15) 0%, transparent 30%, rgba(11,10,8,0.55) 100%)" }} />
+          {/* The one light source */}
+          <div style={{ position: "absolute", inset: 0, background: "radial-gradient(60% 50% at 78% 0%, rgba(252,224,114,0.05) 0%, transparent 60%)" }} />
+          {/* Grain */}
+          <div style={{ position: "absolute", inset: 0, opacity: 0.35, mixBlendMode: "soft-light", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")` }} />
+          {/* Slate credit */}
+          <div style={{ position: "absolute", right: 22, bottom: 18, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: "0.14em", color: "rgba(245,237,220,0.45)" }}>
+            INT. AUDITION ROOM · DAY · TAKE 3
+          </div>
+        </div>
+        {styleBlock}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      // 100dvh shrinks with the iOS virtual keyboard so the Sign In button
+      // stays reachable when the password field is focused.
+      minHeight: "100dvh", position: "relative", overflow: "hidden",
+      background: "#0E0D0A", color: TEXT,
+      fontFamily: "'Space Grotesk', system-ui, sans-serif",
+    }}>
+      {/* Fonts (Space Grotesk / JetBrains Mono / Instrument Serif) come from
+          the consolidated index.html pipeline — no per-page injection. */}
+      {/* Washed-out video background. Hidden under prefers-reduced-motion;
+          the wash gradient below still renders, so the screen never looks bare. */}
+      {!reducedMotion && (
+        <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#0E0D0A" }}>
+          <video
+            ref={videoRef}
+            src={BG_VIDEO}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="auto"
+            style={{
+              position: "absolute", inset: 0, width: "100%", height: "100%",
+              objectFit: "cover",
+              filter: "saturate(0.65) brightness(1.06) contrast(0.92)",
+              opacity: 0.42,
+            }}
+          />
+        </div>
+      )}
+
+      {/* Aurora wash — always renders, regardless of video presence. */}
+      <div aria-hidden="true" style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: `
+          linear-gradient(180deg, rgba(250,250,247,0.55) 0%, rgba(250,250,247,0.30) 32%, rgba(250,250,247,0.62) 70%, rgba(250,250,247,0.96) 100%),
+          radial-gradient(70% 45% at 80% 12%, rgba(212,168,95,0.30) 0%, transparent 55%),
+          radial-gradient(60% 40% at 0% 38%, rgba(167,214,255,0.30) 0%, transparent 55%),
+          radial-gradient(60% 45% at 60% 90%, rgba(159,230,180,0.28) 0%, transparent 55%)
+        `,
+      }} />
+
+      {/* Fine grain texture for tactility. */}
+      <div aria-hidden="true" style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        opacity: 0.4, mixBlendMode: "soft-light",
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")`,
+      }} />
+
+      {/* Content layer */}
+      <div ref={scrollRef} style={{
+        position: "relative", zIndex: 10,
+        minHeight: "100dvh",
+        display: "flex", flexDirection: "column",
+        padding: "max(96px, env(safe-area-inset-top, 24px) + 80px) 24px max(40px, env(safe-area-inset-bottom, 24px)) 24px",
+        maxWidth: 460, margin: "0 auto",
+        // Allow vertical scroll when the keyboard pushes the form upward —
+        // otherwise Password + Sign In button get pinned under the keyboard.
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+      }}>
+        {/* Full Dr Self Tape logo — the mark already contains the wordmark, so
+            we drop the previous tiny mark + "DR · SELF · TAPE" text row. */}
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <img
+            src={`${import.meta.env.BASE_URL}logo-black.png`}
+            alt="Dr Self Tape"
+            style={{
+              width: "min(180px, 44vw)", height: "auto", display: "block",
+              filter: "drop-shadow(0 6px 16px rgba(10,10,10,0.12))",
+            }}
+          />
+        </div>
+
+        {/* Hero text + auth card pinned to the bottom of the viewport */}
+        <div style={{ marginTop: "auto" }}>
+          <div style={{
+            fontFamily: "'JetBrains Mono', ui-monospace, monospace",
+            fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: DEEP,
+          }}>FOR ACTORS WHO BOOK</div>
+
+          <h1 style={{
+            fontFamily: "'Instrument Serif', serif",
+            fontSize: "clamp(40px, 11vw, 52px)", lineHeight: 0.98, letterSpacing: "-1px",
+            color: TEXT, margin: "14px 0 0", fontWeight: 500,
+          }}>
+            Your craft,<br /><em>in motion.</em>
+          </h1>
+
+          <p style={{
+            fontSize: 14, color: SUB, lineHeight: 1.5, marginTop: 16, maxWidth: 300,
+          }}>
+            Track auditions, run sides with verified readers, and get AI notes on every take.
+          </p>
+
+          {authCard}
+
+          {legalFoot}
+        </div>
+      </div>
+
+      {styleBlock}
     </div>
   );
 }
