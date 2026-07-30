@@ -65,7 +65,6 @@ const Submissions = lazy(() => import('../panels/Dashboard/Submissions'));
 const AuditionGenerator = lazy(() => import('../panels/Dashboard/AuditionGenerator'));
 const CastingDirectorAI = lazy(() => import('../panels/Dashboard/CastingDirectorAI'));
 const Referral = lazy(() => import('../panels/Dashboard/Referral'));
-const Marketplace = lazy(() => import('../panels/Dashboard/Marketplace'));
 const SelfTapes = lazy(() => import('../panels/Dashboard/SelfTapes'));
 const Admin = lazy(() => import('../panels/Dashboard/Admin'));
 const Jericho = lazy(() => import('../panels/Dashboard/Jericho'));
@@ -73,11 +72,10 @@ const CraftJourney = lazy(() => import('../panels/Dashboard/CraftJourney'));
 const Leaderboard = lazy(() => import('../panels/Dashboard/Leaderboard'));
 
 // Lazy-loaded Find a Reader imports
-const FindAReader = lazy(() => import('../panels/Dashboard/FindAReader'));
+const Readers = lazy(() => import('../panels/Dashboard/Readers'));
 const ItsAScene = lazy(() => import('../panels/Dashboard/FindAReader/ItsAScene'));
 const GreenRoom = lazy(() => import('../panels/Dashboard/FindAReader/GreenRoom'));
 const GreenRoomChat = lazy(() => import('../panels/Dashboard/FindAReader/GreenRoomChat'));
-const WhoWantsToRead = lazy(() => import('../panels/Dashboard/FindAReader/WhoWantsToRead'));
 const ReaderProfile = lazy(() => import('../panels/Dashboard/FindAReader/ReaderProfile'));
 const Favorites = lazy(() => import('../panels/Dashboard/FindAReader/Favorites'));
 
@@ -139,15 +137,19 @@ export const commonRoutes = [
       { path: 'leaderboard', moduleName: 'Leaderboard', element: <Leaderboard /> },
       { path: 'casting-director-ai', moduleName: 'CastingDirectorAI', element: <CastingDirectorAI /> },
       // Find a Reader
-      { path: 'find-a-reader', moduleName: 'FindAReader', element: <FindAReader /> },
+      // P1-05: the three supply routes collapsed into /dashboard/readers; old
+      // paths redirect with the right filter so links and bookmarks survive.
+      { path: 'readers', moduleName: 'Readers', element: <Readers /> },
+      { path: 'find-a-reader', element: <Navigate to='/dashboard/readers?filter=browse' replace /> },
       { path: 'its-a-scene/:matchId', moduleName: 'ItsAScene', element: <ItsAScene /> },
       { path: 'green-room', moduleName: 'GreenRoom', element: <GreenRoom /> },
       { path: 'green-room/:matchId', moduleName: 'GreenRoomChat', element: <GreenRoomChat /> },
-      { path: 'who-wants-to-read', moduleName: 'WhoWantsToRead', element: <WhoWantsToRead /> },
+      { path: 'who-wants-to-read', element: <Navigate to='/dashboard/readers?filter=interested' replace /> },
       { path: 'favorites', moduleName: 'Favorites', element: <Favorites /> },
       { path: 'reader-profile/:readerId', moduleName: 'ReaderProfile', element: <ReaderProfile /> },
       { path: 'referral', moduleName: 'Referral', element: <Referral /> },
-      { path: 'marketplace', moduleName: 'Marketplace', element: <Marketplace /> },
+      // Paid readers hidden until P4-02 (zero opt-ins made this a dead end)
+      { path: 'marketplace', element: <Navigate to='/dashboard/readers' replace /> },
       { path: 'self-tapes', moduleName: 'SelfTapes', element: <SelfTapes /> },
       { path: 'admin', moduleName: 'Admin', element: <Admin /> },
     ],

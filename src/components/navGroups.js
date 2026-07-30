@@ -1,7 +1,7 @@
 import {
   Monitor, BookOpen, Target, Send, LayoutDashboard, Users2, MessageSquare,
-  HeartHandshake, UserCircle, Clapperboard, Sparkles, Video, Crown, Film,
-  Brain, FileText, Store, Trophy, Gift,
+  UserCircle, Clapperboard, Sparkles, Video, Crown, Film,
+  Brain, FileText, Trophy, Gift,
 } from 'lucide-react';
 
 /* ── Grouped desktop navigation ──
@@ -44,10 +44,10 @@ export const NAV_GROUPS = [
     label: 'Connect',
     icon: Users2,
     items: [
-      { label: 'Find a Reader', path: '/dashboard/find-a-reader', icon: Users2, badgeKey: 'find-a-reader' },
+      // P1-05: one reader surface (browse + interested-in-you); Green Room
+      // stays as the conversations home. Marketplace returns with P4-02.
+      { label: 'Readers', path: '/dashboard/readers', icon: Users2, badgeKey: 'find-a-reader' },
       { label: 'Green Room', path: '/dashboard/green-room', icon: MessageSquare },
-      { label: 'Who Wants to Read', path: '/dashboard/who-wants-to-read', icon: HeartHandshake, badgeKey: 'who-wants-to-read' },
-      { label: 'Reader Market', path: '/dashboard/marketplace', icon: Store },
     ],
   },
   {

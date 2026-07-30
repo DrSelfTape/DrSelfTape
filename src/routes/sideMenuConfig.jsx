@@ -70,18 +70,13 @@ const actorMenu = [
     icon: <SparklesIcon height={19} width={19} />,
   },
   {
-    path: '/dashboard/find-a-reader',
-    text: 'Find a Reader',
+    path: '/dashboard/readers',
+    text: 'Readers',
     icon: <SparklesIcon height={19} width={19} />,
   },
   {
     path: '/dashboard/green-room',
     text: 'Green Room',
-    icon: <SparklesIcon height={19} width={19} />,
-  },
-  {
-    path: '/dashboard/who-wants-to-read',
-    text: 'Who Wants to Read',
     icon: <SparklesIcon height={19} width={19} />,
   },
   {

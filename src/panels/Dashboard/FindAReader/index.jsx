@@ -22,7 +22,7 @@ import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { tapPrimary, cheer } from '../../../utils/haptics';
 import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 
-const FindAReader = () => {
+const FindAReader = ({ embedded = false }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -224,7 +224,7 @@ const FindAReader = () => {
       {/* Nav bar — hidden on mobile because the SwipeCard takes over the
        * full viewport. The bottom tab bar's active state already indicates
        * which screen we're on. */}
-      <div className="hidden md:flex w-full max-w-sm items-end justify-between mb-4 px-1">
+      <div className={`${embedded ? 'hidden' : 'hidden md:flex'} w-full max-w-sm items-end justify-between mb-4 px-1`}>
         <div>
           <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>FIND A READER</span>
           <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
@@ -336,7 +336,9 @@ const FindAReader = () => {
             ? `${onlineCount} readers online`
             : `${readers.length} nearby`}
           <span style={{ opacity: 0.5 }}>·</span>
-          {Math.max(0, readers.length - currentIndex)} left today
+          {/* Deck-remaining, NOT a daily quota — the old "left today" copy
+              implied an undisclosed limit (P1-05 open question, resolved). */}
+          {Math.max(0, readers.length - currentIndex)} in your deck
         </div>
       )}
 

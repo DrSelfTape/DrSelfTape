@@ -3,21 +3,19 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Users, Users2 } from 'lucide-react';
 import ReaderListItem from './components/ReaderListItem';
-import ActivityFeedCard from './components/ActivityFeedCard';
-import { fetchMatches, fetchActivityFeed } from '../../../redux/features/readers/readersMatchSlice';
+import { fetchMatches } from '../../../redux/features/readers/readersMatchSlice';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 
 const GreenRoom = ({ onSelectMatch } = {}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { matches, matchesLoading, activityFeed } = useSelector(
+  const { matches, matchesLoading } = useSelector(
     (state) => state.readersMatch
   );
 
   useEffect(() => {
     dispatch(fetchMatches());
-    dispatch(fetchActivityFeed());
     // Mark tutorial step
     markStep('green_room');
   }, [dispatch]);
@@ -47,14 +45,9 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
               Match with other actors to start running lines together.
             </p>
 
-            {/* Activity stats to show the community is active */}
-            {activityFeed && (
-              <div className="w-full grid gap-2 mb-6">
-                <ActivityFeedCard type="available" count={activityFeed.available_now_count || 0} label="actors available right now" pulse />
-                <ActivityFeedCard type="matches" count={activityFeed.recent_matches_count || 0} label="matches made today" />
-                <ActivityFeedCard type="sessions" count={activityFeed.active_sessions_count || 0} label="live sessions happening" pulse={activityFeed.active_sessions_count > 0} />
-              </div>
-            )}
+            {/* Supply stats removed (P1-05): this strip told a different
+                supply story than the Readers page ("195 available" vs a
+                20-cap deck). One surface owns supply numbers now. */}
 
             <button
               onClick={() => navigate('/dashboard/find-a-reader')}
@@ -72,40 +65,8 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
 
         {!matchesLoading && matches.length > 0 && (
           <>
-            {/* Activity stats — single-row inline pills, no wrapping labels */}
-            {activityFeed && (
-              <div
-                className="aurora-glass mb-5 flex items-center justify-between gap-3 rounded-2xl px-4 py-3"
-                style={{ fontSize: 12 }}
-              >
-                <span style={{ color: 'var(--aurora-text)' }}>
-                  <span className="aurora-mono" style={{ fontSize: 15, fontWeight: 600 }}>
-                    {activityFeed.available_now_count || 0}
-                  </span>
-                  <span className="ml-1.5" style={{ color: 'var(--aurora-sub)' }}>available</span>
-                </span>
-                <span aria-hidden style={{ color: 'var(--aurora-line)' }}>·</span>
-                <span style={{ color: 'var(--aurora-text)' }}>
-                  <span className="aurora-mono" style={{ fontSize: 15, fontWeight: 600 }}>
-                    {activityFeed.recent_matches_count || 0}
-                  </span>
-                  <span className="ml-1.5" style={{ color: 'var(--aurora-sub)' }}>today</span>
-                </span>
-                <span aria-hidden style={{ color: 'var(--aurora-line)' }}>·</span>
-                <span style={{ color: 'var(--aurora-text)' }}>
-                  <span
-                    className="aurora-mono"
-                    style={{
-                      fontSize: 15, fontWeight: 600,
-                      color: activityFeed.active_sessions_count > 0 ? '#FF8280' : 'var(--aurora-text)',
-                    }}
-                  >
-                    {activityFeed.active_sessions_count || 0}
-                  </span>
-                  <span className="ml-1.5" style={{ color: 'var(--aurora-sub)' }}>live now</span>
-                </span>
-              </div>
-            )}
+            {/* Supply pills removed (P1-05) — the Readers page owns
+                supply numbers; this is the conversations home. */}
 
             <div className="grid gap-3 sm:grid-cols-2">
               {matches.map((match) => (

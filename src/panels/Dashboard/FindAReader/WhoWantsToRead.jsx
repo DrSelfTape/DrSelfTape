@@ -9,7 +9,7 @@ import {
   swipeOnReader,
 } from '../../../redux/features/readers/readersMatchSlice';
 
-const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
+const WhoWantsToRead = ({ onMatchNavigate, embedded = false } = {}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -71,11 +71,13 @@ const WhoWantsToRead = ({ onMatchNavigate } = {}) => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] px-4 py-8" style={{ background: 'var(--bg-deepest)' }}>
+    <div className={embedded ? '' : 'min-h-[calc(100vh-80px)] px-4 py-8'} style={embedded ? {} : { background: 'var(--bg-deepest)' }}>
       <div className="mx-auto max-w-2xl">
+        {!embedded && (
         <h1 className="mb-6 text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
           Who Wants to Read
         </h1>
+        )}
 
         {likesLoading && (
           <div className="flex h-60 items-center justify-center">
