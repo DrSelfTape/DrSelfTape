@@ -37,7 +37,12 @@ export async function registerVoip() {
     // The token may arrive asynchronously after PushKit registration, so keep
     // the listener attached across calls (attach once).
     if (!listenerAttached) {
-      VoipCall.addListener('voipToken', ({ token }) => sendToken(token));
+      // Must await: Capacitor's plugin proxy resolves the implementation
+      // asynchronously, so an unimplemented plugin surfaces as a REJECTED
+      // PROMISE, not a sync throw — un-awaited, it escapes this try/catch
+      // as an unhandledrejection (the "$exception: VoipCall plugin is not
+      // implemented" events in PostHog).
+      await VoipCall.addListener('voipToken', ({ token }) => sendToken(token));
       listenerAttached = true;
     }
     const res = await VoipCall.register();

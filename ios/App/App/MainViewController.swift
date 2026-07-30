@@ -23,6 +23,16 @@ class MainViewController: CAPBridgeViewController, WKUIDelegate {
 
     private let log = OSLog(subsystem: "com.drselftapes.app", category: "MediaPermission")
 
+    // Custom in-app plugins are NOT auto-discovered: the bridge only loads
+    // classes from the generated packageClassList (npm plugins). Without this
+    // override, JS calls to VoipCall/AudioSession reject with "plugin is not
+    // implemented on ios" — which killed CallKit ringing AND the AVAudioSession
+    // playback reset in every build through 1.0.21.
+    override open func capacitorDidLoad() {
+        bridge?.registerPluginInstance(VoipCallPlugin())
+        bridge?.registerPluginInstance(AudioSessionPlugin())
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         if let webView = self.webView {

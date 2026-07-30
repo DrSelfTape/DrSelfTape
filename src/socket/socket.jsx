@@ -262,7 +262,11 @@ export const SocketProvider = ({ children }) => {
           if (e?.roomUrl) joinRoom(e.roomUrl, e?.matchId || e?.callId || null);
           // End the CallKit call immediately — the real call lives in the Daily
           // room, so leaving it "active" would show a lingering iOS call bar.
-          if (e?.callId) { try { VoipCall.endCall({ callId: e.callId }); } catch { /* noop */ } }
+          if (e?.callId) {
+            // .catch, not try/catch: the plugin proxy rejects async, so a
+            // sync catch alone would leak an unhandledrejection.
+            try { VoipCall.endCall({ callId: e.callId }).catch(() => {}); } catch { /* noop */ }
+          }
         }));
         // Cold launch: the app was opened by answering a CallKit call before JS
         // was listening — drain the stashed answer.

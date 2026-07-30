@@ -115,8 +115,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 /// session to `.measurement` mode + `.duckOthers` while listening and never
 /// restores it, so the AI reader's WebView TTS plays back silent afterwards.
 /// `resetToPlayback()` puts the session back to the same config AppDelegate
-/// uses at launch (known to play TTS fine in pre-timed mode). Auto-discovered
-/// by Capacitor via `CAPBridgedPlugin` — no Xcode project changes required.
+/// uses at launch (known to play TTS fine in pre-timed mode). NOT auto-
+/// discovered: must be registered in MainViewController.capacitorDidLoad()
+/// (the bridge only loads the generated packageClassList of npm plugins).
 @objc(AudioSessionPlugin)
 public class AudioSessionPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "AudioSessionPlugin"
@@ -269,8 +270,9 @@ extension VoipCallManager: CXProviderDelegate {
     func provider(_ provider: CXProvider, didDeactivate audioSession: AVAudioSession) {}
 }
 
-/// Capacitor bridge for the VoIP/CallKit manager. Auto-discovered via @objc +
-/// CAPBridgedPlugin — no Xcode project changes needed.
+/// Capacitor bridge for the VoIP/CallKit manager. NOT auto-discovered: must
+/// be registered in MainViewController.capacitorDidLoad(), or every JS call
+/// rejects with «"VoipCall" plugin is not implemented on ios».
 @objc(VoipCallPlugin)
 public class VoipCallPlugin: CAPPlugin, CAPBridgedPlugin {
     public let identifier = "VoipCallPlugin"
