@@ -646,9 +646,12 @@ export default function Membership({ onClose }) {
             const on = billing === b;
             const label = { weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly · Save 2mo' }[b];
             return (
-              <button key={b} onClick={() => setBilling(b)} style={{
-                flex: 1, padding: '10px 14px', borderRadius: 100, border: 'none',
-                cursor: 'pointer',
+              <button key={b} onClick={() => setBilling(b)}
+                onTouchEnd={(e) => { e.preventDefault(); setBilling(b); }}
+                aria-pressed={on}
+                style={{
+                flex: 1, padding: '10px 14px', minHeight: 44, borderRadius: 100, border: 'none',
+                cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
                 fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600,
                 background: on ? '#fff' : 'transparent',
                 color: on ? 'var(--aurora-text)' : 'var(--aurora-sub)',

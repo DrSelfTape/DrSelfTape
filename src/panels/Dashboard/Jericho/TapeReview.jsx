@@ -943,6 +943,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             >
               <RotateCcw size={15} /> Review another take
             </button>
+            {/* Clearance for the Slate FAB so it can't cover the last action */}
+            <div aria-hidden="true" style={{ height: 76 }} />
           </>
         ))}
 

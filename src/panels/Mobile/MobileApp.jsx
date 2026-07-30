@@ -239,6 +239,7 @@ function relativeTime(dateStr) {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   const days = Math.floor(hrs / 24);
+  if (days > 3650 || days < 0) return ''; // garbage/epoch guard (P1-04 #1)
   if (days < 30) return `${days}d ago`;
   const months = Math.floor(days / 30);
   return `${months}mo ago`;
@@ -3917,7 +3918,7 @@ export default function DrSelfTapeApp() {
             <span style={{ fontSize: 10, fontWeight: 800, background: 'var(--aurora-accent-light)', color: 'var(--aurora-accent-deep)', padding: '2px 8px', borderRadius: 999, letterSpacing: '0.04em' }}>AI</span>
           </div>
           <p style={{ fontSize: 13, color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.4 }}>
-            Submit a self-tape and get casting-grade acting notes — your performance, framing, eyeline, and the moves that book the room.
+            Submit a self-tape and get casting-grade acting notes: your performance, framing, eyeline, and the moves that book the room.
           </p>
         </div>
         <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>

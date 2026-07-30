@@ -161,6 +161,7 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
         <div className="flex items-start justify-between gap-2">
           <h4
             className="text-sm font-semibold leading-tight line-clamp-1"
+            title={audition.project_title}
             style={{ color: 'var(--aurora-text)' }}
           >
             {audition.project_title}
@@ -188,8 +189,12 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
         </div>
 
         {audition.character && (
-          <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--aurora-sub)' }}>
-            as <span className="font-medium" style={{ color: 'var(--aurora-text)' }}>{audition.character}</span>
+          <p className="text-xs mt-0.5 line-clamp-1" title={audition.character} style={{ color: 'var(--aurora-sub)' }}>
+            as <span className="font-medium" style={{ color: 'var(--aurora-text)' }}>{
+              String(audition.character).length > 40
+                ? String(audition.character).split(/[:;,]/)[0].trim()
+                : audition.character
+            }</span>
           </p>
         )}
         {audition.casting_director && (
@@ -243,7 +248,11 @@ function StaticCard({ audition }) {
       <div className="px-4 py-3">
         <h4 className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{audition.project_title}</h4>
         {audition.character && (
-          <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-sub)' }}>as {audition.character}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-sub)' }}>as {
+            String(audition.character).length > 40
+              ? String(audition.character).split(/[:;,]/)[0].trim()
+              : audition.character
+          }</p>
         )}
         <span
           className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mt-2"

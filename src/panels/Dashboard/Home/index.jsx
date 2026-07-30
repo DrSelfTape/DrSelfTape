@@ -284,7 +284,7 @@ export default function DashboardHome() {
   }));
 
   const hour = new Date().getHours();
-  const firstName = profile?.first_name || 'there';
+  const firstName = (profile?.first_name || 'there').trim();
   const greeting = hour < 12 ? `Good morning, ${firstName}` : hour < 17 ? `Hey ${firstName}` : `Working late, ${firstName}?`;
 
   return (
@@ -298,7 +298,8 @@ export default function DashboardHome() {
           <h1 className="aurora-display text-3xl" style={{ color: 'var(--aurora-text)' }}>{greeting}</h1>
         </div>
         <div className="flex items-center gap-3">
-          <AvailabilityToggle />
+          {/* AvailabilityToggle lives in the sidebar — one control per
+              route (P1-04 #4); the header copy was a duplicate. */}
           <NotificationBell />
         </div>
       </div>

@@ -841,7 +841,7 @@ export default function SelfTapes() {
             <p className="aurora-mono text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>
               {quota.tape_count}
               {quota.tape_count_cap != null && ` / ${quota.tape_count_cap}`}
-              {' tapes · '}
+              {quota.tape_count === 1 ? ' tape · ' : ' tapes · '}
               {quota.used_mb} MB
               {quota.storage_cap_mb != null && ` / ${quota.storage_cap_mb} MB`}
               {' used'}
