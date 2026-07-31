@@ -2,6 +2,7 @@ import { useRef, useState, useEffect } from 'react';
 import { MapPin, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { tapSelect, tapPrimary } from '../../../../utils/haptics';
+import { lastSeenLabel } from '../../../../utils/matchSignals';
 import { ReaderPortrait } from '../../../../components/Aurora';
 import { openReaderProfile } from '../../../../utils/openReaderProfile';
 
@@ -291,6 +292,19 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
               📍 {actor.based_in || actor.experience}
             </span>
           )}
+          {lastSeenLabel(actor?.last_seen) && (
+            <span style={{
+              color: lastSeenLabel(actor?.last_seen) === 'Online now' ? '#A7ECDA' : '#ccc',
+              fontSize: isMobile ? 11 : 12, fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: 5,
+            }}>
+              <span style={{
+                width: 7, height: 7, borderRadius: '50%',
+                background: lastSeenLabel(actor?.last_seen) === 'Online now' ? '#34C759' : '#999',
+              }} />
+              {lastSeenLabel(actor?.last_seen)}
+            </span>
+          )}
           {actor?.years_experience && (
             <span style={{ color: '#aaa', fontSize: isMobile ? 12 : 14 }}>
               🎬 {actor.years_experience}yr{actor.years_experience !== 1 ? 's' : ''}
@@ -313,6 +327,18 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
             </span>
           )}
         </div>
+
+        {/* What they're prepping RIGHT NOW — the most castable signal we
+            have, straight from presence.working_on (was never rendered). */}
+        {String(actor?.working_on || '').trim() && (
+          <p style={{
+            color: '#FCE072', fontSize: isMobile ? 12 : 13, fontWeight: 600,
+            margin: 0, display: '-webkit-box', WebkitLineClamp: 1,
+            WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>
+            🎬 Working on: <span style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>{String(actor.working_on).trim()}</span>
+          </p>
+        )}
 
         {/* Bio — 1 line on mobile, 2 on desktop */}
         {actor?.bio && (

@@ -2,6 +2,7 @@ import { MapPin, Clock, Star, Clapperboard, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ProfilePhoto from '../../../../components/Shared/ProfilePhoto';
 import { openReaderProfile } from '../../../../utils/openReaderProfile';
+import { lastSeenLabel } from '../../../../utils/matchSignals';
 
 const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
   const navigate = useNavigate();
@@ -74,7 +75,20 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
                 <Clock size={10} />{actor.years_experience}yr{actor.years_experience !== 1 ? 's' : ''}
               </span>
             )}
+            {lastSeenLabel(actor?.last_seen) && (
+              <span className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: lastSeenLabel(actor?.last_seen) === 'Online now' ? '#34C759' : 'var(--text-secondary)' }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: lastSeenLabel(actor?.last_seen) === 'Online now' ? '#34C759' : 'var(--text-secondary)' }} />
+                {lastSeenLabel(actor?.last_seen)}
+              </span>
+            )}
           </div>
+
+          {/* What they're prepping right now */}
+          {String(actor?.working_on || '').trim() && (
+            <p className="text-xs font-semibold" style={{ color: 'var(--aurora-heritage-gold-deep, #D4A85F)' }}>
+              🎬 Working on: <span className="font-normal" style={{ color: 'var(--text-secondary)' }}>{String(actor.working_on).trim()}</span>
+            </p>
+          )}
 
           {/* Bio */}
           {actor?.bio && (
