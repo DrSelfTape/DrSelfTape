@@ -9,15 +9,16 @@
 export const WHATS_NEW = [
   {
     id: 8,
-    version: '1.0.22',
+    version: '1.0.24',
     date: 'July 2026',
-    title: 'Your score, revealed properly',
-    intro: 'This round makes the big moments feel bigger and the tools easier to find:',
+    title: 'Your phone rings. Your score reveals.',
+    intro: 'The biggest update since launch — real calls, bigger moments, easier tools:',
     highlights: [
+      { emoji: '📞', title: 'Scene reads ring like real calls', body: 'When a partner calls you for a live read, your phone rings like FaceTime — even locked, even with the app closed. Hang up, decline, and missed calls all work the way you expect.' },
       { emoji: '🎭', title: 'The reveal', body: 'Your Tape Review score now builds up on screen before the notes open, so the verdict lands like a callback, not a spreadsheet.' },
       { emoji: '🎬', title: 'Your takes, on Home', body: 'Home now shows where your latest tape stands the moment you open the app: notes ready, review in progress, or your next step.' },
       { emoji: '🧑‍🤝‍🧑', title: 'One Readers page', body: 'Browse scene partners and see who wants to read with you in one place, with honest live counts.' },
-      { emoji: '🔊', title: 'The reader speaks up', body: 'Fixed a bug where the AI reader could go quiet after listening to your lines. It answers at full volume now, and scene-read invites ring like a real call again.' },
+      { emoji: '🔊', title: 'The reader speaks up', body: 'Fixed a bug where the AI reader could go quiet after listening to your lines. It answers at full volume now.' },
     ],
   },
   {
