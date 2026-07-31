@@ -24,6 +24,7 @@ import DailyIframe from '@daily-co/daily-js';
 
 import PostCallScreen from '../../components/MeetingRoom/PostCallScreen';
 import { clearMeetingHostFlag } from '../../utils/meeting';
+import axiosInstance from '../../redux/http';
 
 const PRIMARY_BG = '#0c0e14';
 
@@ -44,10 +45,30 @@ export default function MeetingRoom() {
   // case we must NOT rate against the wrong id (PostCallScreen skips rating on
   // null). The return route can still fall back to the slug.
   const matchId = location.state?.matchId || null;
+  // Caller-side ring context (set by GreenRoomChat when WE initiated).
+  const startedCall = Boolean(location.state?.startedCall);
+  const ringIdRef = useRef(location.state?.ringId || null);
 
   const containerRef = useRef(null);
   const callRef = useRef(null);
   const cleanupRanRef = useRef(false);
+  // 'ringing' | 'declined' | 'noanswer' | null — caller overlay state while
+  // we wait alone in the room. Cleared the moment the partner joins.
+  const [ringPhase, setRingPhase] = useState(startedCall ? 'ringing' : null);
+  const ringPhaseRef = useRef(startedCall ? 'ringing' : null);
+  const setRing = (v) => { ringPhaseRef.current = v; setRingPhase(v); };
+  const reachedCallRef = useRef(false);
+
+  // Best-effort hang-up signal: kills the callee's ring + leaves them a
+  // missed-call note. Fired on explicit hang-up, decline timeout exit, and
+  // unmount-before-connect. Server ignores it (409) once answered.
+  const cancelRing = useCallback(() => {
+    if (!matchId || ringPhaseRef.current !== 'ringing' || reachedCallRef.current) return;
+    ringPhaseRef.current = null;
+    axiosInstance.post(`/v1/matching/matches/${matchId}/cancel-rehearsal/`, {
+      ring_id: ringIdRef.current || undefined,
+    }).catch(() => {});
+  }, [matchId]);
 
   const [status, setStatus] = useState('loading'); // 'loading' | 'waiting' | 'in-call' | 'left' | 'error'
   const [error, setError] = useState('');
@@ -148,6 +169,8 @@ export default function MeetingRoom() {
     call.on('participant-joined', (e) => {
       const name = e?.participant?.user_name;
       if (name) setPartnerName(name);
+      reachedCallRef.current = true;
+      setRing(null); // they picked up — ringing overlay dies
       setStatus('in-call');
     });
     call.on('left-meeting', () => {
@@ -185,6 +208,9 @@ export default function MeetingRoom() {
     return () => {
       if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
       window.removeEventListener('beforeunload', onUnload);
+      // Leaving while still ringing = hanging up. Must run before teardown
+      // so the callee's phone stops ringing the moment we bail.
+      cancelRing();
       teardown();
     };
     // We intentionally don't depend on `teardown` directly — it has a
@@ -193,6 +219,37 @@ export default function MeetingRoom() {
     // would be catastrophic.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomUrl]);
+
+  // Caller ring lifecycle: the callee's answer/decline arrives over the
+  // socket (drst-ring-update); no event within the ring TTL = no answer.
+  useEffect(() => {
+    if (!startedCall) return undefined;
+    const onRingUpdate = (e) => {
+      const d = e?.detail || {};
+      if (String(d.matchId) !== String(matchId)) return;
+      if (ringIdRef.current && d.ringId && d.ringId !== ringIdRef.current) return;
+      if (d.state === 'declined') setRing('declined');
+      if (d.state === 'answered') setRing(null); // joining any second — keep waiting UI
+    };
+    window.addEventListener('drst-ring-update', onRingUpdate);
+    const noAnswerTimer = setTimeout(() => {
+      if (ringPhaseRef.current === 'ringing' && !reachedCallRef.current) {
+        cancelRing(); // sends the missed-call note; safe no-op if answered
+        ringPhaseRef.current = 'noanswer';
+        setRingPhase('noanswer');
+      }
+    }, 90000);
+    return () => {
+      window.removeEventListener('drst-ring-update', onRingUpdate);
+      clearTimeout(noAnswerTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startedCall, matchId]);
+
+  const hangUp = () => {
+    cancelRing();
+    navigate(matchId ? `/dashboard/green-room/${matchId}` : '/dashboard/green-room');
+  };
 
   if (status === 'left') {
     return (
@@ -315,15 +372,16 @@ export default function MeetingRoom() {
             gap: 16,
             color: '#FFFFFF',
             background: 'rgba(12,14,20,0.72)',
-            pointerEvents: 'none',
+            // Interactive when the caller has ring controls to tap.
+            pointerEvents: ringPhase ? 'auto' : 'none',
           }}
         >
           <div style={{
             width: 80, height: 80, borderRadius: '50%',
-            background: 'rgba(212,168,95,0.18)',
+            background: ringPhase === 'declined' ? 'rgba(255,59,48,0.18)' : 'rgba(212,168,95,0.18)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 34,
-            animation: 'waitPulse 1.6s ease-in-out infinite',
+            animation: ringPhase === 'ringing' || !ringPhase ? 'waitPulse 1.6s ease-in-out infinite' : 'none',
           }}>
             📞
           </div>
@@ -332,11 +390,47 @@ export default function MeetingRoom() {
             fontSize: 22, fontWeight: 600,
             letterSpacing: '-0.3px',
           }}>
-            Waiting for {partnerName}…
+            {ringPhase === 'ringing' && `Ringing ${partnerName}…`}
+            {ringPhase === 'declined' && `${partnerName.split(' ')[0]} can't read right now`}
+            {ringPhase === 'noanswer' && 'No answer'}
+            {!ringPhase && `Waiting for ${partnerName}…`}
           </div>
           <div style={{ fontSize: 13, opacity: 0.65, maxWidth: 280, textAlign: 'center' }}>
-            We let {partnerName === DEFAULT_PARTNER ? 'them' : partnerName.split(' ')[0]} know you're ready. They'll see an Incoming Scene Request notification.
+            {ringPhase === 'ringing' && "Their phone is ringing — even if the app is closed. Hang tight."}
+            {ringPhase === 'declined' && 'Try them again later, or line up another reader in Green Room.'}
+            {ringPhase === 'noanswer' && `We left ${partnerName === DEFAULT_PARTNER ? 'them' : partnerName.split(' ')[0]} a missed-call note. They can call you back in one tap.`}
+            {!ringPhase && `We let ${partnerName === DEFAULT_PARTNER ? 'them' : partnerName.split(' ')[0]} know you're ready. They'll see an Incoming Scene Request notification.`}
           </div>
+          {ringPhase === 'ringing' && (
+            <button
+              type="button"
+              onClick={hangUp}
+              onTouchEnd={(e) => { e.preventDefault(); hangUp(); }}
+              style={{
+                marginTop: 8, padding: '13px 30px', borderRadius: 100,
+                background: '#FF3B30', color: '#fff', fontWeight: 700,
+                border: 'none', cursor: 'pointer', fontSize: 14,
+                touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Hang up
+            </button>
+          )}
+          {(ringPhase === 'declined' || ringPhase === 'noanswer') && (
+            <button
+              type="button"
+              onClick={hangUp}
+              onTouchEnd={(e) => { e.preventDefault(); hangUp(); }}
+              style={{
+                marginTop: 8, padding: '13px 30px', borderRadius: 100,
+                background: '#D4A85F', color: '#0E0D0A', fontWeight: 700,
+                border: 'none', cursor: 'pointer', fontSize: 14,
+                touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Back to Green Room
+            </button>
+          )}
           <style>{`
             @keyframes waitPulse {
               0%, 100% { transform: scale(1); opacity: 0.85; }

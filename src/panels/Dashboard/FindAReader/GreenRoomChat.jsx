@@ -324,7 +324,18 @@ const GreenRoomChat = (props = {}) => {
 
       // Carry the real matchId (the URL's :meetingId is the Daily room slug, NOT
       // the match) so the post-call screen can rate the right match + route back.
-      navigate(`/meeting/${roomId}`, { state: { roomUrl, matchId } });
+      // startedCall/ringId drive the caller's "Ringing…" overlay + hang-up:
+      // ring is 'rang'|'duplicate'|'answered' from the BE — 'answered' means
+      // the partner was already calling US, so we're joining, not ringing.
+      const ringOutcome = data?.data?.ring || data?.ring;
+      const ringId = data?.data?.ring_id || data?.ring_id || null;
+      navigate(`/meeting/${roomId}`, {
+        state: {
+          roomUrl, matchId, partnerName,
+          startedCall: ringOutcome !== 'answered',
+          ringId,
+        },
+      });
     } catch (err) {
       // Old code fell into a demo-rehearsal URL when start-rehearsal/
       // failed — that URL points at a Daily room that doesn't exist,

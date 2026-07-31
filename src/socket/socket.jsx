@@ -40,8 +40,48 @@ export const SocketProvider = ({ children }) => {
   // register once per token becoming available — never repeatedly in a loop.
   const voipRegisteredForRef = useRef(null);
 
-  // Incoming call state
-  const [incomingCall, setIncomingCall] = useState(null); // { matchId, roomUrl, partnerName }
+  // Incoming call state — { matchId, roomUrl, partnerName, ringId, ttl }.
+  // ringId versions each call so a stale socket event can neither resurrect
+  // a dead ring nor kill a newer one; endedRingsRef remembers terminal rings.
+  const [incomingCall, setIncomingCall] = useState(null);
+  const endedRingsRef = useRef(new Set());
+
+  const clearRing = useCallback((ringId) => {
+    if (ringId) endedRingsRef.current.add(ringId);
+    setIncomingCall((prev) => {
+      if (!prev) return prev;
+      if (ringId && prev.ringId && prev.ringId !== ringId) return prev; // newer call — keep it
+      return null;
+    });
+  }, []);
+
+  // "Still there when they open the app": ask the BE for a live ring aimed
+  // at me. Runs on mount, on every socket (re)connect, and on foreground —
+  // a ring that arrived while the socket was down is recovered here.
+  const fetchActiveRing = useCallback(async () => {
+    try {
+      const { data: body } = await axiosInstance.get('/v1/matching/active-ring/');
+      const ring = body?.data;
+      if (!ring?.match_id || !ring?.ring_id) {
+        // Authoritative "no live ring": clear a modal whose cancel event we
+        // missed. The 5s age guard avoids racing a ring that arrived over
+        // the socket while this request was in flight.
+        setIncomingCall((prev) =>
+          prev && Date.now() - (prev.setAt || 0) > 5000 ? null : prev
+        );
+        return;
+      }
+      if (endedRingsRef.current.has(ring.ring_id)) return;
+      setIncomingCall((prev) => (prev?.ringId === ring.ring_id ? prev : {
+        matchId: ring.match_id,
+        roomUrl: ring.room_url,
+        partnerName: ring.partner_name,
+        ringId: ring.ring_id,
+        ttl: ring.seconds_left || 90,
+        setAt: Date.now(),
+      }));
+    } catch { /* not signed in / offline — nothing to recover */ }
+  }, []);
 
   // Like toast state
   const [likeToast, setLikeToast] = useState(null); // { fromName }
@@ -108,37 +148,86 @@ export const SocketProvider = ({ children }) => {
       // New chat message — refresh messages for that match
       // (already handled above, also refresh activity for session count)
 
-      // Partner started the video call — show incoming call modal (auto-dismiss after 30s)
+      // Partner started the video call — forced incoming-call UI.
       case 'rehearsal_started':
         dispatch(fetchActivityFeed());
         if (data?.room_url && data?.match_id) {
           const partner = data.partner_name || 'Your scene partner';
+          const ringId = data.ring_id || null;
+          // A ring we already answered/declined/cancelled must not resurrect
+          // via a reconnect replay or late delivery.
+          if (ringId && endedRingsRef.current.has(ringId)) break;
+          const ring = {
+            matchId: data.match_id,
+            roomUrl: data.room_url,
+            partnerName: partner,
+            ringId,
+            ttl: data.ring_ttl || 90,
+            setAt: Date.now(),
+          };
           if (isVoipNative()) {
-            // Native iOS → real system CallKit incoming-call UI. (Level 2's
-            // killed-app ring comes from the BE VoIP push, handled natively.)
+            // Native iOS → real system CallKit UI. callId = ring_id, the same
+            // id the VoIP push carries, so double delivery (socket + PushKit)
+            // collapses into ONE CallKit call row. The in-app modal shows too
+            // (setIncomingCall below) so the call is visible even mid-app.
             VoipCall.showIncomingCall({
-              callId: String(data.match_id),
+              callId: ringId || String(data.match_id),
+              matchId: String(data.match_id),
               callerName: partner,
               roomUrl: data.room_url,
               hasVideo: true,
-            }).catch(() => {
-              setIncomingCall({ matchId: data.match_id, roomUrl: data.room_url, partnerName: partner });
-            });
-          } else {
-            // Web → in-app full-screen modal (60s auto-dismiss).
-            setIncomingCall({ matchId: data.match_id, roomUrl: data.room_url, partnerName: partner });
-            setTimeout(() => setIncomingCall((prev) =>
-              prev?.matchId === data.match_id ? null : prev
-            ), 60000);
-            try { navigator.vibrate?.([200, 80, 200]); } catch { /* no-op */ }
+            }).catch(() => { /* CallKit unavailable — modal below still rings */ });
           }
+          setIncomingCall(ring);
+          try { navigator.vibrate?.([200, 80, 200]); } catch { /* no-op */ }
         }
+        break;
+
+      // Caller hung up before we answered — kill the ring everywhere and
+      // let the missed-call notification row (sent separately) be the trace.
+      case 'rehearsal_cancelled': {
+        const rid = data?.ring_id || null;
+        clearRing(rid);
+        if (isVoipNative()) {
+          const callId = rid || String(data?.match_id || '');
+          if (callId) { try { VoipCall.endCall({ callId }).catch(() => {}); } catch { /* noop */ } }
+        }
+        break;
+      }
+
+      // Callee answered/declined — the caller's Ringing overlay listens.
+      case 'rehearsal_answered':
+      case 'rehearsal_declined':
+        window.dispatchEvent(new CustomEvent('drst-ring-update', {
+          detail: { state: notification_type.replace('rehearsal_', ''), matchId: data?.match_id, ringId: data?.ring_id },
+        }));
         break;
 
       default:
         break;
     }
-  }, [dispatch, navigate]);
+  }, [dispatch, navigate, clearRing]);
+
+  // Ring expiry — the modal dismisses itself when the BE would consider the
+  // ring dead anyway (TTL from the payload; server enforces its own copy).
+  useEffect(() => {
+    if (!incomingCall) return undefined;
+    const t = setTimeout(() => {
+      clearRing(incomingCall.ringId);
+    }, (incomingCall.ttl || 90) * 1000);
+    return () => clearTimeout(t);
+  }, [incomingCall, clearRing]);
+
+  // Ring recovery on foreground — WKWebView suspends JS + sockets in the
+  // background, so a ring that fired while backgrounded is only findable by
+  // asking the server once we're visible again.
+  useEffect(() => {
+    if (!currentUser || !token) return undefined;
+    fetchActiveRing();
+    const onVis = () => { if (document.visibilityState === 'visible') fetchActiveRing(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => document.removeEventListener('visibilitychange', onVis);
+  }, [currentUser, token, fetchActiveRing]);
 
   useEffect(() => {
     if (!currentUser || !token) return;
@@ -191,7 +280,12 @@ export const SocketProvider = ({ children }) => {
     });
     socketRef.current = ws;
 
-    ws.onopen = () => setIsSocketReady(true);
+    ws.onopen = () => {
+      setIsSocketReady(true);
+      // A ring fired during the disconnect window never reached this socket —
+      // reconcile with the server on every (re)connect, not just page load.
+      fetchActiveRing();
+    };
     ws.onmessage = (event) => {
       try { handleIncomingMessage(JSON.parse(event.data)); } catch (_) {}
     };
@@ -219,7 +313,7 @@ export const SocketProvider = ({ children }) => {
       setIsSocketReady(false);
       socketRef.current = null;
     };
-  }, [currentUser, token, handleIncomingMessage]);
+  }, [currentUser, token, handleIncomingMessage, fetchActiveRing]);
 
   // Parse a Daily room URL → in-app meeting route, and navigate. Carry matchId
   // in nav state (the URL's room slug is NOT the match id) so the post-call
@@ -231,14 +325,36 @@ export const SocketProvider = ({ children }) => {
     if (roomId) navigate(`/meeting/${roomId}`, { state: { roomUrl, matchId } });
   }, [navigate]);
 
-  const acceptCall = () => {
+  const acceptCall = async () => {
     if (!incomingCall) return;
-    const { roomUrl, matchId } = incomingCall;
-    setIncomingCall(null);
+    const { roomUrl, matchId, ringId } = incomingCall;
+    clearRing(ringId);
+    // Server-confirmed answer BEFORE joining: if the caller's cancel already
+    // won the race (409), joining would strand us alone in a dead room.
+    // Network failure ≠ cancelled — on error we still join.
+    try {
+      await axiosInstance.post(`/v1/matching/matches/${matchId}/ring-ack/`, { action: 'answered', ring_id: ringId || undefined }, { timeout: 4000 });
+    } catch (err) {
+      if (err?.response?.status === 409) return; // ring already cancelled/expired
+    }
+    // A CallKit row may be ringing for the same call — end it, we're in.
+    if (isVoipNative() && ringId) {
+      try { VoipCall.endCall({ callId: ringId }).catch(() => {}); } catch { /* noop */ }
+    }
     joinRoom(roomUrl, matchId);
   };
 
-  const declineCall = () => setIncomingCall(null);
+  const declineCall = () => {
+    if (!incomingCall) return;
+    const { matchId, ringId } = incomingCall;
+    clearRing(ringId);
+    // Tell the server — a purely local dismiss would leave the caller
+    // listening to a ring nobody will ever answer.
+    axiosInstance.post(`/v1/matching/matches/${matchId}/ring-ack/`, { action: 'declined', ring_id: ringId || undefined }).catch(() => {});
+    if (isVoipNative() && ringId) {
+      try { VoipCall.endCall({ callId: ringId }).catch(() => {}); } catch { /* noop */ }
+    }
+  };
 
   // ── Native CallKit (iOS) — Level 1 (app alive, via showIncomingCall) AND
   // Level 2 (app killed/locked, via PushKit VoIP push). One native CXProvider;
@@ -258,8 +374,15 @@ export const SocketProvider = ({ children }) => {
           registerVoip(); // register for VoIP pushes + report token to BE
         }
         subs.push(await VoipCall.addListener('callAnswered', (e) => {
-          // e.callId is the match id we set on the CallKit call (String(match_id)).
-          if (e?.roomUrl) joinRoom(e.roomUrl, e?.matchId || e?.callId || null);
+          // e.callId is the ring_id; e.matchId is the real match. Legacy
+          // payloads carried the match id AS callId — accept callId as the
+          // match ONLY if it's numeric (ring_ids are hex, match ids ints),
+          // otherwise PostCallScreen would rate against a ring_id.
+          const mid = e?.matchId || (/^\d+$/.test(String(e?.callId || '')) ? e.callId : null);
+          if (mid) {
+            axiosInstance.post(`/v1/matching/matches/${mid}/ring-ack/`, { action: 'answered', ring_id: e?.callId || undefined }).catch(() => {});
+          }
+          if (e?.roomUrl) joinRoom(e.roomUrl, mid);
           // End the CallKit call immediately — the real call lives in the Daily
           // room, so leaving it "active" would show a lingering iOS call bar.
           if (e?.callId) {
@@ -271,7 +394,14 @@ export const SocketProvider = ({ children }) => {
         // Cold launch: the app was opened by answering a CallKit call before JS
         // was listening — drain the stashed answer.
         const pending = await VoipCall.getPendingAnswer();
-        if (pending?.roomUrl) joinRoom(pending.roomUrl, pending?.matchId || pending?.callId || null);
+        if (pending?.roomUrl) {
+          const pmid = pending?.matchId
+            || (/^\d+$/.test(String(pending?.callId || '')) ? pending.callId : null);
+          if (pmid) {
+            axiosInstance.post(`/v1/matching/matches/${pmid}/ring-ack/`, { action: 'answered', ring_id: pending?.callId || undefined }).catch(() => {});
+          }
+          joinRoom(pending.roomUrl, pmid);
+        }
       } catch { /* plugin unavailable */ }
     })();
     return () => { subs.forEach((s) => { try { s.remove(); } catch { /* noop */ } }); };
