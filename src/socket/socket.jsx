@@ -343,6 +343,30 @@ export const SocketProvider = ({ children }) => {
     if (roomId) navigateRef.current(`/meeting/${roomId}`, { state: { roomUrl, matchId } });
   }, []);
 
+  // Answering on a LOCKED phone launches the app in the background: joining
+  // Daily immediately fails (no camera while locked) and the meeting screen
+  // dies before the user ever sees it. Defer the join until the app is
+  // actually visible; the ring-ack has already gone out, so the caller's
+  // "answered" state is correct while we wait for the unlock.
+  const pendingJoinRef = useRef(null);
+  const joinWhenVisible = useCallback((roomUrl, matchId = null) => {
+    if (typeof document === 'undefined' || document.visibilityState === 'visible') {
+      joinRoom(roomUrl, matchId);
+    } else {
+      pendingJoinRef.current = { roomUrl, matchId };
+    }
+  }, [joinRoom]);
+  useEffect(() => {
+    const drain = () => {
+      if (document.visibilityState !== 'visible' || !pendingJoinRef.current) return;
+      const { roomUrl, matchId } = pendingJoinRef.current;
+      pendingJoinRef.current = null;
+      joinRoom(roomUrl, matchId);
+    };
+    document.addEventListener('visibilitychange', drain);
+    return () => document.removeEventListener('visibilitychange', drain);
+  }, [joinRoom]);
+
   const acceptCall = async () => {
     if (!incomingCall) return;
     const { roomUrl, matchId, ringId } = incomingCall;
@@ -405,7 +429,7 @@ export const SocketProvider = ({ children }) => {
           if (mid) {
             axiosInstance.post(`/v1/matching/matches/${mid}/ring-ack/`, { action: 'answered', ring_id: e?.callId || undefined }).catch(() => {});
           }
-          if (e?.roomUrl) joinRoom(e.roomUrl, mid);
+          if (e?.roomUrl) joinWhenVisible(e.roomUrl, mid);
           // End the CallKit call immediately — the real call lives in the Daily
           // room, so leaving it "active" would show a lingering iOS call bar.
           if (e?.callId) {
@@ -436,12 +460,12 @@ export const SocketProvider = ({ children }) => {
           if (pmid) {
             axiosInstance.post(`/v1/matching/matches/${pmid}/ring-ack/`, { action: 'answered', ring_id: pending?.callId || undefined }).catch(() => {});
           }
-          joinRoom(pending.roomUrl, pmid);
+          joinWhenVisible(pending.roomUrl, pmid);
         }
       } catch { /* plugin unavailable */ }
     })();
     return () => { subs.forEach((s) => { try { s.remove(); } catch { /* noop */ } }); };
-  }, [joinRoom, token, clearRing]);
+  }, [joinRoom, joinWhenVisible, token, clearRing]);
 
   // Pulse a ringing haptic while the full-screen incoming-call alert is up.
   useEffect(() => {

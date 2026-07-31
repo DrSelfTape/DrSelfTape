@@ -124,6 +124,11 @@ export default function MeetingRoom() {
     // old Daily frame (and the camera) under the new one.
     cleanupRanRef.current = false;
 
+    // Daily's prebuilt breadcrumb shows the parent document.title (the
+    // "Home page" label Joseph flagged). Name the room for real.
+    const prevTitle = document.title;
+    document.title = 'Scene Read';
+
     const userName =
       `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
       user?.email ||
@@ -141,8 +146,22 @@ export default function MeetingRoom() {
         },
         showLeaveButton: true,
         showFullscreenButton: true,
-        // Daily's prebuilt UI handles its own theming; we just tint the
-        // outer container so the page never shows a flash of wrong color.
+        // Brand the prebuilt UI: Aurora dark + heritage gold accents so the
+        // call room reads as OUR studio, not Daily's default navy.
+        theme: {
+          colors: {
+            accent: '#D4A85F',
+            accentText: '#0A0A0A',
+            background: '#0c0e14',
+            backgroundAccent: '#161A24',
+            baseText: '#F4F4EE',
+            border: '#2A2E3A',
+            mainAreaBg: '#0c0e14',
+            mainAreaBgAccent: '#161A24',
+            mainAreaText: '#F4F4EE',
+            supportiveText: '#9AA0AD',
+          },
+        },
       });
     } catch (err) {
       // DailyIframe.createFrame can throw synchronously if another frame
@@ -215,6 +234,7 @@ export default function MeetingRoom() {
     return () => {
       if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
       window.removeEventListener('beforeunload', onUnload);
+      document.title = prevTitle;
       // Leaving while still ringing = hanging up. Must run before teardown
       // so the callee's phone stops ringing the moment we bail.
       cancelRing();
@@ -265,6 +285,7 @@ export default function MeetingRoom() {
       <PostCallScreen
         partnerName={partnerName}
         matchId={matchId}
+        onHome={() => navigate('/dashboard')}
         // Rating is now captured ON the post-call screen (submits on tap), so we
         // drop straight back into the match's chat — no ?rehearsal=ended, which
         // would pop a second, now-redundant rating modal.
