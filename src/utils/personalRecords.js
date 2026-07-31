@@ -39,3 +39,23 @@ export function recordAndDiffBests(scores, dims, avg) {
   try { localStorage.setItem(KEY, JSON.stringify(bests)); } catch { /* private mode */ }
   return records;
 }
+
+// ── Score history (the "watch your scores climb" loop) ──
+// Device-local overall-average timeline, capped at the last 50 reviews.
+// Same local-first contract as the bests above.
+const HISTORY_KEY = 'dst_score_history';
+
+export function appendScoreHistory(avg) {
+  if (!Number.isFinite(avg)) return getScoreHistory();
+  let hist = getScoreHistory();
+  hist = [...hist, { t: Date.now(), avg: Math.round(avg * 10) / 10 }].slice(-50);
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(hist)); } catch { /* private mode */ }
+  return hist;
+}
+
+export function getScoreHistory() {
+  try {
+    const h = JSON.parse(localStorage.getItem(HISTORY_KEY));
+    return Array.isArray(h) ? h.filter((e) => Number.isFinite(e?.avg)) : [];
+  } catch { return []; }
+}

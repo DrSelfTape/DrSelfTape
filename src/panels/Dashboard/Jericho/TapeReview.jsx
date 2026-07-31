@@ -21,7 +21,7 @@ import { tapSelect, cheer, warn } from '../../../utils/haptics';
 import { useShareImageCapture } from '../../../hooks/useShareImageCapture';
 import { saveBlobUrl } from '../../../utils/saveMedia';
 import TapeReviewShareCard, { TapeReviewShareCardStory } from './TapeReviewShareCard';
-import { recordAndDiffBests } from '../../../utils/personalRecords';
+import { recordAndDiffBests, appendScoreHistory, getScoreHistory } from '../../../utils/personalRecords';
 import { Share2 } from 'lucide-react';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { PRACTICE_SCENE_TITLE, PRACTICE_SCENE_CONTENT } from '../../../data/practiceScene';
@@ -734,9 +734,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       recordsRef.current = {
         key: resultKey,
         records: recordAndDiffBests(locked ? {} : (raw.scores || {}), locked ? [] : TECH_SCORES, heroAvg),
+        history: appendScoreHistory(heroAvg),
       };
     }
     const newRecords = recordsRef.current.key === resultKey ? recordsRef.current.records : [];
+    const scoreHistory = recordsRef.current.key === resultKey ? (recordsRef.current.history || getScoreHistory()) : getScoreHistory();
 
     return (
       <div className="space-y-4 sm:space-y-5">
@@ -768,6 +770,36 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             </div>
           </div>
         )}
+
+        {/* The climb — overall score across this device's reviews. Sold as a
+            loop, not a verdict: the reason to tape again is to move the line. */}
+        {revealStage >= 3 && scoreHistory.length >= 2 && (() => {
+          const pts = scoreHistory.slice(-12);
+          const min = Math.min(...pts.map((e) => e.avg), 4);
+          const max = Math.max(...pts.map((e) => e.avg), 8);
+          const W = 260, H = 48;
+          const x = (i) => (i / (pts.length - 1)) * W;
+          const y = (v) => H - ((v - min) / Math.max(0.1, max - min)) * H;
+          const path = pts.map((e, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(e.avg).toFixed(1)}`).join(' ');
+          const delta = pts[pts.length - 1].avg - pts[0].avg;
+          return (
+            <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 tr-reveal" style={{ '--tr-i': 2, background: 'rgba(255,255,255,0.6)' }}>
+              <div className="flex items-baseline justify-between mb-2">
+                <h3 className="text-xs font-bold text-[#0A0A0A]">Your scores over time</h3>
+                <span className="text-[11px] font-semibold" style={{ color: delta >= 0 ? '#22c55e' : 'rgba(10,10,10,0.45)' }}>
+                  {delta >= 0.1 ? `▲ +${delta.toFixed(1)} since your first tape here` : `${pts.length} reviews tracked`}
+                </span>
+              </div>
+              <svg width="100%" height={H + 8} viewBox={`0 0 ${W} ${H + 8}`} preserveAspectRatio="none" aria-hidden="true">
+                <path d={path} fill="none" stroke="#D4A85F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" transform="translate(0,4)" />
+                <circle cx={x(pts.length - 1)} cy={y(pts[pts.length - 1].avg) + 4} r="3.5" fill="#7A5A18" />
+              </svg>
+              <p className="text-[11px] mt-1" style={{ color: 'rgba(10,10,10,0.5)' }}>
+                Every tape moves the line. Record another take to keep it climbing.
+              </p>
+            </div>
+          );
+        })()}
 
         {/* Verdict */}
         {r.verdict && (
@@ -928,6 +960,31 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             (free too): an actor posting their casting-grade read is free
             distribution. The template renders far offscreen; the button captures
             it to an image and opens the native share sheet. */}
+        {/* Scene Coach (stolen from a competitor doing it right): a chat
+            pinned to THESE notes. Slate receives the review as context, so
+            "what does adjustment 2 mean" answers about this exact tape.
+            Mobile shell only — the desktop web has no Slate host. */}
+        {revealStage >= 3 && typeof window !== 'undefined' && window.__dstSlateHost && (r.verdict || adjustments.length > 0) && (
+          <button
+            type="button"
+            onClick={() => {
+              trackEvent('scene_coach_open');
+              window.dispatchEvent(new CustomEvent('drst-open-slate', {
+                detail: { review: {
+                  band: (Number.isFinite(heroAvg) ? gradeBand(heroAvg).label : undefined),
+                  verdict: r.verdict || '',
+                  adjustments: adjustments.slice(0, 3).map((a) => (typeof a === 'string' ? a : a?.text || a?.note || '')),
+                } },
+              }));
+            }}
+            onTouchEnd={(e) => { e.preventDefault(); e.currentTarget.click(); }}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold border border-[#D4A85F]/40 transition-all hover:bg-[#D4A85F]/10 tr-reveal"
+            style={{ '--tr-i': 2, color: '#7A5A18', background: 'rgba(212,168,95,0.06)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          >
+            🎬 Talk these notes through with Slate
+          </button>
+        )}
+
         {revealStage >= 3 && (r.verdict || tags.length > 0) && (() => {
           // Identity claim for the card: same band the gauge hero shows.
           const vals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));

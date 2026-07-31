@@ -3651,6 +3651,22 @@ export default function DrSelfTapeApp() {
   const slateAuditions = useSelector((s) => s.auditions?.data || []);
   const slateScripts = useSelector((s) => s.scripts?.scripts || []);
   const slateFallbackScripts = useSelector((s) => s.sceneStudyScripts?.scripts || []);
+  // Scene-Coach mode: the Tape Review results screen pins its review here
+  // (via the drst-open-slate event) so Slate coaches through THOSE notes.
+  const [slateReview, setSlateReview] = useState(null);
+  useEffect(() => {
+    window.__dstSlateHost = true; // TapeReview shows its Slate button only inside this shell
+    const onOpenSlate = (e) => {
+      if (e?.detail?.review) setSlateReview(e.detail.review);
+      setCopilotOpen(true); setCopilotMin(false);
+    };
+    window.addEventListener('drst-open-slate', onOpenSlate);
+    return () => {
+      delete window.__dstSlateHost;
+      window.removeEventListener('drst-open-slate', onOpenSlate);
+    };
+  }, []);
+
   const slateContext = useMemo(() => {
     const closed = new Set(['booked', 'passed', 'declined', 'rejected']);
     const live = (Array.isArray(slateAuditions) ? slateAuditions : [])
@@ -3667,8 +3683,8 @@ export default function DrSelfTapeApp() {
     const recent = [...allScripts].sort(
       (a, b) => new Date(b?.created_at || 0) - new Date(a?.created_at || 0))[0];
     const scene = recent?.title ? { title: recent.title } : undefined;
-    return { name: slateProfile?.first_name || '', tab, auditions: live, scene };
-  }, [slateProfile, slateAuditions, slateScripts, slateFallbackScripts, tab]);
+    return { name: slateProfile?.first_name || '', tab, auditions: live, scene, latest_review: slateReview || undefined };
+  }, [slateProfile, slateAuditions, slateScripts, slateFallbackScripts, tab, slateReview]);
   // Scripts the actor can attach so Slate reads the actual sides (title + text).
   const slateScriptList = useMemo(() => {
     const raw = (Array.isArray(slateScripts) && slateScripts.length)

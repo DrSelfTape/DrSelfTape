@@ -880,8 +880,9 @@ function Offer({ onTry, onSkip }) {
           letterSpacing: '-0.6px', lineHeight: 1.04, marginTop: 8,
         }}>Get casting notes<br />on any take. Free.</h1>
         <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 320 }}>
-          Jericho scores your performance, framing, and eyeline, then names your
-          strongest beat and the one fix that books the room.
+          Know how your tape reads before casting ever sees it. Jericho scores
+          your performance, framing, and eyeline, then names the one fix that
+          books the room.
         </p>
         {/* 3-step expectation strip (pliability pattern): show the destination
             before the ask, so the camera request reads as a step toward
