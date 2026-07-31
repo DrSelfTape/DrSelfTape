@@ -32,16 +32,31 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
           animation: 'slideUp 0.3s ease',
         }}
       >
-        <div className="text-5xl mb-4">🎟️</div>
+        <div className="text-5xl mb-4">🎬</div>
         <h2 className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.3px' }}>
-          Out of Tokens
+          That's today's free AI
         </h2>
-        <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--aurora-sub)' }}>
-          You've used all your AI tokens for this period. Upgrade your plan to get more.
+        <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--aurora-sub)' }}>
+          You're out of included AI actions for now. Premium removes the ceiling.
         </p>
+        {/* Concrete, honest comparison — no "tokens" jargon, no fake trial */}
+        <div className="text-left mb-5 rounded-2xl p-4" style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold, #D4A85F) 8%, transparent)', border: '1px solid var(--aurora-line)' }}>
+          {[
+            ['Tape Reviews', 'Unlimited, with the full deep read'],
+            ['AI scene partner', 'Unlimited reads, any scene'],
+            ['Compare Takes', 'Rank up to 4 takes, pick the send'],
+          ].map(([k, v]) => (
+            <div key={k} className="flex items-start gap-2 py-1">
+              <span style={{ color: '#22c55e', fontWeight: 700 }}>✓</span>
+              <span className="text-xs" style={{ color: 'var(--aurora-text)' }}>
+                <strong>{k}</strong> — <span style={{ color: 'var(--aurora-sub)' }}>{v}</span>
+              </span>
+            </div>
+          ))}
+        </div>
         <button
           onClick={handleUpgrade}
-          className="aurora-mono w-full py-3.5 rounded-full text-white text-sm mb-3"
+          className="aurora-mono w-full py-3.5 rounded-full text-white text-sm mb-1"
           style={{
             background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
             fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 700,
@@ -49,8 +64,11 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
             border: 'none',
           }}
         >
-          Upgrade Plan 👑
+          See plans — from $9.99/mo
         </button>
+        <p className="text-[11px] mb-2" style={{ color: 'var(--aurora-dim, var(--aurora-sub))' }}>
+          Cancel anytime in the App Store.
+        </p>
         <button
           onClick={handleClose}
           className="w-full py-3 rounded-full text-sm font-semibold"

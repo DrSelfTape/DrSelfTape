@@ -41,10 +41,25 @@ export default function CameraPresell({ onReady, onDismiss }) {
           </span>
         </div>
         <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary, #0A0A0A)', margin: '18px 0 0', letterSpacing: '-0.3px' }}>
-          Your AI reader needs to see and hear you
+          Set up your taping studio
         </h2>
+        {/* Studio-setup checklist ((Not Boring) Camera pattern): the two OS
+            asks framed as assembling YOUR gear, not surrendering access. */}
+        <div style={{ margin: '12px auto 0', maxWidth: 240, textAlign: 'left' }}>
+          {[['📷', 'Camera', 'your frame'], ['🎙️', 'Microphone', 'your read']].map(([e, k, v]) => (
+            <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 0' }}>
+              <span style={{ fontSize: 15 }}>{e}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary, #0A0A0A)' }}>{k}</span>
+              <span style={{ fontSize: 12.5, color: 'var(--text-secondary, rgba(10,10,10,0.5))' }}>— {v}</span>
+              <span style={{ marginLeft: 'auto', color: '#D4A85F', fontWeight: 700 }}>✓</span>
+            </div>
+          ))}
+        </div>
         <p style={{ fontSize: 13.5, color: 'var(--text-secondary, rgba(10,10,10,0.55))', margin: '10px 0 0', lineHeight: 1.5 }}>
-          Next screen, tap <strong>Allow</strong> twice (camera, then mic) and you're rolling.
+          Next screen, tap <strong>Allow</strong> twice and you're rolling.
+        </p>
+        <p style={{ fontSize: 11.5, color: 'var(--text-secondary, rgba(10,10,10,0.42))', margin: '8px 0 0', lineHeight: 1.45 }}>
+          Your tapes are yours. AI only sees a tape when you submit it for review.
         </p>
         <button
           type="button"

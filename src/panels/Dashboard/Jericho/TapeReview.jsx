@@ -20,7 +20,8 @@ import { goUpgrade } from '../../../utils/goUpgrade';
 import { tapSelect, cheer, warn } from '../../../utils/haptics';
 import { useShareImageCapture } from '../../../hooks/useShareImageCapture';
 import { saveBlobUrl } from '../../../utils/saveMedia';
-import TapeReviewShareCard from './TapeReviewShareCard';
+import TapeReviewShareCard, { TapeReviewShareCardStory } from './TapeReviewShareCard';
+import { recordAndDiffBests } from '../../../utils/personalRecords';
 import { Share2 } from 'lucide-react';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { PRACTICE_SCENE_TITLE, PRACTICE_SCENE_CONTENT } from '../../../data/practiceScene';
@@ -344,17 +345,24 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // Share card — render an actor's result as a branded image for social. Free
   // distribution: an actor posting their casting-grade read is our UGC engine.
   const shareRef = useRef(null);
+  const shareStoryRef = useRef(null);
+  // Personal-records diff runs once per result (ref-guarded — render-time
+  // compute keeps it beside the derived scores it needs).
+  const recordsRef = useRef({ key: null, records: [] });
   const [sharing, setSharing] = useState(false);
   const { captureImage } = useShareImageCapture({ onError: () => {} });
-  const handleShare = async () => {
-    if (sharing || !shareRef.current) return;
+  // 'story' (1080×1920, IG/TikTok — the primary destination) or 'square'.
+  const handleShare = async (format = 'story') => {
+    const isStory = format === 'story';
+    const node = isStory ? shareStoryRef.current : shareRef.current;
+    if (sharing || !node) return;
     setSharing(true);
     tapSelect();
-    trackEvent('tape_review_share_tap');
+    trackEvent('tape_review_share_tap', { format });
     let url = null;
     try {
-      url = await captureImage(shareRef.current, { width: 1080, height: 1080, scale: 1 });
-      const res = await saveBlobUrl(url, 'my-tape-review.png');
+      url = await captureImage(node, { width: 1080, height: isStory ? 1920 : 1080, scale: 1 });
+      const res = await saveBlobUrl(url, isStory ? 'my-tape-review-story.png' : 'my-tape-review.png');
       if (res?.ok) cheer(); else warn();
     } catch { warn(); } finally {
       if (url) setTimeout(() => { try { URL.revokeObjectURL(url); } catch { /* noop */ } }, 3000);
@@ -715,6 +723,21 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     const hasScores = TECH_SCORES.some((s) => scores[s.key] != null);
     const hasDna = DNA.some((d) => dna[d.key] != null);
 
+    // Headline average from RAW scores (shared by gauge + records + share).
+    const heroVals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));
+    const heroAvg = heroVals.length ? heroVals.reduce((a, b) => a + b, 0) / heroVals.length : null;
+
+    // Personal records (rank 14): once per result. LOCKED users only compete
+    // on the overall number — per-dimension records would leak gated scores.
+    const resultKey = raw?._meta?.job_id || `${raw?.verdict || ''}:${heroAvg ?? ''}`;
+    if (recordsRef.current.key !== resultKey && heroAvg != null) {
+      recordsRef.current = {
+        key: resultKey,
+        records: recordAndDiffBests(locked ? {} : (raw.scores || {}), locked ? [] : TECH_SCORES, heroAvg),
+      };
+    }
+    const newRecords = recordsRef.current.key === resultKey ? recordsRef.current.records : [];
+
     return (
       <div className="space-y-4 sm:space-y-5">
         {/* First-review "how to read your notes" walkthrough — the pre-upload
@@ -727,11 +750,24 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Gauge hero — headline grade from the RAW scores (a single teaser
             number never leaks the gated per-dimension scorecard). */}
-        {(() => {
-          const vals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));
-          if (!vals.length) return null;
-          return <GaugeHero avg={vals.reduce((a, b) => a + b, 0) / vals.length} firstName={firstName} />;
-        })()}
+        {heroAvg != null && <GaugeHero avg={heroAvg} firstName={firstName} />}
+
+        {/* Personal records — review #5 should motivate like review #1.
+            Only renders when this tape actually beat a previous best. */}
+        {revealStage >= 3 && newRecords.length > 0 && (
+          <div className="rounded-2xl border border-[#D4A85F]/35 p-4 tr-reveal" style={{ '--tr-i': 1, background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}>
+            <h3 className="text-xs font-bold text-[#7A5A18] mb-2 uppercase tracking-wider">New personal best{newRecords.length > 1 ? 's' : ''}</h3>
+            <div className="flex flex-wrap gap-2">
+              {newRecords.slice(0, 4).map((rec) => (
+                <span key={rec.key} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{ background: 'rgba(212,168,95,0.18)', color: '#7A5A18', border: '1px solid rgba(212,168,95,0.4)' }}>
+                  🏅 {rec.label} {rec.value.toFixed(1)}
+                  <span style={{ opacity: 0.6, fontWeight: 400 }}>was {rec.prev.toFixed(1)}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Verdict */}
         {r.verdict && (
@@ -892,21 +928,37 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             (free too): an actor posting their casting-grade read is free
             distribution. The template renders far offscreen; the button captures
             it to an image and opens the native share sheet. */}
-        {revealStage >= 3 && (r.verdict || tags.length > 0) && (
-          <>
-            <button
-              type="button"
-              disabled={sharing}
-              onClick={handleShare}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60 tr-reveal"
-              style={{ '--tr-i': 1 }}
-            >
-              {sharing ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
-              {sharing ? 'Preparing your card…' : 'Share my read'}
-            </button>
-            <TapeReviewShareCard ref={shareRef} verdict={r.verdict} tags={tags} />
-          </>
-        )}
+        {revealStage >= 3 && (r.verdict || tags.length > 0) && (() => {
+          // Identity claim for the card: same band the gauge hero shows.
+          const vals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));
+          const shareAvg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+          const shareBand = shareAvg != null ? gradeBand(shareAvg) : null;
+          return (
+            <>
+              <div className="flex gap-2 tr-reveal" style={{ '--tr-i': 1 }}>
+                <button
+                  type="button"
+                  disabled={sharing}
+                  onClick={() => handleShare('story')}
+                  className="flex-[2] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60"
+                >
+                  {sharing ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
+                  {sharing ? 'Preparing your card…' : 'Share to Story'}
+                </button>
+                <button
+                  type="button"
+                  disabled={sharing}
+                  onClick={() => handleShare('square')}
+                  className="flex-1 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-[#7A5A18]/80 border border-[#D4A85F]/25 transition-all hover:bg-[#D4A85F]/10 disabled:opacity-60"
+                >
+                  Square post
+                </button>
+              </div>
+              <TapeReviewShareCard ref={shareRef} verdict={r.verdict} tags={tags} band={shareBand} avg={shareAvg} />
+              <TapeReviewShareCardStory ref={shareStoryRef} verdict={r.verdict} tags={tags} band={shareBand} avg={shareAvg} />
+            </>
+          );
+        })()}
 
         {/* Actions — in first-review mode the paywall leads; otherwise the
             standard "review another take" reset plus the Compare Takes

@@ -33,8 +33,8 @@ export default function Referral() {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: 'Join Dr Self Tape',
-          text: 'Sign up with my referral link and we both earn tokens!',
+          title: 'Read with me on Dr Self Tape',
+          text: "I'm sending you a free AI tape review — and a scene partner (me). Actors read for each other on Dr Self Tape. Join free:",
           url: data.share_url,
         });
       } catch {
@@ -93,43 +93,61 @@ export default function Referral() {
           </div>
           <div>
             <h2 className="aurora-display text-lg" style={{ color: 'var(--aurora-text)' }}>
-              Invite 3 actors, earn 150 tokens
+              Self-taping is a two-person job
             </h2>
             <p className="text-sm mt-1" style={{ color: 'var(--aurora-sub)' }}>
-              Share your referral link with fellow actors. When they sign up and complete their
-              profile, you both earn 50 tokens.
+              <strong>You get:</strong> a scene partner who owes you one, plus 50 AI tokens.{' '}
+              <strong>They get:</strong> free casting notes on their first tape, 50 tokens, and
+              someone to read with on day one — you.
             </p>
+            <div className="aurora-mono flex items-center gap-2 mt-3" style={{ fontSize: 10, color: 'var(--aurora-dim)', letterSpacing: '0.04em' }}>
+              <span>① Invite an actor</span>
+              <span style={{ opacity: 0.4 }}>→</span>
+              <span>② They join free</span>
+              <span style={{ opacity: 0.4 }}>→</span>
+              <span style={{ color: 'var(--aurora-accent-deep)', fontWeight: 700 }}>③ You read for each other</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4">
-        <div
-          className="aurora-card p-5"
-        >
-          <div className="flex items-center gap-3 mb-2">
+      {/* Reader bench — visible, completable goal (Airbuds slot pattern,
+          WITHOUT their hard gate). Slots fill with real invitees. */}
+      <div className="aurora-card p-5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-3">
             <Users className="w-5 h-5" style={{ color: 'var(--aurora-mint)' }} />
-            <span className="aurora-eyebrow">
-              Total Referrals
-            </span>
+            <span className="aurora-eyebrow">Your reader bench</span>
           </div>
-          <p className="aurora-mono text-3xl" style={{ color: 'var(--aurora-text)' }}>
-            {totalReferrals}
-          </p>
+          <span className="aurora-mono text-xs" style={{ color: 'var(--aurora-dim)' }}>
+            {Math.min(totalReferrals, 3)} of 3{totalReferrals > 3 ? ` (+${totalReferrals - 3})` : ''} · {tokensEarned} tokens earned
+          </span>
         </div>
-        <div
-          className="aurora-card p-5"
-        >
-          <div className="flex items-center gap-3 mb-2">
-            <Coins className="w-5 h-5" style={{ color: 'var(--aurora-heritage-gold)' }} />
-            <span className="aurora-eyebrow">
-              Tokens Earned
-            </span>
-          </div>
-          <p className="aurora-mono text-3xl" style={{ color: 'var(--aurora-text)' }}>
-            {tokensEarned}
-          </p>
+        <div className="flex items-center gap-3">
+          {[0, 1, 2].map((i) => {
+            const ref = referrals[i];
+            return ref ? (
+              <div key={i} className="flex flex-col items-center gap-1" style={{ width: 64 }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold) 24%, transparent)', border: '2px solid var(--aurora-heritage-gold)' }}>
+                  <span className="aurora-mono text-sm font-bold" style={{ color: 'var(--aurora-accent-deep)' }}>
+                    {(ref.name || 'A')[0].toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-[10px] truncate w-full text-center" style={{ color: 'var(--aurora-sub)' }}>
+                  {(ref.name || 'Actor').split(' ')[0]}
+                </span>
+              </div>
+            ) : (
+              <div key={i} className="flex flex-col items-center gap-1" style={{ width: 64 }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ border: '2px dashed var(--aurora-line)', color: 'var(--aurora-dim)' }}>
+                  <span className="text-lg">+</span>
+                </div>
+                <span className="text-[10px]" style={{ color: 'var(--aurora-dim)' }}>Open</span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

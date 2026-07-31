@@ -883,6 +883,20 @@ function Offer({ onTry, onSkip }) {
           Jericho scores your performance, framing, and eyeline, then names your
           strongest beat and the one fix that books the room.
         </p>
+        {/* 3-step expectation strip (pliability pattern): show the destination
+            before the ask, so the camera request reads as a step toward
+            casting notes instead of a cost. */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 8, marginTop: 16, flexShrink: 0,
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 10.5, letterSpacing: '0.04em',
+          color: 'var(--aurora-sub)',
+        }}>
+          <span>① Frame your shot</span>
+          <span style={{ opacity: 0.4 }}>→</span>
+          <span>② Record 30 sec</span>
+          <span style={{ opacity: 0.4 }}>→</span>
+          <span style={{ color: 'var(--aurora-accent-deep)', fontWeight: 700 }}>③ Casting notes</span>
+        </div>
         <div style={{ margin: '20px 0 auto', textAlign: 'left', maxWidth: 320, width: '100%', flexShrink: 0 }}>
           {cards.map((c) => {
             const selected = variant === c.id;
