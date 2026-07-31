@@ -149,7 +149,7 @@ export default function NotificationBell({ onNavigate }) {
           // component uses (carry the room info so MeetingRoom can join).
           // Carry the real match id (room slug ≠ match) so the post-call screen
           // rates the right match and routes back to its chat.
-          const mId = notification?.data?.match_id || null;
+          const mId = matchId || null;
           if (isMobile && onNavigate) {
             onNavigate({ panel: 'meeting', roomId, roomUrl: liveRoomUrl, matchId: mId });
           } else {
@@ -168,6 +168,7 @@ export default function NotificationBell({ onNavigate }) {
         scene_partner_like:  { web: '/dashboard/who-wants-to-read', mobile: { panel: 'who-wants-to-read' } },
         scene_partner_match: { web: greenRoom,                      mobile: { panel: 'green-room' } },
         rehearsal_started:   { web: greenRoom,                      mobile: { panel: 'green-room' } },
+        rehearsal_missed:    { web: greenRoom,                      mobile: { panel: 'green-room' } },
         new_message:         { web: greenRoom,                      mobile: { panel: 'green-room' } },
         room_invite:         { web: '/dashboard/green-room',        mobile: { tab: 'green-room' } },
         audition_update:     { web: '/dashboard/auditions',         mobile: { tab: 'auditions' } },

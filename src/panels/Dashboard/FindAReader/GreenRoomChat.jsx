@@ -332,7 +332,10 @@ const GreenRoomChat = (props = {}) => {
       navigate(`/meeting/${roomId}`, {
         state: {
           roomUrl, matchId, partnerName,
-          startedCall: ringOutcome !== 'answered',
+          // Only claim "their phone is ringing" when the BE confirmed a ring
+          // (ring_id present). Against an older BE the response has neither
+          // field — fall back to the plain waiting overlay, never the lie.
+          startedCall: Boolean(ringId) && ringOutcome !== 'answered',
           ringId,
         },
       });

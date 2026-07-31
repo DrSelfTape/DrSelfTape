@@ -166,6 +166,19 @@ final class VoipCallManager: NSObject {
     /// Set when a call is answered before JS is listening (cold launch).
     var pendingAnswer: [String: String]?
 
+    // ALL mutable state (callsById/roomById/matchById/pendingAnswer/voipToken)
+    // is confined to the MAIN queue: CXProvider delegate runs there (queue:
+    // .main below), PKPushRegistry was created with .main, and the Capacitor
+    // plugin entry points hop here. Without this, plugin calls (Capacitor's
+    // own background queue) raced the delegate callbacks on the dicts.
+    static func runOnMain(_ block: @escaping () -> Void) {
+        if Thread.isMainThread { block() } else { DispatchQueue.main.async(execute: block) }
+    }
+    static func syncOnMain<T>(_ block: () -> T) -> T {
+        if Thread.isMainThread { return block() }
+        return DispatchQueue.main.sync(execute: block)
+    }
+
     func start() {
         guard !started else { return }
         started = true
@@ -175,7 +188,7 @@ final class VoipCallManager: NSObject {
         config.maximumCallGroups = 1
         config.supportedHandleTypes = [.generic]
         let p = CXProvider(configuration: config)
-        p.setDelegate(self, queue: nil)
+        p.setDelegate(self, queue: .main)
         provider = p
 
         let r = PKPushRegistry(queue: .main)
@@ -187,33 +200,37 @@ final class VoipCallManager: NSObject {
     /// Report an incoming call to CallKit — used by BOTH the JS showIncomingCall
     /// (app alive) and the VoIP push handler (app killed/locked).
     func reportIncomingCall(callId: String, callerName: String, roomUrl: String, hasVideo: Bool, matchId: String? = nil, completion: (() -> Void)? = nil) {
-        let uuid = callsById[callId] ?? UUID()
-        callsById[callId] = uuid
-        if !roomUrl.isEmpty { roomById[callId] = roomUrl }
-        if let matchId = matchId, !matchId.isEmpty { matchById[callId] = matchId }
-        // No provider (should not happen after start(), but optional-chaining
-        // here would silently drop the PushKit completion and iOS penalises
-        // apps that don't complete every VoIP push).
-        guard let provider = provider else { completion?(); return }
-        let update = CXCallUpdate()
-        update.remoteHandle = CXHandle(type: .generic, value: callerName)
-        update.localizedCallerName = callerName
-        update.hasVideo = hasVideo
-        provider.reportNewIncomingCall(with: uuid, update: update) { error in
-            if let error = error { NSLog("CallKit report failed: \(error.localizedDescription)") }
-            // Call the PushKit completion only AFTER CallKit has processed the
-            // report — calling it earlier (or skipping it on failure) risks iOS
-            // penalising/throttling future VoIP pushes for this app.
-            completion?()
+        Self.runOnMain { [self] in
+            let uuid = callsById[callId] ?? UUID()
+            callsById[callId] = uuid
+            if !roomUrl.isEmpty { roomById[callId] = roomUrl }
+            if let matchId = matchId, !matchId.isEmpty { matchById[callId] = matchId }
+            // No provider (should not happen after start(), but optional-chaining
+            // here would silently drop the PushKit completion and iOS penalises
+            // apps that don't complete every VoIP push).
+            guard let provider = provider else { completion?(); return }
+            let update = CXCallUpdate()
+            update.remoteHandle = CXHandle(type: .generic, value: callerName)
+            update.localizedCallerName = callerName
+            update.hasVideo = hasVideo
+            provider.reportNewIncomingCall(with: uuid, update: update) { error in
+                if let error = error { NSLog("CallKit report failed: \(error.localizedDescription)") }
+                // Call the PushKit completion only AFTER CallKit has processed the
+                // report — calling it earlier (or skipping it on failure) risks iOS
+                // penalising/throttling future VoIP pushes for this app.
+                completion?()
+            }
         }
     }
 
     func endCall(callId: String) {
-        if let uuid = callsById[callId] {
-            provider?.reportCall(with: uuid, endedAt: Date(), reason: .remoteEnded)
-            callsById[callId] = nil
-            roomById[callId] = nil
-            matchById[callId] = nil
+        Self.runOnMain { [self] in
+            if let uuid = callsById[callId] {
+                provider?.reportCall(with: uuid, endedAt: Date(), reason: .remoteEnded)
+                callsById[callId] = nil
+                roomById[callId] = nil
+                matchById[callId] = nil
+            }
         }
     }
 
@@ -241,19 +258,18 @@ extension VoipCallManager: PKPushRegistryDelegate {
         let d = payload.dictionaryPayload
         let callId = (d["callId"] as? String) ?? UUID().uuidString
 
-        // Caller hung up: payload {type:"cancel", callId:<ring_id>}. If the
-        // ring is live, end it. Either way iOS requires a call report per
-        // VoIP push — with no live ring we report-then-instantly-end (brief
-        // "Call Ended" flash, mandated by the platform).
+        // Caller hung up: payload {type:"cancel", callId:<ring_id>}. End the
+        // live ring if present — and ALWAYS report a throwaway call too:
+        // iOS requires reportNewIncomingCall for EVERY VoIP push (killing an
+        // existing call does not count), or the app gets terminated/throttled.
+        // The throwaway is ended instantly (brief "Call Ended" flash, the
+        // platform-mandated cost of a cancel push).
         if (d["type"] as? String) == "cancel" {
-            if callsById[callId] != nil {
-                endCall(callId: callId)
+            endCall(callId: callId) // main-hopped no-op when nothing is ringing
+            let ghost = UUID().uuidString
+            reportIncomingCall(callId: ghost, callerName: "Call ended", roomUrl: "", hasVideo: false) {
+                self.endCall(callId: ghost)
                 completion()
-            } else {
-                reportIncomingCall(callId: callId, callerName: "Call ended", roomUrl: "", hasVideo: false) {
-                    self.endCall(callId: callId)
-                    completion()
-                }
             }
             return
         }
@@ -270,6 +286,7 @@ extension VoipCallManager: CXProviderDelegate {
     func providerDidReset(_ provider: CXProvider) {
         callsById.removeAll()
         roomById.removeAll()
+        matchById.removeAll()
     }
 
     func provider(_ provider: CXProvider, perform action: CXAnswerCallAction) {
@@ -286,9 +303,12 @@ extension VoipCallManager: CXProviderDelegate {
 
     func provider(_ provider: CXProvider, perform action: CXEndCallAction) {
         if let id = callId(for: action.callUUID) {
-            plugin?.notifyListeners("callEnded", data: ["callId": id])
+            // matchId rides along so JS can report the decline to the server
+            // (otherwise the caller keeps ringing for the full TTL).
+            plugin?.notifyListeners("callEnded", data: ["callId": id, "matchId": matchById[id] ?? ""])
             callsById[id] = nil
             roomById[id] = nil
+            matchById[id] = nil
         }
         action.fulfill()
     }
@@ -318,7 +338,9 @@ public class VoipCallPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func register(_ call: CAPPluginCall) {
         VoipCallManager.shared.start()
-        call.resolve(["token": VoipCallManager.shared.voipToken ?? ""])
+        // Main-confined read — plugin calls arrive on Capacitor's queue.
+        let token = VoipCallManager.syncOnMain { VoipCallManager.shared.voipToken }
+        call.resolve(["token": token ?? ""])
     }
 
     @objc func showIncomingCall(_ call: CAPPluginCall) {
@@ -339,8 +361,13 @@ public class VoipCallPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getPendingAnswer(_ call: CAPPluginCall) {
-        if let pending = VoipCallManager.shared.pendingAnswer {
+        // Main-confined read-and-clear — plugin calls arrive on Capacitor's queue.
+        let pending = VoipCallManager.syncOnMain { () -> [String: String]? in
+            let p = VoipCallManager.shared.pendingAnswer
             VoipCallManager.shared.pendingAnswer = nil
+            return p
+        }
+        if let pending = pending {
             call.resolve(["callId": pending["callId"] ?? "", "roomUrl": pending["roomUrl"] ?? "", "matchId": pending["matchId"] ?? ""])
         } else {
             call.resolve([:])

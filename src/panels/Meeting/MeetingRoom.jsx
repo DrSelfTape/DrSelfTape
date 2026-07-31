@@ -75,7 +75,9 @@ export default function MeetingRoom() {
   // Lowercase so it reads naturally inside "Waiting for …" / "session with …"
   // before a real participant name arrives via setPartnerName().
   const DEFAULT_PARTNER = 'your scene partner';
-  const [partnerName, setPartnerName] = useState(DEFAULT_PARTNER);
+  // Seed from nav state (GreenRoomChat passes the real name) so the ringing
+  // overlay says "Ringing Sam…" instead of "Ringing your scene partner…".
+  const [partnerName, setPartnerName] = useState(location.state?.partnerName || DEFAULT_PARTNER);
 
   // If the iframe never fires 'joined-meeting' within 30s, surface a
   // real error so the user isn't stuck on the spinner. Daily.co usually
@@ -116,6 +118,11 @@ export default function MeetingRoom() {
       return undefined;
     }
     if (!containerRef.current) return undefined;
+
+    // A roomUrl CHANGE re-runs this effect: without resetting the guard,
+    // teardown() would no-op forever after the first cleanup, leaking the
+    // old Daily frame (and the camera) under the new one.
+    cleanupRanRef.current = false;
 
     const userName =
       `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
@@ -228,7 +235,9 @@ export default function MeetingRoom() {
       const d = e?.detail || {};
       if (String(d.matchId) !== String(matchId)) return;
       if (ringIdRef.current && d.ringId && d.ringId !== ringIdRef.current) return;
-      if (d.state === 'declined') setRing('declined');
+      // Once the partner actually connected, a straggling 'declined' from a
+      // second device must not flip a live call into the declined screen.
+      if (d.state === 'declined' && !reachedCallRef.current) setRing('declined');
       if (d.state === 'answered') setRing(null); // joining any second — keep waiting UI
     };
     window.addEventListener('drst-ring-update', onRingUpdate);
@@ -380,8 +389,10 @@ export default function MeetingRoom() {
             background: (ringPhase === 'declined' || ringPhase === 'noanswer')
               ? 'rgba(12,14,20,0.82)'
               : 'linear-gradient(180deg, rgba(12,14,20,0.35) 0%, rgba(12,14,20,0) 30%, rgba(12,14,20,0) 55%, rgba(12,14,20,0.88) 100%)',
-            // Interactive when the caller has ring controls to tap.
-            pointerEvents: ringPhase ? 'auto' : 'none',
+            // The container must NOT eat taps during ringing — the gradient
+            // is transparent over Daily's own controls, so only the verdict
+            // scrims capture; the Hang up button opts back in below.
+            pointerEvents: (ringPhase === 'declined' || ringPhase === 'noanswer') ? 'auto' : 'none',
           }}
         >
           <div style={{
@@ -398,8 +409,8 @@ export default function MeetingRoom() {
             fontSize: 22, fontWeight: 600,
             letterSpacing: '-0.3px',
           }}>
-            {ringPhase === 'ringing' && `Ringing ${partnerName}…`}
-            {ringPhase === 'declined' && `${partnerName.split(' ')[0]} can't read right now`}
+            {ringPhase === 'ringing' && `Ringing ${partnerName === DEFAULT_PARTNER ? 'them' : partnerName.split(' ')[0]}…`}
+            {ringPhase === 'declined' && `${partnerName === DEFAULT_PARTNER ? 'They' : partnerName.split(' ')[0]} can't read right now`}
             {ringPhase === 'noanswer' && 'No answer'}
             {!ringPhase && `Waiting for ${partnerName}…`}
           </div>
@@ -419,6 +430,7 @@ export default function MeetingRoom() {
                 background: '#FF3B30', color: '#fff', fontWeight: 700,
                 border: 'none', cursor: 'pointer', fontSize: 14,
                 touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+                pointerEvents: 'auto', // container is pointerEvents:none while ringing
               }}
             >
               Hang up

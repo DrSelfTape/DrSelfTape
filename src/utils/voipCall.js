@@ -9,6 +9,7 @@ const VoipCall = registerPlugin('VoipCall');
 export const isVoipNative = () => Capacitor.getPlatform() === 'ios';
 
 let tokenAcked = false; // the BE has confirmed receipt of the VoIP token
+let ackedAuthKey = null; // which signed-in identity that ack belongs to
 
 // Report the VoIP token to the BE, retrying on failure. The first attempt can
 // fail because auth isn't ready yet or the device is briefly offline — and if
@@ -31,8 +32,15 @@ async function sendToken(token, attempt = 0) {
 let listenerAttached = false;
 /** Register for VoIP pushes and report the token to the backend. Idempotent;
  *  safe (and useful) to call again — it re-attempts an unacked token. */
-export async function registerVoip() {
+export async function registerVoip(authKey = null) {
   if (!isVoipNative()) return;
+  // A previous ack belongs to the PREVIOUS signed-in user: after logout →
+  // new login on the same device, the BE must re-attach this device token
+  // to the new account, so the ack latch resets when the identity changes.
+  if (authKey && authKey !== ackedAuthKey) {
+    ackedAuthKey = authKey;
+    tokenAcked = false;
+  }
   try {
     // The token may arrive asynchronously after PushKit registration, so keep
     // the listener attached across calls (attach once).

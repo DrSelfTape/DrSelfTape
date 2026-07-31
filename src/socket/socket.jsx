@@ -23,6 +23,11 @@ export const useSocket = () => {
 export const SocketProvider = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  // navigate's identity changes with the location; using it directly in
+  // handleIncomingMessage/joinRoom deps re-created the WebSocket on every
+  // route change (ws-ticket burn + missed events during the gap).
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
   const currentUser = useSelector((state) => state?.auth?.user);
   const token = useSelector((state) => state?.auth?.user?.token);
 
@@ -64,11 +69,17 @@ export const SocketProvider = ({ children }) => {
       const ring = body?.data;
       if (!ring?.match_id || !ring?.ring_id) {
         // Authoritative "no live ring": clear a modal whose cancel event we
-        // missed. The 5s age guard avoids racing a ring that arrived over
-        // the socket while this request was in flight.
-        setIncomingCall((prev) =>
-          prev && Date.now() - (prev.setAt || 0) > 5000 ? null : prev
-        );
+        // missed — and its CallKit row, or the phone keeps ringing a call
+        // the server says is dead. The 5s age guard avoids racing a ring
+        // that arrived over the socket while this request was in flight.
+        setIncomingCall((prev) => {
+          if (!prev || Date.now() - (prev.setAt || 0) <= 5000) return prev;
+          if (isVoipNative()) {
+            const callId = prev.ringId || String(prev.matchId || '');
+            if (callId) { try { VoipCall.endCall({ callId }).catch(() => {}); } catch { /* noop */ } }
+          }
+          return null;
+        });
         return;
       }
       if (endedRingsRef.current.has(ring.ring_id)) return;
@@ -126,7 +137,7 @@ export const SocketProvider = ({ children }) => {
             // { subPanel: 'its-a-scene', matchId } shape.
             window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room', subPanel: 'its-a-scene', matchId: data.match_id } }));
           } else {
-            navigate(`/dashboard/its-a-scene/${data.match_id}`);
+            navigateRef.current(`/dashboard/its-a-scene/${data.match_id}`);
           }
         }
         break;
@@ -206,14 +217,21 @@ export const SocketProvider = ({ children }) => {
       default:
         break;
     }
-  }, [dispatch, navigate, clearRing]);
+  }, [dispatch, clearRing]);
 
   // Ring expiry — the modal dismisses itself when the BE would consider the
   // ring dead anyway (TTL from the payload; server enforces its own copy).
+  // The CallKit row for the same ring dies with it — otherwise the phone
+  // keeps ringing a call the app no longer shows.
   useEffect(() => {
     if (!incomingCall) return undefined;
+    const { ringId, matchId } = incomingCall;
     const t = setTimeout(() => {
-      clearRing(incomingCall.ringId);
+      clearRing(ringId);
+      if (isVoipNative()) {
+        const callId = ringId || String(matchId || '');
+        if (callId) { try { VoipCall.endCall({ callId }).catch(() => {}); } catch { /* noop */ } }
+      }
     }, (incomingCall.ttl || 90) * 1000);
     return () => clearTimeout(t);
   }, [incomingCall, clearRing]);
@@ -322,13 +340,18 @@ export const SocketProvider = ({ children }) => {
     if (!roomUrl) return;
     let roomId;
     try { roomId = new URL(roomUrl).pathname.split('/').filter(Boolean).pop(); } catch { return; }
-    if (roomId) navigate(`/meeting/${roomId}`, { state: { roomUrl, matchId } });
-  }, [navigate]);
+    if (roomId) navigateRef.current(`/meeting/${roomId}`, { state: { roomUrl, matchId } });
+  }, []);
 
   const acceptCall = async () => {
     if (!incomingCall) return;
     const { roomUrl, matchId, ringId } = incomingCall;
     clearRing(ringId);
+    // The user has acted on the ring — tear the CallKit row down FIRST, so
+    // it can't outlive a 409 (already-cancelled) early return below.
+    if (isVoipNative() && ringId) {
+      try { VoipCall.endCall({ callId: ringId }).catch(() => {}); } catch { /* noop */ }
+    }
     // Server-confirmed answer BEFORE joining: if the caller's cancel already
     // won the race (409), joining would strand us alone in a dead room.
     // Network failure ≠ cancelled — on error we still join.
@@ -336,10 +359,6 @@ export const SocketProvider = ({ children }) => {
       await axiosInstance.post(`/v1/matching/matches/${matchId}/ring-ack/`, { action: 'answered', ring_id: ringId || undefined }, { timeout: 4000 });
     } catch (err) {
       if (err?.response?.status === 409) return; // ring already cancelled/expired
-    }
-    // A CallKit row may be ringing for the same call — end it, we're in.
-    if (isVoipNative() && ringId) {
-      try { VoipCall.endCall({ callId: ringId }).catch(() => {}); } catch { /* noop */ }
     }
     joinRoom(roomUrl, matchId);
   };
@@ -371,7 +390,7 @@ export const SocketProvider = ({ children }) => {
         // launch-time case for an already-authed user still fires here too).
         if (token && voipRegisteredForRef.current !== token) {
           voipRegisteredForRef.current = token;
-          registerVoip(); // register for VoIP pushes + report token to BE
+          registerVoip(token); // register for VoIP pushes + report token to BE (auth-keyed ack)
         }
         subs.push(await VoipCall.addListener('callAnswered', (e) => {
           // e.callId is the ring_id; e.matchId is the real match. Legacy
@@ -379,6 +398,10 @@ export const SocketProvider = ({ children }) => {
           // match ONLY if it's numeric (ring_ids are hex, match ids ints),
           // otherwise PostCallScreen would rate against a ring_id.
           const mid = e?.matchId || (/^\d+$/.test(String(e?.callId || '')) ? e.callId : null);
+          // Answering via CallKit must also dismiss the in-app modal for the
+          // same ring — both surfaces show for a foreground ring, and the
+          // modal otherwise sits on TOP of the meeting screen (z-index max).
+          if (e?.callId) clearRing(e.callId);
           if (mid) {
             axiosInstance.post(`/v1/matching/matches/${mid}/ring-ack/`, { action: 'answered', ring_id: e?.callId || undefined }).catch(() => {});
           }
@@ -393,10 +416,23 @@ export const SocketProvider = ({ children }) => {
         }));
         // Cold launch: the app was opened by answering a CallKit call before JS
         // was listening — drain the stashed answer.
+        // CallKit DECLINE (user tapped the red button on the system UI) —
+        // without this the server keeps ringing the caller for the full TTL
+        // and then files a false missed-call for an explicitly declined ring.
+        subs.push(await VoipCall.addListener('callEnded', (e) => {
+          const cid = String(e?.callId || '');
+          if (!cid || endedRingsRef.current.has(cid)) return; // we ended it ourselves
+          clearRing(cid);
+          const mid = e?.matchId || (/^\d+$/.test(cid) ? cid : null);
+          if (mid) {
+            axiosInstance.post(`/v1/matching/matches/${mid}/ring-ack/`, { action: 'declined', ring_id: cid }).catch(() => {});
+          }
+        }));
         const pending = await VoipCall.getPendingAnswer();
         if (pending?.roomUrl) {
           const pmid = pending?.matchId
             || (/^\d+$/.test(String(pending?.callId || '')) ? pending.callId : null);
+          if (pending?.callId) clearRing(pending.callId);
           if (pmid) {
             axiosInstance.post(`/v1/matching/matches/${pmid}/ring-ack/`, { action: 'answered', ring_id: pending?.callId || undefined }).catch(() => {});
           }
@@ -405,7 +441,7 @@ export const SocketProvider = ({ children }) => {
       } catch { /* plugin unavailable */ }
     })();
     return () => { subs.forEach((s) => { try { s.remove(); } catch { /* noop */ } }); };
-  }, [joinRoom, token]);
+  }, [joinRoom, token, clearRing]);
 
   // Pulse a ringing haptic while the full-screen incoming-call alert is up.
   useEffect(() => {
@@ -425,7 +461,7 @@ export const SocketProvider = ({ children }) => {
     if (isMobile()) {
       window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'who-wants-to-read' } }));
     } else {
-      navigate('/dashboard/who-wants-to-read');
+      navigateRef.current('/dashboard/who-wants-to-read');
     }
   };
 

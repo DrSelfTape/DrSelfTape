@@ -80,7 +80,10 @@ export const useNotificationActions = () => {
    */
   const handleNotificationClick = useCallback(async (notification, options = {}) => {
     const { onBeforeNavigate } = options;
-    const { notification_type: type } = notification;
+    // Socket payloads carry `notification_type`; DB rows from the API
+    // serialize `type`. Reading only one meant every special-case below
+    // silently never fired for the /notifications page + header popover.
+    const type = notification.notification_type || notification.type;
 
     // Live scene request → JOIN the partner's existing Daily room. The
     // room_url rides in the notification payload (BE StartRehearsalView),
