@@ -83,6 +83,9 @@ export const NOTIFICATION_CONFIG = {
   scene_partner_match: { route: '/dashboard/green-room' },
   new_message:         { route: '/dashboard/green-room' },
   rehearsal_started:   { route: '/dashboard/green-room' },
+  // Missed live read → straight into that match's chat, where the missed-
+  // call system row + the Live Session button (the call-back) live.
+  rehearsal_missed:    { route: '/dashboard/green-room' },
   room_invite:         { route: '/dashboard/green-room' },
   audition_update:     { route: '/dashboard/auditions' },
   booking_confirmed:   { route: '/dashboard/marketplace' },

@@ -368,10 +368,18 @@ export default function MeetingRoom() {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
+            // While ringing (or plainly waiting) the caller's own camera is
+            // the best thing on screen — actors warm up on it (Bumble/
+            // Snapchat pattern). Bottom-anchor the ring UI over a gradient
+            // instead of drowning the self-view in a full scrim; the heavier
+            // centered scrim returns for the declined/no-answer verdicts.
+            justifyContent: (ringPhase === 'declined' || ringPhase === 'noanswer') ? 'center' : 'flex-end',
+            paddingBottom: (ringPhase === 'declined' || ringPhase === 'noanswer') ? 0 : 'calc(env(safe-area-inset-bottom, 0px) + 96px)',
             gap: 16,
             color: '#FFFFFF',
-            background: 'rgba(12,14,20,0.72)',
+            background: (ringPhase === 'declined' || ringPhase === 'noanswer')
+              ? 'rgba(12,14,20,0.82)'
+              : 'linear-gradient(180deg, rgba(12,14,20,0.35) 0%, rgba(12,14,20,0) 30%, rgba(12,14,20,0) 55%, rgba(12,14,20,0.88) 100%)',
             // Interactive when the caller has ring controls to tap.
             pointerEvents: ringPhase ? 'auto' : 'none',
           }}
@@ -396,7 +404,7 @@ export default function MeetingRoom() {
             {!ringPhase && `Waiting for ${partnerName}…`}
           </div>
           <div style={{ fontSize: 13, opacity: 0.65, maxWidth: 280, textAlign: 'center' }}>
-            {ringPhase === 'ringing' && "Their phone is ringing — even if the app is closed. Hang tight."}
+            {ringPhase === 'ringing' && "Their phone is ringing, even with the app closed. Warm up — you're already on camera."}
             {ringPhase === 'declined' && 'Try them again later, or line up another reader in Green Room.'}
             {ringPhase === 'noanswer' && `We left ${partnerName === DEFAULT_PARTNER ? 'them' : partnerName.split(' ')[0]} a missed-call note. They can call you back in one tap.`}
             {!ringPhase && `We let ${partnerName === DEFAULT_PARTNER ? 'them' : partnerName.split(' ')[0]} know you're ready. They'll see an Incoming Scene Request notification.`}

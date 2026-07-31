@@ -104,6 +104,15 @@ export const useNotificationActions = () => {
       }
     }
 
+    // Missed live read → the exact chat (system row + call-back CTA live
+    // there), not the generic Green Room list the static config would hit.
+    if (type === 'rehearsal_missed' && notification?.data?.match_id) {
+      if (!notification.is_read) markAsRead(notification.id);
+      if (onBeforeNavigate) onBeforeNavigate();
+      navigate(`/dashboard/green-room/${notification.data.match_id}`);
+      return;
+    }
+
     const config = NOTIFICATION_CONFIG[type];
 
     // Handle unknown notification types
