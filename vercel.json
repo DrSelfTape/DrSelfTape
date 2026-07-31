@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/go/:campaign", "destination": "/api/go?c=:campaign" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
