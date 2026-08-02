@@ -57,7 +57,12 @@ export const registerUser = createAsyncThunk(
   'auth/register',
   async (formData, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(endPoints.register, formData);
+      // Attach our anonymous PostHog id so the SERVER-SIDE user_signup can
+      // merge this anon person (holding pre-login funnel events) into the new
+      // user — the race-proof identity stitch.
+      let ph_distinct_id = '';
+      try { ph_distinct_id = await (await import('../../../utils/analytics')).getPostHogDistinctId(); } catch { /* swallow */ }
+      const { data } = await axios.post(endPoints.register, { ...formData, ph_distinct_id });
       // user_signup is now fired SERVER-SIDE at user creation (BE
       // posthog_capture.py) — the canonical counter covering email AND Apple
       // paths. Firing it here too would double-count email signups.
@@ -90,10 +95,13 @@ export const appleLoginUser = createAsyncThunk(
   'auth/appleLogin',
   async ({ identityToken, firstName, lastName }, { rejectWithValue }) => {
     try {
+      let ph_distinct_id = '';
+      try { ph_distinct_id = await (await import('../../../utils/analytics')).getPostHogDistinctId(); } catch { /* swallow */ }
       const { data } = await axios.post('/v1/users/apple-login/', {
         identityToken,
         firstName: firstName || '',
         lastName: lastName || '',
+        ph_distinct_id,
       });
       // Apple sign-in covers both first-time signup AND returning login. We
       // can't tell which from this response, so fire LOGIN — the BE creates

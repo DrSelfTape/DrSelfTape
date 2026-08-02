@@ -45,6 +45,13 @@ export async function initAnalytics() {
 
 export async function identifyUser(user) {
   if (!user?.id || !POSTHOG_KEY) return;
+  // Ensure init() has run before identify() — on iOS (Capacitor WKWebView) the
+  // [user] effect could fire identify() before initAnalytics() finished, so the
+  // anon distinct_id was never aliased and the client's in-app events stayed
+  // detached from the server-side user_signup (only ~26% stitched). Awaiting
+  // init closes that race; the server-side $anon_distinct_id stamp is the
+  // belt-and-suspenders (see getPostHogDistinctId + BE posthog_capture).
+  await initAnalytics();
   const posthog = await loadPostHog();
   if (!posthog) return;
   try {
@@ -54,6 +61,17 @@ export async function identifyUser(user) {
       role: user.role,
     });
   } catch { /* noop */ }
+}
+
+// The current (pre-login, anonymous) PostHog distinct_id. Sent to the BE at
+// signup so the server-side user_signup event can carry $anon_distinct_id and
+// merge this anonymous person (which holds the pre-identify funnel events) into
+// the real user — the race-proof half of the identity stitch. '' when PostHog
+// isn't ready yet (BE simply skips the stamp; the client identify() still runs).
+export async function getPostHogDistinctId() {
+  if (!POSTHOG_KEY) return '';
+  const posthog = await loadPostHog();
+  try { return posthog?.get_distinct_id?.() || ''; } catch { return ''; }
 }
 
 // App event → Meta standard conversion event. These are the optimization
