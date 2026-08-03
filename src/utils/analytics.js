@@ -104,18 +104,26 @@ function newEventId() {
 export function trackEvent(event, properties = {}) {
   const eventId = newEventId();
 
-  // PostHog (lazy — only if a key is configured)
+  // PostHog (lazy — only if a key is configured). Await init so the earliest
+  // session events (fired before initAnalytics resolved) aren't dropped
+  // client-side — same race the identity stitch closed for identify().
   if (POSTHOG_KEY) {
-    loadPostHog()?.then((posthog) => {
-      try { posthog?.capture(event, properties); } catch { /* noop */ }
-    });
+    initAnalytics()
+      .then(loadPostHog)
+      .then((posthog) => { try { posthog?.capture(event, properties); } catch { /* noop */ } });
   }
 
   // Meta Pixel (web only — initialised in index.html for non-native platforms).
   // The 4th-arg eventID is what Meta dedupes against the server-side event.
   try {
     if (typeof window !== 'undefined' && window.fbq) {
-      const std = META_STD[event];
+      // 'purchase' → Subscribe is owned by the server webhook now (single
+      // source of truth: real entitlement only, deterministic dedupe id,
+      // carries value). Firing the pixel Subscribe here fired on paywall
+      // taps + failures (poisoning the optimizer) AND double-counted the
+      // webhook. Send purchase as a custom event so internal Meta funnels
+      // still see it, but it never books a Subscribe conversion.
+      const std = event === 'purchase' ? null : META_STD[event];
       if (std) window.fbq('track', std, properties, { eventID: eventId });
       else window.fbq('trackCustom', event, properties, { eventID: eventId });
     }

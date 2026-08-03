@@ -37,6 +37,11 @@ export default async function handler(req, res) {
             platform: isIOS ? 'ios' : 'other',
             destination: wantsTool ? 'tool' : (isIOS ? 'app_store' : 'web'),
             ua: ua.slice(0, 200),
+            // Each click is a throwaway id (the App Store strips any join key,
+            // so a click can't merge to an install anyway). Mark it anonymous
+            // so a viral spike doesn't mint thousands of durable phantom
+            // persons that skew unique-user counts everywhere.
+            $process_person_profile: false,
           },
         }),
       }),
