@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Get the Auto-Submit Kit — Dr Self Tape</title>
+<meta name="description" content="The Claude skill that auto-submits you to Actors Access & Casting Networks roles while you sleep. Free." />
+<meta name="robots" content="noindex" />
+<meta property="og:title" content="Auto-Submit Kit — Dr Self Tape" />
+<meta property="og:description" content="Auto-submit to Actors Access & Casting Networks while you sleep." />
+<meta property="og:image" content="https://drselftape.app/og-image.jpg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<style>
+  :root {
+    --bg: #0b0d12;
+    --card: #14171f;
+    --ink: #f4f6fb;
+    --muted: #9aa3b2;
+    --line: #232838;
+    --brand: #6c8cff;
+    --brand-2: #a06bff;
+    --ok: #35d29a;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 50% -10%, #1a2036 0%, var(--bg) 55%) fixed;
+    color: var(--ink);
+    font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    min-height: 100dvh;
+    padding: max(28px, env(safe-area-inset-top)) 20px max(28px, env(safe-area-inset-bottom));
+  }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 26px; }
+  .brand img { height: 30px; width: auto; }
+  .badge {
+    display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--brand);
+    background: rgba(108,140,255,.12); border: 1px solid rgba(108,140,255,.25);
+    padding: 5px 11px; border-radius: 999px; margin-bottom: 16px;
+  }
+  h1 { font-size: 30px; line-height: 1.12; margin: 0 0 12px; letter-spacing: -.02em; }
+  h1 .g { background: linear-gradient(90deg, var(--brand), var(--brand-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .sub { color: var(--muted); font-size: 16px; margin: 0 0 26px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; margin: 0 0 14px; letter-spacing: .01em; }
+  .steps { margin: 0; padding: 0; list-style: none; counter-reset: s; }
+  .steps li { position: relative; padding: 0 0 14px 34px; color: var(--muted); font-size: 15px; }
+  .steps li:last-child { padding-bottom: 0; }
+  .steps li::before {
+    counter-increment: s; content: counter(s);
+    position: absolute; left: 0; top: -1px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(108,140,255,.14); border: 1px solid rgba(108,140,255,.3);
+    color: var(--brand); font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .steps b { color: var(--ink); font-weight: 600; }
+  .btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; border: 0; border-radius: 14px; cursor: pointer;
+    font-size: 16px; font-weight: 700; padding: 16px 18px; text-decoration: none;
+    transition: transform .16s cubic-bezier(.23,1,.32,1), filter .16s ease;
+  }
+  .btn:active { transform: scale(.98); }
+  .btn-primary { background: linear-gradient(90deg, var(--brand), var(--brand-2)); color: #fff; }
+  .btn-primary:active { filter: brightness(1.06); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); font-weight: 600; font-size: 15px; padding: 13px 18px; margin-top: 10px; }
+  .field { display: flex; flex-direction: column; gap: 10px; }
+  .field input {
+    width: 100%; background: #0e1119; border: 1px solid var(--line); border-radius: 13px;
+    color: var(--ink); font-size: 16px; padding: 15px 16px; outline: none;
+    transition: border-color .16s ease;
+  }
+  .field input:focus { border-color: var(--brand); }
+  .field input::placeholder { color: #5b6577; }
+  .note { color: #6b7486; font-size: 12.5px; margin: 12px 2px 0; text-align: center; }
+  .ok { color: var(--ok); }
+  .mobile-only { display: none; }
+  .hide { display: none !important; }
+  @media (pointer: coarse), (max-width: 620px) { .desktop-first { order: 2; } }
+  .foot { text-align: center; color: #5b6577; font-size: 12.5px; margin-top: 26px; }
+  .foot a { color: #7f8aa0; text-decoration: none; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <img src="/logo.png" alt="Dr Self Tape" onerror="this.style.display='none'" />
+    </div>
+
+    <span class="badge">Free · Actor Kit</span>
+    <h1>The <span class="g">Auto-Submit Kit</span> is yours.</h1>
+    <p class="sub">A Claude skill that submits you to matching roles on <b style="color:var(--ink)">Actors Access</b> and <b style="color:var(--ink)">Casting Networks</b> — automatically, while you sleep.</p>
+
+    <!-- MOBILE: this installs on a computer, capture the lead -->
+    <div class="card mobile-only" id="mobileCard">
+      <h2>📥 This installs on your computer</h2>
+      <p class="sub" style="margin:0 0 16px; font-size:15px;">The kit runs with Claude on a desktop. Drop your email and we'll send the link so it's waiting the second you sit down.</p>
+      <form class="field" id="leadForm" novalidate>
+        <input type="email" id="email" name="email" placeholder="you@email.com" autocomplete="email" inputmode="email" required />
+        <button class="btn btn-primary" type="submit" id="leadBtn">Email me the kit</button>
+      </form>
+      <p class="note" id="leadNote">We'll only email you the kit. No spam.</p>
+      <a class="btn btn-ghost" href="/DrSelfTape-AutoSubmit-Kit.zip" id="mobileDl">Download now anyway</a>
+    </div>
+
+    <!-- DESKTOP: direct download + install steps -->
+    <div class="card desktop-first" id="desktopCard">
+      <h2>Get set up in 3 steps</h2>
+      <ol class="steps">
+        <li><b>Download the kit</b> and unzip it.</li>
+        <li>Open the folder and read <b>START-HERE.md</b> — it walks you through dropping the skill into Claude + Chrome.</li>
+        <li>Tell Claude the roles you want. It <b>logs in, matches, and submits</b> for you.</li>
+      </ol>
+      <a class="btn btn-primary" href="/DrSelfTape-AutoSubmit-Kit.zip" id="desktopDl" style="margin-top:18px;" download>⬇ Download the Kit</a>
+    </div>
+
+    <a class="btn btn-ghost" href="https://apps.apple.com/us/app/id6770320460">Or get the Dr Self Tape app →</a>
+
+    <div class="foot">
+      Made by <a href="https://drselftape.app">Dr Self Tape</a> · self-tape smarter
+    </div>
+  </div>
+
+<script>
+(function () {
+  // Route the UI by device: touch/small screens get the "email it to me" lead
+  // capture first (they can't install a desktop skill on a phone), desktops get
+  // the direct download + steps. Both paths keep a working download link.
+  var isMobile = window.matchMedia('(pointer: coarse), (max-width: 620px)').matches;
+  if (isMobile) {
+    document.getElementById('mobileCard').classList.remove('mobile-only');
+    document.getElementById('desktopCard').classList.add('hide');
+  }
+
+  // Reuse the existing lead endpoint so a captured email lands in the same
+  // QuizLead table + fires the Meta CAPI 'lead' (deduped, value for lookalikes).
+  var API = 'https://drselftape-api-production.up.railway.app/api/v1/marketing/quiz-lead/';
+  function cookie(n){try{var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}catch(e){return '';}}
+
+  var form = document.getElementById('leadForm');
+  if (form) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var input = document.getElementById('email');
+      var btn = document.getElementById('leadBtn');
+      var note = document.getElementById('leadNote');
+      var email = (input.value || '').trim();
+      if (!email || email.indexOf('@') < 1 || email.indexOf('.') < 0) {
+        note.textContent = 'Enter a valid email so we can send it.';
+        note.className = 'note'; input.focus(); return;
+      }
+      btn.disabled = true; btn.textContent = 'Sending…';
+      fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email,
+          src: 'autosubmit-tool',
+          persona: 'autosubmit',
+          fbp: cookie('_fbp'),
+          fbc: cookie('_fbc')
+        })
+      }).then(function (r) {
+        if (r.ok) {
+          form.classList.add('hide');
+          note.innerHTML = '<span class="ok">✓ Sent. Check your inbox — the download link is on its way.</span>';
+          note.className = 'note';
+          // Give them the link immediately too, in case they're on a big screen.
+          var dl = document.getElementById('mobileDl');
+          if (dl) { dl.textContent = 'Or download it right now'; dl.classList.remove('mobile-only'); }
+        } else {
+          throw new Error('bad status');
+        }
+      }).catch(function () {
+        btn.disabled = false; btn.textContent = 'Email me the kit';
+        note.innerHTML = 'Something glitched — <a href="/DrSelfTape-AutoSubmit-Kit.zip" style="color:var(--brand)">download it directly</a> instead.';
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

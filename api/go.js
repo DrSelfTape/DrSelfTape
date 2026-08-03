@@ -5,10 +5,13 @@
 const APP_STORE = 'https://apps.apple.com/us/app/id6770320460';
 const POSTHOG_KEY = 'phc_uPT2jCsZhm9ZdJbGoPjUtDQNKjmkT9WK4EzYY34trhhT'; // public write-only key
 
-// The auto-submitter tool download, hosted on our own domain (public/). Both
-// the Actors Access + Casting Networks kits bundled. Campaigns ending in
-// `-tool` route here; everything else is an app-install link.
-const TOOL_URL = 'https://drselftape.app/DrSelfTape-AutoSubmit-Kit.zip';
+// The auto-submitter tool landing page (public/tool.html). Campaigns ending in
+// `-tool` route here — NOT straight to the .zip. Reel traffic is mostly mobile,
+// where a raw .zip is a dead end (can't unzip / can't run a desktop skill on a
+// phone). The page routes by device: desktop gets the direct download + install
+// steps, mobile gets lead-capture ("email me the kit") so the click still
+// becomes a durable lead instead of a bounce. The page itself serves the .zip.
+const TOOL_URL = 'https://drselftape.app/tool';
 
 export default async function handler(req, res) {
   const campaign = String(req.query.c || 'link').slice(0, 60).replace(/[^a-zA-Z0-9_-]/g, '');
