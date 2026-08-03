@@ -19,7 +19,7 @@ export default async function handler(req, res) {
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const wantsTool = campaign.endsWith('-tool');
   const dest = wantsTool
-    ? TOOL_URL
+    ? `${TOOL_URL}?src=${encodeURIComponent(campaign)}`
     : isIOS
       ? APP_STORE
       : `https://drselftape.app/?utm_source=smartlink&utm_medium=redirect&utm_campaign=${encodeURIComponent(campaign)}`;

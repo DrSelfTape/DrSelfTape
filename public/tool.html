@@ -126,14 +126,56 @@
 
 <script>
 (function () {
+  var isMobile = window.matchMedia('(pointer: coarse), (max-width: 620px)').matches;
+  var device = isMobile ? 'mobile' : 'desktop';
+
+  // Campaign that sent them here. The /go smart link appends ?src=<campaign>
+  // (e.g. autosubmit-tool = comment DM, dm-tool = DM auto-reply) so we can tell
+  // comment-driven from DM-driven traffic. Falls back to the default.
+  var params = new URLSearchParams(window.location.search);
+  var src = (params.get('src') || params.get('c') || 'autosubmit-tool').slice(0, 60);
+
+  // Lightweight PostHog capture — this is a STATIC page (no React/SDK), so we
+  // POST straight to the capture endpoint like the /go smart link does. Without
+  // this, /tool was a black hole: 20 people landed and we saw nothing. One
+  // persisted anon id ties view -> email -> download together.
+  var PH_KEY = 'phc_uPT2jCsZhm9ZdJbGoPjUtDQNKjmkT9WK4EzYY34trhhT';
+  function did() {
+    try {
+      var k = 'dst_tool_did', v = localStorage.getItem(k);
+      if (!v) { v = 'tool-' + Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem(k, v); }
+      return v;
+    } catch (e) { return 'tool-anon'; }
+  }
+  function track(event, extra) {
+    try {
+      var props = { src: src, device: device, $current_url: location.href };
+      if (extra) for (var k in extra) props[k] = extra[k];
+      fetch('https://us.i.posthog.com/capture/', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: PH_KEY, event: event, distinct_id: did(), properties: props }),
+      }).catch(function () {});
+    } catch (e) { /* never block the page on telemetry */ }
+  }
+
   // Route the UI by device: touch/small screens get the "email it to me" lead
   // capture first (they can't install a desktop skill on a phone), desktops get
   // the direct download + steps. Both paths keep a working download link.
-  var isMobile = window.matchMedia('(pointer: coarse), (max-width: 620px)').matches;
   if (isMobile) {
     document.getElementById('mobileCard').classList.remove('mobile-only');
     document.getElementById('desktopCard').classList.add('hide');
   }
+
+  track('tool_page_view');
+
+  // Count every download tap (both the desktop CTA and the mobile fallback).
+  ['desktopDl', 'mobileDl'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('click', function () {
+      track('tool_download_click', { button: id === 'desktopDl' ? 'desktop_primary' : 'mobile_fallback' });
+    });
+  });
 
   // Reuse the existing lead endpoint so a captured email lands in the same
   // QuizLead table + fires the Meta CAPI 'lead' (deduped, value for lookalikes).
@@ -158,13 +200,14 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email,
-          src: 'autosubmit-tool',
+          src: src,
           persona: 'autosubmit',
           fbp: cookie('_fbp'),
           fbc: cookie('_fbc')
         })
       }).then(function (r) {
         if (r.ok) {
+          track('tool_email_captured');
           form.classList.add('hide');
           note.innerHTML = '<span class="ok">✓ Sent. Check your inbox — the download link is on its way.</span>';
           note.className = 'note';
