@@ -11,7 +11,7 @@ import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X, Lock,
   RotateCcw, ChevronDown, Eye, Frame, Lightbulb, Flame, Activity, Theater, Trophy, HelpCircle,
 } from 'lucide-react';
-import { reviewTape, clearTapeReview, resumeAnalysisJob, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
+import { reviewTape, clearTapeReview, resumeAnalysisJob, recoverLatestReview, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
@@ -488,12 +488,22 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   useEffect(() => {
     if (tapeReviewLoading || tapeReviewResult || compareLoading || compareResult) return;
     let slot = null;
-    try { slot = JSON.parse(localStorage.getItem(PENDING_JOB_KEY)); } catch { return; }
-    if (!slot?.jobId || !slot?.startedAt) return;
+    try { slot = JSON.parse(localStorage.getItem(PENDING_JOB_KEY)); } catch { slot = null; }
+
+    // H-08: the local job slot is no longer the only way back to a result.
+    // Whenever there is no live job to resume — no slot, an unreadable slot, or
+    // one past its TTL — ask the server for the newest completed review. The
+    // orphan case this fixes: finish a review, background the app >30 min with
+    // notifications denied, reopen, and the result was gone forever having
+    // already cost the user their one free review.
+    const recover = () => { dispatch(recoverLatestReview()); };
+
+    if (!slot?.jobId || !slot?.startedAt) { recover(); return; }
     if (Date.now() - slot.startedAt > PENDING_JOB_TTL_MS) {
-      // Slot is older than 30 minutes — the job almost certainly expired on the
-      // BE. Clear silently; no point polling a dead job.
+      // The JOB is almost certainly dead on the BE, so don't poll it — but the
+      // RESULT may well exist. Clear the slot and recover from the server.
       try { localStorage.removeItem(PENDING_JOB_KEY); } catch { /* private mode */ }
+      recover();
       return;
     }
     dispatch(resumeAnalysisJob({ jobId: slot.jobId, kind: slot.kind || 'review' }));

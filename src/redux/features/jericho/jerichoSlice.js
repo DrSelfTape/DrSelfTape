@@ -121,6 +121,15 @@ function applyCompareResult(state, result) {
   try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
 }
 
+// H-08: a review RECOVERED from the server, not one that just finished.
+// Deliberately does NOT fire `dst-tokens-changed` — no token was spent to
+// re-read a historical result, and firing it would make every surface
+// re-fetch the balance for nothing on each cold start.
+function applyRecoveredReview(state, result) {
+  state.tapeReviewResult = result;
+  state.notesReady = 'review';
+}
+
 // Defense in depth (BUG 3): the BE can return 200 with an empty/near-empty body
 // after charging a token (the BE refunds on its side). Without this guard the
 // thunk fulfills truthy and the result screen renders a wall of zeroed scores.
@@ -399,6 +408,38 @@ export const compareTakes = createAsyncThunk(
  *  the same result/notesReady/token-event path via the shared reducer helpers.
  *  Clears the localStorage slot in a finally block so it's gone regardless of
  *  whether the poll succeeds, errors, or is canceled. */
+/**
+ * H-08 — recover the most recent completed review from the server.
+ *
+ * The client used to depend entirely on a localStorage job slot with a 30-min
+ * TTL. Background the app for longer than that with notifications denied and
+ * the finished review was simply lost — the user had spent their one free
+ * review and never saw it. The BE now serves the newest durable review, so the
+ * client can always re-surface one regardless of the local cache.
+ *
+ * Returns null (not an error) when there is nothing to recover; that is the
+ * normal case for a new user and must not surface an error banner.
+ */
+export const recoverLatestReview = createAsyncThunk(
+  'jericho/recoverLatestReview',
+  async (_arg, { rejectWithValue, signal }) => {
+    try {
+      const { data } = await axios.get(endPoints.latestReview, { signal });
+      const payload = data?.data || null;
+      const notes = payload?.ai_feedback || null;
+      // An empty/near-empty body is nothing worth surfacing — reuse the same
+      // content guard the live paths use so a hollow result never displaces
+      // a real one.
+      if (!notes || !tapeReviewHasContent(notes)) return null;
+      return { ...notes, _session_id: payload.id };
+    } catch {
+      // Recovery is best-effort and entirely invisible. A failure here must
+      // never produce an error banner — the user did not ask for this.
+      return rejectWithValue(null);
+    }
+  }
+);
+
 export const resumeAnalysisJob = createAsyncThunk(
   'jericho/resumeAnalysisJob',
   async ({ jobId, kind }, { rejectWithValue, signal }) => {
@@ -638,6 +679,16 @@ const jerichoSlice = createSlice({
           applyReviewResult(state, result);
         }
       })
+      // H-08 recovery. Only fills an EMPTY slot: a result already in state is
+      // live and must never be displaced by an older one from the server.
+      .addCase(recoverLatestReview.fulfilled, (state, action) => {
+        if (action.payload && !state.tapeReviewResult && !state.compareResult) {
+          applyRecoveredReview(state, action.payload);
+        }
+      })
+      // Silent by design — no error state. See the thunk's catch.
+      .addCase(recoverLatestReview.rejected, () => {})
+
       .addCase(resumeAnalysisJob.rejected, (state, action) => {
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;

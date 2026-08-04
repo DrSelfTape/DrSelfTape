@@ -123,6 +123,9 @@ const endPoints = {
   // Jericho — Self-Evolving AI Coach
   actorMemory: `${baseURL}/v1/ai/actor-memory/`,
   sessionLog: `${baseURL}/v1/ai/session-log/`,
+  // H-08: newest durable review, so a finished result can be re-surfaced even
+  // after the local 30-min job slot has expired.
+  latestReview: `${baseURL}/v1/ai/session-log/latest-review/`,
   aiInsights: `${baseURL}/v1/ai/insights/`,
   aiEvolution: `${baseURL}/v1/ai/evolution/`,
   jerichoCoach: `${baseURL}/v1/ai/jericho/coach/`,
