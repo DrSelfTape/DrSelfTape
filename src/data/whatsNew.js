@@ -8,6 +8,20 @@
  */
 export const WHATS_NEW = [
   {
+    id: 9,
+    version: '1.0.25',
+    date: 'August 2026',
+    title: 'Nothing gets lost',
+    intro: 'A quieter release than the last one. Mostly it fixes things that were costing you:',
+    highlights: [
+      { emoji: '🎯', title: 'Your notes wait for you', body: 'Finish a review, put your phone down for an hour, come back — your notes are still there. They used to disappear if you left for too long.' },
+      { emoji: '🧾', title: 'Never charged twice', body: 'If a review failed to send and you tried again, that second try could cost you another token. It doesn\'t anymore.' },
+      { emoji: '🔕', title: 'Reminders are optional', body: 'Turn off audition reminders in your profile. Alerts about your own tapes and messages keep working.' },
+      { emoji: '📱', title: 'One reminder, not three', body: 'Some of you were getting the same nudge two or three times. Fixed.' },
+      { emoji: '📈', title: 'Watch your score climb', body: 'Scene Coach and your score history are now in the app, so you can see whether the work is actually moving the line.' },
+    ],
+  },
+  {
     id: 8,
     version: '1.0.24',
     date: 'July 2026',
