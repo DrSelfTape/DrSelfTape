@@ -49,14 +49,22 @@ export function isNativeIOS() {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios';
 }
 
+// RevenueCat public SDK keys are prefixed per store. Validating the prefix —
+// not just "is it non-empty" — is what makes warnIfKeylessNative() actually
+// work: a placeholder like `test_…` left in .env reads as present, so the
+// keyless alarm stays silent while RevenueCat configures with a bogus key and
+// every purchase fails at runtime. A wrong key must degrade exactly like a
+// missing one: no-op, fall back to "manage on web", and scream once.
+const KEY_PREFIX = { ios: 'appl_', android: 'goog_' };
+
 // The RevenueCat public key for the current native platform, or '' on
-// web / unsupported platforms.
+// web / unsupported platforms / a key that isn't real.
 function platformKey() {
   if (!Capacitor.isNativePlatform()) return '';
   const p = Capacitor.getPlatform();
-  if (p === 'ios') return IOS_KEY;
-  if (p === 'android') return ANDROID_KEY;
-  return '';
+  const key = p === 'ios' ? IOS_KEY : p === 'android' ? ANDROID_KEY : '';
+  if (!key || !KEY_PREFIX[p] || !key.startsWith(KEY_PREFIX[p])) return '';
+  return key;
 }
 
 // True on any native store (iOS or Android) where we have an API key —
