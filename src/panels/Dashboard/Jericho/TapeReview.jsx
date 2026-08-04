@@ -724,8 +724,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     const hasDna = DNA.some((d) => dna[d.key] != null);
 
     // Headline average from RAW scores (shared by gauge + records + share).
+    // Prefer the server's `headline_score`: the API now trims a free user's
+    // payload, and once REVIEW_GATE_STRIP_SCORES is on there is no per-dimension
+    // `scores` map left to average — `headline_score` is the same number,
+    // computed server-side, so the gauge survives the strip. Falls back to the
+    // local average for paid users and for any older payload.
     const heroVals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));
-    const heroAvg = heroVals.length ? heroVals.reduce((a, b) => a + b, 0) / heroVals.length : null;
+    const localHeroAvg = heroVals.length ? heroVals.reduce((a, b) => a + b, 0) / heroVals.length : null;
+    const heroAvg = Number.isFinite(Number(raw.headline_score)) ? Number(raw.headline_score) : localHeroAvg;
 
     // Personal records (rank 14): once per result. LOCKED users only compete
     // on the overall number — per-dimension records would leak gated scores.
@@ -988,7 +994,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {revealStage >= 3 && (r.verdict || tags.length > 0) && (() => {
           // Identity claim for the card: same band the gauge hero shows.
           const vals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));
-          const shareAvg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+          const localShareAvg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+          // Same server-first rule as the gauge hero — see heroAvg above.
+          const shareAvg = Number.isFinite(Number(raw.headline_score)) ? Number(raw.headline_score) : localShareAvg;
           const shareBand = shareAvg != null ? gradeBand(shareAvg) : null;
           return (
             <>
