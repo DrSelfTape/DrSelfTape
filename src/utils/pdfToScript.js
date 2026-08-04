@@ -1,5 +1,6 @@
 import axiosInstance from '../redux/http';
 import endPoints from '../redux/constant';
+import { aiIdempotencyHeaders } from './aiIdempotency';
 
 /**
  * True when extracted PDF text is essentially empty — i.e. the PDF has no text
@@ -21,10 +22,13 @@ export function isEmptyScript(text) {
 export async function pdfVisionFallback(file) {
   const fd = new FormData();
   fd.append('pdf', file);
-  const { data } = await axiosInstance.post(endPoints.parseSides, fd, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-    timeout: 90000,
-  });
+  const { data } = await axiosInstance.post(
+    endPoints.parseSides, fd,
+    aiIdempotencyHeaders('parse_sides', fd, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 90000,
+    }),
+  );
   const scene = data?.data || data;
   return (scene?.scenes || [])
     .map((sc) => (sc.lines || [])

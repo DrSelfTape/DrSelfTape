@@ -37,6 +37,7 @@ import {
 } from '../../../redux/features/auditions/auditionsSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 
 /* ─── constants ─────────────────────────────────────────────────── */
 
@@ -625,7 +626,11 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
     try {
       const axiosInstance = (await import('../../../redux/http')).default;
       const endPoints = (await import('../../../redux/constant')).default;
-      const { data } = await axiosInstance.post(endPoints.parseBreakdown, { text });
+      const body = { text };
+      const { data } = await axiosInstance.post(
+        endPoints.parseBreakdown, body,
+        aiIdempotencyHeaders('parse_breakdown', body),
+      );
       const parsed = data?.data || {};
       setForm((prev) => ({
         ...prev,
@@ -671,9 +676,12 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       const endPoints = (await import('../../../redux/constant')).default;
       const fd = new FormData();
       fd.append('image', file);
-      const { data } = await axiosInstance.post(endPoints.parseBreakdown, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const { data } = await axiosInstance.post(
+        endPoints.parseBreakdown, fd,
+        aiIdempotencyHeaders('parse_breakdown', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+      );
       const parsed = data?.data || {};
       setForm((prev) => ({
         ...prev,

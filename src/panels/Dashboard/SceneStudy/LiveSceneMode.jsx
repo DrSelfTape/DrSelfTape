@@ -11,6 +11,7 @@ import { cueProgress, tok as cueTokens } from '../../../utils/cueMatch';
 import { resetAudioToPlayback } from '../../../utils/audioSession';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
 import { completeCraftNode, fetchCraftJourney } from '../../../redux/features/craftJourney/craftJourneySlice';
+import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 
 const SILENCE_TIMEOUT = 1500;
 
@@ -346,10 +347,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
     let response;
     try {
+      const ttsBody = { text, voice: selectedVoice };
       response = await axios.post(
         endPoints.tts,
-        { text, voice: selectedVoice },
-        { responseType: 'arraybuffer', timeout: 25000 }
+        ttsBody,
+        // Keyed on the line + voice: re-hearing the same line during a rehearsal
+        // dedupes to one charge instead of billing every replay.
+        aiIdempotencyHeaders('tts', ttsBody,
+          { responseType: 'arraybuffer', timeout: 25000 }),
       );
     } catch (err) {
       // Try to decode error response body as JSON for a better message
@@ -486,13 +491,17 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       // cost. Only the improv path (no scripted line) needs a generated line.
       if (!scriptLine.dialogue) {
         try {
-          const { data } = await axios.post(endPoints.scenePartner, {
+          const partnerBody = {
             line: historySnapshot[historySnapshot.length - 1]?.text || '',
             actor_line: historySnapshot[historySnapshot.length - 1]?.text || '',
             script_context: lines.map((l) => `${l.character}: ${l.dialogue}`).join('\n'),
             character: scriptLine.character,
             previous_lines: historySnapshot.slice(-6),
-          });
+          };
+          const { data } = await axios.post(
+            endPoints.scenePartner, partnerBody,
+            aiIdempotencyHeaders('live_scene', partnerBody),
+          );
           aiText = data?.data?.response || data?.response || '';
         } catch {
           aiText = '';

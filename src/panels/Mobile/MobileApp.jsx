@@ -38,6 +38,7 @@ import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
 import { extractCharacters } from "../../utils/scriptParser";
+import { aiIdempotencyHeaders } from '../../utils/aiIdempotency';
 
 // pdfjs (~326KB) + its worker (~1.3MB) are dynamically imported on FIRST PDF use
 // instead of at module load — most sessions never upload a PDF, so this keeps
@@ -2018,9 +2019,12 @@ function AuditionsScreen() {
     try {
       const fd = new FormData();
       fd.append('image', file);
-      const res = await axiosInstance.post(endPoints.parseBreakdown, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
+      const res = await axiosInstance.post(
+        endPoints.parseBreakdown, fd,
+        aiIdempotencyHeaders('parse_breakdown', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }),
+      );
       const parsed = res.data?.data || {};
       setAddForm(prev => ({
         ...prev,

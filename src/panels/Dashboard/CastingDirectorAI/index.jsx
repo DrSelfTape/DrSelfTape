@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import axios from "../../../redux/http";
 import endPoints from "../../../redux/constant";
 import useAIGate from "../../../components/AIConsent/useAIGate";
+import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 
 const MINT = "var(--aurora-mint)";
 const MINT_DIM = "rgba(167,236,218,0.10)";
@@ -469,12 +470,16 @@ function GeneratorScreen() {
       // Use the real screenplay generator (SceneGeneratorView, ~800 tokens), not
       // the line-feedback endpoint (capped at 1-2 sentences) — that was charging a
       // token for output it structurally cannot produce.
-      const response = await axios.post(endPoints.generateScene, {
+      const body = {
         genre: genre.toLowerCase(),
         tone: tone.toLowerCase(),
         character_type: 'actor',
         free_prompt: `Write a 1-page dramatic ${genre} scene with ${tone} tone. Format as screenplay with character names in CAPS. Make it emotionally rich. 2 characters, 6-8 lines each.`,
-      }, { timeout: 60000 });
+      };
+      const response = await axios.post(
+        endPoints.generateScene, body,
+        aiIdempotencyHeaders('scene_generator', body, { timeout: 60000 }),
+      );
       const text = response.data?.data?.scene || response.data?.scene || response.data?.data?.feedback || response.data?.feedback || "";
       setSceneText(text);
       if (text) setGenerated(true);

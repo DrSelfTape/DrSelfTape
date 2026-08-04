@@ -5,6 +5,7 @@ import endPoints from '../../../redux/constant';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { openExternal } from '../../../utils/openExternal';
+import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS — Aurora light
@@ -139,13 +140,17 @@ export default function AuditionGenerator() {
       setLoadingIdx((i) => (i + 1) % LOADING_MSGS.length), 2200);
 
     try {
-      const { data } = await axios.post(endPoints.generateScene, {
+      const body = {
         genre: genre.toLowerCase(),
         tone: tone.toLowerCase(),
         difficulty,
         character_type: 'actor',
         free_prompt: `Write a 1-page ${genre} scene with ${tone} tone, difficulty: ${difficulty}. 2 characters, 6-8 lines each. Proper screenplay format, character names in CAPS.`,
-      });
+      };
+      const { data } = await axios.post(
+        endPoints.generateScene, body,
+        aiIdempotencyHeaders('scene_generator', body),
+      );
 
       const text =
         data?.data?.scene || data?.scene ||

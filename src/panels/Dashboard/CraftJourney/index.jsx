@@ -7,6 +7,7 @@ import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { fetchCraftJourney, clearLastResult } from '../../../redux/features/craftJourney/craftJourneySlice';
+import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 
 /* ──────────────────────────────────────────────────────────────────
    Craft Journey — Duolingo-style serpentine skill path.
@@ -224,16 +225,19 @@ export default function CraftJourney() {
 
     setGenerating(node.id);
     try {
+      const body = {
+        genre: config.genre,
+        tone: config.tone,
+        difficulty: config.difficulty,
+        character_type: 'actor',
+        free_prompt: config.prompt,
+      };
       const { data } = await axios.post(
         endPoints.generateScene,
-        {
-          genre: config.genre,
-          tone: config.tone,
-          difficulty: config.difficulty,
-          character_type: 'actor',
-          free_prompt: config.prompt,
-        },
-        { timeout: 45000 }, // GPT-4o + Railway cold-start can take 15s+
+        body,
+        // Keyed so a retry of the same config dedupes instead of charging twice.
+        aiIdempotencyHeaders('scene_generator', body,
+          { timeout: 45000 }), // GPT-4o + Railway cold-start can take 15s+
       );
 
       const sceneText =

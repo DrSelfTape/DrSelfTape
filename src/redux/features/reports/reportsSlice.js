@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import axios from '../../http';
 import endPoints from '../../constant';
+import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 
 const initialState = {
   data: null,
@@ -28,12 +29,17 @@ export const fetchAIInsightThunk = createAsyncThunk(
   'reports/fetchAIInsight',
   async (statsPrompt, { rejectWithValue }) => {
     try {
-      const { data } = await axios.post(endPoints.cdFeedback, {
+      const body = {
         line: statsPrompt,
         script_context: 'Career analysis for actor',
         character: 'Career Coach',
         type: 'line',
-      });
+      };
+      // cd-feedback spends a token; without a key the BE skips dedup entirely
+      // and a retry charges twice for one insight.
+      const { data } = await axios.post(
+        endPoints.cdFeedback, body, aiIdempotencyHeaders('cd_feedback', body),
+      );
       return data?.data?.feedback || data?.feedback || null;
     } catch (error) {
       return rejectWithValue(

@@ -4,6 +4,7 @@ import axiosInstance from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import { requestAiConsent } from '../../../components/AIConsent/AIConsentModal';
 import { trackEvent, Events } from '../../../utils/analytics';
+import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 
 /**
  * SidesUpload — "Bring your own sides."
@@ -72,10 +73,13 @@ export default function SidesUpload({ onReady }) {
     try {
       const fd = new FormData();
       fd.append('pdf', file);
-      const { data } = await axiosInstance.post(endPoints.parseSides, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        timeout: 90000,
-      });
+      const { data } = await axiosInstance.post(
+        endPoints.parseSides, fd,
+        aiIdempotencyHeaders('parse_sides', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 90000,
+        }),
+      );
       const parsed = data?.data || data;
       if (!parsed?.scenes?.length) {
         throw new Error('empty');
