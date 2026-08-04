@@ -145,9 +145,13 @@
 
   // Campaign that sent them here. The /go smart link appends ?src=<campaign>
   // (e.g. autosubmit-tool = comment DM, dm-tool = DM auto-reply) so we can tell
-  // comment-driven from DM-driven traffic. Falls back to the default.
+  // comment-driven from DM-driven traffic. Untagged arrivals (direct hits, bio
+  // link, a shared URL, someone re-opening the emailed link) MUST fall back to
+  // 'direct' — never to a real campaign name. Defaulting to a live campaign
+  // silently credits it with traffic it never earned, which is exactly the
+  // attribution we'd be spending ad money against.
   var params = new URLSearchParams(window.location.search);
-  var src = (params.get('src') || params.get('c') || 'autosubmit-tool').slice(0, 60);
+  var src = (params.get('src') || params.get('c') || 'direct').slice(0, 60);
 
   // Lightweight PostHog capture — this is a STATIC page (no React/SDK), so we
   // POST straight to the capture endpoint like the /go smart link does. Without
