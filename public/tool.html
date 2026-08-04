@@ -104,6 +104,13 @@
       </form>
       <p class="note" id="leadNote">We'll only email you the kit. No spam.</p>
       <a class="btn btn-ghost" href="/DrSelfTape-AutoSubmit-Kit.zip" id="mobileDl">Download now anyway</a>
+      <!-- Revealed after capture: the kit is desktop-only, so on their phone the
+           highest-value next step is the app. Turn the dead "wait till you're at
+           a computer" moment into an install. -->
+      <div id="mobileAppPivot" class="hide" style="margin-top:8px;">
+        <p class="sub" style="font-size:15px; margin:0 0 14px;">The kit's headed to your inbox for when you're at your computer. Right now, on your phone — <b style="color:var(--ink)">the app books the room</b>: casting-style notes on your tape and a reader who actually picks up.</p>
+        <a class="btn btn-primary" id="mobileAppCta" href="https://apps.apple.com/us/app/id6770320460">Get the app 🎬</a>
+      </div>
     </div>
 
     <!-- DESKTOP: direct download + install steps -->
@@ -117,7 +124,14 @@
       <a class="btn btn-primary" href="/DrSelfTape-AutoSubmit-Kit.zip" id="desktopDl" style="margin-top:18px;" download>⬇ Download the Kit</a>
     </div>
 
-    <a class="btn btn-ghost" href="https://apps.apple.com/us/app/id6770320460">Or get the Dr Self Tape app →</a>
+    <!-- Part two: the tool gets the audition, the app books it. Explicit bridge
+         so tool leads are pushed toward the install (the actual #1 goal). -->
+    <div class="card" id="appCard" style="margin-top:4px;">
+      <div style="font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:8px;">Then book it</div>
+      <h2 style="margin-bottom:10px;">Getting the audition is the easy part now.</h2>
+      <p class="sub" style="margin:0 0 16px; font-size:15px;">Auto-submit gets you in the room. Booking it is the tape. The <b style="color:var(--ink)">Dr Self Tape</b> app gives you casting-style notes on your self-tape before you send it, and a reader who actually picks up.</p>
+      <a class="btn btn-primary" id="appCta" href="https://apps.apple.com/us/app/id6770320460">Get the app</a>
+    </div>
 
     <div class="foot">
       Made by <a href="https://drselftape.app">Dr Self Tape</a> · self-tape smarter
@@ -177,6 +191,12 @@
     });
   });
 
+  // Measure the tool -> app bridge: which app CTA gets tapped, and from where.
+  [['appCta', 'part_two'], ['mobileAppCta', 'mobile_post_capture']].forEach(function (pair) {
+    var el = document.getElementById(pair[0]);
+    if (el) el.addEventListener('click', function () { track('tool_app_cta_click', { position: pair[1] }); });
+  });
+
   // Reuse the existing lead endpoint so a captured email lands in the same
   // QuizLead table + fires the Meta CAPI 'lead' (deduped, value for lookalikes).
   var API = 'https://drselftape-api-production.up.railway.app/api/v1/marketing/quiz-lead/';
@@ -209,11 +229,15 @@
         if (r.ok) {
           track('tool_email_captured');
           form.classList.add('hide');
-          note.innerHTML = '<span class="ok">✓ Sent. Check your inbox — the download link is on its way.</span>';
+          note.innerHTML = '<span class="ok">✓ Sent. Check your inbox. The kit runs on your computer.</span>';
           note.className = 'note';
-          // Give them the link immediately too, in case they're on a big screen.
+          // Kit is desktop-only, so on a phone the highest-value next step is the
+          // app (installable right now). Reveal the app pivot; keep the direct
+          // download available but secondary.
+          var pivot = document.getElementById('mobileAppPivot');
+          if (pivot) pivot.classList.remove('hide');
           var dl = document.getElementById('mobileDl');
-          if (dl) { dl.textContent = 'Or download it right now'; dl.classList.remove('mobile-only'); }
+          if (dl) { dl.textContent = 'Or download the kit now'; }
         } else {
           throw new Error('bad status');
         }
