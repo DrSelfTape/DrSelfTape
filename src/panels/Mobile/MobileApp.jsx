@@ -1126,6 +1126,21 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   // the exact handoff AuroraOnboarding's offer step uses (sessionStorage flag
   // survives the AI-consent remount; the event covers the immediate case).
   const launchFreeReview = () => {
+    // H-05: the Home-hero path fired NO funnel events at all, so half the
+    // activation funnel was invisible and the other half (onboarding) looked
+    // like the whole story. Mirror the onboarding offer card's events and
+    // stamp the entry source so the two paths can finally be compared.
+    (async () => {
+      try {
+        const [{ trackEvent, Events }, { markFirstReviewEntry, FIRST_REVIEW_SOURCE_HOME_HERO }] =
+          await Promise.all([
+            import('../../utils/analytics'),
+            import('../../utils/firstReviewFunnel'),
+          ]);
+        markFirstReviewEntry(FIRST_REVIEW_SOURCE_HOME_HERO);
+        trackEvent(Events.FIRST_REVIEW_OFFER_TAPPED, { source: FIRST_REVIEW_SOURCE_HOME_HERO });
+      } catch { /* analytics must never block the handoff */ }
+    })();
     try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
     // Home-card entry made no offer-card choice — drop any leftover variant
     // so a stale 'record' pick can't resurrect the practice-scene prefill.
@@ -1139,6 +1154,26 @@ function HomeScreen({ setTab, setCurrentPanel }) {
     try { window.sessionStorage.setItem('dst_compare_takes', '1'); } catch { /* noop */ }
     setTab('tape-review');
   };
+
+  // H-05: the Home hero shows the free-first-review offer whenever the grant
+  // is unclaimed, but fired no offer_shown — so the onboarding card looked like
+  // the only place the offer was ever made. Once per first review (the guard
+  // outlives mounts), and only once settings have loaded, so a pre-load flash
+  // never counts as an impression.
+  useEffect(() => {
+    if (!firstReviewPending) return;
+    (async () => {
+      try {
+        const [{ trackEvent, Events }, { claimFirstReviewOnce }] = await Promise.all([
+          import('../../utils/analytics'),
+          import('../../utils/firstReviewFunnel'),
+        ]);
+        if (claimFirstReviewOnce('offer_shown_home')) {
+          trackEvent(Events.FIRST_REVIEW_OFFER_SHOWN, { source: 'home_hero' });
+        }
+      } catch { /* swallow */ }
+    })();
+  }, [firstReviewPending]);
 
   useEffect(() => {
     const handler = () => setShowTutorialAchievement(true);

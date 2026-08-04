@@ -1078,6 +1078,14 @@ export default function AuroraOnboarding({ onClose }) {
   // finish() is now synchronous (background persist), so the handoff is instant.
   const launchFirstReview = async (variant = 'upload') => {
     track('FIRST_REVIEW_OFFER_TAPPED', { variant });
+    // H-05: stamp the entry path so first_review_started/_upload_shown/
+    // _completed can be attributed to onboarding vs the Home hero.
+    try {
+      import('../../utils/firstReviewFunnel').then(
+        ({ markFirstReviewEntry, FIRST_REVIEW_SOURCE_ONBOARDING }) =>
+          markFirstReviewEntry(FIRST_REVIEW_SOURCE_ONBOARDING),
+      ).catch(() => {});
+    } catch { /* noop */ }
     // De-stack the pre-upload interstitials: resolve AI consent HERE, while
     // onboarding is still on screen, instead of letting TapeReview's useAIGate
     // stack the consent modal on top of the fresh first-review screen (and

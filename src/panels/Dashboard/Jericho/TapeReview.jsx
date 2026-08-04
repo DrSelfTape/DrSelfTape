@@ -16,6 +16,9 @@ import CompareTakes from './CompareTakes';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { trackEvent, Events } from '../../../utils/analytics';
+import {
+  claimFirstReviewOnce, clearFirstReviewOnce, getFirstReviewEntry,
+} from '../../../utils/firstReviewFunnel';
 import { goUpgrade } from '../../../utils/goUpgrade';
 import { tapSelect, cheer, warn } from '../../../utils/haptics';
 import { useShareImageCapture } from '../../../hooks/useShareImageCapture';
@@ -417,7 +420,16 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // Get Started checklist entry (markStep no-ops once set).
     markStep('first_review');
     if (firstReview) {
-      trackEvent(Events.FIRST_REVIEW_COMPLETED);
+      // H-05: guarded across remounts for the same reason as upload_shown —
+      // this effect re-runs whenever a result is present, and a remount with a
+      // surfaced result (which H-08 will make more common, by design) would
+      // otherwise double-count the activation metric itself.
+      if (claimFirstReviewOnce('completed')) {
+        trackEvent(Events.FIRST_REVIEW_COMPLETED, { source: getFirstReviewEntry() });
+      }
+      // The attempt is over: any later review is a REPEAT and has its own
+      // events, so release the guards.
+      clearFirstReviewOnce(['upload_shown', 'completed']);
       // The pre-upload tutorial was suppressed for this flow — surface it now
       // as the "how to read your notes" walkthrough, with the result behind it.
       try {
@@ -434,9 +446,15 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // landed on the upload step. Fires once; the gap to FIRST_REVIEW_STARTED is
   // the no-tape "upload dead-end" — the biggest suspected activation leak.
   useEffect(() => {
-    if (firstReview && !uploadShownRef.current) {
-      uploadShownRef.current = true;
-      trackEvent(Events.FIRST_REVIEW_UPLOAD_SHOWN);
+    if (!firstReview || uploadShownRef.current) return;
+    uploadShownRef.current = true;
+    // H-05: the ref alone only dedupes within ONE mount, and this component
+    // remounts on the AI-consent flow, on tab switches and on return from
+    // background — so a single first review used to emit this several times,
+    // inflating the top of the funnel against a completion count that cannot
+    // inflate the same way. claimFirstReviewOnce outlives the component.
+    if (claimFirstReviewOnce('upload_shown')) {
+      trackEvent(Events.FIRST_REVIEW_UPLOAD_SHOWN, { source: getFirstReviewEntry() });
     }
   }, [firstReview]);
 
@@ -575,7 +593,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const submit = async () => {
     if (!file || tapeReviewLoading) return;
     if (firstReview) {
-      trackEvent(Events.FIRST_REVIEW_STARTED, { source: 'onboarding' });
+      // H-05: this was hardcoded 'onboarding', so every Home-hero start was
+      // filed under onboarding and the two entry paths could not be compared.
+      trackEvent(Events.FIRST_REVIEW_STARTED, { source: getFirstReviewEntry() });
       // Past the consent-remount window now — retire the durable handoff flag.
       try { window.sessionStorage.removeItem('dst_first_review'); } catch { /* noop */ }
       try { window.sessionStorage.removeItem('dst_first_review_variant'); } catch { /* noop */ }

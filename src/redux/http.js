@@ -3,6 +3,7 @@ import axios from 'axios';
 
 // Local Imports
 import { baseURL } from './constant';
+import { getDeviceId } from '../utils/deviceId';
 // NOTE: do NOT import authSlice here — it imports this file (circular dependency)
 
 const axiosInstance = axios.create({
@@ -16,6 +17,27 @@ export const setAuthToken = (token) => {
     delete axiosInstance.defaults.headers.common['Authorization'];
   }
 };
+
+// H-01: attach the per-install device signal to every request. The backend
+// hashes it and records (device, account) pairs so serial re-registration for
+// unlimited free AI reviews becomes visible, and — behind a server flag that is
+// OFF by default — refusable. Two reasons this is a request interceptor rather
+// than a per-call header:
+//   • signup is the important call site and it is public/unauthenticated, so it
+//     never passes through any of the AI helper wrappers;
+//   • a header added in one place cannot be forgotten at a new call site.
+// The header must also be in the backend's CORS_ALLOW_HEADERS or WKWebView
+// silently blocks the POST at preflight (house rule 8) — it is, alongside
+// idempotency-key.
+axiosInstance.interceptors.request.use((config) => {
+  try {
+    const id = getDeviceId();
+    if (id) {
+      config.headers = { ...(config.headers || {}), 'X-Device-Id': id };
+    }
+  } catch { /* never let a telemetry header break a request */ }
+  return config;
+});
 
 // Endpoints that return 401 on bad credentials/missing data — a 401 here
 // means "wrong password" or "expired reset link," NOT "your session

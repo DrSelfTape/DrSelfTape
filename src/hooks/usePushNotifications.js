@@ -124,6 +124,21 @@ function navDetailForPush(notif) {
 // Route a tapped push: deep-link via drst-navigate when we recognise it, and
 // always emit drst-push-tap so other listeners can react.
 function handlePushTap(notif) {
+  // H-07: the server now records every dispatch; this is the other half of
+  // the loop. Without a tap event we can see that a push left the building but
+  // not whether it brought anyone back — which is the only question that makes
+  // the re-engagement channel worth having. Fired first and independently of
+  // the routing below, so a deep-link failure still records the tap.
+  try {
+    const d = notif?.data || notif?.notification?.data || {};
+    import('../utils/analytics').then(({ trackEvent }) => {
+      trackEvent('push_opened', {
+        notification_type: d.type || 'unknown',
+        kind: d.kind || undefined,
+        path: d.path || undefined,
+      });
+    }).catch(() => {});
+  } catch { /* analytics must never block the deep link */ }
   try {
     const data = notif?.data || notif?.notification?.data || {};
     // App-update broadcast tapped from a closed app → open the store listing.
