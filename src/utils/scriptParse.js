@@ -22,6 +22,44 @@ export function parseScript(text, knownCast) {
   let currentChar = null;
   let currentDialogue = [];
 
+  // Shape of a character cue, with the BUG 18 guards: short, all-caps, and not
+  // a scene-heading slug ("INT. KITCHEN", "FADE IN", "CUT TO").
+  const isCueShape = (s) =>
+    /^[A-Z][A-Z\s.''-]{0,40}$/.test(s) &&
+    s.split(/\s+/).length <= 4 &&
+    !/^(INT\.|EXT\.|INT\/EXT|FADE\b|CUT\b|DISSOLVE\b|SMASH\b|MATCH\b)/.test(s);
+
+  // BUG: an interruption written tight —
+  //     MARA
+  //     Claire—
+  //     CLAIRE
+  //     (cutting her off) I said I'd call him back.
+  // — has no blank line before the second cue, so the `!currentDialogue.length`
+  // guard below refused to promote CLAIRE and appended it to MARA's dialogue.
+  // The actor's own line vanished from the scene and the reader spoke it as the
+  // wrong character. Interruptions are common in generated scenes, so this hit
+  // real sessions.
+  //
+  // Collect the names that appear UNAMBIGUOUSLY as cues (opening a block, i.e.
+  // first non-empty line or right after a blank one) and let the main pass
+  // recognise those same names later even when they're butted up against
+  // dialogue. Seeded with the known cast when the caller supplies it.
+  const knownCues = new Set(
+    (Array.isArray(knownCast) ? knownCast : [])
+      .filter(Boolean)
+      .map((c) => String(c).trim().toUpperCase()),
+  );
+  let atBlockStart = true;
+  for (const raw of rawLines) {
+    const t = raw.trim();
+    if (!t) {
+      atBlockStart = true;
+      continue;
+    }
+    if (atBlockStart && isCueShape(t)) knownCues.add(t.toUpperCase());
+    atBlockStart = false;
+  }
+
   const flush = () => {
     if (currentChar && currentDialogue.length > 0) {
       lines.push({
@@ -52,14 +90,22 @@ export function parseScript(text, knownCast) {
     // Match standalone uppercase name (next line is dialogue).
     // BUG 18: tighten so a stray shouted word or a scene-heading slug line
     // ("INT. KITCHEN", "FADE IN", "CUT TO") is NOT promoted to a character.
-    // Only treat a standalone uppercase line as a cue if it's short (<=4 words)
-    // and doesn't start with a slug-line keyword. Keep the legitimate
-    // CHARACTER-on-its-own-line case intact.
+    //
+    // The cue is accepted when it opens a block (nothing accumulated yet — the
+    // original rule), OR when it is a name we already saw used unambiguously as
+    // a cue. That second case is what rescues a tight interruption without
+    // reopening BUG 18: a shouted word still has to earn its place by appearing
+    // as a real cue somewhere else in the scene.
+    // A dash or ellipsis at the end of the previous line is how an interruption
+    // is written, and it is the one place a cue legitimately butts straight up
+    // against dialogue. `cachedCharacters` is null for any script saved before
+    // the BE started caching the cast, so this cannot rely on knownCues alone.
+    const prevLine = currentDialogue[currentDialogue.length - 1] || '';
+    const wasInterrupted = /(?:[—–]|--|\.\.\.)\s*$/.test(prevLine);
+
     if (
-      /^[A-Z][A-Z\s.''-]{0,40}$/.test(trimmed) &&
-      !currentDialogue.length &&
-      trimmed.split(/\s+/).length <= 4 &&
-      !/^(INT\.|EXT\.|INT\/EXT|FADE\b|CUT\b|DISSOLVE\b|SMASH\b|MATCH\b)/.test(trimmed)
+      isCueShape(trimmed) &&
+      (!currentDialogue.length || knownCues.has(trimmed.toUpperCase()) || wasInterrupted)
     ) {
       flush();
       currentChar = trimmed;
@@ -149,6 +195,30 @@ export function parseInlineCharacters(text, knownCast) {
   if (out.length < 2 || distinctSpeakers.size < 2) return [];
 
   return out;
+}
+
+/**
+ * The part of a line that is actually SPOKEN — parentheticals removed.
+ *
+ * A generated scene writes performance directions inline: "(cutting her off)
+ * I said I'd call him back." Those are for the actor to READ, never to hear or
+ * to say. Left in, two things break: the AI reader speaks "cutting her off"
+ * aloud, and the cue matcher waits for the actor to say those words before it
+ * will advance the scene.
+ *
+ * The BYOS/sides path already strips these at import (see SidesUpload's
+ * sidesToScript). Generated scenes never went through that path, so the same
+ * rule has to be applied at the point of speaking/listening.
+ *
+ * Display is deliberately left alone — seeing "(cutting her off)" is useful
+ * direction for the actor.
+ */
+export function spokenText(dialogue) {
+  return String(dialogue || '')
+    .replace(/\([^)]*\)/g, ' ')   // (cutting her off)
+    .replace(/\[[^\]]*\]/g, ' ')  // [beat] — some generations use brackets
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export function extractCharacters(lines) {

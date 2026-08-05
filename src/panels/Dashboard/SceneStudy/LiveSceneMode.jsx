@@ -8,6 +8,7 @@ import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader'
 import { isNativeIOS } from '../../../utils/purchases';
 import { SpeechRecognition as NativeSpeech } from '@capgo/capacitor-speech-recognition';
 import { cueProgress, tok as cueTokens } from '../../../utils/cueMatch';
+import { spokenText } from '../../../utils/scriptParse';
 import { resetAudioToPlayback } from '../../../utils/audioSession';
 import { logSession } from '../../../redux/features/jericho/jerichoSlice';
 import { completeCraftNode, fetchCraftJourney } from '../../../redux/features/craftJourney/craftJourneySlice';
@@ -516,7 +517,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       });
       setStatus('playing');
 
-      await playTTS(aiText, voice);
+      // Same rule as the pre-timed path: speak the words, not the direction.
+      await playTTS(spokenText(aiText), voice);
 
       if (!isActiveRef.current) return;
       idx++;
@@ -696,7 +698,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // the teleprompter and pre-timed mode. (Consecutive same-character lines are
     // separate beats, NOT one turn — treating them as one made the reader wait
     // for a line the teleprompter never showed.)
-    return lines[currentLineIdxRef.current]?.dialogue || '';
+    //
+    // Parentheticals are stripped: they are direction to be read, not words to
+    // be said. Left in, the matcher waits for the actor to speak "cutting her
+    // off" and the beat never completes. A line that is ONLY a parenthetical
+    // reduces to '' here, which the caller already treats as a no-wait beat.
+    return spokenText(lines[currentLineIdxRef.current]?.dialogue || '');
   }, [lines]);
 
   const stopNativeListen = useCallback(async () => {
@@ -961,8 +968,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         if (line.character !== userRole) {
           // AI line — play TTS then auto-advance after pause
           setStatus('playing');
+          // Display keeps the parenthetical (useful direction for the actor);
+          // only what is SPOKEN drops it, so the reader never says "cutting
+          // her off" out loud.
           setAiCurrentLine(line.dialogue);
-          await playTTS(line.dialogue, selectedVoice);
+          await playTTS(spokenText(line.dialogue), selectedVoice);
           if (!isActiveRef.current) return;
           // Pause for actor to absorb / react
           setStatus('idle');
