@@ -66,6 +66,7 @@ const AuditionGenerator = lazy(() => import('../panels/Dashboard/AuditionGenerat
 const CastingDirectorAI = lazy(() => import('../panels/Dashboard/CastingDirectorAI'));
 const Referral = lazy(() => import('../panels/Dashboard/Referral'));
 const SelfTapes = lazy(() => import('../panels/Dashboard/SelfTapes'));
+const MyStudio = lazy(() => import('../panels/Dashboard/MyStudio'));
 const Admin = lazy(() => import('../panels/Dashboard/Admin'));
 const Jericho = lazy(() => import('../panels/Dashboard/Jericho'));
 const CraftJourney = lazy(() => import('../panels/Dashboard/CraftJourney'));
@@ -151,6 +152,7 @@ export const commonRoutes = [
       // Paid readers hidden until P4-02 (zero opt-ins made this a dead end)
       { path: 'marketplace', element: <Navigate to='/dashboard/readers' replace /> },
       { path: 'self-tapes', moduleName: 'SelfTapes', element: <SelfTapes /> },
+      { path: 'my-studio', moduleName: 'MyStudio', element: <MyStudio /> },
       { path: 'admin', moduleName: 'Admin', element: <Admin /> },
     ],
   },

@@ -84,6 +84,8 @@ const endPoints = {
   // Booking locations & membership
   locations: `${baseURL}/v1/bookings/locations/`,
   membership: `${baseURL}/v1/bookings/membership/`,
+  // The client's own studio sessions (My Studio). ?status=upcoming|past
+  myBookings: `${baseURL}/v1/bookings/`,
 
   // Dashboard auditions (generic)
   auditions: `${baseURL}/v1/auditions/`,

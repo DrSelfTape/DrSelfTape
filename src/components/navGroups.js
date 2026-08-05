@@ -55,6 +55,10 @@ export const NAV_GROUPS = [
     label: 'My Work',
     icon: Target,
     items: [
+      // My Studio sits under My Work rather than Practice: for a studio client
+      // these are sessions they PAID for, alongside auditions and submissions,
+      // not a practice tool.
+      { label: 'My Studio', path: '/dashboard/my-studio', icon: Clapperboard },
       { label: 'Audition Tracker', path: '/dashboard/auditions', icon: Target },
       { label: 'Submissions', path: '/dashboard/submissions', icon: Send },
     ],
