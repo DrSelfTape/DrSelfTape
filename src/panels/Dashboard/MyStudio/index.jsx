@@ -21,9 +21,11 @@ import { openExternal } from '../../../utils/openExternal';
 
 const GOLD = '#D4A85F';
 
-// Where "book another session" goes until we own the calendar. Wix is still the
-// booking system of record, so sending them anywhere else would be a lie.
-const BOOK_URL = 'https://www.drselftapes.com/book-online';
+// Fallback only. The real destination comes from the server, routed by the
+// client's most recent studio — each location is a separate Wix site on its own
+// domain, so a New York regular must not be sent to the Hollywood page. Wix
+// remains the booking system of record; we only hand off to the right one.
+const BOOK_URL_FALLBACK = 'https://www.drselftapes.com/hollywood';
 
 // How many past sessions to load. Regulars have years of history behind them.
 const PAST_LIMIT = 30;
@@ -127,6 +129,7 @@ export default function MyStudio() {
   const [past, setPast] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [bookUrl, setBookUrl] = useState(BOOK_URL_FALLBACK);
 
   useEffect(() => {
     let alive = true;
@@ -135,14 +138,17 @@ export default function MyStudio() {
         // Bounded on purpose. History is far longer than it looks — 1,883
         // accounts have bookings and one has 822 — so an unbounded fetch would
         // pull megabytes and try to render hundreds of cards.
-        const [u, p] = await Promise.all([
+        const [u, p, sum] = await Promise.all([
           axios.get(endPoints.myBookings, { params: { status: 'upcoming', limit: 10 } }),
           axios.get(endPoints.myBookings, { params: { status: 'past', limit: PAST_LIMIT } }),
+          axios.get(endPoints.studioSummary).catch(() => null),
         ]);
         if (!alive) return;
         const rows = (res) => res?.data?.data || res?.data?.results || res?.data || [];
         setUpcoming(Array.isArray(rows(u)) ? rows(u) : []);
         setPast(Array.isArray(rows(p)) ? rows(p) : []);
+        const routed = sum?.data?.data?.book_url || sum?.data?.book_url;
+        if (routed) setBookUrl(routed);
       } catch {
         if (alive) setError("We couldn't load your sessions. Pull down to try again.");
       } finally {
@@ -211,7 +217,7 @@ export default function MyStudio() {
       {!loading && (
         <button
           type="button"
-          onClick={() => openExternal(BOOK_URL)}
+          onClick={() => openExternal(bookUrl)}
           className="w-full mt-4 px-5 py-4 rounded-xl font-semibold text-[15px] cursor-pointer"
           style={{ background: GOLD, color: '#0A0A0A' }}
         >
