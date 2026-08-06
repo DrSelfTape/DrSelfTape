@@ -31,6 +31,7 @@ import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
 import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
+import MyStudioCard from "../../components/Dashboard/MyStudioCard";
 import TakesDeck from "../../components/Dashboard/TakesDeck";
 import CameraPresell from "../../components/Shared/CameraPresell";
 import { needsCameraPresell, markCameraPresellSeen } from "../../components/Shared/cameraPresellGate";
@@ -1905,6 +1906,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           RANK →
         </span>
       </button>
+
+      {/* Studio clients first: these are people who already pay the studio and
+          book ~9 times a year. Renders nothing for everyone else. */}
+      <MyStudioCard setCurrentPanel={setCurrentPanel} />
 
       {/* ── Tutorial + daily challenge — kept; Aurora glass treatment via wrapper ── */}
       <div style={{ marginBottom: 14 }}>

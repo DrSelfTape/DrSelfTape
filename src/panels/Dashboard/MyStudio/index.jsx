@@ -25,6 +25,9 @@ const GOLD = '#D4A85F';
 // booking system of record, so sending them anywhere else would be a lie.
 const BOOK_URL = 'https://www.drselftapes.com/book-online';
 
+// How many past sessions to load. Regulars have years of history behind them.
+const PAST_LIMIT = 30;
+
 // The delivery page lives on the API origin, not the app origin. baseURL ends
 // in /api, and the tape link sits at the root — so trim it rather than
 // hard-coding a host that can go stale.
@@ -129,9 +132,12 @@ export default function MyStudio() {
     let alive = true;
     (async () => {
       try {
+        // Bounded on purpose. History is far longer than it looks — 1,883
+        // accounts have bookings and one has 822 — so an unbounded fetch would
+        // pull megabytes and try to render hundreds of cards.
         const [u, p] = await Promise.all([
-          axios.get(endPoints.myBookings, { params: { status: 'upcoming' } }),
-          axios.get(endPoints.myBookings, { params: { status: 'past' } }),
+          axios.get(endPoints.myBookings, { params: { status: 'upcoming', limit: 10 } }),
+          axios.get(endPoints.myBookings, { params: { status: 'past', limit: PAST_LIMIT } }),
         ]);
         if (!alive) return;
         const rows = (res) => res?.data?.data || res?.data?.results || res?.data || [];
@@ -182,6 +188,11 @@ export default function MyStudio() {
             Past sessions
           </h2>
           {past.map((b) => <SessionCard key={b.id} booking={b} upcoming={false} />)}
+          {past.length >= PAST_LIMIT && (
+            <p className="text-[13px] text-[rgba(10,10,10,0.45)] text-center mt-1 mb-2">
+              Showing your {PAST_LIMIT} most recent sessions.
+            </p>
+          )}
         </>
       )}
 

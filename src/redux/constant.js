@@ -86,6 +86,8 @@ const endPoints = {
   membership: `${baseURL}/v1/bookings/membership/`,
   // The client's own studio sessions (My Studio). ?status=upcoming|past
   myBookings: `${baseURL}/v1/bookings/`,
+  // Compact Home-card payload — never the full booking list.
+  studioSummary: `${baseURL}/v1/bookings/studio-summary/`,
 
   // Dashboard auditions (generic)
   auditions: `${baseURL}/v1/auditions/`,
