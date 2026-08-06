@@ -17,6 +17,7 @@ import ProfileCompleteness from '../../../components/Dashboard/ProfileCompletene
 import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
 import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardingModal';
 import NotificationBell from '../../../components/Dashboard/NotificationBell';
+import MyStudioCard from '../../../components/Dashboard/MyStudioCard';
 import TutorialChecklist from '../../../components/Dashboard/TutorialChecklist';
 import TutorialAchievement from '../../../components/Dashboard/TutorialAchievement';
 import DailyChallengeCard from '../../../components/Dashboard/DailyChallengeCard';
@@ -303,6 +304,11 @@ export default function DashboardHome() {
           <NotificationBell />
         </div>
       </div>
+
+      {/* Studio clients — desktop only, on purpose. The studio hub is a
+          separate product surface from the mobile actor app; see the fork
+          decision. Renders nothing for anyone without sessions. */}
+      <MyStudioCard />
 
       {/* ── Pending Matches Banner ── */}
       <PendingLikesBanner />

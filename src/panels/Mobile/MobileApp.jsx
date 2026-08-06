@@ -31,7 +31,6 @@ import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
 import TutorialAchievement from "../../components/Dashboard/TutorialAchievement";
 import DailyChallengeCard from "../../components/Dashboard/DailyChallengeCard";
-import MyStudioCard from "../../components/Dashboard/MyStudioCard";
 import TakesDeck from "../../components/Dashboard/TakesDeck";
 import CameraPresell from "../../components/Shared/CameraPresell";
 import { needsCameraPresell, markCameraPresellSeen } from "../../components/Shared/cameraPresellGate";
@@ -121,7 +120,6 @@ async function extractPdfText(file) {
 
 /* Lazy-load dashboard panels for the "More" menu */
 const CDSim = lazy(() => import("../Dashboard/CDSim"));
-const MyStudio = lazy(() => import("../Dashboard/MyStudio"));
 const Jericho = lazy(() => import("../Dashboard/Jericho"));
 const CraftJourney = lazy(() => import("../Dashboard/CraftJourney"));
 const Leaderboard = lazy(() => import("../Dashboard/Leaderboard"));
@@ -978,9 +976,6 @@ const MORE_FEATURES = [
   { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072", section: "Connect" },
   { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072", section: "Connect" },
   // auditions is a tab, not a panel — MoreScreen routes it via drst-navigate.
-  // Studio clients book ~9 sessions a year; this is where those sessions and
-  // the footage from them live. Sits in My Work, not Practice — they paid for it.
-  { id: "my-studio", label: "My Studio", desc: "Your studio sessions and tapes", emoji: "🎬", color: "#D4A85F", section: "My Work" },
   { id: "auditions", label: "Audition Tracker", desc: "Log and track every audition", emoji: "🎯", color: "#A7D6FF", section: "My Work" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8", section: "My Work" },
   { id: "leaderboard", label: "Ranks", desc: "See where you rank this season", emoji: "🏆", color: "#FCE072", section: "Community" },
@@ -1012,7 +1007,6 @@ const PANEL_COMPONENTS = {
   "referral": Referral,
   "marketplace": Marketplace,
   "self-tapes": SelfTapesPanel,
-  "my-studio": MyStudio,
   // reader-profile mounts as a bare mobile panel (deep-linked from the Green
   // Room chat header's "View Profile"). It needs a readerId from the
   // drst-navigate detail, which PanelScreen threads in and renders via
@@ -1906,10 +1900,6 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           RANK →
         </span>
       </button>
-
-      {/* Studio clients first: these are people who already pay the studio and
-          book ~9 times a year. Renders nothing for everyone else. */}
-      <MyStudioCard setCurrentPanel={setCurrentPanel} />
 
       {/* ── Tutorial + daily challenge — kept; Aurora glass treatment via wrapper ── */}
       <div style={{ marginBottom: 14 }}>

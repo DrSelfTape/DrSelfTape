@@ -2,16 +2,22 @@
  * Home-screen card for people who actually use the studio.
  *
  * ~1,880 accounts have studio bookings and LA's regulars book about nine times
- * a year each — they are the app's most engaged real-world users and had no
- * reason to open it. My Studio lives two taps deep in the More menu; this
- * surfaces the same thing where they'll see it.
+ * a year each — the most engaged real-world users there are, with nothing here
+ * addressed to them. This puts their next session and their latest tape on the
+ * first screen they land on.
+ *
+ * DESKTOP ONLY, deliberately. The studio hub is a separate product surface
+ * from the mobile actor app — that fork is a product decision, not an
+ * oversight, so this is mounted from the desktop Home panel and NOT from the
+ * mobile shell.
  *
  * RENDERS NOTHING for anyone without sessions. It's driven by
  * /bookings/studio-summary/, a flat handful of fields — Home loads on every
- * launch for every user, and one account has 822 bookings, so this must never
+ * visit for every user, and one account has 822 bookings, so this must never
  * pull the booking list to decide whether to show a card.
  */
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../../redux/http';
 import endPoints, { baseURL } from '../../redux/constant';
 import { openExternal } from '../../utils/openExternal';
@@ -28,7 +34,8 @@ const fmtWhen = (iso) => {
   return `${date} · ${time}`;
 };
 
-export default function MyStudioCard({ setCurrentPanel }) {
+export default function MyStudioCard() {
+  const navigate = useNavigate();
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
@@ -84,7 +91,7 @@ export default function MyStudioCard({ setCurrentPanel }) {
 
       <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
         <button
-          onClick={() => setCurrentPanel?.('my-studio')}
+          onClick={() => navigate('/dashboard/my-studio')}
           className="aurora-mono"
           style={{
             flex: 1, padding: '11px 12px', borderRadius: 100, cursor: 'pointer',
