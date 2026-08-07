@@ -434,9 +434,9 @@
       </div>
 
       <div class="copy">
-        <div class="eyebrow light">For actors who book</div>
-        <div class="headline light" style="font-size: 148px;">Your craft,<br><span class="underline-sweep">in motion.</span></div>
-        <div class="subhead light">Track auditions, run sides with verified readers, and get AI notes on every take.</div>
+        <div class="eyebrow light">AI tape review</div>
+        <div class="headline light" style="font-size: 130px;">The notes that<br><span class="underline-sweep">book the room.</span></div>
+        <div class="subhead light">Submit a self-tape and get casting-grade acting notes on every take — the exact moves that book the room.</div>
         <!-- rating/user-count pill removed for Google Play metadata compliance -->
       </div>
 
@@ -530,9 +530,9 @@
       </div>
 
       <div class="copy">
-        <div class="eyebrow light">Practice · on demand</div>
-        <div class="headline light">A fresh scene<br>whenever you <span class="underline-sweep">show up.</span></div>
-        <div class="subhead light">Generate cold reads in any genre or tone. Pair with warm-up missions. No more "I have nothing to work on."</div>
+        <div class="eyebrow light">Your studio</div>
+        <div class="headline light">Your first<br>review is <span class="underline-sweep">free.</span></div>
+        <div class="subhead light">Everything one tap from home — your next audition, your last take, and casting-grade notes waiting.</div>
       </div>
 
       <!-- Single device: Scene Generator — the colorful chip grid reads
@@ -542,7 +542,7 @@
       </div>
 
       <div class="sticky" style="top: 1280px; left: 80px; transform: rotate(-6deg); width: 260px; font-size: 28px;">
-        6 genres · 6 tones · 3 levels
+        your whole career, one tap
       </div>
 
       <!-- Margin notes -->
@@ -691,9 +691,9 @@
       </div>
 
       <div class="copy">
-        <div class="eyebrow">Community · Craft XP</div>
-        <div class="headline">Grind with<br>actors who <span class="underline-sweep gold">show up.</span></div>
-        <div class="subhead">Daily craft turns into points. Points turn into ranks. Climb a real community of actors who train.</div>
+        <div class="eyebrow">Compare takes</div>
+        <div class="headline">Which take<br>books the <span class="underline-sweep gold">room?</span></div>
+        <div class="subhead">Upload two to four takes. The AI picks the winner — and tells you exactly why.</div>
       </div>
 
       <div class="device" style="width: 820px; bottom: -100px; left: 50%; transform: translateX(-50%);">
@@ -701,23 +701,23 @@
       </div>
 
       <div class="sticky" style="top: 1200px; left: 60px; transform: rotate(-6deg); width: 220px;">
-        50 actors<br><span class="script">grinding with you</span>
+        the AI<br><span class="script">picks the winner</span>
       </div>
 
       <!-- Margin notes — black ink on cream for contrast -->
       <div class="actor-note ink" style="top: 920px; right: 60px; font-size: 52px; transform: rotate(7deg);">
-        show up<br><span class="underline">daily.</span>
+        which<br><span class="underline">one?</span>
       </div>
       <div class="actor-note deep-gold" style="top: 2200px; left: 50px; font-size: 44px; transform: rotate(-6deg);">
-        +10 XP / scene
+        take 2 wins
       </div>
       <div class="actor-note ink" style="top: 2520px; right: 80px; font-size: 36px; transform: rotate(4deg);">
-        practice ≠<br>perfect
+        trust<br>the pick
       </div>
 
-      <!-- Streak fire pill -->
+      <!-- Winner pill -->
       <div style="position: absolute; top: 1300px; right: 60px; transform: rotate(6deg); z-index: 7;">
-        <div class="streak-pill"><span class="fire">🔥</span>14 day streak</div>
+        <div class="streak-pill"><span class="fire">🏆</span>winner: take 2</div>
       </div>
 
       <!-- Highlighter on "show up." -->
@@ -741,8 +741,15 @@
 
       <div class="copy" style="text-align: center;">
         <div class="eyebrow" style="display: block;">Yours, always</div>
-        <div class="headline" style="font-size: 124px;">Sign in with Apple.<br>Yours by <span class="underline-sweep gold">design.</span></div>
-        <div class="subhead" style="text-align: center; margin: 0 auto; max-width: 980px;">Your videos never go to AI. Your tapes never leave your device. Free to start, no card required.</div>
+        <div class="headline" style="font-size: 124px;">Your data.<br>Your <span class="underline-sweep gold">call.</span></div>
+        <!-- ACCURACY: this previously read "Your videos never go to AI. Your tapes
+             never leave your device." Both were false and the consent screen in
+             this very panel contradicted them: frames go to Claude, audio goes to
+             Whisper, and tapes upload to R2 (that is how the library works). A
+             false PRIVACY claim is the worst kind to ship, and it is an Apple 2.3
+             accuracy risk. Replaced with what the product actually promises,
+             mirroring TapeReview.jsx: analyzed, not stored for training. -->
+        <div class="subhead" style="text-align: center; margin: 0 auto; max-width: 980px;">You see exactly what each AI provider gets, and you can say no. Your tape is analyzed, never stored for training. Free to start, no card required.</div>
       </div>
 
       <div class="device" style="width: 720px; bottom: 240px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
