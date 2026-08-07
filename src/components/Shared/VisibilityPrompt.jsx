@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Camera } from 'lucide-react';
 import axios from '../../redux/http';
@@ -6,6 +6,7 @@ import { baseURL } from '../../redux/constant';
 import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 import { fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { markStep } from '../Dashboard/TutorialChecklist';
+import { trackEvent, Events } from '../../utils/analytics';
 import { ReaderPortrait } from '../Aurora';
 import { avatarStyleFor } from '../Aurora/avatarStyle';
 import AvatarPicker from './AvatarPicker';
@@ -42,6 +43,12 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
   // profile refetch that might fail.
   const [done, setDone] = useState(false);
 
+  // Fires once per mount. `where` distinguishes the Home card from the Match
+  // gate — if one converts and the other doesn't, that is the whole answer.
+  useEffect(() => {
+    trackEvent(Events.VISIBILITY_PROMPT_SHOWN, { where: compact ? 'home' : 'match' });
+  }, [compact]);
+
   const pickFile = (e) => {
     const file = e.target.files?.[0];
     e.target.value = '';
@@ -76,6 +83,9 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
       }
       dispatch(fetchProfileThunk());
       markStep('headshot');
+      // findings.length tells us whether our own quality checks are firing on
+      // real uploads, or whether the validator is shouting at nobody.
+      trackEvent(Events.VISIBILITY_PHOTO_UPLOADED, { warnings: found.length });
     } catch (err) {
       dispatch(showSnackbar({
         message: err?.response?.data?.message || "Couldn't upload that photo. Please try again.",
@@ -104,6 +114,7 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
         dispatch(fetchProfileThunk());
       }
       markStep('headshot');
+      trackEvent(Events.VISIBILITY_AVATAR_CHOSEN, { index });
       dispatch(showSnackbar({ message: "You're visible in Match now.", variant: 'success' }));
     } catch (err) {
       dispatch(showSnackbar({
@@ -170,7 +181,7 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
 
         <button
           type="button"
-          onClick={() => setPicking((v) => !v)}
+          onClick={() => { if (!picking) trackEvent(Events.VISIBILITY_PICKER_OPENED); setPicking((v) => !v); }}
           disabled={busy}
           aria-expanded={picking}
           style={{
@@ -216,7 +227,7 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
       {onDismiss && (
         <button
           type="button"
-          onClick={onDismiss}
+          onClick={() => { trackEvent(Events.VISIBILITY_DISMISSED); onDismiss(); }}
           style={{
             alignSelf: 'flex-start', background: 'none', border: 'none', padding: '4px 0',
             color: 'var(--aurora-sub)', fontSize: 12.5, cursor: 'pointer', textDecoration: 'underline',

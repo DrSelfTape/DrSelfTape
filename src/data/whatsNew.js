@@ -8,6 +8,22 @@
  */
 export const WHATS_NEW = [
   {
+    // Separate entry rather than edited into id 9, because anyone who has
+    // already seen 9 would never be shown an edit to it. Version stays 1.0.25:
+    // that IS the marketing version of the build carrying this.
+    id: 10,
+    version: '1.0.25',
+    date: 'August 2026',
+    title: 'Be seen without a headshot',
+    intro: 'Match only deals cards that have a picture on them, so a lot of you were not being shown to anyone. Two ways to fix that now:',
+    highlights: [
+      { emoji: '🖼️', title: 'Add a photo in seconds', body: 'The prompt is right on your home screen if you need it, and we will tell you if the shot is too dark or too small to read on a card.' },
+      { emoji: '🎭', title: 'Or pick an illustrated avatar', body: "Would rather not put your face on a swipe card? Choose one of fourteen drawings instead. It's clearly a drawing, so nobody is misled about who they matched with, and you still show up in decks." },
+      { emoji: '🔁', title: 'Change your mind any time', body: 'Profile now has a "How you appear in Match" card. Switch between your photo and your avatar whenever you like. Switching never deletes the photo you uploaded.' },
+      { emoji: '🔢', title: 'Honest reader counts', body: 'Every number about how many readers are around now comes from the same place the deck does, so what you see is what you get.' },
+    ],
+  },
+  {
     id: 9,
     version: '1.0.25',
     date: 'August 2026',

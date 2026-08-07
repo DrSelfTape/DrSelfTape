@@ -165,6 +165,18 @@ export const Events = {
   PRACTICE_AI: 'practice_with_ai',
   SWIPE: 'swipe_reader',
   MATCH: 'match_created',
+
+  // ── Visibility funnel. 52 of 73 active actors could not be dealt into any
+  // deck because they had no picture. The OUTCOME is measurable server-side
+  // (manage.py headshot_nudge re-reports the visible/invisible split), but not
+  // the funnel: someone who opens the app, reads the prompt and walks away is
+  // indistinguishable from someone who never opened it — and those two failures
+  // need completely different fixes.
+  VISIBILITY_PROMPT_SHOWN: 'visibility_prompt_shown',
+  VISIBILITY_PICKER_OPENED: 'visibility_picker_opened',
+  VISIBILITY_AVATAR_CHOSEN: 'visibility_avatar_chosen',
+  VISIBILITY_PHOTO_UPLOADED: 'visibility_photo_uploaded',
+  VISIBILITY_DISMISSED: 'visibility_dismissed',
   SEND_MESSAGE: 'send_message',
   START_REHEARSAL: 'start_rehearsal',
   GO_AVAILABLE: 'go_available',

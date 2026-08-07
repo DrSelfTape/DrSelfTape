@@ -7,6 +7,7 @@ import { fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { ReaderPortrait } from '../Aurora';
 import { hasAvatar } from '../Aurora/avatarStyle';
 import AvatarPicker from './AvatarPicker';
+import { trackEvent, Events } from '../../utils/analytics';
 
 /**
  * "How you appear in Match" — the Profile control for switching between your
@@ -52,6 +53,12 @@ export default function AppearanceCard({ profile }) {
         dispatch(fetchProfileThunk());
       }
       if (gen !== saveGen.current) return; // superseded by a later choice
+      trackEvent(Events.VISIBILITY_AVATAR_CHOSEN, {
+        where: 'profile',
+        // '' means they switched BACK to their photo — the signal that the
+        // avatar was tried and rejected, which is worth knowing separately.
+        cleared: value === '',
+      });
       dispatch(showSnackbar({ message: successMessage, variant: 'success' }));
       setPicking(false);
     } catch (err) {
@@ -97,7 +104,7 @@ export default function AppearanceCard({ profile }) {
           <button
             type="button"
             disabled={busy}
-            onClick={() => setPicking((v) => !v)}
+            onClick={() => { if (!picking) trackEvent(Events.VISIBILITY_PICKER_OPENED, { where: 'profile' }); setPicking((v) => !v); }}
             style={{
               padding: '11px 18px', borderRadius: 12, minHeight: 44, fontSize: 13.5, fontWeight: 700,
               background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',

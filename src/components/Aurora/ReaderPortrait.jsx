@@ -69,9 +69,14 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
   // for your identity, that is backwards, and it handed plenty of women a
   // male-presenting face. `avatar_style` is stored as "aurora:<index>".
   const chosen = parseAvatarStyle(reader.avatar_style ?? reader.avatarStyle);
-  const idx = chosen ?? (h % FACE_PRESETS.length);
-  const preset = FACE_PRESETS[idx % FACE_PRESETS.length];
-  const bgColor = reader.color || BG_COLORS[(chosen ?? h) % BG_COLORS.length];
+  // An index past the end used to wrap by modulo, so "aurora:99" rendered a
+  // real but ARBITRARY face — an actor could be shown something they never
+  // picked, with nothing to indicate it. Out of range now falls back to the id
+  // hash, the same as having made no choice at all.
+  const inRange = chosen !== null && chosen < FACE_PRESETS.length;
+  const idx = inRange ? chosen : (h % FACE_PRESETS.length);
+  const preset = FACE_PRESETS[idx];
+  const bgColor = reader.color || BG_COLORS[(inRange ? chosen : h) % BG_COLORS.length];
   const ink = '#1A1408';
   const skin = preset.skin;
   const hair = preset.hair;
