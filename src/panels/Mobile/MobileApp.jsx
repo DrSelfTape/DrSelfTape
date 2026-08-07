@@ -1664,7 +1664,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </span>
       </button>
 
-      {/* ── Match tease ── 3 stacked reader avatars + "X new readers near you" ── */}
+      {/* ── Match tease ── 3 stacked reader avatars + "X readers active this month".
+     NOT "near you" (PresenceStatus stores no location) and NOT "new"
+     (they are existing accounts). The count previously read 2019 because
+     is_available defaults to True on every provisioned account. ── */}
       {(() => {
         const recent = Array.isArray(matchingStats?.recent_readers) ? matchingStats.recent_readers : [];
         const readers = recent.slice(0, 3);
@@ -1711,7 +1714,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
                 FIND A READER
               </span>
               <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
-                {count} new reader{count !== 1 ? 's' : ''} near you
+                {count} reader{count !== 1 ? 's' : ''} active this month
               </p>
               <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
                 Swipe to run sides together
