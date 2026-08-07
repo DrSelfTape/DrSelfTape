@@ -38,7 +38,21 @@ const BG_COLORS = ['#D4A85F', '#A7D6FF', '#9FE6B4', '#FFC9A3', '#FFB3C1', '#D8C5
 // right in a 150px circle and in the 400x220 default, and badly wrong on a
 // 230x380 swipe card: a small head marooned under an empty field of gradient.
 const DESIGN_W = 400;
-const DESIGN_H = 260;
+// 450, not 260. The box was LANDSCAPE (aspect 1.54) while the surface that
+// matters most — a full-bleed mobile swipe card — is 0.55. Covering a tall
+// container from a wide source meant scaling 2.8x and throwing away two thirds
+// of the width, which is why the avatar arrived as a giant face cropped at the
+// hairline. 450 puts the box at 0.89, the geometric mean of every container
+// ReaderPortrait actually renders into (card 0.55 / desktop card 0.67 /
+// ReaderProfile hero 1.25 / the various circles 1.0), so no surface has to
+// crop hard. Changing this WITHOUT re-checking all four sizes is how the
+// framing broke the first time.
+const DESIGN_H = 450;
+
+// The single scale for the whole figure. The artwork spans roughly -58..152
+// vertically and ±96 horizontally in local units, so ~2.0 fills a 400x450 box
+// with a little air. This is the ONLY number to touch when reframing.
+const FIGURE_SCALE = 2;
 
 // Callers still pass viewWidth/viewHeight; they are accepted and ignored. The
 // SVG fills its container and crops, so the caller's CSS box decides framing.
@@ -106,22 +120,28 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
         </>
       )}
 
-      {/* shoulders */}
-      <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.99})`}>
+      {/* ONE group, ONE scale, for the whole figure.
+          Shoulders used to be sized off DESIGN_W while the head carried its own
+          scale() — two independent scales for one body. Enlarging the head to
+          fix the card framing therefore produced a long neck above small
+          shoulders. Everything below is now authored in the SAME local units as
+          the head (roughly ±95 wide, -58 to 150 tall) and scaled once, so the
+          proportions cannot drift again. To reframe, change FIGURE_SCALE. */}
+      <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.30}) scale(${FIGURE_SCALE})`}>
+        {/* shoulders — drawn first so the neck overlaps them */}
         <path
-          d={`M -${DESIGN_W * 0.42} 30 Q -${DESIGN_W * 0.32} -${DESIGN_H * 0.18} 0 -${DESIGN_H * 0.22} Q ${DESIGN_W * 0.32} -${DESIGN_H * 0.18} ${DESIGN_W * 0.42} 30 Z`}
+          d="M -96 152 Q -82 84 0 74 Q 82 84 96 152 Z"
           fill={preset.shirt}
         />
         <path
-          d={`M -${DESIGN_W * 0.22} -${DESIGN_H * 0.22} L 0 -${DESIGN_H * 0.12} L ${DESIGN_W * 0.22} -${DESIGN_H * 0.22}`}
+          d="M -44 78 L 0 102 L 44 78"
           fill="none"
           stroke={shade(preset.shirt, -25)}
-          strokeWidth="2"
+          strokeWidth="2.5"
         />
-      </g>
 
       {/* head */}
-      <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.46}) scale(1.35)`}>
+      <g>
         {/* neck */}
         {/* The neck has to REACH the shoulders. It used to run y=20..40, which
             is entirely behind the face ellipse (that extends to ~y=48), so no
@@ -129,7 +149,10 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
             between the chin and the shirt. A head floating above a collar.
             The shoulders are drawn before this group, so the neck overlaps them
             cleanly rather than butting up against them. */}
-        <rect x="-14" y="20" width="28" height="44" fill={skin} />
+        {/* Width matters as much as length. At 30 against a ~76-wide face this read
+            as a stalk; a neck is roughly 55-60% of face width. Ends at y=78,
+            four units into the shoulders at 74, so the join stays sealed. */}
+        <rect x="-21" y="20" width="42" height="58" fill={skin} />
         {/* Shadow under the jaw, tied to THIS preset's chin — faceH varies
             44-51 across the set, so a fixed y would float on some faces and
             hide behind the chin on others. */}
@@ -194,6 +217,7 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
             <circle cx="32" cy="14" r="4.5" stroke="#D4A85F" strokeWidth="2" fill="none" />
           </g>
         )}
+      </g>
       </g>
 
       {/* A specular highlight ellipse used to be drawn HERE — last, on top of
