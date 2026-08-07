@@ -20,6 +20,7 @@ export const WHATS_NEW = [
       { emoji: '🔕', title: 'Reminders are optional', body: 'Turn off audition reminders in your profile. Alerts about your own tapes and messages keep working.' },
       { emoji: '📱', title: 'One reminder, not three', body: 'Some of you were getting the same nudge two or three times. Fixed.' },
       { emoji: '📈', title: 'Watch your score climb', body: 'Scene Coach and your score history are now in the app, so you can see whether the work is actually moving the line.' },
+      { emoji: '🤝', title: 'Match keeps up with you', body: "The next reader comes up the moment you swipe instead of waiting on the network. The reader count is honest now too: it only counts people who've actually opened the app this month." },
     ],
   },
   {
