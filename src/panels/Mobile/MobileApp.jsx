@@ -14,6 +14,7 @@ import { getScripts } from "../../redux/features/sceneStudyScripts/sceneStudyScr
 import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/features/submissions/submissionsSlice";
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
+import VisibilityPrompt from "../../components/Shared/VisibilityPrompt";
 import { markStep } from "../../components/Dashboard/TutorialChecklist";
 import { logoutUser, performLogout } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
@@ -1663,6 +1664,15 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           OPEN →
         </span>
       </button>
+
+      {/* Invisible in the deck? This is the first thing they see. `needs_visual`
+          uses the same rule the deck does, so it disappears the moment they
+          pick either route and never nags someone already visible. */}
+      {profile?.needs_visual && (
+        <div style={{ marginBottom: 14 }}>
+          <VisibilityPrompt userId={profile?.id} name={profile?.first_name} compact />
+        </div>
+      )}
 
       {/* ── Match tease ── 3 stacked reader avatars + "X readers active this month".
      NOT "near you" (PresenceStatus stores no location) and NOT "new"

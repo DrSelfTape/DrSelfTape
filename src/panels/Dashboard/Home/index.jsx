@@ -19,6 +19,7 @@ import ReaderOnboardingModal from '../../../components/Dashboard/ReaderOnboardin
 import NotificationBell from '../../../components/Dashboard/NotificationBell';
 import MyStudioCard from '../../../components/Dashboard/MyStudioCard';
 import TutorialChecklist from '../../../components/Dashboard/TutorialChecklist';
+import VisibilityPrompt from '../../../components/Shared/VisibilityPrompt';
 import TutorialAchievement from '../../../components/Dashboard/TutorialAchievement';
 import DailyChallengeCard from '../../../components/Dashboard/DailyChallengeCard';
 
@@ -361,6 +362,15 @@ export default function DashboardHome() {
       {/* ── Progress Section ── */}
       <div className="space-y-3">
         <DailyChallengeCard />
+        {/* Invisible in the deck? Say so where they actually land, not only on
+            the Match tab they aren't visiting. `needs_visual` is computed from
+            the same rule the deck uses, so this can't nag someone already
+            visible. */}
+        {profile?.needs_visual && (
+          <div className="mb-6">
+            <VisibilityPrompt userId={profile?.id} name={profile?.first_name} />
+          </div>
+        )}
         <TutorialChecklist />
       </div>
 
