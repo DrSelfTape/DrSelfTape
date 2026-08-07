@@ -16,12 +16,10 @@ import {
 } from '../../../redux/features/readers/readersMatchSlice';
 import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
-import axios from '../../../redux/http';
-import { baseURL } from '../../../redux/constant';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { tapPrimary, cheer } from '../../../utils/haptics';
-import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 import { supplyLine } from '../../../utils/supply';
+import VisibilityPrompt from '../../../components/Shared/VisibilityPrompt';
 
 // Backend serializes a null last_name as the Python string "None"; strip it
 // before we put a name in front of the user.
@@ -44,9 +42,6 @@ const FindAReader = ({ embedded = false }) => {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [cropSrc, setCropSrc] = useState(null); // object URL being positioned
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     dispatch(fetchProfileThunk());
@@ -76,43 +71,6 @@ const FindAReader = ({ embedded = false }) => {
       dispatch(fetchAvailableReaders());
     }
   }, [settingsLoaded, savedFilters, dispatch]);
-
-  // Pick a file → open the cropper so they frame their face perfectly.
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    if (!file.type?.startsWith('image/')) {
-      dispatch(showSnackbar({ message: 'Please choose an image file.', variant: 'error' }));
-      return;
-    }
-    setCropSrc(URL.createObjectURL(file));
-  };
-
-  // Upload the positioned/cropped square headshot.
-  const uploadCroppedHeadshot = async (blob) => {
-    const src = cropSrc;
-    setCropSrc(null);
-    if (src) URL.revokeObjectURL(src);
-    if (!blob) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('headshot', blob, 'headshot.jpg');
-      await axios.patch(`${baseURL}/v1/users/profile/`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      dispatch(fetchProfileThunk());
-      markStep('headshot');
-    } catch (err) {
-      console.error('Failed to upload photo:', err);
-      dispatch(showSnackbar({
-        message: err?.response?.data?.message || "Couldn't upload photo. Please try again.",
-        variant: 'error',
-      }));
-    }
-    setUploading(false);
-  };
 
   const [celebrating, setCelebrating] = useState(null); // null | { matchId }
   // Swipes made this browsing session — drives the Session-Complete recap
@@ -297,52 +255,11 @@ const FindAReader = ({ embedded = false }) => {
         Filters
       </button>
 
-      {/* Photo required gate */}
+      {/* Photo/avatar gate. Copy and both routes out live in VisibilityPrompt
+          so this and the Home card can never tell different stories. */}
       {!hasPhoto && !readersLoading && (
-        <div className="aurora-glass w-full max-w-sm flex flex-col items-center text-center p-8 mt-4">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center mb-5" style={{
-            background: 'color-mix(in oklch, var(--aurora-accent) 18%, transparent)',
-          }}>
-            <Camera className="w-9 h-9" style={{ color: 'var(--aurora-accent)' }} />
-          </div>
-          <span className="aurora-eyebrow mb-2">STEP 1</span>
-          <h2 className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>Add a headshot</h2>
-          <p className="text-sm mb-6" style={{ color: 'var(--aurora-sub)' }}>
-            Other actors want to see who they're reading with.
-          </p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            className="hidden"
-            onChange={handlePhotoUpload}
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="aurora-mono px-8 py-3 rounded-full text-white transition-all disabled:opacity-50"
-            style={{
-              background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
-              fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
-              boxShadow: 'var(--aurora-shadow-coral)',
-            }}
-          >
-            {uploading ? 'Uploading…' : 'Upload Photo'}
-          </button>
-          <button
-            onClick={() => {
-              const isMob = window.innerWidth < 768;
-              if (isMob) {
-                window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'dash-profile' } }));
-              } else {
-                navigate('/dashboard/profile');
-              }
-            }}
-            className="mt-3 text-xs transition-colors"
-            style={{ color: 'var(--aurora-sub)' }}
-          >
-            Or update your full profile
-          </button>
+        <div className="w-full max-w-sm mt-4">
+          <VisibilityPrompt userId={profile?.id} name={profile?.first_name} />
         </div>
       )}
 
@@ -499,15 +416,6 @@ const FindAReader = ({ embedded = false }) => {
           actor={celebrating.actor}
           onConnect={onCelebrationDone}
           onDismiss={onMatchDismiss}
-        />
-      )}
-
-      {/* Headshot cropper — position your face in the circle before uploading */}
-      {cropSrc && (
-        <HeadshotCropper
-          imageSrc={cropSrc}
-          onCancel={() => { URL.revokeObjectURL(cropSrc); setCropSrc(null); }}
-          onComplete={uploadCroppedHeadshot}
         />
       )}
 
