@@ -5,7 +5,7 @@ import { Users2, HeartHandshake, Radio, Gift } from 'lucide-react';
 import FindAReader from '../FindAReader';
 import WhoWantsToRead from '../FindAReader/WhoWantsToRead';
 import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
-import { fetchMatchingStats, fetchAvailableReaders } from '../../../redux/features/readers/readersMatchSlice';
+import { fetchMatchingStats } from '../../../redux/features/readers/readersMatchSlice';
 import { trackEvent } from '../../../utils/analytics';
 import { supplyLine } from '../../../utils/supply';
 
@@ -35,7 +35,7 @@ export default function Readers() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { readers = [], matchingStats, readersLoading } = useSelector(
+  const { readers = [], matchingStats } = useSelector(
     (s) => s.readersMatch || {}
   );
   const interestedCount = matchingStats?.pending_likes_count || 0;
@@ -49,16 +49,12 @@ export default function Readers() {
   const defaultFilter = readers.length > 0 || interestedCount === 0 ? 'browse' : 'interested';
   const filter = FILTERS.some((f) => f.id === requested) ? requested : defaultFilter;
 
-  // Fetch the deck HERE, not only inside <FindAReader>. The empty state below
-  // renders *instead of* FindAReader when `readers` is empty, and FindAReader
-  // was the only thing that ever dispatched fetchAvailableReaders — so a direct
-  // load of /dashboard/readers showed "No readers in your deck right now"
-  // forever, no matter how many readers were available. It only ever looked
-  // right when the user arrived from a surface that had already filled the store.
-  useEffect(() => {
-    dispatch(fetchMatchingStats());
-    dispatch(fetchAvailableReaders());
-  }, [dispatch]);
+  // This page deliberately does NOT fetch the deck. It renders <FindAReader>,
+  // which owns that fetch along with the user's saved filters, the caught-up
+  // state and the retry-on-error. Dispatching here as well produced a duplicate
+  // unfiltered request racing FindAReader's filtered one, and whichever landed
+  // last won — so the deck could show the wrong set.
+  useEffect(() => { dispatch(fetchMatchingStats()); }, [dispatch]);
 
   const counts = useMemo(() => ({
     browse: readers.length,
@@ -70,9 +66,12 @@ export default function Readers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  // Never call it empty while the first fetch is still in flight — that
-  // flashes "no readers" at someone whose deck is about to be full.
-  const allEmpty = !readersLoading && readers.length === 0 && interestedCount === 0;
+  // Only claim "nothing here" when the INTERESTED side is also empty and the
+  // browse deck is genuinely finished loading without error. Anything else is
+  // FindAReader's job to render — it owns the fetch, the caught-up state and
+  // the retry, and rendering our card instead of it is what used to leave the
+  // deck permanently unfetched.
+  const allEmpty = interestedCount === 0 && filter === 'interested';
 
   return (
     <div className="aurora-orbs" style={{ color: 'var(--aurora-text)', fontFamily: "'Space Grotesk', sans-serif" }}>

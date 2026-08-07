@@ -36,7 +36,13 @@ const FindAReader = ({ embedded = false }) => {
   const pendingLikes = matchingStats?.pending_likes_count || 0;
   const supply = supplyLine(matchingStats);
   const profile = useSelector((state) => state.profile?.profile);
-  const hasPhoto = !!(profile?.actor_profile?.headshot || profile?.user_image);
+  // Visibility is a SERVER decision — `needs_visual` is computed from the same
+  // rule the deck uses. Checking headshot/user_image here instead meant someone
+  // who picked the illustrated avatar was still told they were invisible AND
+  // was locked out of the card stack, which broke the avatar route entirely.
+  // While the profile is still loading, assume visible: showing the deck early
+  // is recoverable, wrongly accusing someone of being invisible is not.
+  const hasPhoto = profile ? !profile.needs_visual : true;
   const savedFilters = useSelector((s) => s.userSettings?.data?.reader_filters);
   const settingsLoaded = useSelector((s) => !!s.userSettings?.loaded);
 

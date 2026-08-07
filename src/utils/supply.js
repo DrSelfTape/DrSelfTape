@@ -21,16 +21,25 @@
  * numbers below describe exactly the readers the deck can actually deal.
  */
 
+// A count must be a finite, non-negative integer or it is not a count. Without
+// this, a bad payload rendered "3 readers active in the last -7 days" or
+// "...in the last Infinity days" straight to the user, and Number() on an
+// exotic value could throw inside render.
+const count = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0;
+};
+
 /** Normalize the stats payload into the only three quantities that exist. */
 export function supplyCounts(stats) {
   return {
     // Cards waiting for this user right now (swipe history applied).
-    deck: Number(stats?.deck_count) || 0,
+    deck: count(stats?.deck_count),
     // Readers this user could be matched with at all.
-    available: Number(stats?.available_count) || 0,
+    available: count(stats?.available_count),
     // Connected this instant. The ONLY one that may pulse.
-    online: Number(stats?.online_count) || 0,
-    windowDays: Number(stats?.window_days) || 30,
+    online: count(stats?.online_count),
+    windowDays: count(stats?.window_days) || 30,
   };
 }
 
@@ -41,20 +50,25 @@ export function supplyCounts(stats) {
  * nothing rather than reach for a different number to fill the space.
  */
 export function supplyLine(stats) {
-  const { deck, available, online, windowDays } = supplyCounts(stats);
-  if (online > 0) {
-    return { text: `${online} reader${online === 1 ? '' : 's'} online now`, live: true };
+  try {
+    const { deck, available, online, windowDays } = supplyCounts(stats);
+    if (online > 0) {
+      return { text: `${online} reader${online === 1 ? '' : 's'} online now`, live: true };
+    }
+    if (deck > 0) {
+      return { text: `${deck} in your deck`, live: false };
+    }
+    if (available > 0) {
+      return {
+        text: `${available} reader${available === 1 ? '' : 's'} active in the last ${windowDays} days`,
+        live: false,
+      };
+    }
+    return null;
+  } catch {
+    // A supply line is decoration. It must never take a screen down with it.
+    return null;
   }
-  if (deck > 0) {
-    return { text: `${deck} in your deck`, live: false };
-  }
-  if (available > 0) {
-    return {
-      text: `${available} reader${available === 1 ? '' : 's'} active in the last ${windowDays} days`,
-      live: false,
-    };
-  }
-  return null;
 }
 
 /** True when we may render a pulsing "live" dot beside a supply number. */
