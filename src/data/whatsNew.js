@@ -14,6 +14,7 @@ export const WHATS_NEW = [
     title: 'Nothing gets lost',
     intro: 'A quieter release than the last one. Mostly it fixes things that were costing you:',
     highlights: [
+      { emoji: '🎭', title: 'The reader stops talking over you', body: 'When a scene had an interruption, your line could vanish and the reader would say it in the wrong voice. It also read the stage directions out loud and waited for you to say them back. Both fixed.' },
       { emoji: '🎯', title: 'Your notes wait for you', body: 'Finish a review, put your phone down for an hour, come back — your notes are still there. They used to disappear if you left for too long.' },
       { emoji: '🧾', title: 'Never charged twice', body: 'If a review failed to send and you tried again, that second try could cost you another token. It doesn\'t anymore.' },
       { emoji: '🔕', title: 'Reminders are optional', body: 'Turn off audition reminders in your profile. Alerts about your own tapes and messages keep working.' },
