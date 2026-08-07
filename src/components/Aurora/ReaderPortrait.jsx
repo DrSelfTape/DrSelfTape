@@ -5,6 +5,9 @@
  * the Aurora handoff `screens/v1-match.jsx` READER_FACES.
  */
 
+import { FACE_PRESETS } from './readerPortraitPresets';
+import { parseAvatarStyle } from './avatarStyle';
+
 function shade(hex, amt) {
   const h = (hex || '#000000').replace('#', '');
   const r = parseInt(h.slice(0, 2), 16) || 0;
@@ -23,79 +26,31 @@ function hashStr(s) {
   return Math.abs(h);
 }
 
-// Six face presets — each represents a distinct person archetype.
-// Reader id/name hashes into the pool; same reader always gets the same face.
-const FACE_PRESETS = [
-  { // 0 — short dark wave + light stubble
-    skin: '#C99A78', hair: '#1F140A', shirt: '#26303C', faceW: 38, faceH: 48,
-    hairPath: 'M -36 -28 Q -38 -52 -10 -54 Q 22 -56 36 -42 Q 38 -28 36 -22 Q 30 -36 16 -38 Q 0 -34 -16 -36 Q -32 -32 -36 -22 Z',
-    browL: 'M -22 -12 Q -16 -16 -8 -14',
-    browR: 'M 22 -12 Q 16 -16 8 -14',
-    mouth: 'M -7 22 Q 0 25 7 22',
-    extras: 'stubble',
-  },
-  { // 1 — long dark hair + gold earrings + red lip
-    skin: '#C68B5E', hair: '#0F0805', shirt: '#1F2A2E', faceW: 36, faceH: 46,
-    hairBackPath: 'M -52 -22 Q -56 30 -38 56 L -28 30 L -34 -10 Z M 52 -22 Q 56 30 38 56 L 28 30 L 34 -10 Z',
-    hairPath: 'M -38 -32 Q -42 -54 -8 -56 Q 26 -58 38 -42 Q 40 -22 36 -16 Q 28 -34 12 -36 Q -8 -32 -22 -34 Q -34 -30 -38 -22 Z',
-    browL: 'M -22 -14 Q -16 -19 -8 -17',
-    browR: 'M 22 -14 Q 16 -19 8 -17',
-    mouth: 'M -8 22 Q 0 27 8 22',
-    lip: '#7A2A2A',
-    extras: 'earrings',
-  },
-  { // 2 — mop top + wide grin
-    skin: '#E2B58E', hair: '#3F2818', shirt: '#3A3225', faceW: 38, faceH: 44,
-    hairPath: 'M -38 -22 Q -44 -54 -4 -56 Q 30 -54 38 -34 Q 40 -22 30 -16 Q 18 -32 4 -32 Q -10 -30 -22 -34 Q -34 -30 -38 -18 Z',
-    browL: 'M -22 -16 Q -16 -20 -8 -17',
-    browR: 'M 22 -16 Q 16 -20 8 -17',
-    eyeW: 3.2, eyeH: 2.2,
-    mouth: 'M -10 21 Q 0 30 10 21',
-    mouthW: 2.6,
-    extras: 'grin',
-  },
-  { // 3 — bun + glasses
-    skin: '#D9A57E', hair: '#1A0F0A', shirt: '#3A2E22', faceW: 36, faceH: 46,
-    hairBackPath: 'M -42 -28 Q -50 4 -42 24 L -34 14 L -36 -8 Z M 42 -28 Q 50 4 42 24 L 34 14 L 36 -8 Z',
-    hairPath: 'M -36 -28 Q -42 -54 0 -56 Q 36 -54 38 -36 Q 32 -32 22 -34 Q 8 -38 -8 -36 Q -22 -34 -32 -32 Q -38 -32 -36 -22 Z',
-    browL: 'M -22 -14 Q -16 -18 -8 -16',
-    browR: 'M 22 -14 Q 16 -18 8 -16',
-    mouth: 'M -7 22 Q 0 24 7 22',
-    extras: 'glasses-bun',
-  },
-  { // 4 — fade + beard, deeper skin tone
-    skin: '#7C4A30', hair: '#0A0605', shirt: '#1F1F1F', faceW: 38, faceH: 48,
-    hairPath: 'M -36 -26 Q -38 -52 -8 -54 Q 24 -56 36 -42 Q 38 -28 36 -22 Q 26 -28 14 -28 Q -2 -26 -18 -28 Q -32 -26 -36 -22 Z',
-    browL: 'M -22 -14 Q -16 -18 -8 -16',
-    browR: 'M 22 -14 Q 16 -18 8 -16',
-    browW: 3.5,
-    mouth: 'M -6 22 Q 0 24 6 22',
-    extras: 'beard',
-  },
-  { // 5 — wavy shoulder hair + hoops + red lip
-    skin: '#D89868', hair: '#5A2F1A', shirt: '#3A2A20', faceW: 36, faceH: 46,
-    hairBackPath: 'M -46 -22 Q -52 28 -38 50 L -30 32 L -32 -6 Z M 46 -22 Q 52 28 38 50 L 30 32 L 32 -6 Z',
-    hairPath: 'M -38 -28 Q -44 -54 -4 -56 Q 32 -54 38 -36 Q 40 -22 34 -16 Q 24 -34 6 -36 Q -10 -32 -22 -34 Q -34 -30 -38 -18 Z',
-    browL: 'M -22 -14 Q -16 -18 -8 -16',
-    browR: 'M 22 -14 Q 16 -18 8 -16',
-    mouth: 'M -8 22 Q 0 26 8 22',
-    lip: '#9B3838',
-    extras: 'hoops',
-  },
-];
-
 const BG_COLORS = ['#D4A85F', '#A7D6FF', '#9FE6B4', '#FFC9A3', '#FFB3C1', '#D8C5F2'];
 
-export default function ReaderPortrait({
-  reader = {},
-  viewWidth = 400,
-  viewHeight = 220,
-  showBackground = true,
-}) {
+// The figure is authored ONCE in this coordinate space and scaled to cover
+// whatever box it is placed in. Previously the background and shoulders scaled
+// with the caller's viewWidth/viewHeight while the head was drawn at FIXED
+// coordinates (face rx 38, neck 28 wide) and only translated — so the head's
+// size relative to its frame changed with every caller. It happened to look
+// right in a 150px circle and in the 400x220 default, and badly wrong on a
+// 230x380 swipe card: a small head marooned under an empty field of gradient.
+const DESIGN_W = 400;
+const DESIGN_H = 260;
+
+// Callers still pass viewWidth/viewHeight; they are accepted and ignored. The
+// SVG fills its container and crops, so the caller's CSS box decides framing.
+export default function ReaderPortrait({ reader = {}, showBackground = true }) {
   const seed = String(reader.id ?? reader.name ?? '0');
   const h = hashStr(seed);
-  const preset = FACE_PRESETS[h % FACE_PRESETS.length];
-  const bgColor = reader.color || BG_COLORS[h % BG_COLORS.length];
+  // An explicit CHOICE wins over the id hash. Assigning a face by hashing the
+  // user id meant your avatar was allocated to you — for something standing in
+  // for your identity, that is backwards, and it handed plenty of women a
+  // male-presenting face. `avatar_style` is stored as "aurora:<index>".
+  const chosen = parseAvatarStyle(reader.avatar_style ?? reader.avatarStyle);
+  const idx = chosen ?? (h % FACE_PRESETS.length);
+  const preset = FACE_PRESETS[idx % FACE_PRESETS.length];
+  const bgColor = reader.color || BG_COLORS[(chosen ?? h) % BG_COLORS.length];
   const ink = '#1A1408';
   const skin = preset.skin;
   const hair = preset.hair;
@@ -105,7 +60,7 @@ export default function ReaderPortrait({
 
   return (
     <svg
-      viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+      viewBox={`0 0 ${DESIGN_W} ${DESIGN_H}`}
       preserveAspectRatio="xMidYMid slice"
       style={{ width: '100%', height: '100%' }}
       aria-hidden="true"
@@ -123,19 +78,19 @@ export default function ReaderPortrait({
 
       {showBackground && (
         <>
-          <rect width={viewWidth} height={viewHeight} fill={`url(#${gradId})`} />
-          <rect width={viewWidth} height={viewHeight} fill={`url(#${glowId})`} />
+          <rect width={DESIGN_W} height={DESIGN_H} fill={`url(#${gradId})`} />
+          <rect width={DESIGN_W} height={DESIGN_H} fill={`url(#${glowId})`} />
         </>
       )}
 
       {/* shoulders */}
-      <g transform={`translate(${viewWidth / 2}, ${viewHeight * 0.95})`}>
+      <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.99})`}>
         <path
-          d={`M -${viewWidth * 0.42} 30 Q -${viewWidth * 0.32} -${viewHeight * 0.18} 0 -${viewHeight * 0.22} Q ${viewWidth * 0.32} -${viewHeight * 0.18} ${viewWidth * 0.42} 30 Z`}
+          d={`M -${DESIGN_W * 0.42} 30 Q -${DESIGN_W * 0.32} -${DESIGN_H * 0.18} 0 -${DESIGN_H * 0.22} Q ${DESIGN_W * 0.32} -${DESIGN_H * 0.18} ${DESIGN_W * 0.42} 30 Z`}
           fill={preset.shirt}
         />
         <path
-          d={`M -${viewWidth * 0.22} -${viewHeight * 0.22} L 0 -${viewHeight * 0.12} L ${viewWidth * 0.22} -${viewHeight * 0.22}`}
+          d={`M -${DESIGN_W * 0.22} -${DESIGN_H * 0.22} L 0 -${DESIGN_H * 0.12} L ${DESIGN_W * 0.22} -${DESIGN_H * 0.22}`}
           fill="none"
           stroke={shade(preset.shirt, -25)}
           strokeWidth="2"
@@ -143,7 +98,7 @@ export default function ReaderPortrait({
       </g>
 
       {/* head */}
-      <g transform={`translate(${viewWidth / 2}, ${viewHeight * 0.55})`}>
+      <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.46}) scale(1.35)`}>
         {/* neck */}
         <rect x="-14" y="20" width="28" height="20" fill={skin} />
         <ellipse cx="0" cy="40" rx="20" ry="6" fill={shade(skin, -18)} opacity="0.5" />
@@ -151,9 +106,13 @@ export default function ReaderPortrait({
         {preset.hairBackPath && <path d={preset.hairBackPath} fill={hair} />}
         {/* face */}
         <ellipse cx="0" cy="0" rx={preset.faceW || 38} ry={preset.faceH || 46} fill={skin} />
-        {/* cheek blush */}
-        <ellipse cx="-22" cy="14" rx="9" ry="5" fill={shade(bgColor, 10)} opacity="0.35" />
-        <ellipse cx="22" cy="14" rx="9" ry="5" fill={shade(bgColor, 10)} opacity="0.35" />
+        {/* Cheek blush, tinted from the SKIN. It used to be shade(bgColor, 10)
+            — a colour taken from the background — which put a pale patch on a
+            deep skin tone whenever the card behind was light, big enough to
+            read as a blank eye at card size. Warm the skin instead, and keep
+            it small enough to suggest a cheek rather than announce itself. */}
+        <ellipse cx="-21" cy="15" rx="7" ry="3.6" fill={shade(skin, -16)} opacity="0.28" />
+        <ellipse cx="21" cy="15" rx="7" ry="3.6" fill={shade(skin, -16)} opacity="0.28" />
         {/* hair front */}
         {preset.hairPath && <path d={preset.hairPath} fill={hair} />}
         {/* brows */}
@@ -167,8 +126,14 @@ export default function ReaderPortrait({
         {/* mouth */}
         <path d={preset.mouth} stroke={preset.lip || shade(skin, -35)} strokeWidth={preset.mouthW || 2.4} fill="none" strokeLinecap="round" />
         {/* extras — accessories per preset */}
+        {/* Stubble followed the JAW. It was a literal <rect> across the chin,
+            which is invisible at 40px and an obvious grey box on a swipe card. */}
         {preset.extras === 'stubble' && (
-          <rect x="-22" y="14" width="44" height="18" fill="#7E5A40" opacity="0.18" />
+          <path
+            d="M -26 10 Q -20 34 0 38 Q 20 34 26 10 Q 18 26 0 28 Q -18 26 -26 10 Z"
+            fill={shade(skin, -55)}
+            opacity="0.22"
+          />
         )}
         {preset.extras === 'earrings' && (
           <g>
@@ -198,8 +163,11 @@ export default function ReaderPortrait({
         )}
       </g>
 
-      {/* highlight */}
-      <ellipse cx={viewWidth * 0.42} cy={viewHeight * 0.42} rx="14" ry="8" fill="rgba(255,255,255,0.35)" />
+      {/* A specular highlight ellipse used to be drawn HERE — last, on top of
+          everything, at 42%/42% of the box. That put a white blob squarely on
+          the left eye of every avatar at every size, and it read as a blank or
+          rolled-back eye. The background already carries a radial sheen
+          (glowId), so this was duplicate anyway. Removed, not moved. */}
     </svg>
   );
 }

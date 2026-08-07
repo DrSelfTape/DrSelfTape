@@ -7,6 +7,8 @@ import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 import { fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { markStep } from '../Dashboard/TutorialChecklist';
 import { ReaderPortrait } from '../Aurora';
+import { FACE_PRESETS } from '../Aurora/readerPortraitPresets';
+import { avatarStyleFor } from '../Aurora/avatarStyle';
 import HeadshotCropper from './HeadshotCropper';
 
 /**
@@ -26,13 +28,16 @@ import HeadshotCropper from './HeadshotCropper';
  * on a real person's profile misleads whoever is choosing who to run lines
  * with.
  */
-const AVATAR_STYLE = 'aurora';
-
 export default function VisibilityPrompt({ userId, name, onDismiss, compact = false }) {
   const dispatch = useDispatch();
   const [cropSrc, setCropSrc] = useState(null);
   const [busy, setBusy] = useState(false);
   const [findings, setFindings] = useState([]);
+  // null until they open the picker — the avatar is a CHOICE, so nothing is
+  // preselected. It used to be assigned by hashing the user id, which handed
+  // plenty of women a male-presenting face.
+  const [picking, setPicking] = useState(false);
+  const [chosen, setChosen] = useState(null);
 
   const pickFile = (e) => {
     const file = e.target.files?.[0];
@@ -71,10 +76,10 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
     setBusy(false);
   };
 
-  const chooseAvatar = async () => {
+  const chooseAvatar = async (index) => {
     setBusy(true);
     try {
-      await axios.patch(`${baseURL}/v1/users/profile/`, { avatar_style: AVATAR_STYLE });
+      await axios.patch(`${baseURL}/v1/users/profile/`, { avatar_style: avatarStyleFor(index) });
       dispatch(fetchProfileThunk());
       markStep('headshot');
       dispatch(showSnackbar({ message: "You're visible in Match now.", variant: 'success' }));
@@ -143,8 +148,9 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
 
         <button
           type="button"
-          onClick={chooseAvatar}
+          onClick={() => setPicking((v) => !v)}
           disabled={busy}
+          aria-expanded={picking}
           style={{
             flex: '1 1 150px', display: 'flex', alignItems: 'center', justifyContent: 'center',
             gap: 10, padding: '10px 16px', borderRadius: 14, minHeight: 48,
@@ -154,11 +160,41 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
           }}
         >
           <span style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-            <ReaderPortrait reader={{ id: userId, name }} viewWidth={30} viewHeight={30} showBackground />
+            <ReaderPortrait reader={{ id: userId, name }} />
           </span>
-          Use this avatar
+          {picking ? 'Close' : 'Pick an avatar'}
         </button>
       </div>
+
+      {picking && (
+        <div>
+          <p style={{ color: 'var(--aurora-sub)', fontSize: 12.5, margin: '0 0 10px' }}>
+            Pick the one you want. You can change it later in Profile.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: 10 }}>
+            {FACE_PRESETS.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                disabled={busy}
+                onClick={() => { setChosen(i); chooseAvatar(i); }}
+                aria-label={`Avatar option ${i + 1}`}
+                aria-pressed={chosen === i}
+                style={{
+                  padding: 0, borderRadius: '50%', overflow: 'hidden', cursor: busy ? 'default' : 'pointer',
+                  aspectRatio: '1 / 1', background: 'none',
+                  border: chosen === i
+                    ? '3px solid var(--aurora-accent)'
+                    : '2px solid var(--aurora-glass-border)',
+                  opacity: busy && chosen !== i ? 0.5 : 1,
+                }}
+              >
+                <ReaderPortrait reader={{ id: userId, name, avatar_style: `aurora:${i}` }} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <p style={{ color: 'var(--aurora-sub)', fontSize: 12, lineHeight: 1.45, margin: 0, opacity: 0.85 }}>
         Rather not put your face on a swipe card? The avatar makes you visible without one.

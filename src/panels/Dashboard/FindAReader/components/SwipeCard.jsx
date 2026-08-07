@@ -233,7 +233,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
         ) : (
           <div style={{ width: '100%', height: '100%', position: 'relative' }}>
             <ReaderPortrait
-              reader={{ id: actor?.id, name: cleanName, color: actor?.brandColor }}
+              reader={{ id: actor?.id, name: cleanName, color: actor?.brandColor, avatar_style: actor?.avatar_style }}
               viewWidth={400}
               viewHeight={isMobile ? 520 : 540}
               showBackground
