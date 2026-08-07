@@ -6,6 +6,11 @@ import { lastSeenLabel } from '../../../../utils/matchSignals';
 import { ReaderPortrait } from '../../../../components/Aurora';
 import { openReaderProfile } from '../../../../utils/openReaderProfile';
 
+// Kept in one place because the drag turns it off and back on imperatively;
+// if the string here and the string in the style object drift, the exit
+// animation silently stops running.
+const TRANSITION = 'transform 0.3s ease, box-shadow 0.3s ease';
+
 const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   const navigate = useNavigate();
   // Tap (not swipe) the name/bio strip → open the reader's full profile.
@@ -16,12 +21,47 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     openReaderProfile(actor?.id, navigate);
   };
   const cardRef = useRef(null);
+  const slateRef = useRef(null);
+  const passRef = useRef(null);
   const dragState = useRef({ startX: 0, isDragging: false, currentX: 0 });
-  const [transform, setTransform] = useState('');
-  const [slateOpacity, setSlateOpacity] = useState(0);
-  const [passOpacity, setPassOpacity] = useState(0);
   const [flyDir, setFlyDir] = useState(null); // 'right' = energetic gold-trail exit
   const [isMobile, setIsMobile] = useState(false);
+
+  // ── The drag runs OUTSIDE React on purpose.
+  // Routing every pointer-move through setState re-rendered this whole card
+  // (a full-bleed headshot, gradients, badges) on every frame of the gesture,
+  // on the same JS thread the drag is being tracked on. That is where the
+  // stutter came from inside WKWebView. Position is now written straight to
+  // the nodes and coalesced into one paint per frame; React only hears about
+  // the exit (flyDir), which happens once.
+  const rafRef = useRef(0);
+  const pendingRef = useRef(0);
+
+  const paint = (delta) => {
+    const el = cardRef.current;
+    if (el) el.style.transform = `translateX(${delta}px) rotate(${delta * 0.06}deg)`;
+    const threshold = 80;
+    const slate = delta > 0 ? Math.min(delta / threshold, 1) : 0;
+    const pass = delta < 0 ? Math.min(-delta / threshold, 1) : 0;
+    if (slateRef.current) {
+      slateRef.current.style.opacity = slate;
+      slateRef.current.style.transform = `rotate(-12deg) scale(${0.9 + slate * 0.18})`;
+    }
+    if (passRef.current) passRef.current.style.opacity = pass;
+  };
+
+  // Coalesce pointer-moves to one paint per frame — a finger can outrun the
+  // display, and painting twice in a frame is work nobody sees.
+  const schedulePaint = (delta) => {
+    pendingRef.current = delta;
+    if (rafRef.current) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = 0;
+      paint(pendingRef.current);
+    });
+  };
+
+  useEffect(() => () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); }, []);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -33,10 +73,8 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   // When this slot promotes to a new actor (deck advances), start clean so a
   // freshly-promoted card never inherits the previous card's fly-off/glow.
   useEffect(() => {
-    setTransform('');
     setFlyDir(null);
-    setSlateOpacity(0);
-    setPassOpacity(0);
+    paint(0);
     dragState.current = { startX: 0, isDragging: false, currentX: 0, crossedDir: null };
   }, [actor?.id]);
 
@@ -59,22 +97,15 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   const handleDragStart = (clientX) => {
     if (!isTop) return;
     dragState.current = { startX: clientX, isDragging: true, currentX: 0, crossedDir: null };
+    // The card must track the finger exactly — no easing mid-drag.
+    if (cardRef.current) cardRef.current.style.transition = 'none';
   };
 
   const handleDragMove = (clientX) => {
     if (!isTop || !dragState.current.isDragging) return;
     const delta = clientX - dragState.current.startX;
     dragState.current.currentX = delta;
-    const rotate = delta * 0.06;
-    setTransform(`translateX(${delta}px) rotate(${rotate}deg)`);
-    const threshold = 80;
-    if (delta > 0) {
-      setSlateOpacity(Math.min(delta / threshold, 1));
-      setPassOpacity(0);
-    } else {
-      setPassOpacity(Math.min(-delta / threshold, 1));
-      setSlateOpacity(0);
-    }
+    schedulePaint(delta);
     // Dopamine in the gesture: fire the commit haptic the MOMENT the stamp
     // locks in (threshold-cross), not on release — so the body learns where
     // "commit" lives. RIGHT ("read with") = a meatier medium tap; LEFT
@@ -94,11 +125,24 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   // Snap the card back to center — used when a fling's swipe call fails, so a
   // failed swipe doesn't leave the (still-mounted, index-unchanged) card flung
   // off-screen and invisible.
+  // Hand the card back to CSS. `transition: none` is live from the drag, so
+  // the property has to be restored AND flushed (the offsetWidth read) before
+  // the new transform lands, or the card teleports instead of flying.
+  const animateTo = (transform) => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.transition = TRANSITION;
+    void el.offsetWidth; // force the reflow that arms the transition
+    if (transform) {
+      el.style.transform = transform;
+    } else {
+      paint(0);
+    }
+  };
+
   const resetCard = () => {
     setFlyDir(null);
-    setTransform('');
-    setSlateOpacity(0);
-    setPassOpacity(0);
+    animateTo(null);
     dragState.current.crossedDir = null;
   };
 
@@ -110,16 +154,14 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       // RIGHT — "read with": energetic, higher-spin exit + a gold trail. This
       // is the rewarded act (seeking a partner), so it gets the satisfying beat.
       setFlyDir('right');
-      setTransform('translateX(165%) rotate(32deg) scale(1.03)');
+      animateTo('translateX(165%) rotate(32deg) scale(1.03)');
       setTimeout(async () => { if ((await onSwipeRight?.()) === false) resetCard(); }, 280);
     } else if (delta < -100) {
       // LEFT — "not now": a quiet, lower-energy glide. No flourish, no penalty.
-      setTransform('translateX(-135%) rotate(-16deg)');
+      animateTo('translateX(-135%) rotate(-16deg)');
       setTimeout(async () => { if ((await onSwipeLeft?.()) === false) resetCard(); }, 280);
     } else {
-      setTransform('');
-      setSlateOpacity(0);
-      setPassOpacity(0);
+      animateTo(null);
       dragState.current.crossedDir = null;
     }
   };
@@ -137,8 +179,10 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     zIndex: 40,
     borderRadius: 28,
     overflow: 'hidden',
-    transform,
-    transition: dragState.current.isDragging ? 'none' : 'transform 0.3s ease, box-shadow 0.3s ease',
+    // `transform` is deliberately absent — it's owned by the drag, written
+    // straight to the node. Listing it here would let a re-render (resize,
+    // flyDir) snap the card back to the start of the gesture.
+    transition: TRANSITION,
     cursor: isTop ? 'grab' : 'default',
     background: '#0a0a0f',
     touchAction: 'none',
@@ -153,8 +197,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     height: 540,
     borderRadius: 20,
     overflow: 'hidden',
-    transform,
-    transition: dragState.current.isDragging ? 'none' : 'transform 0.3s ease',
+    transition: TRANSITION,
     cursor: isTop ? 'grab' : 'default',
     background: '#1A1A1A',
     boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
@@ -220,25 +263,26 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
       </div>
 
       {/* ── READ WITH stamp (swipe right) — warm gold, the rewarded act */}
-      <div style={{
+      <div ref={slateRef} style={{
         position: 'absolute', top: isMobile ? 80 : 24, left: 20,
         border: '2.5px solid #FCE072', color: '#FCE072',
         fontSize: isMobile ? 21 : 17, fontWeight: 900, letterSpacing: 1.5,
         padding: '5px 14px', borderRadius: 6,
-        opacity: slateOpacity,
-        transform: `rotate(-12deg) scale(${0.9 + slateOpacity * 0.18})`,
+        // opacity + transform are driven by the drag, not by React.
+        opacity: 0,
+        transform: 'rotate(-12deg) scale(0.9)',
         pointerEvents: 'none',
         textShadow: '0 0 22px rgba(252,224,114,0.6)',
         fontFamily: '"Space Grotesk", sans-serif',
       }}>READ WITH</div>
 
       {/* ── NOT NOW stamp (swipe left) — neutral slate, never a red rejection */}
-      <div style={{
+      <div ref={passRef} style={{
         position: 'absolute', top: isMobile ? 80 : 24, right: 20,
         border: '2.5px solid rgba(255,255,255,0.4)', color: 'rgba(255,255,255,0.7)',
         fontSize: isMobile ? 21 : 17, fontWeight: 900, letterSpacing: 1.5,
         padding: '5px 14px', borderRadius: 6,
-        opacity: passOpacity,
+        opacity: 0,
         transform: 'rotate(12deg)',
         pointerEvents: 'none',
         fontFamily: '"Space Grotesk", sans-serif',

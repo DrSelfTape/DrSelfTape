@@ -22,6 +22,11 @@ import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { tapPrimary, cheer } from '../../../utils/haptics';
 import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 
+// Backend serializes a null last_name as the Python string "None"; strip it
+// before we put a name in front of the user.
+const firstNameOf = (actor) =>
+  (actor?.name || 'them').replace(/\bNone\b/g, '').trim().split(' ')[0] || 'them';
+
 const FindAReader = ({ embedded = false }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -107,7 +112,6 @@ const FindAReader = ({ embedded = false }) => {
     setUploading(false);
   };
 
-  const [swiping, setSwiping] = useState(false);
   const [celebrating, setCelebrating] = useState(null); // null | { matchId }
   // Swipes made this browsing session — drives the Session-Complete recap
   // shown when the deck runs out. Reset on a fresh load-more.
@@ -118,57 +122,79 @@ const FindAReader = ({ embedded = false }) => {
   const [swipeToast, setSwipeToast] = useState(null); // null | { text, gold }
   // Free Rewind — undo the immediately-previous (non-match) swipe.
   const [lastSwipe, setLastSwipe] = useState(null); // null | { index }
+  // The deck cursor, advanced SYNCHRONOUSLY. `currentIndex` is state, so two
+  // swipes fired inside one frame (a double-tap on the desktop buttons) would
+  // both read the same stale value and swipe the same card twice — the old
+  // in-flight lock used to hide that, and going optimistic removed the lock.
+  const cursorRef = useRef(0);
+  useEffect(() => { cursorRef.current = currentIndex; }, [currentIndex]);
+
+  // Send the swipe AFTER the deck has already moved on. The network
+  // round-trip must never gate the next card — that's the whole point of an
+  // optimistic deck, and it's what made swiping feel laggy on cellular.
+  // One silent retry covers a dropped connection; only a second failure
+  // surfaces, and it never rewinds the deck (yanking a card back after the
+  // user has moved past it is worse than losing one swipe).
+  const sendSwipe = useCallback(
+    async (actor, action) => {
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const result = await dispatch(
+            swipeOnReader({ reader_id: actor.id, action })
+          ).unwrap();
+          // Refresh the dashboard pending-likes counter so the home-tab
+          // CTA isn't stale next time the user lands there.
+          dispatch(fetchMatchingStats());
+          if (result?.matched && result?.matchId) {
+            // The biggest moment in the app — make it land in the hand.
+            cheer();
+            setSessionSwipes((s) => s.map((e) => (
+              e.actor?.id === actor.id ? { ...e, matched: true } : e
+            )));
+            // Hold the user on the celebration overlay; navigation runs
+            // when the burst finishes (MatchCelebration calls onDone).
+            setCelebrating({ matchId: result.matchId, actor });
+          }
+          return;
+        } catch {
+          if (attempt === 0) {
+            await new Promise((r) => setTimeout(r, 700));
+            continue;
+          }
+          dispatch(showSnackbar({
+            message: `Couldn't save your swipe on ${firstNameOf(actor)}. They'll come back around.`,
+            variant: 'error',
+          }));
+        }
+      }
+    },
+    [dispatch]
+  );
 
   const handleSwipe = useCallback(
-    async (action) => {
-      if (swiping) return true;
-      const actor = readers[currentIndex];
+    (action) => {
+      const idx = cursorRef.current;
+      const actor = readers[idx];
       if (!actor) return true;
-      setSwiping(true);
-      try {
-        const result = await dispatch(
-          swipeOnReader({ reader_id: actor.id, action })
-        ).unwrap();
-        // Refresh the dashboard pending-likes counter so the home-tab
-        // CTA isn't stale next time the user lands there.
-        dispatch(fetchMatchingStats());
-        // Record the swipe for the end-of-session recap.
-        setSessionSwipes((s) => [...s, { actor, action, matched: !!result?.matched }]);
-        if (result?.matched && result?.matchId) {
-          // Hold the user on the celebration overlay; navigation runs
-          // when the burst finishes (MatchCelebration calls onDone).
-          cheer(); // the biggest moment in the app — make it land in the hand
-          setCelebrating({ matchId: result.matchId, actor });
-          return true;
-        }
-        // Per-swipe payoff chip — honest, never fabricated. Right/star =
-        // the real status ("you're on their list"); left = an occasional,
-        // quiet deck-tuning note (the left payoff is mostly the glide itself).
-        const first = (actor?.name || 'them').replace(/\bNone\b/g, '').trim().split(' ')[0] || 'them';
-        if (action !== 'left') {
-          setSwipeToast({ text: `You're on ${first}'s list to read`, gold: true });
-          setTimeout(() => setSwipeToast(null), 1500);
-        } else if (Math.random() < 0.34) {
-          setSwipeToast({ text: 'Tuning your deck', gold: false });
-          setTimeout(() => setSwipeToast(null), 1300);
-        }
-      } catch (err) {
-        dispatch(showSnackbar({
-          message: err?.message || err?.detail || "Swipe didn't go through. Please try again.",
-          variant: 'error',
-        }));
-        // Swipe failed — keep the card in place instead of silently skipping it.
-        // Returning false lets SwipeCard roll its fling animation back so the
-        // card doesn't stay flung off-screen while the index hasn't advanced.
-        setSwiping(false);
-        return false;
+      // Advance the deck NOW; the request goes out behind it.
+      cursorRef.current = idx + 1;
+      setSessionSwipes((s) => [...s, { actor, action, matched: false }]);
+      setLastSwipe({ index: idx });
+      setCurrentIndex(idx + 1);
+      // Per-swipe payoff chip — honest, never fabricated. Right/star =
+      // the real status ("you're on their list"); left = an occasional,
+      // quiet deck-tuning note (the left payoff is mostly the glide itself).
+      if (action !== 'left') {
+        setSwipeToast({ text: `You're on ${firstNameOf(actor)}'s list to read`, gold: true });
+        setTimeout(() => setSwipeToast(null), 1500);
+      } else if (Math.random() < 0.34) {
+        setSwipeToast({ text: 'Tuning your deck', gold: false });
+        setTimeout(() => setSwipeToast(null), 1300);
       }
-      setLastSwipe({ index: currentIndex });
-      setCurrentIndex((prev) => prev + 1);
-      setSwiping(false);
+      sendSwipe(actor, action);
       return true;
     },
-    [currentIndex, readers, dispatch, swiping]
+    [readers, sendSwipe]
   );
 
   // Reset the carousel cursor when the reader list shrinks below it
@@ -183,9 +209,9 @@ const FindAReader = ({ embedded = false }) => {
   const onCelebrationDone = useCallback(() => {
     const id = celebrating?.matchId;
     setCelebrating(null);
-    setSwiping(false);
+    // The matched card was already consumed when the swipe fired optimistically
+    // — advancing again here would skip the reader behind it.
     setLastSwipe(null);
-    setCurrentIndex((prev) => prev + 1); // consume the matched card
     if (!id) return;
     const isMob = window.innerWidth < 768;
     if (isMob) {
@@ -198,19 +224,17 @@ const FindAReader = ({ embedded = false }) => {
   // "Keep swiping" from the match screen — consume the card, stay in the deck.
   const onMatchDismiss = useCallback(() => {
     setCelebrating(null);
-    setSwiping(false);
     setLastSwipe(null);
-    setCurrentIndex((prev) => prev + 1);
   }, []);
 
   // Free Rewind — bring back the last card so a mis-flick isn't a lost reader.
   const rewind = useCallback(() => {
-    if (!lastSwipe || swiping || celebrating) return;
+    if (!lastSwipe || celebrating) return;
     tapPrimary();
     setCurrentIndex(lastSwipe.index);
     setSessionSwipes((s) => s.slice(0, -1));
     setLastSwipe(null);
-  }, [lastSwipe, swiping, celebrating]);
+  }, [lastSwipe, celebrating]);
 
   const currentActor = readers[currentIndex];
   const nextActor = readers[currentIndex + 1];
