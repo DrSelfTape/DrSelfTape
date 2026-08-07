@@ -159,9 +159,14 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
             cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
           }}
         >
-          <span style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-            <ReaderPortrait reader={{ id: userId, name }} />
-          </span>
+          {/* The thumbnail is a PREVIEW of what's on offer. Once the grid is
+              open it previews nothing, so it goes — leaving a decorative face
+              next to the word "Close" just reads as a stray graphic. */}
+          {!picking && (
+            <span style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
+              <ReaderPortrait reader={{ id: userId, name }} />
+            </span>
+          )}
           {picking ? 'Close' : 'Pick an avatar'}
         </button>
       </div>

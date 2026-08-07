@@ -68,10 +68,15 @@ export default function ReaderPortrait({ reader = {}, showBackground = true }) {
       <defs>
         <linearGradient id={gradId} x1="0" x2="1" y1="0" y2="1">
           <stop offset="0" stopColor={bgColor} />
-          <stop offset="1" stopColor={shade(bgColor, -25)} />
+          <stop offset="1" stopColor={shade(bgColor, -42)} />
         </linearGradient>
-        <radialGradient id={glowId} cx="65%" cy="35%" r="55%">
-          <stop offset="0" stopColor="rgba(255,255,255,0.45)" />
+        {/* Was 0.45 white over a 55% radius centred at 65%/35%. A picker
+            swatch crops to the middle of the design box, so every option was
+            showing mostly that highlight and all fourteen looked like the same
+            tan circle. Weaker and pushed into the corner: still a sheen at card
+            size, no longer a wash at 60px. */}
+        <radialGradient id={glowId} cx="76%" cy="22%" r="42%">
+          <stop offset="0" stopColor="rgba(255,255,255,0.20)" />
           <stop offset="1" stopColor="rgba(255,255,255,0)" />
         </radialGradient>
       </defs>
@@ -119,8 +124,8 @@ export default function ReaderPortrait({ reader = {}, showBackground = true }) {
         <path d={preset.browL} stroke={hair} strokeWidth={preset.browW || 3} fill="none" strokeLinecap="round" />
         <path d={preset.browR} stroke={hair} strokeWidth={preset.browW || 3} fill="none" strokeLinecap="round" />
         {/* eyes */}
-        <ellipse cx="-13" cy="-2" rx={preset.eyeW || 3.5} ry={preset.eyeH || 2.5} fill={ink} />
-        <ellipse cx="13" cy="-2" rx={preset.eyeW || 3.5} ry={preset.eyeH || 2.5} fill={ink} />
+        <ellipse cx={-(preset.eyeGap || 13)} cy="-2" rx={preset.eyeW || 3.5} ry={preset.eyeH || 2.5} fill={ink} />
+        <ellipse cx={preset.eyeGap || 13} cy="-2" rx={preset.eyeW || 3.5} ry={preset.eyeH || 2.5} fill={ink} />
         {/* nose */}
         <path d="M 0 4 Q -2 12 0 14 Q 3 14 4 12" stroke={shade(skin, -25)} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         {/* mouth */}
@@ -146,8 +151,8 @@ export default function ReaderPortrait({ reader = {}, showBackground = true }) {
         )}
         {preset.extras === 'glasses-bun' && (
           <g>
-            <circle cx="-13" cy="-2" r="8.5" stroke="#1A1408" strokeWidth="1.8" fill="rgba(26,20,8,0.06)" />
-            <circle cx="13" cy="-2" r="8.5" stroke="#1A1408" strokeWidth="1.8" fill="rgba(26,20,8,0.06)" />
+            <circle cx={-(preset.eyeGap || 13)} cy="-2" r="8.5" stroke="#1A1408" strokeWidth="1.8" fill="rgba(26,20,8,0.06)" />
+            <circle cx={preset.eyeGap || 13} cy="-2" r="8.5" stroke="#1A1408" strokeWidth="1.8" fill="rgba(26,20,8,0.06)" />
             <path d="M -4.5 -2 L 4.5 -2" stroke="#1A1408" strokeWidth="1.8" />
             <circle cx="0" cy="-50" r="10" fill={hair} />
           </g>
