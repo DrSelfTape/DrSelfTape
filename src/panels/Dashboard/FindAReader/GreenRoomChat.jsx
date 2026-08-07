@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { ReaderPortrait } from '../../../components/Aurora';
+import { hasAvatar } from '../../../components/Aurora/avatarStyle';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -603,7 +605,7 @@ const GreenRoomChat = (props = {}) => {
             <div
               style={{
                 width: 72, height: 72, borderRadius: '50%', overflow: 'hidden',
-                background: otherActor.headshot
+                background: (!hasAvatar(otherActor.avatar_style) && otherActor.headshot)
                   ? `url(${otherActor.headshot}) center/cover`
                   : 'linear-gradient(135deg, rgba(212,168,95,0.20), rgba(212,168,95,0.40))',
                 border: '3px solid #FFFFFF',
@@ -611,7 +613,11 @@ const GreenRoomChat = (props = {}) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              {!otherActor.headshot && (
+              {/* Their chosen avatar, so the person you matched with looks the
+                  same here as on the card you swiped. */}
+              {hasAvatar(otherActor.avatar_style) ? (
+                <ReaderPortrait reader={{ id: otherActor.id, name: otherActor.name, avatar_style: otherActor.avatar_style }} />
+              ) : !otherActor.headshot && (
                 <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)' }}>
                   {partnerInitials}
                 </span>

@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { ReaderPortrait } from '../../../components/Aurora';
+import { hasAvatar } from '../../../components/Aurora/avatarStyle';
 import { useNavigate } from 'react-router-dom';
 import { Star, Clock, X, ChevronDown } from 'lucide-react';
 import axios from '../../../redux/http';
@@ -59,7 +61,12 @@ function ReaderCard({ reader, onBook }) {
             'linear-gradient(135deg, color-mix(in oklch, var(--aurora-rose) 26%, var(--aurora-glass)), color-mix(in oklch, var(--aurora-sky) 18%, var(--aurora-glass)))',
         }}
       >
-        {reader.headshot ? (
+        {/* A chosen avatar wins over a stored photo, same as the swipe card —
+            an actor must not appear as a drawing in one place and a photo in
+            another. */}
+        {hasAvatar(reader.avatar_style) ? (
+          <ReaderPortrait reader={{ id: reader.id, name: reader.name, avatar_style: reader.avatar_style }} />
+        ) : reader.headshot ? (
           <img
             src={reader.headshot}
             alt={reader.name}

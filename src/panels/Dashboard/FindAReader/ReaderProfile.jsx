@@ -6,6 +6,7 @@ import GenreTags from './components/GenreTags';
 import UnionBadge from './components/UnionBadge';
 import AvailabilityStatus from './components/AvailabilityStatus';
 import ProfilePhoto from '../../../components/Shared/ProfilePhoto';
+import { hasAvatar } from '../../../components/Aurora/avatarStyle';
 import { swipeOnReader, fetchFavorites, fetchReaderById } from '../../../redux/features/readers/readersMatchSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import ReportBlockMenu from '../../../components/Shared/ReportBlockMenu';
@@ -80,7 +81,11 @@ const ReaderProfile = (props) => {
     .toUpperCase()
     .slice(0, 2);
 
+  // A chosen avatar counts as having a picture — otherwise this page falls
+  // through to the bare-initials block for anyone who picked one, while their
+  // swipe card shows the avatar.
   const headshot = reader?.headshot || reader?.user_image;
+  const hasPicture = headshot || hasAvatar(reader?.avatar_style);
 
   const handleChat = () => {
     if (matchId) {
@@ -160,8 +165,15 @@ const ReaderProfile = (props) => {
             boxShadow: '0 12px 30px rgba(10,10,10,0.18)',
           }}
         >
-          {headshot ? (
-            <ProfilePhoto src={headshot} alt={reader.name} initials={initials} className="h-72 w-full" />
+          {hasPicture ? (
+            <ProfilePhoto
+              src={headshot}
+              avatarStyle={reader?.avatar_style}
+              seedId={reader?.id}
+              alt={reader.name}
+              initials={initials}
+              className="h-72 w-full"
+            />
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <span style={{ fontSize: 80, fontWeight: 800, color: 'rgba(212,168,95,0.35)' }}>{initials}</span>

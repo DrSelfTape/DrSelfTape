@@ -5,6 +5,7 @@ import { tapSelect, tapPrimary } from '../../../../utils/haptics';
 import { lastSeenLabel } from '../../../../utils/matchSignals';
 import { ReaderPortrait } from '../../../../components/Aurora';
 import { openReaderProfile } from '../../../../utils/openReaderProfile';
+import { hasAvatar } from '../../../../components/Aurora/avatarStyle';
 
 // Kept in one place because the drag turns it off and back on imperatively;
 // if the string here and the string in the style object drift, the exit
@@ -218,7 +219,12 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
     >
       {/* Full-bleed headshot */}
       <div style={{ position: 'absolute', inset: 0 }}>
-        {actor?.headshot || actor?.user_image || actor?.headshotUrl ? (
+        {/* A CHOSEN avatar wins over a stored photo. Without this the choice is
+            one-way: someone who uploads a photo and later prefers the avatar
+            would keep seeing the photo, and switching back would mean deleting
+            the file they uploaded. Choosing is reversible; deleting is not. */}
+        {!hasAvatar(actor?.avatar_style)
+          && (actor?.headshot || actor?.user_image || actor?.headshotUrl) ? (
           <>
             <img
               src={actor.headshot || actor.user_image || actor.headshotUrl}

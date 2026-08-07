@@ -10,6 +10,7 @@ import { baseURL } from '../../../redux/constant';
 import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
 import DeleteAccountModal from '../../../components/Dashboard/DeleteAccountModal';
 import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
+import AppearanceCard from '../../../components/Shared/AppearanceCard';
 import AuditionBadges, { BADGES } from '../../../components/AuditionBadges';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
 
@@ -863,6 +864,14 @@ export default function Profile() {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* How you appear in Match. Sits ABOVE the file uploads because it
+                decides which of them your swipe card actually uses, and because
+                the avatar route needs to be as findable as the upload — a lot
+                of actors will not put their face on a swipe card. */}
+            <div className="mb-6">
+              <AppearanceCard profile={profile} />
             </div>
 
             {/* File Uploads */}

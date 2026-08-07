@@ -37,6 +37,8 @@ const ActorProfileCard = ({ actor, onSlate, onStar, onPass }) => {
         >
           <ProfilePhoto
             src={actor?.headshot || actor?.user_image}
+            avatarStyle={actor?.avatar_style}
+            seedId={actor?.id}
             alt={actor?.name}
             initials={initials}
             className="h-16 w-16"

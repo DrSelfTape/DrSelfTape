@@ -60,6 +60,8 @@ const ReaderListItem = ({ match, onClick }) => {
         >
           <ProfilePhoto
             src={other?.headshot || other?.user_image}
+            avatarStyle={other?.avatar_style}
+            seedId={other?.id}
             alt={other?.name}
             initials={initials}
             className="h-14 w-14"

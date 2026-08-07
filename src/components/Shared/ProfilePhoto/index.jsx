@@ -10,8 +10,15 @@
  *   style      — outer container inline style
  *   initials   — fallback initials if no src
  *   round      — true = circle (default), false = rounded-lg
+ *   avatarStyle— the actor's CHOSEN illustrated avatar ("aurora:<n>"). When set
+ *                it WINS over src: someone who picked an avatar must look the
+ *                same everywhere, or they appear as a drawing on the swipe card
+ *                and as their photo in the Green Room list.
+ *   seedId     — id used to seed the illustration (falls back to alt)
  */
 import { useState } from 'react';
+import { ReaderPortrait } from '../../Aurora';
+import { hasAvatar } from '../../Aurora/avatarStyle';
 
 export default function ProfilePhoto({
   src,
@@ -20,17 +27,22 @@ export default function ProfilePhoto({
   style = {},
   initials = '',
   round = true,
+  avatarStyle = '',
+  seedId,
 }) {
+  const usingAvatar = hasAvatar(avatarStyle);
   const shape = round ? 'rounded-full' : 'rounded-lg';
   const [imgFailed, setImgFailed] = useState(false);
-  const showImage = src && !imgFailed;
+  const showImage = !usingAvatar && src && !imgFailed;
 
   return (
     <div
       className={`relative overflow-hidden ${shape} ${className}`}
       style={style}
     >
-      {showImage ? (
+      {usingAvatar ? (
+        <ReaderPortrait reader={{ id: seedId ?? alt, name: alt, avatar_style: avatarStyle }} />
+      ) : showImage ? (
         <>
           {/* Photo */}
           <img

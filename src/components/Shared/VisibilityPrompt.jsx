@@ -7,8 +7,8 @@ import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 import { fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { markStep } from '../Dashboard/TutorialChecklist';
 import { ReaderPortrait } from '../Aurora';
-import { FACE_PRESETS } from '../Aurora/readerPortraitPresets';
 import { avatarStyleFor } from '../Aurora/avatarStyle';
+import AvatarPicker from './AvatarPicker';
 import HeadshotCropper from './HeadshotCropper';
 
 /**
@@ -198,28 +198,13 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
           <p style={{ color: 'var(--aurora-sub)', fontSize: 12.5, margin: '0 0 10px' }}>
             Pick the one you want.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: 10 }}>
-            {FACE_PRESETS.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                disabled={busy}
-                onClick={() => chooseAvatar(i)}
-                aria-label={`Avatar option ${i + 1}`}
-                aria-pressed={chosen === i}
-                style={{
-                  padding: 0, borderRadius: '50%', overflow: 'hidden', cursor: busy ? 'default' : 'pointer',
-                  aspectRatio: '1 / 1', background: 'none',
-                  border: chosen === i
-                    ? '3px solid var(--aurora-accent)'
-                    : '2px solid var(--aurora-glass-border)',
-                  opacity: busy && chosen !== i ? 0.5 : 1,
-                }}
-              >
-                <ReaderPortrait reader={{ id: userId, name, avatar_style: `aurora:${i}` }} />
-              </button>
-            ))}
-          </div>
+          <AvatarPicker
+            userId={userId}
+            name={name}
+            selected={chosen === null ? '' : avatarStyleFor(chosen)}
+            disabled={busy}
+            onPick={(i) => chooseAvatar(i)}
+          />
         </div>
       )}
 
