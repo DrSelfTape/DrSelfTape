@@ -408,6 +408,14 @@
        the marketing-relevant rows sit higher in the frame. */
     .device img.shift-up { object-position: top; }
 
+    /* Frames that should show the WHOLE capture with nothing cropped.
+       Default .device img is object-fit:cover against a fixed-height frame,
+       which silently shaves the left/right edges — that is how the Performance
+       DNA scores ended up clipped mid-digit. With natural sizing the frame
+       inherits the capture's aspect and cover has nothing to crop. */
+    .device.natural { height: auto; }
+    .device.natural img { height: auto; object-fit: fill; }
+
     .doodle-arrow {
       position: absolute;
       width: 280px; height: 180px;
@@ -445,11 +453,11 @@
         <img src="captures/02-home.png" alt="Home — Hey Joel">
       </div>
 
-      <div class="testimonial" style="bottom: 110px; right: 80px; transform: rotate(6deg);">
-        <div class="tape"></div>
-        <div class="quote">"Booked my first co-star in 6 weeks."</div>
-        <div class="who">— Maya K. · NY actor</div>
-      </div>
+      <!-- Testimonial removed 2026-08-06: "Booked my first co-star in 6 weeks."
+           — Maya K. had no source. An endorsement we can't attribute to a real
+           user who actually said it is a fabricated review, not copy. If a real
+           actor gives us a quote in writing, it goes back here verbatim with
+           their real name. Same reason the rating/user-count pill above went. -->
 
       <!-- Actor margin notes — scrawled around the device -->
       <div class="actor-note gold" style="top: 880px; right: 70px; font-size: 56px; transform: rotate(-8deg);">
@@ -492,8 +500,8 @@
       </div>
 
       <!-- Jericho dominant device -->
-      <div class="device" style="width: 880px; bottom: -200px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
-        <img src="captures/08-jericho.png" alt="Jericho — My Growth Performance DNA">
+      <div class="device natural" style="width: 880px; bottom: -200px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
+        <img src="captures/jericho-growth.png" alt="Jericho — My Growth Performance DNA">
       </div>
 
       <div class="sticky mint" style="top: 1280px; right: 60px; transform: rotate(8deg); width: 270px; font-size: 28px;">
@@ -585,15 +593,22 @@
       <div class="copy">
         <div class="eyebrow light">Find a Reader · live</div>
         <div class="headline light">Real readers.<br><span class="underline-sweep">Real time.</span></div>
-        <div class="subhead light">Swipe through verified actors near you. Match in seconds. Rehearse over HD video in minutes.</div>
-        <div style="margin-top: 30px;">
-          <div class="live-pill"><span class="dot"></span>234 readers online · 12 in NY · 8 in LA</div>
-        </div>
+        <!-- "verified actors" removed: there is no verification system. The
+             only gate on the deck is a real headshot. "Match in seconds" was
+             also cut — a match needs another human to swipe back, so it is not
+             something we can promise. -->
+        <div class="subhead light">Swipe through actors who want to run lines. Match, then rehearse over live video.</div>
+        <!-- Live-count pill removed 2026-08-06. It read "234 readers online ·
+             12 in NY · 8 in LA" while production had 0 online, 71 available in
+             the last 30 days, and 144 users who had EVER logged in — the
+             advertised number exceeded the entire lifetime user base. Do not
+             reintroduce a hard count here: any number we bake into an image is
+             wrong by next month. Same call as the screen-1 user-count pill. -->
       </div>
 
       <!-- Swipe card -->
-      <div class="device" style="width: 820px; bottom: -100px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
-        <img src="captures/06-swipe-card.png" alt="Find a Reader — D'Kia Anderson">
+      <div class="device natural" style="width: 820px; bottom: -100px; left: 50%; transform: translateX(-50%) rotate(-2deg);">
+        <img src="captures/find-a-reader.png" alt="Find a Reader — sample reader card">
       </div>
 
       <!-- Margin notes -->
@@ -607,9 +622,11 @@
         + tape it
       </div>
 
-      <!-- Sticky note -->
+      <!-- Sticky note. Was "Verified actors — no ghosts", which was false twice
+           over: nothing is verified, and the reader shown on the iPad card had
+           never logged in — a ghost. This says something we can actually keep. -->
       <div class="sticky mint" style="top: 980px; right: 50px; transform: rotate(8deg); width: 240px; font-size: 26px;">
-        Verified actors — no ghosts
+        Read with a real actor
       </div>
 
       <!-- Highlighter on "Real time." -->

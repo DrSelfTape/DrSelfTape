@@ -5,7 +5,7 @@ import { Users2, HeartHandshake, Radio, Gift } from 'lucide-react';
 import FindAReader from '../FindAReader';
 import WhoWantsToRead from '../FindAReader/WhoWantsToRead';
 import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
-import { fetchMatchingStats } from '../../../redux/features/readers/readersMatchSlice';
+import { fetchMatchingStats, fetchAvailableReaders } from '../../../redux/features/readers/readersMatchSlice';
 import { trackEvent } from '../../../utils/analytics';
 
 /**
@@ -34,7 +34,7 @@ export default function Readers() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { readers = [], onlineCount, matchingStats } = useSelector(
+  const { readers = [], onlineCount, matchingStats, readersLoading } = useSelector(
     (s) => s.readersMatch || {}
   );
   const interestedCount = matchingStats?.pending_likes_count || 0;
@@ -45,7 +45,16 @@ export default function Readers() {
   const defaultFilter = readers.length > 0 || interestedCount === 0 ? 'browse' : 'interested';
   const filter = FILTERS.some((f) => f.id === requested) ? requested : defaultFilter;
 
-  useEffect(() => { dispatch(fetchMatchingStats()); }, [dispatch]);
+  // Fetch the deck HERE, not only inside <FindAReader>. The empty state below
+  // renders *instead of* FindAReader when `readers` is empty, and FindAReader
+  // was the only thing that ever dispatched fetchAvailableReaders — so a direct
+  // load of /dashboard/readers showed "No readers in your deck right now"
+  // forever, no matter how many readers were available. It only ever looked
+  // right when the user arrived from a surface that had already filled the store.
+  useEffect(() => {
+    dispatch(fetchMatchingStats());
+    dispatch(fetchAvailableReaders());
+  }, [dispatch]);
 
   const counts = useMemo(() => ({
     browse: readers.length,
@@ -57,7 +66,9 @@ export default function Readers() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter]);
 
-  const allEmpty = readers.length === 0 && interestedCount === 0;
+  // Never call it empty while the first fetch is still in flight — that
+  // flashes "no readers" at someone whose deck is about to be full.
+  const allEmpty = !readersLoading && readers.length === 0 && interestedCount === 0;
 
   return (
     <div className="aurora-orbs" style={{ color: 'var(--aurora-text)', fontFamily: "'Space Grotesk', sans-serif" }}>
