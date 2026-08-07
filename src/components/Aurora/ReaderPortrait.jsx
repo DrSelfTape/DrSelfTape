@@ -120,14 +120,21 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
         </>
       )}
 
-      {/* ONE group, ONE scale, for the whole figure.
+      {/* Positioned at 0.34, not 0.30. A SQUARE container (the 62px picker
+          swatch, the 68px Profile preview, the chat circle) covering a 0.89 box
+          crops ~25 design units off the top — and the hair crown sat at y=19,
+          six units inside that. Every avatar came out with a flat-topped head
+          in the picker, which is the one place all fourteen are seen together.
+          Dropping the figure 18 units clears it with margin to spare.
+
+          ONE group, ONE scale, for the whole figure.
           Shoulders used to be sized off DESIGN_W while the head carried its own
           scale() — two independent scales for one body. Enlarging the head to
           fix the card framing therefore produced a long neck above small
           shoulders. Everything below is now authored in the SAME local units as
           the head (roughly ±95 wide, -58 to 150 tall) and scaled once, so the
           proportions cannot drift again. To reframe, change FIGURE_SCALE. */}
-      <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.30}) scale(${FIGURE_SCALE})`}>
+      <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.34}) scale(${FIGURE_SCALE})`}>
         {/* shoulders — drawn first so the neck overlaps them */}
         <path
           d="M -96 152 Q -82 84 0 74 Q 82 84 96 152 Z"
