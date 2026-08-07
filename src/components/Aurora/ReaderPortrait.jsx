@@ -5,6 +5,8 @@
  * the Aurora handoff `screens/v1-match.jsx` READER_FACES.
  */
 
+import { useId } from 'react';
+
 import { FACE_PRESETS } from './readerPortraitPresets';
 import { parseAvatarStyle } from './avatarStyle';
 
@@ -45,6 +47,7 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
   // throw on reader.id. No caller passes null today, but this renders on the
   // swipe deck, the chat list and the picker — a crash here takes a screen down.
   const reader = readerProp || {};
+  const instanceId = useId();
   const seed = String(reader.id ?? reader.name ?? '0');
   const h = hashStr(seed);
   // An explicit CHOICE wins over the id hash. Assigning a face by hashing the
@@ -58,7 +61,18 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
   const ink = '#1A1408';
   const skin = preset.skin;
   const hair = preset.hair;
-  const variant = (h % 9999).toString();
+  // The gradient id must be unique per MOUNTED INSTANCE, not per reader.
+  //
+  // It was derived from the reader id alone. The picker renders all 14 options
+  // with the SAME user id, so every swatch emitted <linearGradient
+  // id="dst-pbg-N"> with the same id and different stops — and SVG url(#id)
+  // resolves document-wide by first match in tree order, so all fourteen
+  // painted swatch zero's background. That is the real reason they all looked
+  // like the same tan circle; it was never the crop.
+  //
+  // useId gives React's own per-instance id, which is stable across renders and
+  // safe under concurrent rendering and SSR — unlike a counter or a random.
+  const variant = `${h % 9999}-${instanceId.replace(/:/g, '')}`;
   const gradId = `dst-pbg-${variant}`;
   const glowId = `dst-pglow-${variant}`;
 

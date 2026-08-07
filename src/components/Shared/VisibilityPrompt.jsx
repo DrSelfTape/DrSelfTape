@@ -67,7 +67,13 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
       });
       // The photo is already saved. These are notes on how it will look, never
       // a rejection — a picture we think is dark still beats the blank card.
-      setFindings((data?.data || data)?.headshot_findings || []);
+      const found = (data?.data || data)?.headshot_findings || [];
+      setFindings(found);
+      if (found.length) {
+        // A successful upload flips needs_visual, the parent unmounts this
+        // component, and the inline list disappears before it can be read.
+        dispatch(showSnackbar({ message: found[0].message, variant: 'warning' }));
+      }
       dispatch(fetchProfileThunk());
       markStep('headshot');
     } catch (err) {
@@ -87,12 +93,16 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
       // a failed save looking successful — the avatar stayed ringed as selected
       // while the server still had nothing.
       setChosen(index);
-      // Hide locally too. The prompt is gated on profile.needs_visual, which
-      // only flips when this refetch lands; if the GET fails after the PATCH
-      // succeeded, the prompt would sit there telling someone they are invisible
-      // when they are not.
       setDone(true);
-      dispatch(fetchProfileThunk());
+      // The prompt AND the deck are both gated on needs_visual, so this refetch
+      // is what actually reveals Match. Await it and retry once — dispatching
+      // and walking away meant a cellular blip left the flag stale.
+      try {
+        await dispatch(fetchProfileThunk()).unwrap();
+      } catch {
+        await new Promise((r) => setTimeout(r, 900));
+        dispatch(fetchProfileThunk());
+      }
       markStep('headshot');
       dispatch(showSnackbar({ message: "You're visible in Match now.", variant: 'success' }));
     } catch (err) {
@@ -103,8 +113,6 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
     }
     setBusy(false);
   };
-
-  if (done) return null;
 
   return (
     <div
@@ -117,13 +125,13 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
     >
       <div>
         <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 6 }}>
-          YOU&apos;RE NOT BEING SHOWN
+          {done ? 'YOU\u2019RE VISIBLE' : 'YOU\u2019RE NOT BEING SHOWN'}
         </span>
         <h2
           className="aurora-display"
           style={{ fontSize: compact ? 19 : 23, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.4px' }}
         >
-          Actors can&apos;t see you yet
+          {done ? 'You\u2019re in the deck now' : 'Actors can\u2019t see you yet'}
         </h2>
         <p style={{ color: 'var(--aurora-sub)', fontSize: 14, lineHeight: 1.5, marginTop: 8 }}>
           Match only deals cards that have a picture on them. Until you add one you
@@ -188,7 +196,7 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
       {picking && (
         <div>
           <p style={{ color: 'var(--aurora-sub)', fontSize: 12.5, margin: '0 0 10px' }}>
-            Pick the one you want. You can change it later in Profile.
+            Pick the one you want.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(62px, 1fr))', gap: 10 }}>
             {FACE_PRESETS.map((_, i) => (
