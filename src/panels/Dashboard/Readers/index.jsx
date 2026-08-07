@@ -7,6 +7,7 @@ import WhoWantsToRead from '../FindAReader/WhoWantsToRead';
 import AvailabilityToggle from '../../../components/Dashboard/AvailabilityToggle';
 import { fetchMatchingStats, fetchAvailableReaders } from '../../../redux/features/readers/readersMatchSlice';
 import { trackEvent } from '../../../utils/analytics';
+import { supplyLine } from '../../../utils/supply';
 
 /**
  * The ONE reader surface (P1-05). Replaces three routes that told three
@@ -34,10 +35,13 @@ export default function Readers() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { readers = [], onlineCount, matchingStats, readersLoading } = useSelector(
+  const { readers = [], matchingStats, readersLoading } = useSelector(
     (s) => s.readersMatch || {}
   );
   const interestedCount = matchingStats?.pending_likes_count || 0;
+  // Phrasing owned by utils/supply — see that file for why every surface
+  // stopped rolling its own count.
+  const supply = supplyLine(matchingStats);
 
   // Default: never land on an empty filter (ticket req 2). Browse wins when
   // the deck has anyone; otherwise Interested if it has anyone.
@@ -82,9 +86,7 @@ export default function Readers() {
       {/* The truth strip — every number sourced from the slice that renders
           the content below. One supply story, told once. */}
       <p className="aurora-mono text-xs mb-4" style={{ color: 'var(--aurora-sub)', letterSpacing: '0.06em' }}>
-        {onlineCount > 0 && <>{onlineCount} online now<span style={{ opacity: 0.4 }}> · </span></>}
-        {readers.length} in your deck
-        <span style={{ opacity: 0.4 }}> · </span>
+        {supply && <>{supply.text}<span style={{ opacity: 0.4 }}> · </span></>}
         {interestedCount} interested in you
       </p>
 

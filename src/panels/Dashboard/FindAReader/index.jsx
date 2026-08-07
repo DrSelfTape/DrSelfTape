@@ -21,6 +21,7 @@ import { baseURL } from '../../../redux/constant';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { tapPrimary, cheer } from '../../../utils/haptics';
 import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
+import { supplyLine } from '../../../utils/supply';
 
 // Backend serializes a null last_name as the Python string "None"; strip it
 // before we put a name in front of the user.
@@ -31,10 +32,11 @@ const FindAReader = ({ embedded = false }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { readers = [], readersLoading, onlineCount, matchingStats, readersError } = useSelector(
+  const { readers = [], readersLoading, matchingStats, readersError } = useSelector(
     (state) => state.readersMatch || {}
   );
   const pendingLikes = matchingStats?.pending_likes_count || 0;
+  const supply = supplyLine(matchingStats);
   const profile = useSelector((state) => state.profile?.profile);
   const hasPhoto = !!(profile?.actor_profile?.headshot || profile?.user_image);
   const savedFilters = useSelector((s) => s.userSettings?.data?.reader_filters);
@@ -354,15 +356,13 @@ const FindAReader = ({ embedded = false }) => {
           backdropFilter: 'blur(12px)',
         }}>
           <Users size={11} />
-          {/* Use real onlineCount when BE returns it; otherwise show the
-              honest "X NEARBY" count instead of misleading "online". */}
-          {onlineCount > 0
-            ? `${onlineCount} readers online`
-            : `${readers.length} nearby`}
+          {/* "Nearby" was a lie: there is no geography anywhere in the deck
+              query. Supply phrasing is owned by utils/supply so a label can
+              never drift from the number it describes. */}
+          {supply ? supply.text : `${Math.max(0, readers.length - currentIndex)} in your deck`}
           <span style={{ opacity: 0.5 }}>·</span>
-          {/* Deck-remaining, NOT a daily quota — the old "left today" copy
-              implied an undisclosed limit (P1-05 open question, resolved). */}
-          {Math.max(0, readers.length - currentIndex)} in your deck
+          {/* Cards left in THIS deck — a page position, not a supply figure. */}
+          {Math.max(0, readers.length - currentIndex)} left to swipe
         </div>
       )}
 

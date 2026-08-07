@@ -261,10 +261,13 @@ const initialState = {
   messagesLoading: false,
   whoWantsToRead: [],
   likesLoading: false,
+  // Mirrors matchingStats.online_count. It used to be initialised to 0 and
+  // NEVER assigned, so every `onlineCount > 0` branch in the UI was dead and
+  // each surface silently fell through to a worse, wronger number.
   onlineCount: 0,
   filters: {},
   error: null,
-  matchingStats: { available_count: 0, pending_likes_count: 0, active_matches_count: 0 },
+  matchingStats: { deck_count: 0, available_count: 0, online_count: 0, window_days: 30, pending_likes_count: 0, active_matches_count: 0 },
   isAvailable: false,
   availabilityToggling: false,
   activityFeed: null,
@@ -440,6 +443,9 @@ const readersMatchSlice = createSlice({
       })
       .addCase(fetchMatchingStats.fulfilled, (state, action) => {
         state.matchingStats = action.payload;
+        // Keep the standalone mirror in step with the payload; it is the one
+        // number allowed a live indicator, so it must never go stale.
+        state.onlineCount = Number(action.payload?.online_count) || 0;
         state.matchingStatsError = null;
       })
       .addCase(fetchMatchingStats.rejected, (state, action) => {

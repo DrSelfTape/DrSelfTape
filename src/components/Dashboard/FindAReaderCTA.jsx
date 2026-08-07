@@ -1,11 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Users2, HeartHandshake } from 'lucide-react';
+import { supplyLine } from '../../utils/supply';
 
 export default function FindAReaderCTA() {
   const navigate = useNavigate();
   const stats = useSelector((s) => s.readersMatch.matchingStats);
-  const available = stats?.available_count || 0;
+  // This card used to render available_count as "N actors looking for readers
+  // RIGHT NOW" beside a pulsing live dot — a 30-day figure dressed as presence.
+  const supply = supplyLine(stats);
   const pendingLikes = stats?.pending_likes_count || 0;
 
   return (
@@ -26,15 +29,18 @@ export default function FindAReaderCTA() {
             <Users2 className="w-5 h-5 text-[#A7ECDA]" />
             <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Find a Reader</h2>
           </div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-            </span>
-            <p className="text-[#A7ECDA] text-sm font-semibold">
-              {available} {available === 1 ? 'actor' : 'actors'} looking for readers right now
-            </p>
-          </div>
+          {supply && (
+            <div className="flex items-center gap-2 mb-1">
+              {/* The pulse is reserved for genuine presence. */}
+              {supply.live && (
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                </span>
+              )}
+              <p className="text-[#A7ECDA] text-sm font-semibold">{supply.text}</p>
+            </div>
+          )}
           {pendingLikes > 0 && (
             <div className="flex items-center gap-2 mt-2">
               <HeartHandshake className="w-4 h-4 text-[#7A5A18]" />

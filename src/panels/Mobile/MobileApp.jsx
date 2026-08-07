@@ -1671,7 +1671,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {(() => {
         const recent = Array.isArray(matchingStats?.recent_readers) ? matchingStats.recent_readers : [];
         const readers = recent.slice(0, 3);
-        const count = Number(matchingStats?.pending_likes_count) || Number(matchingStats?.available_count) || 0;
+        // NEVER `likes || available` — those are different quantities, and the
+        // label below describes only one of them. A user with 3 pending likes
+        // was being told "3 readers active this month".
+        const count = Number(matchingStats?.available_count) || 0;
         if (count === 0 && readers.length === 0) return null;
         return (
           <button
