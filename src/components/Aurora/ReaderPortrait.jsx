@@ -123,8 +123,18 @@ export default function ReaderPortrait({ reader: readerProp, showBackground = tr
       {/* head */}
       <g transform={`translate(${DESIGN_W / 2}, ${DESIGN_H * 0.46}) scale(1.35)`}>
         {/* neck */}
-        <rect x="-14" y="20" width="28" height="20" fill={skin} />
-        <ellipse cx="0" cy="40" rx="20" ry="6" fill={shade(skin, -18)} opacity="0.5" />
+        {/* The neck has to REACH the shoulders. It used to run y=20..40, which
+            is entirely behind the face ellipse (that extends to ~y=48), so no
+            neck ever rendered — and 26.6 design units of bare background sat
+            between the chin and the shirt. A head floating above a collar.
+            The shoulders are drawn before this group, so the neck overlaps them
+            cleanly rather than butting up against them. */}
+        <rect x="-14" y="20" width="28" height="44" fill={skin} />
+        {/* Shadow under the jaw, tied to THIS preset's chin — faceH varies
+            44-51 across the set, so a fixed y would float on some faces and
+            hide behind the chin on others. */}
+        <ellipse cx="0" cy={(preset.faceH || 46) + 3} rx="13" ry="4"
+                 fill={shade(skin, -22)} opacity="0.45" />
         {/* hair back */}
         {preset.hairBackPath && <path d={preset.hairBackPath} fill={hair} />}
         {/* face */}
