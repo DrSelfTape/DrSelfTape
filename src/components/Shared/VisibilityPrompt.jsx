@@ -38,6 +38,9 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
   // plenty of women a male-presenting face.
   const [picking, setPicking] = useState(false);
   const [chosen, setChosen] = useState(null);
+  // Set once the choice is saved, so the prompt goes away without waiting on a
+  // profile refetch that might fail.
+  const [done, setDone] = useState(false);
 
   const pickFile = (e) => {
     const file = e.target.files?.[0];
@@ -80,6 +83,15 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
     setBusy(true);
     try {
       await axios.patch(`${baseURL}/v1/users/profile/`, { avatar_style: avatarStyleFor(index) });
+      // Mark it chosen only once the SERVER has it. Setting this on click left
+      // a failed save looking successful — the avatar stayed ringed as selected
+      // while the server still had nothing.
+      setChosen(index);
+      // Hide locally too. The prompt is gated on profile.needs_visual, which
+      // only flips when this refetch lands; if the GET fails after the PATCH
+      // succeeded, the prompt would sit there telling someone they are invisible
+      // when they are not.
+      setDone(true);
       dispatch(fetchProfileThunk());
       markStep('headshot');
       dispatch(showSnackbar({ message: "You're visible in Match now.", variant: 'success' }));
@@ -91,6 +103,8 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
     }
     setBusy(false);
   };
+
+  if (done) return null;
 
   return (
     <div
@@ -182,7 +196,7 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
                 key={i}
                 type="button"
                 disabled={busy}
-                onClick={() => { setChosen(i); chooseAvatar(i); }}
+                onClick={() => chooseAvatar(i)}
                 aria-label={`Avatar option ${i + 1}`}
                 aria-pressed={chosen === i}
                 style={{

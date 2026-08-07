@@ -40,7 +40,11 @@ const DESIGN_H = 260;
 
 // Callers still pass viewWidth/viewHeight; they are accepted and ignored. The
 // SVG fills its container and crops, so the caller's CSS box decides framing.
-export default function ReaderPortrait({ reader = {}, showBackground = true }) {
+export default function ReaderPortrait({ reader: readerProp, showBackground = true }) {
+  // A default parameter only covers `undefined`; `reader={null}` would still
+  // throw on reader.id. No caller passes null today, but this renders on the
+  // swipe deck, the chat list and the picker — a crash here takes a screen down.
+  const reader = readerProp || {};
   const seed = String(reader.id ?? reader.name ?? '0');
   const h = hashStr(seed);
   // An explicit CHOICE wins over the id hash. Assigning a face by hashing the
