@@ -1100,6 +1100,12 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   const availabilityToggling = useSelector((state) => state.readersMatch.availabilityToggling);
   const profile = useSelector((state) => state.profile?.profile);
 
+  // Home READS the profile (needs_visual drives the visibility prompt) but
+  // nothing here ever FETCHED it — fetchProfileThunk was dispatched only from
+  // ProfileScreen. On a fresh session `profile` was empty, so needs_visual was
+  // undefined and the prompt could not render for anybody, gate or no gate.
+  useEffect(() => { dispatch(fetchProfileThunk()); }, [dispatch]);
+
   const auditions = rawAuditions.map(mapAudition);
   const scripts = rawScripts.map(mapScript);
 
@@ -1323,6 +1329,28 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       <div style={{ paddingTop: 16, marginBottom: (matchingStats?.pending_likes_count || 0) > 0 ? 8 : 0 }}>
         <PendingLikesBanner onNavigate={() => setTab("find-a-reader")} />
       </div>
+
+      {/* Invisible in the deck? DELIBERATELY OUTSIDE the !firstSession gate
+          below.
+
+          This is the exact trap that caused the July headshot cliff. Commit
+          94f38cf cut the headshot step from onboarding and moved the ask to
+          ProfileCompleteness — which only renders once the first review is
+          done. Since then 62 real signups produced 19 completed first reviews,
+          so 69% were never asked for a picture at all, and the deck requires
+          one. They were invisible from the moment they arrived.
+
+          I originally put this prompt inside the same gate and rebuilt the same
+          bug. "You are not being shown to anyone" is precisely what a
+          first-session user needs to hear — it is not a post-value nicety, it
+          is the thing standing between them and every match. `needs_visual`
+          comes from the same rule the deck uses, so it disappears the moment
+          they pick either route and never nags someone already visible. */}
+      {profile?.needs_visual && (
+        <div style={{ paddingTop: 8 }}>
+          <VisibilityPrompt userId={profile?.id} name={profile?.first_name} compact />
+        </div>
+      )}
 
       {/* Profile completeness — auto-hides at 100%. Hidden pre-first-review:
           the checklist is the one guidance system on the first-session Home,
@@ -1664,15 +1692,6 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           OPEN →
         </span>
       </button>
-
-      {/* Invisible in the deck? This is the first thing they see. `needs_visual`
-          uses the same rule the deck does, so it disappears the moment they
-          pick either route and never nags someone already visible. */}
-      {profile?.needs_visual && (
-        <div style={{ marginBottom: 14 }}>
-          <VisibilityPrompt userId={profile?.id} name={profile?.first_name} compact />
-        </div>
-      )}
 
       {/* ── Match tease ── 3 stacked reader avatars + "X readers active this month".
      NOT "near you" (PresenceStatus stores no location) and NOT "new"
