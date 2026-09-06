@@ -245,7 +245,8 @@ function ReviewDetailSheet({ session, onClose }) {
                 {locked && (
                   <button type="button"
                     onClick={() => goUpgrade({ source: 'history_full_read', returnTo: 'jericho' })}
-                    onTouchEnd={(e) => { e.preventDefault(); e.currentTarget.click(); }}
+                    // WKWebView drops synthetic clicks on overlays — call the action, don't re-click.
+                    onTouchEnd={(e) => { e.preventDefault(); goUpgrade({ source: 'history_full_read', returnTo: 'jericho' }); }}
                     className="w-full text-left rounded-2xl p-4 border border-[#D4A85F]/35"
                     style={{ ...TAP_STYLE, background: 'rgba(212,168,95,0.08)' }}>
                     <span className="flex items-center gap-2 text-sm font-bold text-[#0A0A0A]">

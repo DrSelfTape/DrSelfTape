@@ -151,7 +151,9 @@ export default function TapeReviewNotes({ review: r, revealStage = 3, afterNotes
               <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={SURFACE}>
                 <h3 className="text-xs font-bold text-[#0A0A0A] mb-3">Tape scores</h3>
                 <div className="space-y-2.5">
-                  {TECH_SCORES.map((s) => (
+                  {/* Only dimensions the server actually scored — a missing key
+                      must never render as a 0 that reads as a terrible score. */}
+                  {TECH_SCORES.filter((s) => scores[s.key] != null).map((s) => (
                     <ScoreBar key={s.key} label={s.label} value={scores[s.key]} chip={scoreChip(scores[s.key])} />
                   ))}
                 </div>
