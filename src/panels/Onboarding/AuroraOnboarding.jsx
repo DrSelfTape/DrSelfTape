@@ -5,6 +5,7 @@ import { patchUserSettings } from '../../redux/features/userSettings/userSetting
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
 import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
+import SampleReview from './SampleReview';
 
 /* ── Aurora post-signup onboarding flow ────────────────────────────────
  * 3 screens pre-value (Tier 2 item 2): identity → free-review offer →
@@ -834,9 +835,15 @@ function Welcome({ data, onDone }) {
  * practice scene" is preselected + RECOMMENDED so the no-tape/no-sides user —
  * the common case for a brand-new signup — still has a one-tap path to the
  * aha. Both cards terminate at the analyzer; only the variant differs. */
-function Offer({ onTry, onSkip }) {
+function Offer({ firstName, onTry, onSkip }) {
   useEffect(() => { track('FIRST_REVIEW_OFFER_SHOWN'); }, []);
   const [variant, setVariant] = useState('record');
+  const [sampleOpen, setSampleOpen] = useState(false);
+  const sampleLinkRef = useRef(null);
+  const closeSample = () => {
+    setSampleOpen(false);
+    requestAnimationFrame(() => sampleLinkRef.current?.focus());
+  };
   const cards = [
     {
       id: 'record', emoji: '🎬', badge: 'RECOMMENDED',
@@ -850,8 +857,9 @@ function Offer({ onTry, onSkip }) {
     },
   ];
   return (
+    <>
     <div className="aurora-orbs aurora-orbs-live" style={{
-      position: 'absolute', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+      position: 'absolute', inset: 0, overflow: 'hidden', display: sampleOpen ? 'none' : 'flex', flexDirection: 'column',
     }}>
       {/* Safe-center: margin-auto bookends instead of justify-center, plus
           overflow-y — the two offer cards make this column taller than a
@@ -939,6 +947,20 @@ function Offer({ onTry, onSkip }) {
               </button>
             );
           })}
+          <button
+            ref={sampleLinkRef}
+            type="button"
+            onClick={() => {
+              track('FIRST_REVIEW_SAMPLE_VIEWED');
+              setSampleOpen(true);
+            }}
+            className="text-xs underline"
+            style={{
+              display: 'block', margin: '0 auto', padding: '12px 4px',
+              background: 'none', border: 'none', color: 'var(--aurora-sub)',
+              cursor: 'pointer', fontFamily: 'inherit', touchAction: 'manipulation',
+            }}
+          >See what a review looks like</button>
         </div>
       </div>
       <div style={{
@@ -959,6 +981,17 @@ function Offer({ onTry, onSkip }) {
         >Not now</button>
       </div>
     </div>
+    {sampleOpen && (
+      <SampleReview
+        firstName={firstName}
+        onClose={closeSample}
+        onTry={(chosenVariant) => {
+          track('FIRST_REVIEW_SAMPLE_CTA', { variant: chosenVariant });
+          return onTry(chosenVariant);
+        }}
+      />
+    )}
+    </>
   );
 }
 
@@ -1216,7 +1249,7 @@ export default function AuroraOnboarding({ onClose }) {
       {/* When the free-review flow is on, the welcome CTA advances to the offer
           step instead of finishing; otherwise it closes onboarding as before. */}
       {step === 'welcome' && <Welcome data={data} onDone={finish} />}
-      {step === 'offer' && <Offer onTry={launchFirstReview} onSkip={skipFirstReview} />}
+      {step === 'offer' && <Offer firstName={data.first_name} onTry={launchFirstReview} onSkip={skipFirstReview} />}
     </div>
   );
 }
