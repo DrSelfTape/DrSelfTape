@@ -17,11 +17,13 @@ export const ResetPassword = () => {
   const dispatch = useDispatch();
   const { toast } = useSnackbar();
 
-  // Get params from URL (for example, token or email)
+  // The token identifies the user on its own; the API no longer puts the
+  // email in the link (it leaked into browser history and access logs).
+  // `email` is still read so links sent before that change keep working.
   const searchParams = new URLSearchParams(window.location.search);
   const token = searchParams.get('token');
   const email = searchParams.get('email');
-  const linkIsValid = !!(token && token.trim() && email && email.trim());
+  const linkIsValid = !!(token && token.trim());
 
   const [formData, setFormData] = useState({
     newPassword: '',

@@ -60,7 +60,7 @@ let sessionExpiredHandled = false;
 // if a 401 fired while already on /login, permanently disabling expiry logout).
 export const resetSessionExpiredLatch = () => { sessionExpiredHandled = false; };
 
-// Silent session refresh. Access tokens live 60 minutes; the refresh token
+// Silent session refresh. Access tokens live 30 minutes; the refresh token
 // (30 days, rotated on every use) is exchanged here for a new pair so the
 // user never sees a login wall mid-session. Single-flight: when a burst of
 // requests 401s together (dashboard fires 10-15 calls per page), only ONE
