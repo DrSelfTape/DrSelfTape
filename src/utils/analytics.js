@@ -200,6 +200,8 @@ export const Events = {
   FIRST_REVIEW_PAYWALL_SHOWN: 'first_review_paywall_shown',
   FIRST_REVIEW_PAYWALL_TAP: 'first_review_paywall_tap',
   FIRST_REVIEW_SKIPPED: 'first_review_skipped',
+  FIRST_REVIEW_SAMPLE_VIEWED: 'first_review_sample_viewed',
+  FIRST_REVIEW_SAMPLE_CTA: 'first_review_sample_cta',
   // Added 2026-07-07 — the silent-abort + repeat gaps the activation funnel was
   // blind to. offer_shown → upload_shown → started → completed → notes_viewed,
   // plus the two silent drops (consent decline, upload dead-end) and the repeat
