@@ -19,6 +19,13 @@ import {
 } from '../../../redux/features/jericho/jerichoSlice';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import TapeReview from './TapeReview';
+import TapeReviewNotes from './TapeReviewNotes';
+import TapeReviewShareCard, { TapeReviewShareCardStory } from './TapeReviewShareCard';
+import { TECH_SCORES } from './reviewResultFields';
+import { useShareImageCapture } from '../../../hooks/useShareImageCapture';
+import { saveBlobUrl } from '../../../utils/saveMedia';
+import { trackEvent } from '../../../utils/analytics';
+import { Share2 } from 'lucide-react';
 import axios from '../../../redux/http';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { useTokenBalance } from '../../../hooks/useTokenBalance';
@@ -59,271 +66,225 @@ const SESSION_TYPE_LABELS = {
   take_compare: { label: 'Compare Takes', emoji: '🏆' },
 };
 
-// ─── Review Detail Sheet constants ────────────────────────────────────
-
-// Human-readable labels for tape-review score keys.
-const SCORE_LABELS = {
-  framing: 'Framing',
-  eyeline: 'Eyeline',
-  lighting: 'Lighting',
-  energy_commitment: 'Energy / Commitment',
-  dynamic_range: 'Dynamic Range',
-};
-
-// Human-readable labels for tape-review performance keys.
-const PERF_LABELS = {
-  emotional_arc: 'Emotional Arc',
-  strongest_beat: 'Strongest Beat',
-  choices: 'Choices',
-  listening_presence: 'Listening Presence',
-  truth_vs_indicated: 'Truth vs. Indicated',
-};
-
-// Keys that identify a tape-review-shaped ai_feedback dict. If NONE of
-// these are present we fall back to a generic labeled list.
-const TAPE_REVIEW_KEYS = ['verdict', 'scores', 'performance', 'the_one_thing', 'tone_tags'];
+// Includes current results and the older review shape. Unknown sessions retain
+// the labeled fallback; history never reads notes from Redux or localStorage.
+const TAPE_REVIEW_KEYS = ['verdict', 'scores', 'performance', 'the_one_thing', 'tone_tags', 'whats_working', 'adjustments', 'performance_dna'];
+const TAP_STYLE = { touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' };
 
 // ─── ReviewDetailSheet ─────────────────────────────────────────────────
 
-/**
- * Full-screen overlay that fetches and renders the stored Jericho notes
- * for a single `self_tape_review` session. Hides the Aurora mobile
- * header via useHideMobileHeader for its lifetime so the X button is
- * fully reachable.
- */
 function ReviewDetailSheet({ session, onClose }) {
-  // Suppress the persistent Aurora top bar while this overlay is open.
   useHideMobileHeader(true);
-
-  // Entitlement — the deep read is a paid unlock, in history too. Without this,
-  // a free user could bypass the live-result paywall just by reopening a past
-  // session. Fail-open: only gate when we positively know the user is free.
   const { isPaid, loading: entLoading, error: entError, balance } = useTokenBalance();
   const locked = !entLoading && !entError && balance !== null && !isPaid;
-
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [attempt, setAttempt] = useState(0);
+  const dialogRef = useRef(null);
+  const closeRef = useRef(null);
+  const shareRef = useRef(null);
+  const shareStoryRef = useRef(null);
+  const sharingRef = useRef(false);
+  const [sharing, setSharing] = useState(false);
+  const [shareError, setShareError] = useState(null);
+  const { captureImage } = useShareImageCapture({ onError: () => {} });
 
-  const fetchDetail = useCallback(() => {
+  useEffect(() => {
+    const opener = document.activeElement;
+    closeRef.current?.focus();
+    return () => { if (opener?.isConnected) opener.focus(); };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
     setLoading(true);
     setError(null);
-    axios
-      .get(`/v1/ai/session-log/${session.id}/`)
+    setDetail(null);
+    // Fetch the durable session, even when the original analysis job expired.
+    // Never fall back to a cached full payload after a downgrade or an error.
+    axios.get(`/v1/ai/session-log/${session.id}/`, { signal: controller.signal })
       .then((res) => {
-        // House envelope is {data, message, success} — unwrap like the rest
-        // of the app (data?.data || data), and guard the null/empty body that
-        // would otherwise leave all three body states false → blank sheet.
-        const body = res.data?.data || res.data;
-        if (!body || typeof body !== 'object') { setError('Unexpected empty response.'); setLoading(false); return; }
-        setDetail(body); setLoading(false);
+        if (!active) return;
+        const payload = res.data;
+        const body = payload && Object.hasOwn(payload, 'data') ? payload.data : payload;
+        if (payload?.success === false || !body || typeof body !== 'object' || Array.isArray(body) || !Object.hasOwn(body, 'ai_feedback')) {
+          setError('Unexpected empty response.');
+          return;
+        }
+        setDetail(body);
       })
       .catch((err) => {
-        setError(err?.response?.data?.detail || 'Failed to load review details.');
-        setLoading(false);
-      });
-  }, [session.id]);
+        if (!active) return;
+        setError(err?.response?.status === 404
+          ? 'This review is no longer available.'
+          : 'Could not load your review. Please try again.');
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; controller.abort(); };
+  }, [session.id, attempt]);
 
-  useEffect(() => { fetchDetail(); }, [fetchDetail]);
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') { event.preventDefault(); onClose(); }
+    if (event.key !== 'Tab') return;
+    const buttons = [...dialogRef.current.querySelectorAll('button:not(:disabled)')];
+    const first = buttons[0], last = buttons[buttons.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault(); last?.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault(); first?.focus();
+    }
+  };
 
-  const feedback = detail?.ai_feedback || null;
-  // True when the response has at least one structured tape-review field.
-  const hasTapeKeys = feedback && TAPE_REVIEW_KEYS.some((k) => k in feedback);
+  const handleShare = async (format) => {
+    const node = format === 'story' ? shareStoryRef.current : shareRef.current;
+    if (sharingRef.current || !node) return;
+    sharingRef.current = true;
+    setSharing(true);
+    setShareError(null);
+    trackEvent('tape_review_share_tap', { format, source: 'history' });
+    let url = null;
+    try {
+      url = await captureImage(node, { width: 1080, height: format === 'story' ? 1920 : 1080, scale: 1 });
+      const result = await saveBlobUrl(url, format === 'story' ? 'my-tape-review-story.png' : 'my-tape-review.png');
+      if (!result?.ok) setShareError('Could not save your card. Please try again.');
+    } catch {
+      setShareError('Could not save your card. Please try again.');
+    } finally {
+      if (url) setTimeout(() => URL.revokeObjectURL(url), 3000);
+      sharingRef.current = false;
+      setSharing(false);
+    }
+  };
+
+  const feedback = detail?.ai_feedback;
+  const isObject = feedback && typeof feedback === 'object' && !Array.isArray(feedback);
+  const hasTapeKeys = isObject && TAPE_REVIEW_KEYS.some((key) => {
+    const value = feedback[key];
+    return typeof value === 'string' ? value.trim().length > 0
+      : value && typeof value === 'object' && Object.keys(value).length > 0;
+  });
+  const legacyFields = isObject ? Object.entries(feedback).filter(([key]) => !key.startsWith('_')) : [];
+  // The server owns the deep-read trim. Scores alone still need the legacy
+  // display guard until REVIEW_GATE_STRIP_SCORES flips. Wait for entitlement
+  // before showing that map; preserve the existing fail-open error policy.
+  const hideScores = entLoading || locked || (!entError && balance === null);
+  const notes = hasTapeKeys && hideScores ? { ...feedback, scores: undefined } : feedback;
+  const tags = Array.isArray(feedback?.tone_tags) ? feedback.tone_tags : [];
+  const values = TECH_SCORES.map(({ key }) => feedback?.scores?.[key])
+    .filter((v) => v != null && v !== '').map(Number).filter(Number.isFinite);
+  const headline = feedback?.headline_score;
+  const avg = headline != null && headline !== '' && Number.isFinite(Number(headline))
+    ? Number(headline) : values.length ? values.reduce((a, b) => a + b, 0) / values.length : null;
+  const band = avg == null ? null : avg >= 8
+    ? { label: 'Book It', color: '#22c55e' }
+    : avg >= 5.5 ? { label: 'Callback Range', color: '#D4A85F' } : { label: 'Keep Taping', color: '#FF8280' };
+  const retry = () => setAttempt((n) => n + 1);
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col overflow-y-auto"
-      style={{ background: 'var(--aurora-bg)' }}
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="history-review-title"
+      onKeyDown={handleKeyDown}
+      className="fixed inset-0 flex flex-col overflow-y-auto"
+      style={{ zIndex: 110, background: 'var(--aurora-bg)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
-      {/* ── Sheet header ── */}
       <div
         className="flex items-center justify-between px-4 py-4 border-b border-[rgba(10,10,10,0.08)] sticky top-0 z-10"
-        style={{ background: 'var(--aurora-bg)' }}
+        style={{ background: 'var(--aurora-bg)', paddingTop: 'max(16px, env(safe-area-inset-top, 0px))' }}
       >
         <div className="flex items-center gap-2">
           <Film size={16} className="text-[#7A5A18]" />
-          <h2 className="text-base font-bold text-[#0A0A0A]">Tape Review</h2>
+          <h2 id="history-review-title" className="text-base font-bold text-[#0A0A0A]">Tape Review</h2>
           {session.created_at && (
             <span className="text-xs text-[rgba(10,10,10,0.4)]">
-              {new Date(session.created_at).toLocaleDateString('en-US', {
-                month: 'short', day: 'numeric', year: 'numeric',
-              })}
+              {new Date(session.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           )}
         </div>
         <button
+          ref={closeRef}
           type="button"
           onTouchEnd={(e) => { e.preventDefault(); onClose(); }}
           onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:text-[#0A0A0A] transition-colors"
-          style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-          aria-label="Close"
-        >
-          <X size={16} />
-        </button>
+          className="w-11 h-11 rounded-full flex items-center justify-center border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)]"
+          style={TAP_STYLE}
+          aria-label="Close review"
+        ><X size={16} /></button>
       </div>
-
-      {/* ── Sheet body ── */}
       <div className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
-
-        {/* Loading spinner */}
         {loading && (
-          <div className="flex items-center justify-center py-20">
+          <div role="status" className="flex items-center justify-center gap-3 py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
+            <span className="text-sm">Loading your review…</span>
           </div>
         )}
-
-        {/* Error state with retry */}
         {error && (
           <div className="text-center py-20">
-            <p className="text-sm text-[rgba(10,10,10,0.62)] mb-4">{error}</p>
-            <button
-              type="button"
-              onTouchEnd={(e) => { e.preventDefault(); fetchDetail(); }}
-              onClick={fetchDetail}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-[#0A0A0A]"
-              style={{
-                background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Try again
-            </button>
+            <p role="alert" className="text-sm text-[rgba(10,10,10,0.62)] mb-4">{error}</p>
+            <button type="button" onClick={retry} onTouchEnd={(e) => { e.preventDefault(); retry(); }}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-[#0A0A0A]"
+              style={{ ...TAP_STYLE, background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}>Try again</button>
           </div>
         )}
-
-        {/* Loaded content */}
-        {detail && !loading && (
-          <div className="space-y-5">
+        {detail && !loading && !error && (
+          <div className="space-y-4 sm:space-y-5">
+            {band && <p className="text-sm font-bold text-[#7A5A18]">{band.label} · {avg.toFixed(1)}/10</p>}
             {hasTapeKeys ? (
               <>
-                {/* Verdict — headline treatment */}
-                {feedback.verdict && (
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-2">Verdict</h3>
-                    <p className="text-base font-bold text-[#0A0A0A] leading-snug">{feedback.verdict}</p>
-                  </div>
+                <TapeReviewNotes review={notes} />
+                {/* Old tone-only responses have no verdict card to host chips. */}
+                {!feedback.verdict && tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">{tags.map((tag, i) => (
+                    <span key={i} className="px-3 py-1.5 rounded-full text-xs bg-[#D4A85F]/10 text-[#7A5A18]">{tag}</span>
+                  ))}</div>
                 )}
-
-                {/* Scores — labeled 1–10 progress bars (deep read → paid) */}
-                {!locked && feedback.scores && Object.keys(feedback.scores).length > 0 && (
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Scores</h3>
-                    <div className="space-y-3">
-                      {Object.entries(feedback.scores).map(([k, v]) => (
-                        <div key={k} className="flex items-center gap-3">
-                          <span className="text-xs text-[rgba(10,10,10,0.62)] w-32 truncate flex-shrink-0">
-                            {SCORE_LABELS[k] || k.replace(/_/g, ' ')}
-                          </span>
-                          <div className="flex-1 h-2 rounded-full bg-[#F4F4EE] overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-700"
-                              style={{ width: `${(Number(v) / 10) * 100}%`, background: '#D4A85F' }}
-                            />
-                          </div>
-                          <span className="text-xs font-bold text-[#0A0A0A] w-6 text-right">{v}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Performance — readable-label sections (deep read → paid) */}
-                {!locked && feedback.performance && Object.keys(feedback.performance).length > 0 && (
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Performance</h3>
-                    <div className="space-y-4">
-                      {Object.entries(feedback.performance).map(([k, v]) => (
-                        <div key={k}>
-                          <span className="text-[10px] font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide">
-                            {PERF_LABELS[k] || k.replace(/_/g, ' ')}
-                          </span>
-                          <p className="text-sm text-[rgba(10,10,10,0.62)] leading-relaxed mt-0.5">{String(v)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* The One Thing — highlighted callout (deep read → paid) */}
-                {!locked && feedback.the_one_thing && (
-                  <div
-                    className="rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/30"
-                    style={{ background: 'rgba(212,168,95,0.08)' }}
-                  >
-                    <h3 className="text-xs font-bold text-[#7A5A18] uppercase tracking-wide mb-2 flex items-center gap-1.5">
-                      <Sparkles size={12} /> The One Thing
-                    </h3>
-                    <p className="text-sm font-semibold text-[#0A0A0A] leading-relaxed">{feedback.the_one_thing}</p>
-                  </div>
-                )}
-
-                {/* Deep read locked → personalized unlock CTA in its place */}
-                {locked && (() => {
-                  const nScores = feedback.scores ? Object.keys(feedback.scores).length : 0;
-                  const nPerf = feedback.performance ? Object.keys(feedback.performance).length : 0;
-                  const bits = [
-                    nScores && `${nScores} technical scores`,
-                    nPerf && `${nPerf} performance notes`,
-                    feedback.the_one_thing && 'the one thing that books it',
-                  ].filter(Boolean);
-                  return (
-                    <button
-                      type="button"
-                      onClick={() => goUpgrade({ source: 'history_full_read', returnTo: 'jericho' })}
-                      className="w-full text-left rounded-2xl p-4 sm:p-5 border border-[#D4A85F]/35"
-                      style={{ background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.04))' }}
-                    >
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <Lock size={14} className="text-[#7A5A18]" />
-                        <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read with any plan</span>
-                      </div>
-                      <p className="text-xs text-[rgba(10,10,10,0.6)] leading-relaxed">
-                        {bits.length ? `Includes ${bits.join(' · ')}.` : 'The full casting read on this tape.'}
-                      </p>
-                    </button>
-                  );
-                })()}
-
-                {/* Tone tags — chips */}
-                {feedback.tone_tags && feedback.tone_tags.length > 0 && (
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                    <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-3">Tone</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {feedback.tone_tags.map((tag, idx) => (
-                        <span
-                          key={idx}
-                          className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#D4A85F]/10 text-[#7A5A18] border border-[#D4A85F]/20"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
+                {locked && (
+                  <button type="button"
+                    onClick={() => goUpgrade({ source: 'history_full_read', returnTo: 'jericho' })}
+                    onTouchEnd={(e) => { e.preventDefault(); e.currentTarget.click(); }}
+                    className="w-full text-left rounded-2xl p-4 border border-[#D4A85F]/35"
+                    style={{ ...TAP_STYLE, background: 'rgba(212,168,95,0.08)' }}>
+                    <span className="flex items-center gap-2 text-sm font-bold text-[#0A0A0A]">
+                      <Lock size={14} className="text-[#7A5A18]" />Unlock the full read with any plan
+                    </span>
+                  </button>
                 )}
               </>
             ) : (
-              /* Fallback: generic / unknown session shape — list all present fields */
-              <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+              <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                 <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Session Notes</h3>
-                {feedback && Object.keys(feedback).length > 0 ? (
-                  <div className="space-y-3">
-                    {Object.entries(feedback).map(([k, v]) => (
-                      <div key={k}>
-                        <span className="text-[10px] font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide">
-                          {k.replace(/_/g, ' ')}
-                        </span>
-                        <p className="text-sm text-[rgba(10,10,10,0.62)] leading-relaxed mt-0.5">
-                          {typeof v === 'string' ? v : JSON.stringify(v)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-[rgba(10,10,10,0.4)]">No notes stored for this session.</p>
-                )}
+                {legacyFields.length > 0
+                  ? legacyFields.map(([key, value]) => (
+                    <div key={key} className="mb-3">
+                      <p className="text-xs font-bold text-[#7A5A18]">{key.replace(/_/g, ' ')}</p>
+                      <p className="text-sm text-[rgba(10,10,10,0.62)]">{typeof value === 'string' ? value : JSON.stringify(value)}</p>
+                    </div>
+                  ))
+                  : <p className="text-sm text-[rgba(10,10,10,0.4)]">{typeof feedback === 'string' && feedback ? feedback : 'No notes stored for this session.'}</p>}
               </div>
+            )}
+            {(feedback?.verdict || tags.length > 0) && (
+              <>
+                <div className="flex gap-2">
+                  {['story', 'square'].map((format) => (
+                    <button key={format} type="button" disabled={sharing}
+                      onClick={() => handleShare(format)}
+                      onTouchEnd={(e) => { e.preventDefault(); handleShare(format); }}
+                      className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 disabled:opacity-60"
+                      style={TAP_STYLE}>
+                      <Share2 size={15} className="inline mr-2" />
+                      {sharing ? 'Preparing your card…' : format === 'story' ? 'Share to Story' : 'Square post'}
+                    </button>
+                  ))}
+                </div>
+                {shareError && <p role="alert" className="text-sm text-[#b91c1c]">{shareError}</p>}
+                <TapeReviewShareCard ref={shareRef} verdict={feedback.verdict} tags={tags} band={band} avg={avg} />
+                <TapeReviewShareCardStory ref={shareStoryRef} verdict={feedback.verdict} tags={tags} band={band} avg={avg} />
+              </>
             )}
           </div>
         )}
@@ -582,6 +543,7 @@ export default function JerichoDashboard() {
       {/* Detail sheet — mounts as a fixed overlay when a review row is tapped */}
       {selectedSession && (
         <ReviewDetailSheet
+          key={selectedSession.id}
           session={selectedSession}
           onClose={() => setSelectedSession(null)}
         />
