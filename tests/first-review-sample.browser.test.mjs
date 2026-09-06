@@ -2,14 +2,19 @@
 // Chrome; no production account, API, camera, or analytics service is used.
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
-import puppeteer from 'puppeteer';
 import { startHarness } from './first-review-sample-harness.mjs';
+
+// Puppeteer is optional tooling, not a declared dependency: a clean checkout
+// without it skips this file instead of failing the run.
+let puppeteer = null;
+try { ({ default: puppeteer } = await import('puppeteer')); } catch { /* not installed */ }
 
 let harness;
 let browser;
 let page;
 const errors = [];
 before(async () => {
+  if (!puppeteer) return; // cases skip themselves below
   harness = await startHarness();
   browser = await puppeteer.launch({ headless: true });
   page = await browser.newPage();
@@ -19,6 +24,9 @@ before(async () => {
   page.on('request', request => request.url().startsWith(harness.url) ? request.continue() : request.abort());
 });
 after(async () => { await browser?.close(); await harness?.close(); });
+
+// Each case skips (not fails) when the optional browser tooling is absent.
+const btest = (name, fn) => test(name, async (t) => (puppeteer ? fn(t) : t.skip('puppeteer not installed')));
 
 async function fresh() {
   errors.length = 0;
@@ -37,7 +45,7 @@ async function openSample() {
 }
 async function eventNames() { return page.evaluate(() => window.__events.map(e => e.event)); }
 
-test('sample is reachable only on the offer; closing preserves selection, progress and funnel', async () => {
+btest('sample is reachable only on the offer; closing preserves selection, progress and funnel', async () => {
   await fresh();
   await click('I have my own tape or sides');
   await openSample();
@@ -76,7 +84,7 @@ test('sample is reachable only on the offer; closing preserves selection, progre
 });
 
 for (const variant of ['record', 'upload']) {
-  test(`sample ${variant} CTA uses the original consent and first-review handoff exactly once`, async () => {
+  btest(`sample ${variant} CTA uses the original consent and first-review handoff exactly once`, async () => {
     await fresh();
     await openSample();
     await page.evaluate(() => { window.__holdConsent = true; });
@@ -96,7 +104,7 @@ for (const variant of ['record', 'upload']) {
   });
 }
 
-test('sample consent decline keeps the existing decline event and next onboarding step', async () => {
+btest('sample consent decline keeps the existing decline event and next onboarding step', async () => {
   await fresh();
   await openSample();
   await page.evaluate(() => { window.__consent = false; });
@@ -111,7 +119,7 @@ test('sample consent decline keeps the existing decline event and next onboardin
   assert.deepEqual(errors, []);
 });
 
-test('reopening the sample records another view without repeating offer_shown', async () => {
+btest('reopening the sample records another view without repeating offer_shown', async () => {
   await fresh();
   await openSample();
   await click('Back to the free review offer');
