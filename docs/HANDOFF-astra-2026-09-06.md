@@ -24,10 +24,10 @@ You are the **worker**. Claude is the **reviewer** and the only one who pushes, 
 ```
 cd ~/Downloads/Projects && codex exec --model gpt-6-astra -c model_reasoning_effort=high \
   -s workspace-write --skip-git-repo-check \
-  --output-last-message ~/Downloads/Projects/astra-reports/<ticket-id>.md \
+  --output-last-message ~/Downloads/Projects/astra-reports/<ticket-id>.last.md \
   "$(cat ~/Downloads/Projects/HANDOFF-astra-2026-09-06.md) ... Do ticket <ticket-id> only." < /dev/null
 ```
-Launched from the parent directory on purpose: `workspace-write` scoped to one repo cannot touch the other, and cannot reach local Postgres or run Vite.
+Detached under `nohup` (a build run can exceed the tool's 10-minute cap) and with the last-message file separate from the report path, which Codex would otherwise overwrite. Launched from the parent directory on purpose: `workspace-write` scoped to one repo cannot touch the other, and cannot reach local Postgres or run Vite.
 
 ---
 
