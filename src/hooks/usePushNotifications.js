@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { queueAuditionNotification } from '../utils/auditionNotification';
 import axiosInstance from '../redux/http';
 import { openExternal } from '../utils/openExternal';
 
@@ -101,8 +102,9 @@ function navDetailForPush(notif) {
     case 'audition_reminder':
     case 'audition-reminder':
     case 'audition_update':
-      // Callback / audition reminders + tracker updates land in Auditions.
-      return { tab: 'auditions' };
+      // Auditions moved out of the tab bar. Queue the record before opening
+      // its lazy panel; standalone submissions live in a different tracker.
+      return { panel: queueAuditionNotification(data).panel };
     case 'scene_partner_like':
       // "Someone wants to read with you" → the Who Wants to Read panel.
       return { panel: 'who-wants-to-read' };

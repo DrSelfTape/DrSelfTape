@@ -8,6 +8,7 @@ import { getNotifications, markNotificationRead } from '../../redux/features/not
 import useNotificationActions from '../../hooks/useNotificationActions';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { openExternal } from '../../utils/openExternal';
+import { queueAuditionNotification } from '../../utils/auditionNotification';
 
 // App-update broadcasts ("Tap to update") send the user to the store listing.
 const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
@@ -163,6 +164,12 @@ export default function NotificationBell({ onNavigate }) {
       // notification lands on the screen it's about. `web` is a react-router
       // path; `mobile` is the panel/tab the Capacitor shell's onNavigate
       // understands (react-router navigate() no-ops inside the app shell).
+      const auditionTarget = queueAuditionNotification({ ...notif.data, type: notif.type });
+      if (auditionTarget) {
+        if (isMobile && onNavigate) onNavigate({ panel: auditionTarget.panel });
+        else navigate(auditionTarget.web);
+        return;
+      }
       const greenRoom = matchId ? `/dashboard/green-room/${matchId}` : '/dashboard/green-room';
       const DEST = {
         scene_partner_like:  { web: '/dashboard/who-wants-to-read', mobile: { panel: 'who-wants-to-read' } },
@@ -171,7 +178,6 @@ export default function NotificationBell({ onNavigate }) {
         rehearsal_missed:    { web: greenRoom,                      mobile: { panel: 'green-room' } },
         new_message:         { web: greenRoom,                      mobile: { panel: 'green-room' } },
         room_invite:         { web: '/dashboard/green-room',        mobile: { tab: 'green-room' } },
-        audition_update:     { web: '/dashboard/auditions',         mobile: { tab: 'auditions' } },
         booking_confirmed:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
         booking_cancelled:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
       };

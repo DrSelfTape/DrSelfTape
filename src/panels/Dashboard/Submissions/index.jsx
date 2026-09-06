@@ -10,6 +10,8 @@ import {
 import StatsCard from '../../../components/StatsCard';
 import TalentReportImporter from './TalentReportImporter';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
+import useAuditionNotification from '../../../hooks/useAuditionNotification';
+import { clearAuditionNotification } from '../../../utils/auditionNotification';
 
 // --- Constants ---
 
@@ -127,6 +129,31 @@ export default function Submissions() {
   const [showImporter, setShowImporter] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState({ ...EMPTY_FORM });
+  const [reminderSubmissionId, setReminderSubmissionId] = useState(null);
+  const notificationTarget = useAuditionNotification('submissions');
+
+  useEffect(() => {
+    if (!notificationTarget) return;
+    let cancelled = false;
+    setReminderSubmissionId(null);
+    dispatch(fetchSubmissionsThunk()).unwrap().then(items => {
+      if (cancelled) return;
+      const exists = Array.isArray(items) && items.some(item => String(item.id) === notificationTarget.id);
+      if (exists) {
+        setActiveTab('all');
+        setReminderSubmissionId(notificationTarget.id);
+      }
+      clearAuditionNotification(notificationTarget);
+    }).catch(() => { /* keep the handoff for retry on the next panel mount */ });
+    return () => { cancelled = true; };
+  }, [notificationTarget, dispatch]);
+
+  useEffect(() => {
+    if (!reminderSubmissionId || loading) return;
+    const card = document.getElementById(`submission-${reminderSubmissionId}`);
+    card?.scrollIntoView({ block: 'center' });
+    card?.focus({ preventScroll: true });
+  }, [reminderSubmissionId, loading, activeTab]);
 
   useEffect(() => {
     dispatch(fetchSubmissionsThunk());
@@ -362,6 +389,9 @@ export default function Submissions() {
           {sorted.map((sub) => (
             <div
               key={sub.id}
+              id={`submission-${sub.id}`}
+              tabIndex={-1}
+              style={String(sub.id) === reminderSubmissionId ? { outline: '2px solid var(--aurora-heritage-gold)' } : undefined}
               className="aurora-card rounded-xl p-4 transition-shadow"
             >
               <div className="flex items-start justify-between mb-2">

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
+import { getPendingAuditionNotification } from "../../utils/auditionNotification";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
 import UpdateBanner from "../../components/UpdateBanner";
@@ -3933,6 +3934,9 @@ export default function DrSelfTapeApp() {
       }
     };
     window.addEventListener('drst-navigate', handler);
+    // A deadline push can arrive before this shell mounts after a cold start.
+    const pendingAudition = getPendingAuditionNotification();
+    if (pendingAudition) handler({ detail: { panel: pendingAudition.panel } });
     return () => window.removeEventListener('drst-navigate', handler);
   }, []);
 
