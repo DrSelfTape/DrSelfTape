@@ -4,7 +4,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import { loadPersonalRecords, reviewRecordId } from '../src/utils/personalRecords.js';
 import { loadRecordingReview, mountComponent } from './recording-review-harness.mjs';
 
-const { usePersonalRecords, TapeReview, reducer, reviewTape, resumeAnalysisJob } = await loadRecordingReview();
+const { usePersonalRecords, reducer, reviewTape, resumeAnalysisJob } = await loadRecordingReview();
+const realEntitlement = await loadRecordingReview({ realTokenBalance: true });
 const full = { bests: { overall: 8, framing: 9 }, count: 3,
   first_review_at: '2026-09-01T00:00:00Z', last_review_at: '2026-09-03T00:00:00Z',
   history: [{ t: 1, avg: 6 }, { t: 2, avg: 7 }, { t: 3, avg: 8 }],
@@ -173,8 +174,26 @@ test('a superseding review cancels the first request and ignores its late respon
   mounted.unmount();
 });
 
-test('real TapeReview renders a server-earned overall badge from a stripped free review', async () => {
+for (const scenario of [
+  { name: 'known free status hides dimension badges', statusFails: false, dimensions: false },
+  { name: 'failed status request preserves server-authorized paid dimension badges', statusFails: true, dimensions: true },
+  { name: 'failed status request cannot invent dimensions in a trimmed response', statusFails: true, dimensions: false },
+]) test(`real TapeReview: ${scenario.name}`, async () => {
   const { renderToStaticMarkup } = await import('react-dom/server');
+  realEntitlement.resetTokenCache();
+  let statusRequests = 0;
+  __reviewHttp.get = async url => {
+    if (url === '/v1/subscriptions/status/') {
+      statusRequests++;
+      if (scenario.statusFails) throw new Error('Subscription status unavailable');
+      return { data: { data: { balance: 2, plan: null, status: null } } };
+    }
+    assert.equal(url, '/v1/ai/personal-records/');
+    if (scenario.statusFails && !scenario.dimensions) {
+      return { data: { data: { ...full, bests: { overall: 8 }, records: [full.records[0]] } } };
+    }
+    return request();
+  };
   const state = { auth: { user: { id: 1, ai_consent_accepted_at: '2026-09-01' } },
     userSettings: { loaded: true, data: { tutorial_progress: { first_review: true } } },
     profile: { profile: { first_name: 'Alex' } },
@@ -187,8 +206,10 @@ test('real TapeReview renders a server-earned overall badge from a stripped free
     matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }),
     dispatchEvent() {} };
   globalThis.document = { visibilityState: 'visible', addEventListener() {}, removeEventListener() {} };
-  const mounted = mountComponent(TapeReview);
+  const mounted = mountComponent(realEntitlement.TapeReview);
   let tree = mounted.render(); mounted.flush(); await settle();
+  mounted.render(); mounted.flush(); await settle();
+  assert.equal(statusRequests, 1, 'Exercise the real subscription-status request');
   // The existing reveal supports showing everything immediately.
   const find = (node, label) => {
     if (!node || typeof node !== 'object') return null;
@@ -203,6 +224,12 @@ test('real TapeReview renders a server-earned overall badge from a stripped free
   const html = renderToStaticMarkup(tree);
   assert.ok(html.includes('New personal best'));
   assert.ok(html.includes('Overall 8.0'));
-  assert.ok(!html.includes('Framing 9.0'));
+  assert.equal(html.includes('Framing 9.0'), scenario.dimensions);
+  const cacheTier = scenario.statusFails ? 'full' : 'overall';
+  const cached = JSON.parse(storage.get(`dst_personal_bests:1:${cacheTier}`));
+  assert.equal(cached.data.bests.framing === 9, scenario.dimensions);
   mounted.unmount();
+  navigator.onLine = false;
+  const offline = await loadPersonalRecords({ request, userId: 1, reviewId: 'session:3', allowDimensions: scenario.statusFails });
+  assert.deepEqual(offline, cached.data, 'Offline uses the same entitlement decision');
 });

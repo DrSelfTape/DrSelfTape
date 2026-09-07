@@ -236,7 +236,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // users see the headline + an unlock CTA. onUpgrade is passed in the
   // first-review flow; elsewhere fall back to the global panel-nav event.
   const { isPaid, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
-  const personalRecords = usePersonalRecords({ review: tapeReviewResult, allowDimensions: isPaid,
+  const entitlementKnown = !entitlementLoading && !entitlementError && tokenBalance !== null;
+  // Match the full-read gate: only a known free entitlement strips server-
+  // authorized dimensions. The hook keys its offline cache by this decision.
+  const personalRecords = usePersonalRecords({ review: tapeReviewResult, allowDimensions: isPaid || !entitlementKnown,
     enabled: !!tapeReviewResult });
   const handleUpgrade = () => {
     if (onUpgrade) { onUpgrade(); return; }
@@ -730,7 +733,6 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // one out on a network hiccup. Also require a headline to exist so a rare
     // deep-only partial response never trims a free user down to nothing.
     const hasHeadline = !!raw.verdict || rawWorking.length > 0 || rawAdjustments.length > 0;
-    const entitlementKnown = !entitlementLoading && !entitlementError && tokenBalance !== null;
     const locked = entitlementKnown && !isPaid && hasHeadline;
     const r = locked
       ? { verdict: raw.verdict, tone_tags: raw.tone_tags, whats_working: rawWorking.slice(0, 1), adjustments: rawAdjustments.slice(0, 1) }
