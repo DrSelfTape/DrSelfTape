@@ -20,7 +20,7 @@ export const WHATS_NEW = [
       { emoji: '⏰', title: 'Deadlines that wake the phone', body: 'Track an audition with a due date and you get a reminder the day before and the morning of, and tapping it opens that audition.' },
       { emoji: '👋', title: 'A better first minute', body: 'New here? You can read a full sample review before you record anything, and two quick questions tell Jericho where you are in your career so the notes fit.' },
       { emoji: '🧭', title: 'Empty screens tell the truth', body: 'A screen with nothing on it now says what will fill it and has a button that actually goes there.' },
-      { emoji: '🖥️', title: 'On iPad and the web', body: 'The whole app lives in one studio console now, and a finished review arrives as a full-screen recap before you dig into the notes.' },
+      { emoji: '🖥️', title: 'On iPad and the web', body: 'The whole app lives in one studio console now. On the web, a finished review also arrives as a full-screen recap before you dig into the notes.' },
     ],
   },
   {

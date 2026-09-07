@@ -12,6 +12,7 @@ import { identifySentryUser, clearSentryUser } from './utils/sentry';
 import { fetchUserSettings, resetSettings } from './redux/features/userSettings/userSettingsSlice';
 import { initPurchases } from './utils/purchases';
 import { openExternal } from './utils/openExternal';
+import { pushData } from './utils/pushData';
 import { resumeQueue } from './utils/uploadQueue';
 import AIConsentModal from './components/AIConsent/AIConsentModal';
 import AgeGateModal from './components/AgeGate/AgeGateModal';
@@ -56,9 +57,12 @@ function App() {
     if (Capacitor.getPlatform() !== 'ios') return;
     const onTap = (e) => {
       const notif = e.detail || {};
-      const data = notif.data || {};
+      const data = pushData(notif);
       const type = String(data.type || '').toLowerCase();
-      const isUpdate = type === 'app_update' || /\bupdate\b/i.test(notif.title || data.title || '');
+      // The title fallback exists for an untyped broadcast only. A typed push
+      // ("Audition Update" deadline reminders) must never bounce to the store
+      // (B-01 catch — it did, on every deadline tap).
+      const isUpdate = type === 'app_update' || (!type && /\bupdate\b/i.test(notif.title || data.title || ''));
       if (isUpdate) openExternal('itms-apps://itunes.apple.com/app/id6770320460');
     };
     window.addEventListener('drst-push-tap', onTap);

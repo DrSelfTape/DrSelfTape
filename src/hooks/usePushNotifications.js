@@ -1,3 +1,4 @@
+import { pushData } from '../utils/pushData';
 import { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { queueAuditionNotification } from '../utils/auditionNotification';
@@ -63,7 +64,7 @@ let _lastDeviceToken = null;
 // Translate a tapped push payload into a drst-navigate detail so the app
 // deep-links to the right screen. Returns null for payloads we don't route.
 function navDetailForPush(notif) {
-  const data = notif?.data || notif?.notification?.data || {};
+  const data = pushData(notif);
   const type = data.type;
   const matchId = data.match_id;
 
@@ -132,7 +133,7 @@ function handlePushTap(notif) {
   // the re-engagement channel worth having. Fired first and independently of
   // the routing below, so a deep-link failure still records the tap.
   try {
-    const d = notif?.data || notif?.notification?.data || {};
+    const d = pushData(notif);
     import('../utils/analytics').then(({ trackEvent }) => {
       trackEvent('push_opened', {
         notification_type: d.type || 'unknown',
@@ -142,7 +143,7 @@ function handlePushTap(notif) {
     }).catch(() => {});
   } catch { /* analytics must never block the deep link */ }
   try {
-    const data = notif?.data || notif?.notification?.data || {};
+    const data = pushData(notif);
     // App-update broadcast tapped from a closed app → open the store listing.
     if (data.type === 'admin_broadcast' || data.type === 'app_update') {
       openExternal(storeUrl());
