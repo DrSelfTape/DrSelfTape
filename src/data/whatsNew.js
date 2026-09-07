@@ -8,6 +8,22 @@
  */
 export const WHATS_NEW = [
   {
+    id: 11,
+    version: '1.0.26',
+    date: 'September 2026',
+    title: 'Your notes, kept',
+    intro: 'A month of fixes to the parts you use most. The big one: nothing you have been told about a tape disappears anymore.',
+    highlights: [
+      { emoji: '📚', title: 'Every review stays readable', body: 'Open any past review from your history and read the full notes again, share it again, and see exactly what you were told. Before, older notes were a one-line summary.' },
+      { emoji: '🎬', title: 'Record, then review, in one move', body: 'Finish a take in the recorder and send it straight to Tape Review. No saving, hunting for the file, and uploading it again.' },
+      { emoji: '🏅', title: 'Your best so far', body: 'A fresh review tells you when it beat your own best, overall or on one thing like eyeline. Only your real tapes count, so a first review never claims a record.' },
+      { emoji: '⏰', title: 'Deadlines that wake the phone', body: 'Track an audition with a due date and you get a reminder the day before and the morning of, and tapping it opens that audition.' },
+      { emoji: '👋', title: 'A better first minute', body: 'New here? You can read a full sample review before you record anything, and two quick questions tell Jericho where you are in your career so the notes fit.' },
+      { emoji: '🧭', title: 'Empty screens tell the truth', body: 'A screen with nothing on it now says what will fill it and has a button that actually goes there.' },
+      { emoji: '🖥️', title: 'On iPad and the web', body: 'The whole app lives in one studio console now, and a finished review arrives as a full-screen recap before you dig into the notes.' },
+    ],
+  },
+  {
     // Separate entry rather than edited into id 9, because anyone who has
     // already seen 9 would never be shown an edit to it. Version stays 1.0.25:
     // that IS the marketing version of the build carrying this.
