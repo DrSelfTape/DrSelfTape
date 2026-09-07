@@ -2454,8 +2454,17 @@ function AuditionsScreen() {
 
       {/* Compact List */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 0", color: TEXT_MUTED, fontSize: 'var(--type-base)' }}>
-          No auditions yet — tap + to add one.
+        <div style={{ textAlign: "center", padding: "48px 16px" }}>
+          {/* V-03: the CTA is a real button, not a hint about a "+" somewhere else. */}
+          <p style={{ color: TEXT_MUTED, fontSize: 'var(--type-base)', margin: "0 0 14px", lineHeight: 1.45 }}>
+            Nothing tracked yet. Add the audition you're prepping and you'll get a reminder before it's due.
+          </p>
+          <button onClick={() => setShowAddForm(true)} style={{
+            background: 'var(--aurora-accent)', color: '#fff', border: 'none', borderRadius: 14,
+            padding: '12px 18px', fontSize: 'var(--type-base)', fontWeight: 700, cursor: 'pointer',
+          }}>
+            Add an audition
+          </button>
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
