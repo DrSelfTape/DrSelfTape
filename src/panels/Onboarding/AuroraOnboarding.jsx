@@ -6,9 +6,10 @@ import { usePushNotifications } from '../../hooks/usePushNotifications';
 import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
 import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
 import SampleReview from './SampleReview';
+import { PLATE_OPTIONS, TAPED_OPTIONS, normalizePersonalization, getOfferCopy, personalizationProperties } from '../../data/onboardingPersonalization';
 
 /* ── Aurora post-signup onboarding flow ────────────────────────────────
- * 3 screens pre-value (Tier 2 item 2): identity → free-review offer →
+ * 3 screens pre-value (Tier 2 item 2): identity + optional context → free-review offer →
  * notifications. The old profile/interests/goals/level/follow steps were
  * cut — their only BE-real data (headshot, bio, union, location, years,
  * genres) is collected post-first-review via the ProfileCompleteness
@@ -71,7 +72,6 @@ const LEVELS = [
   { id: 'pro', label: 'Full-time pro', sub: 'THIS IS THE CAREER' },
 ];
 const TYPES = ['Leading', 'Character', 'Comedic', 'Ingénue', 'Best Friend', 'Villain', 'Parent'];
-const PRONOUNS = ['she/her', 'he/him', 'they/them', 'other'];
 const UNIONS = ['SAG-AFTRA', 'Eligible', 'Non-union'];
 
 const STORAGE_STEP = 'dst_onb_step_v3'; // v3: flow cut to 3 screens — old numeric indices meant different steps, so ignore stale v1/v2 progress (entered data in STORAGE_DATA is preserved)
@@ -269,7 +269,7 @@ function SelectRow({ label, sub, on, onClick, tint }) {
 
 /* ───── STEP COMPONENTS ───── */
 
-function Identity({ data, set, onNext, nameLocked }) {
+function Identity({ data, set, onNext, onSkipQuestions, nameLocked }) {
   const valid = (data.first_name || '').trim() && (data.last_name || '').trim();
   // When the name arrived from Sign in with Apple (or a prior signup), we
   // lock the inputs read-only so Apple's Authentication Services framework
@@ -288,15 +288,34 @@ function Identity({ data, set, onNext, nameLocked }) {
       <div style={{ marginTop: 16 }}>
         <Field label="LAST NAME" value={data.last_name} onChange={(v) => set({ last_name: v })} placeholder="Okonkwo" disabled={nameLocked} />
       </div>
-      <div style={{ marginTop: 16 }}>
-        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>UNION STATUS</label>
-        <ChipRow options={UNIONS} value={data.union_status} onPick={(v) => set({ union_status: v })} />
-      </div>
-      <div style={{ marginTop: 16 }}>
-        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>PRONOUNS</label>
-        <ChipRow options={PRONOUNS} value={data.pronouns} onPick={(v) => set({ pronouns: v })} />
-      </div>
+      <p style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', marginTop: 20 }}>Two optional questions to make your first review feel useful.</p>
+      {[
+        { key: 'plate', label: "What's on your plate?", options: PLATE_OPTIONS },
+        { key: 'taped_before', label: 'Taped before?', options: TAPED_OPTIONS },
+      ].map(({ key, label, options }) => (
+        <fieldset key={key} style={{ margin: '16px 0 0', padding: 0, border: 0 }}>
+          <legend style={{ fontSize: 'var(--type-base)', fontWeight: 600, color: 'var(--aurora-text)' }}>{label}</legend>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+            {options.map(({ value, label: optionLabel }) => {
+              const selected = data.onboarding_personalization?.[key] === value;
+              return (
+                <button key={value} type="button" aria-pressed={selected}
+                  onClick={() => set({ onboarding_personalization: { ...data.onboarding_personalization, [key]: selected ? '' : value } })}
+                  style={{
+                    padding: '12px 14px', minHeight: 44, borderRadius: 100, cursor: 'pointer',
+                    border: `1.5px solid ${selected ? 'var(--aurora-heritage-gold)' : 'var(--aurora-line)'}`,
+                    background: selected ? 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)' : 'rgba(255,255,255,0.6)',
+                    color: 'var(--aurora-text)', fontFamily: 'inherit', fontSize: 'var(--type-base)',
+                    touchAction: 'manipulation',
+                  }}
+                >{optionLabel}</button>
+              );
+            })}
+          </div>
+        </fieldset>
+      ))}
       <GoldBtn onClick={onNext} disabled={!valid} style={{ marginTop: 26 }}>Continue</GoldBtn>
+      <GhostBtn onClick={onSkipQuestions}>Skip these questions</GhostBtn>
     </div>
   );
 }
@@ -835,8 +854,9 @@ function Welcome({ data, onDone }) {
  * practice scene" is preselected + RECOMMENDED so the no-tape/no-sides user —
  * the common case for a brand-new signup — still has a one-tap path to the
  * aha. Both cards terminate at the analyzer; only the variant differs. */
-function Offer({ firstName, onTry, onSkip }) {
+function Offer({ firstName, personalization, onTry, onSkip }) {
   useEffect(() => { track('FIRST_REVIEW_OFFER_SHOWN'); }, []);
+  const copy = getOfferCopy(personalization);
   const [variant, setVariant] = useState('record');
   const [sampleOpen, setSampleOpen] = useState(false);
   const sampleLinkRef = useRef(null);
@@ -886,11 +906,9 @@ function Offer({ firstName, onTry, onSkip }) {
         <h1 style={{
           fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700,
           letterSpacing: '-0.6px', lineHeight: 1.04, marginTop: 8,
-        }}>Get casting notes<br />on any take. Free.</h1>
+        }}>{copy.headline}</h1>
         <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 320 }}>
-          Know how your tape reads before casting ever sees it. Jericho scores
-          your performance, framing, and eyeline, then names the one fix that
-          books the room.
+          {copy.body}
         </p>
         {/* 3-step expectation strip (pliability pattern): show the destination
             before the ask, so the camera request reads as a step toward
@@ -1003,11 +1021,13 @@ export default function AuroraOnboarding({ onClose }) {
   // sheet, which also has a bottom action card the tab bar overlapped).
   useHideMobileHeader(true);
   const dispatch = useDispatch();
+  const personalizationSave = useRef(null);
   // Apple guideline 4 / Sign in with Apple HIG: if Authentication Services
   // already provided the user's name, never re-ask. We seed the onboarding
   // form from the logged-in user so the Identity step renders pre-filled
   // and read-only when first_name + last_name are present.
   const authUser = useSelector((s) => s?.auth?.user) || {};
+  const profile = useSelector((s) => s?.profile?.profile);
   const [i, setI] = useState(() => {
     const saved = parseInt(typeof window !== 'undefined' ? window.localStorage.getItem(STORAGE_STEP) : null, 10);
     return Number.isFinite(saved) ? Math.min(saved, STEPS.length - 1) : 0;
@@ -1029,6 +1049,13 @@ export default function AuroraOnboarding({ onClose }) {
       last_name: saved.last_name || authUser.last_name || '',
       city: saved.city || authUser.city || '',
       ...saved,
+      // The older draft contains names without an owner key. Only reuse the
+      // new answers when they belong to this account on a shared device.
+      onboarding_personalization: normalizePersonalization(
+        authUser.id && saved.personalization_user_id === String(authUser.id)
+          ? saved.onboarding_personalization
+          : (String(profile?.id) === String(authUser.id) ? profile?.onboarding_personalization : null),
+      ),
     };
   });
   const nameLocked = !!(authUser.first_name && authUser.last_name);
@@ -1049,13 +1076,33 @@ export default function AuroraOnboarding({ onClose }) {
   };
 
   const set = (patch) => setData((d) => {
-    const nd = { ...d, ...patch };
+    const nd = { ...d, ...patch, personalization_user_id: String(authUser.id || '') };
     try { window.localStorage.setItem(STORAGE_DATA, JSON.stringify(nd)); } catch { /* storage unavailable */ }
     return nd;
   });
   const toggle = (key, id) => {
     const cur = data[key] || [];
     set({ [key]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
+  };
+
+  const persistPersonalization = (value = data.onboarding_personalization) => {
+    const answers = normalizePersonalization(value);
+    // Save at this step so an actor who closes the offer still has their
+    // context on their profile. This must never delay the record/upload door.
+    const fd = new FormData();
+    fd.append('onboarding_personalization', JSON.stringify(answers));
+    // Profile PATCH currently saves the whole user row. Serialize our writes
+    // so a fast finish/name PATCH cannot overwrite metadata from a stale row.
+    personalizationSave.current = Promise.resolve(personalizationSave.current)
+      .then(() => dispatch(updateProfileThunk(fd)));
+    track('onboarding_personalized', { $set: personalizationProperties(answers) });
+  };
+
+  const continueIdentity = (skipQuestions = false) => {
+    const answers = normalizePersonalization(skipQuestions ? null : data.onboarding_personalization);
+    set({ onboarding_personalization: answers });
+    persistPersonalization(answers);
+    next();
   };
 
   const finish = useCallback((opts) => {
@@ -1073,6 +1120,7 @@ export default function AuroraOnboarding({ onClose }) {
     const d = data;
     (async () => {
       try {
+        await personalizationSave.current;
         const fd = new FormData();
         if (d.first_name) fd.append('first_name', d.first_name);
         if (d.last_name) fd.append('last_name', d.last_name);
@@ -1189,7 +1237,10 @@ export default function AuroraOnboarding({ onClose }) {
             // whatever's entered + marks onboarding seen). A required-step
             // validation a user can't clear (iOS keyboard/focus bug, indecision)
             // must never lock them out of the whole app behind this modal.
-            onSkip={() => finish()}
+            onSkip={() => {
+              if (step === 'identity') persistPersonalization();
+              finish();
+            }}
           />
           <div key={step} className="aurora-page-in" style={{
             flex: 1, overflowY: 'auto',
@@ -1198,7 +1249,7 @@ export default function AuroraOnboarding({ onClose }) {
             // the keyboard, not pinned at the very top.
             scrollPaddingBottom: '120px',
           }}>
-            {step === 'identity' && <Identity data={data} set={set} onNext={next} nameLocked={nameLocked} />}
+            {step === 'identity' && <Identity data={data} set={set} onNext={() => continueIdentity()} onSkipQuestions={() => continueIdentity(true)} nameLocked={nameLocked} />}
             {step === 'profile' && <ProfileStep data={data} set={set} onNext={next} />}
             {step === 'interests' && (
               <MultiPicker
@@ -1249,7 +1300,7 @@ export default function AuroraOnboarding({ onClose }) {
       {/* When the free-review flow is on, the welcome CTA advances to the offer
           step instead of finishing; otherwise it closes onboarding as before. */}
       {step === 'welcome' && <Welcome data={data} onDone={finish} />}
-      {step === 'offer' && <Offer firstName={data.first_name} onTry={launchFirstReview} onSkip={skipFirstReview} />}
+      {step === 'offer' && <Offer firstName={data.first_name} personalization={data.onboarding_personalization} onTry={launchFirstReview} onSkip={skipFirstReview} />}
     </div>
   );
 }

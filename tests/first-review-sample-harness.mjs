@@ -28,13 +28,17 @@ export async function loadResults() {
   return mod.exports;
 }
 
-export async function startHarness(port = 0) {
+export async function startHarness(port = 0, { firstReviewFlow = true } = {}) {
   const analytics = await readFile(path.join(root, 'src/utils/analytics.js'), 'utf8');
   const events = analytics.match(/export const Events = \{[\s\S]*?\n\};/)[0];
   const mocks = {
-    'react-redux': `export const useSelector = fn => fn({auth: {user: {first_name: window.__firstName, last_name: 'Actor'}}});
-      export const useDispatch = () => () => { const p = Promise.resolve({}); p.unwrap = () => p; return p; };`,
-    'profileSlice': 'export const updateProfileThunk = () => ({}); export const fetchProfileThunk = () => ({});',
+    'react-redux': `export const useSelector = fn => fn({auth: {user: {id: window.__userId, first_name: window.__firstName, last_name: 'Actor'}}, profile: {profile: window.__profile}});
+      export const useDispatch = () => action => {
+        const p = action.type === 'test/profile' && window.__holdProfileWrite
+          ? new Promise(resolve => { window.__resolveProfileWrite = resolve; }) : Promise.resolve({});
+        p.unwrap = () => p; return p;
+      };`,
+    'profileSlice': 'export const updateProfileThunk = fd => { window.__profileWrites.push(Object.fromEntries(fd)); return { type: "test/profile" }; }; export const fetchProfileThunk = () => ({});',
     'userSettingsSlice': 'export const patchUserSettings = () => ({});',
     'usePushNotifications': 'export const usePushNotifications = () => ({ permission: "prompt", requestPermission: async () => {} });',
     'AIConsentModal': `export const requestAiConsent = () => {
@@ -49,7 +53,8 @@ export async function startHarness(port = 0) {
         import { createRoot } from 'react-dom/client';
         import AuroraOnboarding from './src/panels/Onboarding/AuroraOnboarding.jsx';
         window.__events = []; window.__handoffs = []; window.__consentCalls = 0;
-        window.__consent = true; window.__firstName = 'Joseph';
+        window.__consent = true; window.__firstName = 'Joseph'; window.__userId = 42;
+        window.__profileWrites = []; window.__profile = null;
         window.__modalCount = 0;
         window.addEventListener('drst-modal-open', () => window.__modalCount++);
         window.addEventListener('drst-modal-closed', () => window.__modalCount--);
@@ -60,14 +65,16 @@ export async function startHarness(port = 0) {
           localStorage.clear(); sessionStorage.clear();
           localStorage.setItem('dst_onb_step_v3', String(step));
           window.__events = []; window.__handoffs = []; window.__consentCalls = 0;
+          window.__profileWrites = [];
           root.render(<AuroraOnboarding key={Math.random()} onClose={opts => { window.__closed = opts; }} />);
         };
+        window.resumeOnboarding = () => root.render(<AuroraOnboarding key={Math.random()} onClose={opts => { window.__closed = opts; }} />);
         window.mountOffer();`,
       resolveDir: root, loader: 'jsx',
     },
     bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
     loader: { '.css': 'empty' },
-    define: { 'import.meta.env': JSON.stringify({ VITE_FIRST_REVIEW_FLOW: 'true' }) },
+    define: { 'import.meta.env': JSON.stringify({ VITE_FIRST_REVIEW_FLOW: String(firstReviewFlow) }) },
     plugins: [{
       name: 'isolated-onboarding-services',
       setup(builder) {
