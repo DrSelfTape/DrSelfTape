@@ -27,6 +27,14 @@ function aiErrorMessage(err, fallback) {
 
 const _sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
+// Session persistence is best effort; keep the job identity for record deltas
+// when completion succeeded without a durable session. Preserve provider meta.
+function completedJobResult(job, fallbackId) {
+  const result = job.result;
+  if (!result || typeof result !== 'object' || Array.isArray(result)) return result;
+  return { ...result, _meta: { ...result._meta, job_id: job.job_id || fallbackId } };
+}
+
 // ─── Persistence helpers ─────────────────────────────────────────────────────
 // Keep the key as a module constant so both the save and resume paths agree on
 // the exact string without needing to export it.
@@ -80,7 +88,7 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
       throw err;
     }
     const j = data?.data || data;
-    if (j?.status === 'done') return j.result;
+    if (j?.status === 'done') return completedJobResult(j, jobId);
     if (j?.status === 'failed') {
       throw { settled: true, response: { status: 502, data: { message: j.error || 'Analysis failed. Please try again.' } } };
     }
@@ -107,7 +115,7 @@ async function resolveAnalysis(payload, { signal, kind, recordingId, idempotency
   // endpoint already trims its result; unwrap that same response shape here.
   if (payload?.job_id && payload.status === 'done') {
     clearPendingJob(payload.job_id);
-    return payload.result;
+    return completedJobResult(payload);
   }
   if (payload?.job_id && payload.status === 'failed') {
     clearPendingJob(payload.job_id);

@@ -43,12 +43,18 @@ export async function loadPersonalRecords({ request, userId, reviewId = '', allo
       params: reviewId ? { review_id: reviewId } : {}, signal, timeout: 8000,
     });
   } catch (error) {
-    // HTTP/auth failures and timeouts while online must never resurrect cache.
-    if (!signal?.aborted && !error?.response && navigator.onLine === false) return offlineCopy();
+    // navigator.onLine only describes the device's link, not API reachability.
+    // HTTP/auth refusals and cancellation must remain distinct from outages.
+    if (!signal?.aborted && !error?.aborted && error?.code !== 'ERR_CANCELED' && error?.name !== 'AbortError' &&
+        error?.name !== 'CanceledError' && !error?.response) return offlineCopy();
     throw error;
   }
   if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   const data = visiblePersonalRecords(response.data?.data, allowDimensions);
-  try { localStorage.setItem(cacheKey, JSON.stringify({ reviewId, data })); } catch { /* private mode */ }
+  try { localStorage.setItem(cacheKey, JSON.stringify({ reviewId, data })); } catch {
+    // A corrected server best may be LOWER (e.g. a deleted review). An older
+    // snapshot must not resurrect it when the next mount is offline.
+    try { localStorage.removeItem(cacheKey); } catch { /* storage unavailable */ }
+  }
   return data;
 }

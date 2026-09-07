@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { beforeEach, test } from 'node:test';
+import { configureStore } from '@reduxjs/toolkit';
 import { loadPersonalRecords, reviewRecordId } from '../src/utils/personalRecords.js';
 import { loadRecordingReview, mountComponent } from './recording-review-harness.mjs';
 
-const { usePersonalRecords, TapeReview } = await loadRecordingReview();
+const { usePersonalRecords, TapeReview, reducer, reviewTape, resumeAnalysisJob } = await loadRecordingReview();
 const full = { bests: { overall: 8, framing: 9 }, count: 3,
   first_review_at: '2026-09-01T00:00:00Z', last_review_at: '2026-09-03T00:00:00Z',
   history: [{ t: 1, avg: 6 }, { t: 2, avg: 7 }, { t: 3, avg: 8 }],
@@ -12,7 +13,7 @@ const request = async () => ({ data: { data: structuredClone(full) } });
 let storage, listeners;
 beforeEach(() => {
   storage = new Map(); listeners = new Map();
-  globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value) };
+  globalThis.localStorage = { getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value), removeItem: key => storage.delete(key) };
   globalThis.window = { addEventListener: (type, fn) => listeners.set(type, fn), removeEventListener: type => listeners.delete(type) };
   Object.defineProperty(globalThis, 'navigator', { configurable: true, value: { onLine: true } });
   globalThis.__reviewStore = { getState: () => ({ auth: { user: { id: 1 } } }) };
@@ -52,12 +53,48 @@ test('offline fallback is account/tier scoped and never resurrects another revie
   assert.equal(await loadPersonalRecords({ request: offlineRequest, userId: null }), null);
 });
 
-test('online HTTP errors, timeouts and malformed payloads never fall back to cached bests', async () => {
+test('online HTTP errors and malformed payloads never fall back to cached bests', async () => {
   await loadPersonalRecords({ request, userId: 1 });
-  for (const error of [{ response: { status: 401 } }, { response: { status: 403 } }, { response: { status: 500 } }, new Error('timeout')]) {
+  for (const error of [{ response: { status: 401 } }, { response: { status: 403 } }, { response: { status: 500 } }]) {
     await assert.rejects(loadPersonalRecords({ request: async () => { throw error; }, userId: 1 }));
   }
   await assert.rejects(loadPersonalRecords({ request: async () => ({ data: {} }), userId: 1 }));
+});
+
+test('unreachable server and timeout use scoped cache even when navigator reports online', async () => {
+  await loadPersonalRecords({ request, userId: 1 });
+  for (const error of [new Error('Network Error'), Object.assign(new Error('timeout'), { code: 'ECONNABORTED' })]) {
+    const failedRequest = async () => { throw error; };
+    assert.equal((await loadPersonalRecords({ request: failedRequest, userId: 1 })).bests.overall, 8);
+    assert.equal(await loadPersonalRecords({ request: failedRequest, userId: 2 }), null);
+    assert.equal(await loadPersonalRecords({ request: failedRequest, userId: 1, allowDimensions: true }), null);
+  }
+});
+
+test('failed cache replacement removes superseded best before an offline mount', async () => {
+  await loadPersonalRecords({ request: async () => ({ data: { data: { ...full, bests: { overall: 9 } } } }), userId: 1 });
+  localStorage.setItem = () => { throw new Error('quota exceeded'); };
+  assert.equal((await loadPersonalRecords({ request, userId: 1 })).bests.overall, 8);
+  assert.equal(storage.has('dst_personal_bests:1:overall'), false);
+  navigator.onLine = false;
+  assert.equal(await loadPersonalRecords({ request, userId: 1 }), null);
+});
+
+test('polling and completed replay preserve real job identity for session-less record deltas', async () => {
+  const store = configureStore({ reducer: { jericho: reducer } });
+  const result = { verdict: 'Grounded', headline_score: 8, _meta: { duration_s: 10 } };
+  __reviewHttp.get = async () => ({ data: { data: { job_id: 91, status: 'done', result } } });
+  await store.dispatch(resumeAnalysisJob({ jobId: 91, kind: 'review' })).unwrap();
+  assert.equal(reviewRecordId(store.getState().jericho.tapeReviewResult), 'job:91');
+  __reviewHttp.post = async () => ({ data: { data: { job_id: 92, status: 'done', result } } });
+  await store.dispatch(reviewTape({ file: new Blob(['tape']), idempotencyKey: 'replay-key' })).unwrap();
+  const review = store.getState().jericho.tapeReviewResult;
+  assert.equal(reviewRecordId(review), 'job:92');
+  assert.equal(review._meta.duration_s, 10);
+  await loadPersonalRecords({ userId: 1, reviewId: reviewRecordId(review), request: async (_url, options) => {
+    assert.deepEqual(options.params, { review_id: 'job:92' });
+    return request();
+  } });
 });
 
 test('connection loss during a request may use offline cache, but a 403 still cannot', async () => {
@@ -68,6 +105,16 @@ test('connection loss during a request may use offline cache, but a 403 still ca
   await assert.rejects(loadPersonalRecords({ userId: 1, request: async () => {
     navigator.onLine = false; throw { response: { status: 403 } };
   } }));
+});
+
+test('cancellation never reads cache even if the device loses connectivity', async () => {
+  await loadPersonalRecords({ request, userId: 1 });
+  for (const error of [{ code: 'ERR_CANCELED' }, { name: 'AbortError' }, { name: 'CanceledError' }, { aborted: true }]) {
+    navigator.onLine = true;
+    await assert.rejects(loadPersonalRecords({ userId: 1, request: async () => {
+      navigator.onLine = false; throw error;
+    } }));
+  }
 });
 
 test('abort cannot write stale records; storage failures do not hide successful server results', async () => {
