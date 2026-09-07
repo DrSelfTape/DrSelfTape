@@ -37,7 +37,7 @@ export async function loadRecordingReview() {
   };
   const result = await build({
     stdin: { resolveDir: root, contents: `
-      export { default as reducer, reviewTape, selectReviewRecording, clearTapeReview } from './src/redux/features/jericho/jerichoSlice.js';
+      export { default as reducer, reviewTape, compareTakes, selectReviewRecording, clearTapeReview } from './src/redux/features/jericho/jerichoSlice.js';
       export { default as TapeReview } from './src/panels/Dashboard/Jericho/TapeReview.jsx';
       export { TapeCard } from './src/panels/Dashboard/SelfTapes/index.jsx';
     ` },

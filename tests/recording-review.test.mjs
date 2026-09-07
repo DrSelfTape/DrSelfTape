@@ -5,7 +5,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { loadRecordingReview } from './recording-review-harness.mjs';
 
-const { reducer, reviewTape, selectReviewRecording, clearTapeReview, TapeReview, TapeCard } = await loadRecordingReview();
+const { reducer, reviewTape, compareTakes, selectReviewRecording, clearTapeReview, TapeReview, TapeCard } = await loadRecordingReview();
 const recording = { id: 42, title: 'Callback take', role_name: 'Morgan', video_url: 'https://unreachable-r2.test/video.mov' };
 const notes = { verdict: 'An honest pause', headline_score: 7, whats_working: ['Listening'], adjustments: [{ note: 'Wait for the thought' }] };
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
@@ -43,6 +43,16 @@ test('a library handoff cannot clear a running review', () => {
   store.dispatch(selectReviewRecording(recording));
   assert.equal(store.getState().jericho.reviewRecording, null);
   assert.equal(store.getState().jericho.tapeReviewLoading, true);
+});
+
+test('a library handoff cannot replace an active charged comparison', () => {
+  store.dispatch(compareTakes.pending('active-comparison', {}));
+  store.dispatch(selectReviewRecording(recording));
+  assert.equal(store.getState().jericho.reviewRecording, null);
+  assert.equal(store.getState().jericho.compareLoading, true);
+  const card = render(TapeCard, { tape: recording, reviewBusy: true });
+  assert.match(card, /disabled=""[^>]*>Get casting notes/);
+  assert.equal(requests.length, 0);
 });
 
 test('library mode renders the real TapeReview with a ready CTA and no file picker', () => {
