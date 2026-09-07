@@ -49,6 +49,7 @@ export async function recoveryBundle(firstReviewFlow = true) {
       import profile from './src/redux/features/profile/profileSlice';
       import userSettings from './src/redux/features/userSettings/userSettingsSlice';
       import AuroraOnboarding from './src/panels/Onboarding/AuroraOnboarding';
+      import {flushPendingPersonalization} from './src/panels/Onboarding/pendingPersonalization';
       import App from './src/App';
       window.events = []; window.actions = []; window.attempts = []; window.accepted = [];
       window.purges = 0; window.refreshes = 0; window.serverSettings = {};
@@ -78,6 +79,7 @@ export async function recoveryBundle(firstReviewFlow = true) {
           if (window.expireNext) {window.expireNext = false; fail(config, 401);}
           if (window.failWrites) fail(config, 503);
           if (window.holdWrites) await new Promise(resolve => {window.releaseWrite = resolve;});
+          if (window.late401AfterHold) {window.late401AfterHold = false; fail(config, 401);}
           if (config.signal?.aborted) throw new bareAxios.CanceledError();
           if (fields.onboarding_personalization) fields.onboarding_personalization = JSON.parse(fields.onboarding_personalization);
           Object.assign(window.serverProfile, fields);
@@ -104,6 +106,7 @@ export async function recoveryBundle(firstReviewFlow = true) {
         setAuthToken('fresh');
       };
       window.rotate = () => window.store.dispatch(setTokens({access: 'fresh', refresh: 'refresh-b'}));
+      window.flushPersonalization = () => flushPendingPersonalization(window.store);
       window.mountOnboarding();
     ` },
     bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',

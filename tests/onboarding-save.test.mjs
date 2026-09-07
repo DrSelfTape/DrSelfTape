@@ -12,8 +12,8 @@ before(async () => {
   const result = await build({
     stdin: {resolveDir: fileURLToPath(new URL('../', import.meta.url)), contents: `
       export {default as bareAxios} from 'axios';
-      export {default as http, setAuthToken} from './src/redux/http';
-      export {default as profile, updateProfileThunk} from './src/redux/features/profile/profileSlice';
+      export {default as http, setAuthToken, STALE_AUTH_REQUEST} from './src/redux/http';
+      export {default as profile, updateProfileThunk, fetchProfileThunk} from './src/redux/features/profile/profileSlice';
       export {createOnboardingSession} from './src/panels/Onboarding/onboardingSession';
       export {flushPendingPersonalization, pendingKey} from './src/panels/Onboarding/pendingPersonalization';`},
     bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external',
@@ -47,6 +47,7 @@ function harness(t) {
     profile: api.profile,
     auth: (state = {user: {id: 42, token: 'expired', refresh: 'refresh-a'}}, action) => {
       if (action.type === 'auth/logoutUser') return {user: null};
+      if (action.type === 'auth/loginUser/fulfilled') return {user: action.payload};
       if (action.type === 'auth/setTokens') return {user: {...state.user, token: action.payload.access}};
       return state;
     },
@@ -82,6 +83,119 @@ test('real interceptor: a nine-second successful refresh acknowledges the save w
   assert.equal(attempts, 2);
   assert.equal(h.store.getState().profile.profile.first_name, 'Joseph');
 });
+
+function switchActor(h) {
+  h.store.dispatch({type: 'auth/logoutUser'});
+  h.store.dispatch({type: 'auth/loginUser/fulfilled', payload: {id: 99, token: 'actor-b', refresh: 'refresh-b'}});
+  h.setAuthToken('actor-b');
+}
+
+test('a late 401 from actor A never refreshes or retries A’s payload as actor B', async t => {
+  const h = harness(t);
+  let release, sent;
+  const gate = new Promise(resolve => {release = resolve;});
+  const started = new Promise(resolve => {sent = resolve;});
+  t.after(release);
+  let refreshes = 0;
+  h.bareAxios.defaults.adapter = async config => {refreshes++; return h.response(config, {access: 'actor-b-refreshed'});};
+  const attempts = [];
+  const serverB = {id: 99, first_name: 'B'};
+  h.http.defaults.adapter = async config => {
+    attempts.push({id: config._authUserId, token: config.headers.Authorization, name: config.data.get('first_name')});
+    if (attempts.length === 1) {
+      sent(); await gate;
+      throw new AxiosError('expired', 'ERR_BAD_RESPONSE', config, null, {status: 401, data: {}, config});
+    }
+    serverB.first_name = config.data.get('first_name');
+    return h.response(config, {data: serverB});
+  };
+  const scope = h.createOnboardingSession(h.store);
+  t.after(() => scope.dispose());
+  const fd = new FormData(); fd.append('first_name', 'A');
+  const pending = scope.run(h.store.dispatch, h.updateProfileThunk(fd));
+  await started;
+  assert.equal(h.store.getState().profile.updateLoading, true);
+  switchActor(h);
+  release();
+  assert.equal(await pending, false);
+  assert.equal(refreshes, 0);
+  assert.deepEqual(attempts, [{id: 42, token: 'Bearer expired', name: 'A'}]);
+  assert.deepEqual(serverB, {id: 99, first_name: 'B'});
+  assert.deepEqual(h.store.getState().profile, {profile: null, loading: false, updateLoading: false, error: null});
+  assert.equal(window.purges, 0);
+  assert.equal(h.actions.filter(a => a === 'auth/logoutUser').length, 1);
+});
+
+test('a stale HTTP request has a distinct not-applied error', async t => {
+  const h = harness(t);
+  h.http.defaults.adapter = async config => {
+    switchActor(h);
+    throw new AxiosError('expired', 'ERR_BAD_RESPONSE', config, null, {status: 401, data: {}, config});
+  };
+  await assert.rejects(h.http.patch('/profile/', new FormData()), {code: h.STALE_AUTH_REQUEST});
+});
+
+test('an account switch during refresh cannot install old tokens, retry, or log out B', async t => {
+  const h = harness(t);
+  let release, refreshing;
+  const gate = new Promise(resolve => {release = resolve;});
+  const started = new Promise(resolve => {refreshing = resolve;});
+  t.after(release);
+  let attempts = 0;
+  h.http.defaults.adapter = async config => {
+    attempts++;
+    throw new AxiosError('expired', 'ERR_BAD_RESPONSE', config, null, {status: 401, data: {}, config});
+  };
+  h.bareAxios.defaults.adapter = async config => {refreshing(); await gate; return h.response(config, {access: 'new-a', refresh: 'new-refresh-a'});};
+  const pending = h.store.dispatch(h.updateProfileThunk(new FormData()));
+  await started;
+  switchActor(h);
+  release();
+  const result = await pending;
+  assert.equal(result.meta.notApplied, true);
+  assert.equal(attempts, 1);
+  assert.equal(h.store.getState().auth.user.token, 'actor-b');
+  assert.equal(h.store.getState().profile.error, null);
+  assert.equal(window.purges, 0);
+  assert.equal(h.actions.filter(a => a === 'auth/logoutUser').length, 1);
+});
+
+test('concurrent 401s for the same actor still share one refresh and both retry', async t => {
+  const h = harness(t);
+  let release, refreshing;
+  const gate = new Promise(resolve => {release = resolve;});
+  const started = new Promise(resolve => {refreshing = resolve;});
+  t.after(release);
+  let refreshes = 0;
+  const attempts = [];
+  h.bareAxios.defaults.adapter = async config => {refreshes++; refreshing(); await gate; return h.response(config, {access: 'fresh'});};
+  h.http.defaults.adapter = async config => {
+    attempts.push(config._authUserId);
+    if (!config._authRetried) throw new AxiosError('expired', 'ERR_BAD_RESPONSE', config, null, {status: 401, data: {}, config});
+    return h.response(config, {ok: true});
+  };
+  const pending = Promise.all([h.http.get('/one/'), h.http.get('/two/')]);
+  await started;
+  await delay(20);
+  assert.equal(refreshes, 1);
+  release();
+  assert.equal((await pending).length, 2);
+  assert.deepEqual(attempts, [42, 42, 42, 42]);
+  assert.equal(h.actions.includes('auth/logoutUser'), false);
+});
+
+for (const boundary of ['auth/logoutUser', 'auth/loginUser/fulfilled']) {
+  test(`real profile reducer clears both pending flags and old profile on ${boundary}`, t => {
+    const h = harness(t);
+    h.store.dispatch(h.fetchProfileThunk.fulfilled({id: 42}, 'fetch'));
+    h.store.dispatch(h.fetchProfileThunk.pending('fetch-pending'));
+    h.store.dispatch(h.updateProfileThunk.pending('save-pending'));
+    assert.equal(h.store.getState().profile.loading, true);
+    assert.equal(h.store.getState().profile.updateLoading, true);
+    h.store.dispatch({type: boundary, payload: {id: 99}});
+    assert.deepEqual(h.store.getState().profile, {profile: null, loading: false, updateLoading: false, error: null});
+  });
+}
 
 test('a background profile PATCH still completes nine seconds after its screen disposes the session', async t => {
   const h = harness(t);

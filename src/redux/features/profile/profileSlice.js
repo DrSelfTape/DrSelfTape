@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import axios from '../../http';
+import axios, { STALE_AUTH_REQUEST } from '../../http';
 import endPoints from '../../constant';
 
 const initialState = {
@@ -16,6 +16,7 @@ export const fetchProfileThunk = createAsyncThunk(
       const { data } = await axios.get(endPoints.profile, { signal });
       return data?.data || data;
     } catch (error) {
+      if (error?.code === STALE_AUTH_REQUEST) return rejectWithValue(null, { notApplied: true });
       return rejectWithValue(
         error?.response?.data?.message || 'Failed to load profile.'
       );
@@ -32,6 +33,7 @@ export const updateProfileThunk = createAsyncThunk(
       });
       return data?.data || data;
     } catch (error) {
+      if (error?.code === STALE_AUTH_REQUEST) return rejectWithValue(null, { notApplied: true });
       const message =
         error?.response?.data?.message ||
         (error?.response?.data && typeof error.response.data === 'object'
@@ -52,6 +54,10 @@ const profileSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // A scoped onboarding save suppresses its terminal action after logout.
+      // Clear the old actor's data and both in-flight flags at auth boundaries.
+      .addCase('auth/logoutUser', () => ({ ...initialState }))
+      .addCase('auth/loginUser/fulfilled', () => ({ ...initialState }))
       // Fetch profile
       .addCase(fetchProfileThunk.pending, (state) => {
         state.loading = true;
@@ -62,6 +68,7 @@ const profileSlice = createSlice({
         state.profile = action.payload;
       })
       .addCase(fetchProfileThunk.rejected, (state, action) => {
+        if (action.meta.notApplied) return;
         state.loading = false;
         state.error = action.payload;
       })
@@ -75,6 +82,7 @@ const profileSlice = createSlice({
         state.profile = action.payload;
       })
       .addCase(updateProfileThunk.rejected, (state, action) => {
+        if (action.meta.notApplied) return;
         state.updateLoading = false;
         state.error = action.payload;
       });

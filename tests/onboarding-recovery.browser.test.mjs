@@ -12,14 +12,18 @@ before(async () => {
 after(async () => {await browser?.close();});
 
 async function open(t, flag = true) {
-  const page = await browser.newPage();
+  // Pages in the default context share localStorage. A preceding test's draft
+  // can preselect (and then toggle off) an answer or auto-retry on mount.
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
   page.setDefaultTimeout(2500);
   await page.setRequestInterception(true);
   page.on('request', req => req.isNavigationRequest() ? req.respond({status: 200, contentType: 'text/html', body: '<div id="root"></div>'}) : req.abort());
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  t.after(async () => {await page.close(); assert.deepEqual(errors, []);});
+  t.after(async () => {await context.close(); assert.deepEqual(errors, []);});
   await page.goto('https://test.invalid');
+  assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
   await page.addScriptTag({content: bundles.get(flag)});
   await page.waitForSelector('input');
   return page;
@@ -49,6 +53,7 @@ test('a successful nine-second refresh saves without session-expired logout', as
   const page = await open(t);
   await click(page, 'Between jobs');
   await page.evaluate(() => {window.expireNext = true; window.refreshDelay = 9000;});
+  assert.equal(await page.$eval('button[aria-pressed="true"]', el => el.textContent), 'Between jobs');
   await click(page, 'Continue');
   await page.waitForFunction(() => sessionStorage.getItem('refreshed') === 'true', {timeout: 12000});
   await page.waitForFunction(() => {
@@ -127,17 +132,42 @@ test('failed local answers flush from App despite the real desktop Home marking 
 
 test('App leaves another actor’s pending answers alone and retries only when that actor authenticates', async t => {
   const page = await open(t);
+  assert.equal(await page.evaluate(() => localStorage.getItem('dst_onb_pending:42')), null);
   await page.evaluate(() => {
     localStorage.setItem('dst_onb_pending:99', JSON.stringify({plate: 'auditioning_now'}));
     window.serverSettings.reader_onboarding_seen = true;
     window.mountApp();
   });
   await page.waitForFunction(() => window.store.getState().userSettings.loaded);
-  assert.equal(await page.evaluate(() => window.attempts.length), 0);
+  assert.deepEqual(await page.evaluate(() => window.attempts), []);
   assert.ok(await page.evaluate(() => localStorage.getItem('dst_onb_pending:99')));
   await page.evaluate(() => {window.logout(); window.serverProfile = {id: 99}; window.signIn(99);});
   await page.waitForFunction(() => localStorage.getItem('dst_onb_pending:99') === null);
   assert.deepEqual(await page.evaluate(() => window.serverProfile.onboarding_personalization), {plate: 'auditioning_now'});
+});
+
+test('a held PATCH returning 401 after login as another actor cannot refresh, replay or leave profile saving disabled', async t => {
+  const page = await open(t);
+  await click(page, 'Between jobs');
+  await page.evaluate(() => {window.holdWrites = true; window.late401AfterHold = true;});
+  await click(page, 'Continue');
+  await page.waitForFunction(() => !!window.releaseWrite);
+  assert.equal(await page.evaluate(() => window.store.getState().profile.updateLoading), true);
+  // Join the existing writer so the assertion waits for its terminal result.
+  await page.evaluate(() => {window.pendingSave = window.flushPersonalization();});
+  await click(page, 'Parent closes onboarding');
+  await page.waitForSelector('[data-testid="closed"]');
+  assert.equal(await page.evaluate(async () => {
+    window.logout(); window.serverProfile = {id: 99, first_name: 'B'}; window.signIn(99);
+    window.holdWrites = false; window.releaseWrite();
+    return await window.pendingSave;
+  }), false);
+  assert.equal(await page.evaluate(() => window.refreshes), 0);
+  assert.equal(await page.evaluate(() => window.attempts.length), 1);
+  assert.deepEqual(await page.evaluate(() => window.serverProfile), {id: 99, first_name: 'B'});
+  assert.deepEqual(await page.evaluate(() => window.store.getState().profile), {profile: null, loading: false, updateLoading: false, error: null});
+  assert.equal(await page.evaluate(() => window.actions.filter(a => a === 'auth/logoutUser').length), 1);
+  assert.equal(await page.evaluate(() => window.purges), 0);
 });
 
 test('App retries on connectivity recovery with onboarding already seen, preserving newer pending answers during the request', async t => {
