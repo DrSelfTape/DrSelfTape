@@ -11,9 +11,9 @@ const initialState = {
 
 export const fetchProfileThunk = createAsyncThunk(
   'profile/fetchProfile',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue, signal }) => {
     try {
-      const { data } = await axios.get(endPoints.profile);
+      const { data } = await axios.get(endPoints.profile, { signal });
       return data?.data || data;
     } catch (error) {
       return rejectWithValue(
@@ -25,9 +25,10 @@ export const fetchProfileThunk = createAsyncThunk(
 
 export const updateProfileThunk = createAsyncThunk(
   'profile/updateProfile',
-  async (formData, { rejectWithValue }) => {
+  async (formData, { rejectWithValue, signal }) => {
     try {
       const { data } = await axios.patch(endPoints.profile, formData, {
+        signal,
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return data?.data || data;

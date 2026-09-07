@@ -28,18 +28,32 @@ export async function loadResults() {
   return mod.exports;
 }
 
-export async function startHarness(port = 0, { firstReviewFlow = true } = {}) {
+export async function startHarness(port = 0, { firstReviewFlow = true, onboardingSource } = {}) {
   const analytics = await readFile(path.join(root, 'src/utils/analytics.js'), 'utf8');
   const events = analytics.match(/export const Events = \{[\s\S]*?\n\};/)[0];
   const mocks = {
-    'react-redux': `export const useSelector = fn => fn({auth: {user: {id: window.__userId, first_name: window.__firstName, last_name: 'Actor'}}, profile: {profile: window.__profile}});
-      export const useDispatch = () => action => {
-        const p = action.type === 'test/profile' && window.__holdProfileWrite
-          ? new Promise(resolve => { window.__resolveProfileWrite = resolve; }) : Promise.resolve({});
+    'react-redux': `import { useSyncExternalStore } from 'react';
+      const listeners = new Set();
+      const state = () => ({auth: {user: window.__userId ? {id: window.__userId, token: window.__token, first_name: window.__firstName, last_name: 'Actor'} : null}, profile: {profile: window.__profile}});
+      const store = {getState: state, subscribe: fn => { listeners.add(fn); return () => listeners.delete(fn); }};
+      let revision = 0;
+      window.updateAccountState = patch => { Object.assign(window, patch); revision++; listeners.forEach(fn => fn()); };
+      export const useStore = () => store;
+      export const useSelector = fn => { useSyncExternalStore(store.subscribe, () => revision); return fn(state()); };
+      const dispatch = action => {
+        if (action.type === 'test/settings') window.__settingsWrites.push(action.payload);
+        const p = action.type === 'test/profile'
+          ? (window.__holdProfileWrite
+            ? new Promise((resolve, reject) => { window.__resolveProfileWrite = resolve; window.__rejectProfileWrite = reject; })
+            : window.__failProfileWrite ? Promise.reject(new Error('offline')) : Promise.resolve({}))
+          : Promise.resolve({});
+        p.catch(() => {});
+        p.abort = () => { window.__abortedWrites++; };
         p.unwrap = () => p; return p;
-      };`,
+      };
+      export const useDispatch = () => dispatch;`,
     'profileSlice': 'export const updateProfileThunk = fd => { window.__profileWrites.push(Object.fromEntries(fd)); return { type: "test/profile" }; }; export const fetchProfileThunk = () => ({});',
-    'userSettingsSlice': 'export const patchUserSettings = () => ({});',
+    'userSettingsSlice': 'export const patchUserSettings = payload => ({type: "test/settings", payload});',
     'usePushNotifications': 'export const usePushNotifications = () => ({ permission: "prompt", requestPermission: async () => {} });',
     'AIConsentModal': `export const requestAiConsent = () => {
       window.__consentCalls += 1;
@@ -55,11 +69,13 @@ export async function startHarness(port = 0, { firstReviewFlow = true } = {}) {
         window.__events = []; window.__handoffs = []; window.__consentCalls = 0;
         window.__consent = true; window.__firstName = 'Joseph'; window.__userId = 42;
         window.__profileWrites = []; window.__profile = null;
+        window.__settingsWrites = []; window.__abortedWrites = 0; window.__token = 'session-a';
         window.__modalCount = 0;
         window.addEventListener('drst-modal-open', () => window.__modalCount++);
         window.addEventListener('drst-modal-closed', () => window.__modalCount--);
         window.addEventListener('drst-start-first-review', () => window.__handoffs.push(sessionStorage.getItem('dst_first_review_variant')));
         const root = createRoot(document.getElementById('root'));
+        window.unmountOnboarding = () => root.render(null);
         window.mountOffer = (step = 1, firstName = 'Joseph') => {
           window.__firstName = firstName;
           localStorage.clear(); sessionStorage.clear();
@@ -78,11 +94,12 @@ export async function startHarness(port = 0, { firstReviewFlow = true } = {}) {
     plugins: [{
       name: 'isolated-onboarding-services',
       setup(builder) {
+        if (onboardingSource) builder.onLoad({ filter: /AuroraOnboarding\.jsx$/ }, () => ({ contents: onboardingSource, loader: 'jsx', resolveDir: path.join(root, 'src/panels/Onboarding') }));
         builder.onResolve({ filter: /react-redux|profileSlice|userSettingsSlice|usePushNotifications|AIConsentModal|utils\/analytics$/ }, ({ path: importPath }) => {
           const key = Object.keys(mocks).find(name => importPath === name || importPath.endsWith('/' + name));
           if (key) return { path: key, namespace: 'mock' };
         });
-        builder.onLoad({ filter: /.*/, namespace: 'mock' }, ({ path: key }) => ({ contents: mocks[key], loader: 'js' }));
+        builder.onLoad({ filter: /.*/, namespace: 'mock' }, ({ path: key }) => ({ contents: mocks[key], loader: 'js', resolveDir: root }));
       },
     }],
   });

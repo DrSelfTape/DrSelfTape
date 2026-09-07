@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { updateProfileThunk, fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
 import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
 import SampleReview from './SampleReview';
+import { createOnboardingSession } from './onboardingSession';
 import { PLATE_OPTIONS, TAPED_OPTIONS, normalizePersonalization, getOfferCopy, personalizationProperties } from '../../data/onboardingPersonalization';
 
 /* ── Aurora post-signup onboarding flow ────────────────────────────────
@@ -44,8 +45,9 @@ const Q_STEPS = ['identity', 'notif'];
 
 // Best-effort analytics — mirrors the dynamic-import pattern finish() already
 // uses so a missing/blocked analytics bundle never breaks onboarding.
-function track(event, props) {
+function track(event, props, isCurrent = () => true) {
   import('../../utils/analytics').then(({ trackEvent, Events }) => {
+    if (!isCurrent()) return;
     const name = Events[event] || event;
     trackEvent(name, props);
   }).catch(() => { /* analytics unavailable */ });
@@ -72,10 +74,16 @@ const LEVELS = [
   { id: 'pro', label: 'Full-time pro', sub: 'THIS IS THE CAREER' },
 ];
 const TYPES = ['Leading', 'Character', 'Comedic', 'Ingénue', 'Best Friend', 'Villain', 'Parent'];
+const PRONOUNS = ['she/her', 'he/him', 'they/them', 'other'];
 const UNIONS = ['SAG-AFTRA', 'Eligible', 'Non-union'];
 
 const STORAGE_STEP = 'dst_onb_step_v3'; // v3: flow cut to 3 screens — old numeric indices meant different steps, so ignore stale v1/v2 progress (entered data in STORAGE_DATA is preserved)
 const STORAGE_DATA = 'dst_onb_data';
+const pendingKey = (userId) => `dst_onb_pending:${userId}`;
+const answerPatch = (d) => Object.fromEntries(
+  (d.personalization_keys || []).filter(key => ['plate', 'taped_before'].includes(key))
+    .map(key => [key, d.onboarding_personalization[key]]),
+);
 
 /* Primary gold CTA — gradient + sheen */
 function GoldBtn({ children, onClick, disabled, style }) {
@@ -269,7 +277,7 @@ function SelectRow({ label, sub, on, onClick, tint }) {
 
 /* ───── STEP COMPONENTS ───── */
 
-function Identity({ data, set, onNext, onSkipQuestions, nameLocked }) {
+function Identity({ data, set, onNext, onSkipQuestions, nameLocked, saving }) {
   const valid = (data.first_name || '').trim() && (data.last_name || '').trim();
   // When the name arrived from Sign in with Apple (or a prior signup), we
   // lock the inputs read-only so Apple's Authentication Services framework
@@ -288,6 +296,15 @@ function Identity({ data, set, onNext, onSkipQuestions, nameLocked }) {
       <div style={{ marginTop: 16 }}>
         <Field label="LAST NAME" value={data.last_name} onChange={(v) => set({ last_name: v })} placeholder="Okonkwo" disabled={nameLocked} />
       </div>
+      <div style={{ marginTop: 16 }}>
+        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>UNION STATUS</label>
+        <ChipRow options={UNIONS} value={data.union_status} onPick={(v) => set({ union_status: v })} />
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>PRONOUNS</label>
+        <ChipRow options={PRONOUNS} value={data.pronouns} onPick={(v) => set({ pronouns: v })} />
+      </div>
+      {FIRST_REVIEW_FLOW && <>
       <p style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', marginTop: 20 }}>Two optional questions to make your first review feel useful.</p>
       {[
         { key: 'plate', label: "What's on your plate?", options: PLATE_OPTIONS },
@@ -314,8 +331,9 @@ function Identity({ data, set, onNext, onSkipQuestions, nameLocked }) {
           </div>
         </fieldset>
       ))}
-      <GoldBtn onClick={onNext} disabled={!valid} style={{ marginTop: 26 }}>Continue</GoldBtn>
-      <GhostBtn onClick={onSkipQuestions}>Skip these questions</GhostBtn>
+      </>}
+      <GoldBtn onClick={onNext} disabled={!valid || saving} style={{ marginTop: 26 }}>{saving ? 'Saving…' : 'Continue'}</GoldBtn>
+      {FIRST_REVIEW_FLOW && <GhostBtn onClick={onSkipQuestions}>Skip these questions</GhostBtn>}
     </div>
   );
 }
@@ -906,9 +924,11 @@ function Offer({ firstName, personalization, onTry, onSkip }) {
         <h1 style={{
           fontFamily: "'Space Grotesk', sans-serif", fontSize: 34, fontWeight: 700,
           letterSpacing: '-0.6px', lineHeight: 1.04, marginTop: 8,
-        }}>{copy.headline}</h1>
+        }}>{FIRST_REVIEW_FLOW ? copy.headline : <>Get casting notes<br />on any take. Free.</>}</h1>
         <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 320 }}>
-          {copy.body}
+          {FIRST_REVIEW_FLOW ? copy.body : <>Know how your tape reads before casting ever sees it. Jericho scores
+          your performance, framing, and eyeline, then names the one fix that
+          books the room.</>}
         </p>
         {/* 3-step expectation strip (pliability pattern): show the destination
             before the ask, so the camera request reads as a step toward
@@ -1021,7 +1041,12 @@ export default function AuroraOnboarding({ onClose }) {
   // sheet, which also has a bottom action card the tab bar overlapped).
   useHideMobileHeader(true);
   const dispatch = useDispatch();
+  const store = useStore();
+  const session = useRef(null);
   const personalizationSave = useRef(null);
+  const transitioning = useRef(false);
+  const launching = useRef(false);
+  const [saving, setSaving] = useState(false);
   // Apple guideline 4 / Sign in with Apple HIG: if Authentication Services
   // already provided the user's name, never re-ask. We seed the onboarding
   // form from the logged-in user so the Identity step renders pre-filled
@@ -1040,6 +1065,19 @@ export default function AuroraOnboarding({ onClose }) {
     } catch {
       saved = {};
     }
+    if (FIRST_REVIEW_FLOW && saved.personalization_user_id && saved.personalization_user_id !== String(authUser.id)) saved = {};
+    // Logout clears the legacy, unscoped draft. Unacknowledged answers have
+    // their own account key so they survive cancellation and can be retried
+    // only when their originating actor signs back in.
+    if (FIRST_REVIEW_FLOW && authUser.id) {
+      try {
+        const pending = JSON.parse(window.localStorage.getItem(pendingKey(authUser.id)));
+        if (pending) saved = { ...saved, personalization_user_id: String(authUser.id),
+          onboarding_personalization: normalizePersonalization(pending),
+          personalization_keys: Object.keys(pending), personalization_touched: Object.keys(pending),
+          personalization_pending: true };
+      } catch { /* storage unavailable */ }
+    }
     // Backfill name + city from the logged-in user record on first render.
     // localStorage wins for anything the user has already typed in this
     // onboarding session, but we never want an empty name input when SiwA
@@ -1051,17 +1089,48 @@ export default function AuroraOnboarding({ onClose }) {
       ...saved,
       // The older draft contains names without an owner key. Only reuse the
       // new answers when they belong to this account on a shared device.
+      ...(FIRST_REVIEW_FLOW ? {
       onboarding_personalization: normalizePersonalization(
         authUser.id && saved.personalization_user_id === String(authUser.id)
           ? saved.onboarding_personalization
           : (String(profile?.id) === String(authUser.id) ? profile?.onboarding_personalization : null),
       ),
+      personalization_keys: authUser.id && saved.personalization_user_id === String(authUser.id)
+        ? (saved.personalization_keys || Object.keys(saved.onboarding_personalization || {}))
+        : (String(profile?.id) === String(authUser.id) ? Object.keys(profile?.onboarding_personalization || {}) : []),
+      } : {}),
     };
   });
+  const dataRef = useRef(data);
+  const touched = useRef(new Set(data.personalization_touched || (
+    data.personalization_user_id === String(authUser.id) ? data.personalization_keys : []
+  )));
+  useEffect(() => {
+    const scope = createOnboardingSession(store);
+    session.current = scope;
+    return () => scope.dispose();
+  }, [store]);
+
+  // Keep hydration separate from edits. A late GET may fill an untouched
+  // answer, but cannot undo a selection or an explicit deselection/skip.
+  useEffect(() => {
+    if (!FIRST_REVIEW_FLOW || !authUser.id || String(profile?.id) !== String(authUser.id) || !session.current?.current()) return;
+    const answers = normalizePersonalization(profile.onboarding_personalization);
+    const current = dataRef.current;
+    const hydrated = { ...current.onboarding_personalization };
+    const keys = new Set(current.personalization_keys);
+    for (const key of Object.keys(profile.onboarding_personalization || {})) {
+      if (!touched.current.has(key) && key in answers) { hydrated[key] = answers[key]; keys.add(key); }
+    }
+    const nd = { ...current, onboarding_personalization: hydrated, personalization_keys: [...keys] };
+    dataRef.current = nd;
+    setData(nd);
+  }, [profile, authUser.id]);
   const nameLocked = !!(authUser.first_name && authUser.last_name);
 
   const step = STEPS[i];
   const go = (n) => {
+    if (FIRST_REVIEW_FLOW && transitioning.current) return;
     const next = Math.max(0, Math.min(STEPS.length - 1, n));
     setI(next);
     try { window.localStorage.setItem(STORAGE_STEP, String(next)); } catch { /* storage unavailable */ }
@@ -1075,37 +1144,82 @@ export default function AuroraOnboarding({ onClose }) {
     go(Math.max(0, t));
   };
 
-  const set = (patch) => setData((d) => {
-    const nd = { ...d, ...patch, personalization_user_id: String(authUser.id || '') };
+  const set = (patch) => {
+    if (FIRST_REVIEW_FLOW && (!session.current?.current() || transitioning.current)) return;
+    const d = dataRef.current;
+    if (FIRST_REVIEW_FLOW && patch.onboarding_personalization) {
+      for (const key of Object.keys(patch.onboarding_personalization)) {
+        if (patch.onboarding_personalization[key] !== d.onboarding_personalization[key]) touched.current.add(key);
+      }
+    }
+    const nd = { ...d, ...patch, ...(FIRST_REVIEW_FLOW ? {
+      personalization_user_id: String(authUser.id || ''),
+      personalization_touched: [...touched.current],
+      personalization_keys: [...new Set([...(d.personalization_keys || []), ...touched.current])],
+    } : {}) };
+    dataRef.current = nd;
+    setData(nd);
     try { window.localStorage.setItem(STORAGE_DATA, JSON.stringify(nd)); } catch { /* storage unavailable */ }
-    return nd;
-  });
+    if (FIRST_REVIEW_FLOW && nd.personalization_pending) {
+      try { window.localStorage.setItem(pendingKey(authUser.id), JSON.stringify(answerPatch(nd))); } catch { /* storage unavailable */ }
+    }
+  };
   const toggle = (key, id) => {
     const cur = data[key] || [];
     set({ [key]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
   };
 
-  const persistPersonalization = (value = data.onboarding_personalization) => {
-    const answers = normalizePersonalization(value);
-    // Save at this step so an actor who closes the offer still has their
-    // context on their profile. This must never delay the record/upload door.
-    const fd = new FormData();
-    fd.append('onboarding_personalization', JSON.stringify(answers));
-    // Profile PATCH currently saves the whole user row. Serialize our writes
-    // so a fast finish/name PATCH cannot overwrite metadata from a stale row.
-    personalizationSave.current = Promise.resolve(personalizationSave.current)
-      .then(() => dispatch(updateProfileThunk(fd)));
-    track('onboarding_personalized', { $set: personalizationProperties(answers) });
-  };
+  const persistPersonalization = useCallback(() => {
+    if (personalizationSave.current) return personalizationSave.current;
+    const scope = session.current;
+    if (!FIRST_REVIEW_FLOW || !scope?.current()) return Promise.resolve(false);
+    const userId = store.getState().auth?.user?.id;
+    const pending = (async () => {
+      while (scope.current() && dataRef.current.personalization_pending) {
+        // Omit answers that have not hydrated. A blank would clear a value
+        // saved on another device. Snapshot each attempt so a late ACK cannot
+        // discard edits made while a resumed request was in flight.
+        const payload = JSON.stringify(answerPatch(dataRef.current));
+        const fd = new FormData();
+        fd.append('onboarding_personalization', payload);
+        if (!await scope.run(dispatch, updateProfileThunk(fd))) return false;
+        if (payload !== JSON.stringify(answerPatch(dataRef.current))) continue;
+        const nd = { ...dataRef.current, personalization_pending: false };
+        dataRef.current = nd;
+        setData(nd);
+        try {
+          window.localStorage.setItem(STORAGE_DATA, JSON.stringify(nd));
+          window.localStorage.removeItem(pendingKey(userId));
+        } catch { /* storage unavailable */ }
+      }
+      return scope.current();
+    })().finally(() => { if (personalizationSave.current === pending) personalizationSave.current = null; });
+    personalizationSave.current = pending;
+    return pending;
+  }, [dispatch, store]);
 
-  const continueIdentity = (skipQuestions = false) => {
-    const answers = normalizePersonalization(skipQuestions ? null : data.onboarding_personalization);
-    set({ onboarding_personalization: answers });
-    persistPersonalization(answers);
+  useEffect(() => {
+    // Resuming an interrupted offer also retries. launchFirstReview waits on
+    // this request before opening consent; retries cannot race that POST.
+    if (FIRST_REVIEW_FLOW && dataRef.current.personalization_pending) persistPersonalization();
+  }, [persistPersonalization]);
+
+  const continueIdentity = async (skipQuestions = false) => {
+    if (transitioning.current || !session.current?.current()) return;
+    const answers = normalizePersonalization(skipQuestions ? null : dataRef.current.onboarding_personalization);
+    if (skipQuestions) { touched.current.add('plate'); touched.current.add('taped_before'); }
+    set({ onboarding_personalization: answers, personalization_pending: true });
+    transitioning.current = true;
+    setSaving(true);
+    track('onboarding_personalized', { $set: personalizationProperties(answers) }, session.current.current);
+    await persistPersonalization();
+    if (!session.current.current()) return;
+    transitioning.current = false;
+    setSaving(false);
     next();
   };
 
-  const finish = useCallback((opts) => {
+  const finishLegacy = useCallback((opts) => {
     // Mark onboarding seen, clear local progress, and CLOSE IMMEDIATELY. The
     // profile PATCH (especially a multi-MB headshot upload) is best-effort and
     // runs in the background — awaiting it here previously trapped the user on
@@ -1120,7 +1234,7 @@ export default function AuroraOnboarding({ onClose }) {
     const d = data;
     (async () => {
       try {
-        await personalizationSave.current;
+        if (!session.current?.current()) return;
         const fd = new FormData();
         if (d.first_name) fd.append('first_name', d.first_name);
         if (d.last_name) fd.append('last_name', d.last_name);
@@ -1143,9 +1257,9 @@ export default function AuroraOnboarding({ onClose }) {
         }
 
         const hasAny = ['first_name', 'last_name', 'city', 'bio'].some((k) => fd.get(k));
-        if (hasAny) {
-          await dispatch(updateProfileThunk(fd)).unwrap().catch(() => {});
-          await dispatch(fetchProfileThunk()).catch(() => {});
+        if (hasAny && session.current?.current()) {
+          await session.current.run(dispatch, updateProfileThunk(fd));
+          if (session.current.current()) await session.current.run(dispatch, fetchProfileThunk());
         }
       } catch { /* profile patch best-effort */ }
     })();
@@ -1153,11 +1267,59 @@ export default function AuroraOnboarding({ onClose }) {
     if (onClose) onClose(opts);
   }, [data, dispatch, onClose]);
 
+  const finishPersonalized = async (opts) => {
+    const scope = session.current;
+    if (transitioning.current || !scope?.current()) return false;
+    if (step === 'identity') {
+      set({ personalization_pending: true });
+      track('onboarding_personalized', { $set: personalizationProperties(dataRef.current.onboarding_personalization) }, scope.current);
+    }
+    transitioning.current = true;
+    setSaving(true);
+    // Completion retries failed answers. Preserve the draft and seen=false
+    // until both answers and identity have been acknowledged by the server.
+    const answersSaved = await persistPersonalization();
+    if (!scope.current()) return false;
+    const d = dataRef.current;
+    const fd = new FormData();
+    for (const key of ['first_name', 'last_name', 'city', 'bio', 'pronouns', 'union_status', 'representation']) {
+      if (d[key]) fd.append(key, d[key]);
+    }
+    const profileSaved = ![...fd.keys()].length || await scope.run(dispatch, updateProfileThunk(fd));
+    if (!scope.current()) return false;
+    if (answersSaved && profileSaved) {
+      dispatch(patchUserSettings({ reader_onboarding_seen: true }));
+      try {
+        window.localStorage.removeItem(STORAGE_STEP);
+        window.localStorage.removeItem(STORAGE_DATA);
+      } catch { /* storage unavailable */ }
+    }
+    // A failed request still lets the actor leave. The next onboarding mount
+    // retries the retained draft because completion was not marked as seen.
+    transitioning.current = false;
+    setSaving(false);
+    if (opts?.launchFirstReview) {
+      try {
+        window.sessionStorage.setItem('dst_first_review', '1');
+        window.sessionStorage.setItem('dst_first_review_variant', opts.variant || 'upload');
+      } catch { /* storage unavailable */ }
+    }
+    onClose?.(opts);
+    return true;
+  };
+  const finish = FIRST_REVIEW_FLOW ? finishPersonalized : finishLegacy;
+
   // From the 'offer' step: close onboarding, then ask MobileApp to drop the
   // user straight into a (free) Tape Review. The event is the cross-component
   // bridge — onboarding lives inside HomeScreen, the analyzer in the root.
-  // finish() is now synchronous (background persist), so the handoff is instant.
+  // The enabled flow settles its bounded saves before handing off.
   const launchFirstReview = async (variant = 'upload') => {
+    const scope = session.current;
+    if (launching.current || transitioning.current || !scope?.current()) return;
+    launching.current = true;
+    try {
+    if (FIRST_REVIEW_FLOW) await personalizationSave.current;
+    if (!scope.current()) return;
     track('FIRST_REVIEW_OFFER_TAPPED', { variant });
     // H-05: stamp the entry path so first_review_started/_upload_shown/
     // _completed can be attributed to onboarding vs the Home hero.
@@ -1177,6 +1339,7 @@ export default function AuroraOnboarding({ onClose }) {
     // index via skipFirstReview.)
     let ok = false;
     try { ok = await requestAiConsent(); } catch { ok = false; }
+    if (!scope.current()) return;
     if (!ok) {
       // Consent decline is its OWN funnel drop — distinct from a deliberate
       // "maybe later" skip. Splitting them tells us whether the leak is the
@@ -1193,13 +1356,18 @@ export default function AuroraOnboarding({ onClose }) {
     // and the upload (e.g. the BE-403 consent path), so MobileApp re-reads it
     // on every mount and re-asserts the first-review screen. The event covers
     // the immediate (no-remount) case.
-    try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
+    if (!FIRST_REVIEW_FLOW) try { window.sessionStorage.setItem('dst_first_review', '1'); } catch { /* noop */ }
     // Which offer card was chosen. TapeReview reads this once in firstReview
     // mode: 'record' prefills the bundled practice sides and promotes the
     // record button to primary; 'upload' keeps the classic upload emphasis.
-    try { window.sessionStorage.setItem('dst_first_review_variant', variant); } catch { /* noop */ }
-    finish({ launchFirstReview: true });
+    if (FIRST_REVIEW_FLOW) {
+      if (!await finish({ launchFirstReview: true, variant })) return;
+    } else {
+      try { window.sessionStorage.setItem('dst_first_review_variant', variant); } catch { /* noop */ }
+      finish({ launchFirstReview: true });
+    }
     try { window.dispatchEvent(new CustomEvent('drst-start-first-review')); } catch { /* noop */ }
+    } finally { launching.current = false; }
   };
 
   // Offer now comes early (right after the name step). Skipping CONTINUES the
@@ -1237,10 +1405,7 @@ export default function AuroraOnboarding({ onClose }) {
             // whatever's entered + marks onboarding seen). A required-step
             // validation a user can't clear (iOS keyboard/focus bug, indecision)
             // must never lock them out of the whole app behind this modal.
-            onSkip={() => {
-              if (step === 'identity') persistPersonalization();
-              finish();
-            }}
+            onSkip={() => finish()}
           />
           <div key={step} className="aurora-page-in" style={{
             flex: 1, overflowY: 'auto',
@@ -1249,7 +1414,7 @@ export default function AuroraOnboarding({ onClose }) {
             // the keyboard, not pinned at the very top.
             scrollPaddingBottom: '120px',
           }}>
-            {step === 'identity' && <Identity data={data} set={set} onNext={() => continueIdentity()} onSkipQuestions={() => continueIdentity(true)} nameLocked={nameLocked} />}
+            {step === 'identity' && <Identity data={data} set={set} onNext={FIRST_REVIEW_FLOW ? () => continueIdentity() : next} onSkipQuestions={() => continueIdentity(true)} nameLocked={nameLocked} saving={saving} />}
             {step === 'profile' && <ProfileStep data={data} set={set} onNext={next} />}
             {step === 'interests' && (
               <MultiPicker
