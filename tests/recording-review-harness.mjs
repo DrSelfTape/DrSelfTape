@@ -44,6 +44,7 @@ export async function loadRecordingReview() {
   const result = await build({
     stdin: { resolveDir: root, contents: `
       export * from './src/redux/features/jericho/jerichoSlice.js';
+      export { usePersonalRecords } from './src/hooks/usePersonalRecords.js';
       export { default as reducer } from './src/redux/features/jericho/jerichoSlice.js';
       export { default as TapeReview } from './src/panels/Dashboard/Jericho/TapeReview.jsx';
       export { TapeCard, default as SelfTapes } from './src/panels/Dashboard/SelfTapes/index.jsx';
@@ -54,7 +55,7 @@ export async function loadRecordingReview() {
     define: { 'import.meta.env': '{}' },
     plugins: [{ name: 'recording-review-services', setup(builder) {
       builder.onResolve({ filter: /.*/ }, ({ path, importer }) => {
-        if (path === 'react' && /(?:TapeReview\.jsx|DashboardLayout\.jsx|SelfTapes\/index\.jsx|useIsMobile\.js)$/.test(importer)) {
+        if (path === 'react' && /(?:TapeReview\.jsx|DashboardLayout\.jsx|SelfTapes\/index\.jsx|useIsMobile\.js|usePersonalRecords\.js)$/.test(importer)) {
           return { path: 'hooks', namespace: 'mock' };
         }
         if (path === 'react') return { path, external: true };

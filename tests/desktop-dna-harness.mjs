@@ -39,6 +39,7 @@ export async function loadDesktopReview({ baseline = false } = {}) {
     loader: { '.css': 'empty' }, define: { 'import.meta.env': '{}' },
     plugins: [{ name: 'desktop-render-services', setup(builder) {
       builder.onResolve({ filter: /.*/ }, ({ path, importer }) => {
+        if (path === 'react' && /usePersonalRecords\.js$/.test(importer)) return { path: 'hooks', namespace: 'mock' };
         if (path === 'react' && /\/(DesktopCompareMatrix|DesktopPerformanceDNA|DesktopTapeReport)\.jsx$/.test(importer)) return { path: 'hooks', namespace: 'mock' };
         if (path === 'react') return { path, external: true };
         const key = Object.keys(mocks).find(name => path === name || path.endsWith('/' + name));
@@ -51,6 +52,9 @@ export async function loadDesktopReview({ baseline = false } = {}) {
         export const useEffect = (...a) => (globalThis.__hooks || React).useEffect(...a);
         export const useId = () => globalThis.__hooks ? 'test-id' : React.useId();
       ` : mocks[path], loader: 'js' }));
+      builder.onLoad({ filter: /personalRecords\.js$/ }, ({ path }) => baseline ? ({
+        contents: execFileSync('git', ['show', `${BASE}:${path.slice(root.length)}`], { cwd: root, encoding: 'utf8' }), loader: 'js',
+      }) : undefined);
       builder.onLoad({ filter: /Jericho\/(TapeReview|TapeReviewNotes|CompareTakes|index)\.jsx$/ }, ({ path }) => {
         const source = baseline
           ? execFileSync('git', ['show', `${BASE}:${path.slice(root.length)}`], { cwd: root, encoding: 'utf8' })

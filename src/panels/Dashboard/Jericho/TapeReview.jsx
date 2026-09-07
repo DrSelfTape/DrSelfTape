@@ -29,7 +29,7 @@ import { tapSelect, cheer, warn } from '../../../utils/haptics';
 import { useShareImageCapture } from '../../../hooks/useShareImageCapture';
 import { saveBlobUrl } from '../../../utils/saveMedia';
 import TapeReviewShareCard, { TapeReviewShareCardStory } from './TapeReviewShareCard';
-import { recordAndDiffBests, appendScoreHistory, getScoreHistory } from '../../../utils/personalRecords';
+import { usePersonalRecords } from '../../../hooks/usePersonalRecords';
 import { Share2 } from 'lucide-react';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { PRACTICE_SCENE_TITLE, PRACTICE_SCENE_CONTENT } from '../../../data/practiceScene';
@@ -236,6 +236,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // users see the headline + an unlock CTA. onUpgrade is passed in the
   // first-review flow; elsewhere fall back to the global panel-nav event.
   const { isPaid, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
+  const personalRecords = usePersonalRecords({ review: tapeReviewResult, allowDimensions: isPaid,
+    enabled: !!tapeReviewResult });
   const handleUpgrade = () => {
     if (onUpgrade) { onUpgrade(); return; }
     goUpgrade({ source: 'tape_full_read', returnTo: 'jericho' });
@@ -315,9 +317,6 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // distribution: an actor posting their casting-grade read is our UGC engine.
   const shareRef = useRef(null);
   const shareStoryRef = useRef(null);
-  // Personal-records diff runs once per result (ref-guarded — render-time
-  // compute keeps it beside the derived scores it needs).
-  const recordsRef = useRef({ key: null, records: [] });
   const [sharing, setSharing] = useState(false);
   const { captureImage } = useShareImageCapture({ onError: () => {} });
   // 'story' (1080×1920, IG/TikTok — the primary destination) or 'square'.
@@ -749,18 +748,13 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     const localHeroAvg = heroVals.length ? heroVals.reduce((a, b) => a + b, 0) / heroVals.length : null;
     const heroAvg = Number.isFinite(Number(raw.headline_score)) ? Number(raw.headline_score) : localHeroAvg;
 
-    // Personal records (rank 14): once per result. LOCKED users only compete
-    // on the overall number — per-dimension records would leak gated scores.
-    const resultKey = raw?._meta?.job_id || `${raw?.verdict || ''}:${heroAvg ?? ''}`;
-    if (recordsRef.current.key !== resultKey && heroAvg != null) {
-      recordsRef.current = {
-        key: resultKey,
-        records: recordAndDiffBests(locked ? {} : (raw.scores || {}), locked ? [] : TECH_SCORES, heroAvg),
-        history: appendScoreHistory(heroAvg),
-      };
-    }
-    const newRecords = recordsRef.current.key === resultKey ? recordsRef.current.records : [];
-    const scoreHistory = recordsRef.current.key === resultKey ? (recordsRef.current.history || getScoreHistory()) : getScoreHistory();
+    // The server compares this saved review with earlier reviews across devices.
+    // An unavailable aggregate hides the optional badge; notes remain usable.
+    const resultKey = raw._session_id || raw?._meta?.job_id || `${raw?.verdict || ''}:${heroAvg ?? ''}`;
+    const newRecords = (personalRecords?.records || [])
+      .filter(record => !locked || record.key === 'overall')
+      .map(record => ({ ...record, label: record.key === 'overall' ? 'Overall' : TECH_SCORES.find(d => d.key === record.key)?.label }));
+    const scoreHistory = personalRecords?.history || [];
 
     // Additive Ring 3 presentation. Native (including tablets) retains the
     // original result JSX below. Pass only the already-trimmed read to desktop.
