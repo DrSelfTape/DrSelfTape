@@ -906,16 +906,29 @@ export default function SelfTapes() {
           style={{ background: 'var(--aurora-glass-strong)', borderColor: 'var(--aurora-glass-border)' }}
         >
           <Film className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--aurora-dim)' }} />
-          <p className="text-sm" style={{ color: 'var(--aurora-dim)' }}>
-            No self-tapes yet. Upload your first recording!
+          <p style={{ color: 'var(--aurora-dim)', fontSize: 'var(--type-base)' }}>
+            Your takes land here once you record or upload one.
           </p>
-          <button
-            onClick={() => setShowUpload(true)}
-            className="mt-4 text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
-            style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
-          >
-            Upload Self-Tape
-          </button>
+          {/* V-03: on a phone the next action is the in-app recorder (Scenes
+              tab); the upload sheet is the desktop path. drst-navigate, not
+              navigate(), for the same reason handleReview uses it. */}
+          {(isMobile || Capacitor.isNativePlatform()) ? (
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'scenes' } }))}
+              className="mt-4 font-semibold px-5 py-2.5 rounded-xl transition-colors"
+              style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', fontSize: 'var(--type-base)' }}
+            >
+              Record a take
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowUpload(true)}
+              className="mt-4 font-semibold px-5 py-2.5 rounded-xl transition-colors"
+              style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', fontSize: 'var(--type-base)' }}
+            >
+              Upload a self-tape
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
