@@ -35,7 +35,11 @@ export async function loadRecordingReview() {
     'openExternal': 'export const openExternal = () => {};',
     '@sentry/react': 'export const captureException = () => {};',
     '@capacitor/core': 'export const Capacitor = { isNativePlatform: () => !!globalThis.__native, getPlatform: () => globalThis.__native ? "ios" : "web" };',
-    'react-router-dom': 'export const useNavigate = () => path => globalThis.__routes.push(path);',
+    'react-router-dom': 'export const useNavigate = () => path => globalThis.__routes.push(path); export const Outlet = () => null;',
+    'Sidebar.jsx': 'export default function Sidebar() { return null; }',
+    'MobileApp.jsx': 'export default function MobileApp() { return null; }',
+    'AnnouncementBanner.jsx': 'export default function AnnouncementBanner() { return null; }',
+    'ConsoleCommandPalette.jsx': 'export default function ConsoleCommandPalette() { return null; }',
   };
   const result = await build({
     stdin: { resolveDir: root, contents: `
@@ -43,12 +47,13 @@ export async function loadRecordingReview() {
       export { default as reducer } from './src/redux/features/jericho/jerichoSlice.js';
       export { default as TapeReview } from './src/panels/Dashboard/Jericho/TapeReview.jsx';
       export { TapeCard, default as SelfTapes } from './src/panels/Dashboard/SelfTapes/index.jsx';
+      export { default as DashboardLayout } from './src/panels/Dashboard/DashboardLayout.jsx';
     ` },
     bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external', jsx: 'automatic',
     define: { 'import.meta.env': '{}' },
     plugins: [{ name: 'recording-review-services', setup(builder) {
       builder.onResolve({ filter: /.*/ }, ({ path, importer }) => {
-        if (path === 'react' && /(?:TapeReview\.jsx|SelfTapes\/index\.jsx|useIsMobile\.js)$/.test(importer)) {
+        if (path === 'react' && /(?:TapeReview\.jsx|DashboardLayout\.jsx|SelfTapes\/index\.jsx|useIsMobile\.js)$/.test(importer)) {
           return { path: 'hooks', namespace: 'mock' };
         }
         if (path === 'react') return { path, external: true };
@@ -57,6 +62,7 @@ export async function loadRecordingReview() {
       });
       builder.onLoad({ filter: /.*/, namespace: 'mock' }, ({ path }) => ({ contents: path === 'hooks' ? `
         import * as React from 'react';
+        export const Suspense = React.Suspense;
         export const useState = (...a) => (globalThis.__hooks || React).useState(...a);
         export const useRef = (...a) => (globalThis.__hooks || React).useRef(...a);
         export const useEffect = (...a) => (globalThis.__hooks || React).useEffect(...a);

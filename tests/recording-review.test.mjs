@@ -5,7 +5,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { loadRecordingReview, mountComponent } from './recording-review-harness.mjs';
 
-const { reducer, reviewTape, compareTakes, selectReviewRecording, clearTapeReview, rememberRecordingAttempt, recoverLatestReview, TapeReview, TapeCard, SelfTapes } = await loadRecordingReview();
+const { reducer, reviewTape, compareTakes, selectReviewRecording, clearTapeReview, rememberRecordingAttempt, recoverLatestReview, resumeAnalysisJob, TapeReview, TapeCard, SelfTapes, DashboardLayout } = await loadRecordingReview();
 const recording = { id: 42, title: 'Callback take', role_name: 'Morgan', video_url: 'https://unreachable-r2.test/video.mov' };
 const notes = { verdict: 'An honest pause', headline_score: 7, whats_working: ['Listening'], adjustments: [{ note: 'Wait for the thought' }] };
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
@@ -65,6 +65,7 @@ test('uncertain submission survives unmount and reselection with exactly the sam
 
 test('selected recording checks recovery before enabling any charged attempt', async () => {
   store.dispatch(selectReviewRecording(recording));
+  store.dispatch(rememberRecordingAttempt({ id: 42, idempotencyKey: 'existing-attempt' }));
   let resolve;
   globalThis.__reviewHttp.get = async url => {
     assert.equal(url, '/latest/');
@@ -84,7 +85,8 @@ test('selected recording checks recovery before enabling any charged attempt', a
 
 test('selected recording resumes a pending job and consumes selection on completion', async () => {
   store.dispatch(selectReviewRecording(recording));
-  globalThis.localStorage.getItem = key => key === 'dst_pending_analysis' ? JSON.stringify({jobId: 12, kind: 'review', startedAt: Date.now()}) : null;
+  store.dispatch(rememberRecordingAttempt({ id: 42, idempotencyKey: 'pending-key' }));
+  globalThis.localStorage.getItem = key => key === 'dst_pending_analysis' ? JSON.stringify({jobId: 12, kind: 'review', recordingId: 42, idempotencyKey: 'pending-key', startedAt: Date.now()}) : null;
   globalThis.__reviewHttp.get = async url => {
     assert.equal(url, '/jobs/12/'); return { data: { data: {status: 'done', result: notes} } };
   };
@@ -129,22 +131,43 @@ test('consented arrival consumes only the shell handoff, retaining the recording
   mounted.unmount();
 });
 
-test('native iPad library action follows the desktop shell route; phone uses its tab receiver', async () => {
+test('native iPad library action reaches the mounted desktop receiver; phone retains its tab event', async () => {
   globalThis.__native = true;
   for (const [width, height, mobile] of [[1024, 1366, false], [390, 844, true]]) {
     window.innerWidth = width; window.innerHeight = height;
+    const events = new EventTarget();
+    window.addEventListener = events.addEventListener.bind(events);
+    window.removeEventListener = events.removeEventListener.bind(events);
+    window.dispatchEvent = event => { globalThis.__navEvents.push(event); return events.dispatchEvent(event); };
+    const paths = [];
+    window.history = { state: { idx: 0 }, pushState: (state, unused, path) => paths.push(path) };
+    let pops = 0;
+    window.addEventListener('popstate', () => { pops++; });
+    globalThis.PopStateEvent = class extends Event {
+      constructor(type, init) { super(type); this.state = init.state; }
+    };
+    const shell = mountComponent(DashboardLayout);
+    shell.render(); shell.flush();
     globalThis.__reviewHttp.get = async url => ({ data: { data: url.endsWith('/quota/') ? {} : [recording] } });
     const mounted = mountComponent(SelfTapes);
     mounted.render(); mounted.flush(); await tick();
     const card = findNode(mounted.render(), node => node.type === TapeCard);
     assert.ok(card);
     card.props.onReview(recording);
-    if (mobile) assert.equal(globalThis.__navEvents.at(-1).detail.tab, 'tape-review');
+    if (mobile) {
+      assert.equal(globalThis.__navEvents.at(-1).detail.tab, 'tape-review');
+      assert.deepEqual(paths, []);
+    }
     else {
-      assert.deepEqual(globalThis.__routes, ['/dashboard/jericho?tab=tape']);
-      assert.equal(globalThis.__navEvents.length, 0);
+      assert.deepEqual(paths, ['/dashboard/jericho?tab=tape']);
+      assert.equal(pops, 1, 'BrowserRouter receives a popstate notification');
+      assert.deepEqual(globalThis.__routes, [], 'native never calls the navigate mock');
     }
     mounted.unmount();
+    shell.unmount();
+    const count = paths.length;
+    window.dispatchEvent(new CustomEvent('drst-navigate', {detail: {tab: 'tape-review'}}));
+    assert.equal(paths.length, count, 'desktop receiver cleans up on unmount');
   }
 });
 
@@ -202,6 +225,99 @@ test('polling HTTP 500 preserves the pending slot and recording key for a later 
   assert.equal(result.payload.reuseKey, true);
   assert.equal(store.getState().jericho.reviewRecording.idempotencyKey, 'poll-key');
   assert.equal(JSON.parse(saved.get('dst_pending_analysis')).jobId, 12);
+  assert.equal(JSON.parse(saved.get('dst_pending_analysis')).recordingId, 42);
+  assert.equal(JSON.parse(saved.get('dst_pending_analysis')).idempotencyKey, 'poll-key');
+});
+
+test('unrelated upload, library and legacy pending slots never resume on a different recording', async () => {
+  for (const identity of [{}, {recordingId: null, idempotencyKey: 'upload-A'},
+    {recordingId: 41, idempotencyKey: 'library-A'}, {recordingId: 42, idempotencyKey: 'older-B'}]) {
+    store.dispatch(selectReviewRecording(recording));
+    store.dispatch(rememberRecordingAttempt({id: 42, idempotencyKey: 'current-B'}));
+    const saved = JSON.stringify({jobId: 11, kind: 'review', startedAt: Date.now(), ...identity});
+    globalThis.localStorage.getItem = key => key === 'dst_pending_analysis' ? saved : null;
+    const gets = [];
+    globalThis.__reviewHttp.get = async url => {
+      gets.push(url);
+      return {data: {data: url === '/latest/' ? null : {status: 'done', result: notes}}};
+    };
+    const mounted = mountComponent(TapeReview);
+    mounted.render(); mounted.flush();
+    await new Promise(resolve => setTimeout(resolve, 2600));
+    assert.deepEqual(gets, ['/latest/']);
+    assert.equal(store.getState().jericho.tapeReviewResult, null);
+    assert.equal(store.getState().jericho.reviewRecording.id, 42);
+    assert.equal(button(mounted.render(), 'Get my notes').props.disabled, false);
+    mounted.unmount();
+  }
+});
+
+test('late job settlement cannot apply A to B or erase the newer pending slot', async () => {
+  const saved = new Map();
+  globalThis.localStorage = {getItem: k => saved.get(k), setItem: (k,v) => saved.set(k,v), removeItem: k => saved.delete(k)};
+  let finish;
+  globalThis.__reviewHttp.get = () => new Promise(resolve => { finish = resolve; });
+  const old = {jobId: 11, kind: 'review', recordingId: 41, idempotencyKey: 'A'};
+  const running = store.dispatch(resumeAnalysisJob(old));
+  await new Promise(resolve => setTimeout(resolve, 2600));
+  // Simulate A losing its poll owner, then B being selected while a late
+  // completion is still queued. Exercise the actual thunk's slot cleanup.
+  store.dispatch(resumeAnalysisJob.rejected(null, 'lost-poll', old, {silent: true, reuseKey: true}));
+  store.dispatch(selectReviewRecording(recording));
+  store.dispatch(rememberRecordingAttempt({id: 42, idempotencyKey: 'B'}));
+  saved.set('dst_pending_analysis', JSON.stringify({jobId: 12, kind: 'review', recordingId: 42, idempotencyKey: 'B'}));
+  finish({data: {data: {status: 'done', result: notes}}});
+  await running;
+  assert.equal(store.getState().jericho.reviewRecording?.id, 42);
+  assert.equal(store.getState().jericho.tapeReviewResult, null);
+  assert.equal(JSON.parse(saved.get('dst_pending_analysis')).jobId, 12);
+  store.dispatch(resumeAnalysisJob.rejected(null, 'old-failure', old, {reuseKey: false, message: 'A failed'}));
+  assert.equal(store.getState().jericho.reviewRecording?.id, 42);
+  assert.equal(store.getState().jericho.tapeReviewError, null);
+});
+
+test('ordinary upload submits while best-effort history GET remains stalled', async () => {
+  let finishHistory;
+  globalThis.__reviewHttp.get = () => new Promise(resolve => { finishHistory = resolve; });
+  let finishPost;
+  globalThis.__reviewHttp.post = async (url, body, options) => {
+    requests.push({url, body, options});
+    if (url === '/presign/') return {data: {data: {}}};
+    return await new Promise(resolve => { finishPost = resolve; });
+  };
+  const mounted = mountComponent(TapeReview);
+  mounted.render(); mounted.flush(); await tick();
+  const picker = findNode(mounted.render(), n => n.type === 'input' && n.props.type === 'file');
+  picker.props.onChange({target: {files: [new Blob(['tape'], {type: 'video/mp4'})]}});
+  assert.equal(button(mounted.render(), 'Get my notes').props.disabled, false);
+  const submitting = button(mounted.render(), 'Get my notes').props.onClick();
+  await tick();
+  assert.equal(typeof finishPost, 'function');
+  finishHistory({data: {data: {id: 10, ai_feedback: {...notes, verdict: 'Old history'}}}});
+  await tick();
+  assert.equal(store.getState().jericho.tapeReviewResult, null, 'history cannot replace the active upload');
+  finishPost({data: {data: notes}});
+  await submitting;
+  assert.deepEqual(store.getState().jericho.tapeReviewResult, notes);
+  mounted.unmount();
+});
+
+test('stalled keyed recovery times out and re-enables submission with the same attempt key', async (t) => {
+  t.mock.timers.enable({apis: ['setTimeout']});
+  store.dispatch(selectReviewRecording(recording));
+  store.dispatch(rememberRecordingAttempt({id: 42, idempotencyKey: 'uncertain-B'}));
+  let config;
+  globalThis.__reviewHttp.get = (url, options) => { config = options; return new Promise(() => {}); };
+  const mounted = mountComponent(TapeReview);
+  mounted.render(); mounted.flush(); await tick();
+  assert.equal(button(mounted.render(), 'Get my notes').props.disabled, true);
+  t.mock.timers.tick(8001); await tick();
+  assert.equal(button(mounted.render(), 'Get my notes').props.disabled, false);
+  assert.equal(config.timeout, 8000);
+  assert.equal(config.signal.aborted, true);
+  await button(mounted.render(), 'Get my notes').props.onClick();
+  assert.equal(requests[0].options.headers['Idempotency-Key'], 'uncertain-B');
+  mounted.unmount();
 });
 
 test('selecting a library tape clears prior results and retains no media URL or cached notes', () => {
@@ -269,6 +385,7 @@ test('the real thunk sends only id/context and stable key, never fetches or uplo
 
 test('completed async replay unwraps the server-trimmed notes without polling', async () => {
   const removed = [];
+  globalThis.localStorage.getItem = key => key === 'dst_pending_analysis' ? JSON.stringify({jobId: 12}) : null;
   globalThis.localStorage.removeItem = key => removed.push(key);
   globalThis.__reviewHttp.post = async () => ({ data: { data: { job_id: 12, status: 'done', result: notes } } });
   const result = await store.dispatch(reviewTape({ recordingId: 42, idempotencyKey: 'same-action' }));

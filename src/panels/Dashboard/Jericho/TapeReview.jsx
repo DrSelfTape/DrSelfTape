@@ -11,7 +11,7 @@ import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X, Lock,
   RotateCcw, ChevronDown, Trophy, HelpCircle,
 } from 'lucide-react';
-import { reviewTape, clearTapeReview, resumeAnalysisJob, recoverLatestReview, clearCompare, clearReviewRecording, consumeRecordingNavigation } from '../../../redux/features/jericho/jerichoSlice';
+import { reviewTape, clearTapeReview, resumeAnalysisJob, recoverLatestReview, clearCompare, clearReviewRecording, consumeRecordingNavigation, pendingJobMatchesRecording, REVIEW_RECOVERY_TIMEOUT_MS } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeReviewNotes from './TapeReviewNotes';
 import { TECH_SCORES, DNA } from './reviewResultFields';
@@ -457,11 +457,26 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // orphan case this fixes: finish a review, background the app >30 min with
     // notifications denied, reopen, and the result was gone forever having
     // already cost the user their one free review.
-    const recover = () => mode === 'compare' ? Promise.resolve() : dispatch(recoverLatestReview());
+    let recoveryRequest;
+    let recoveryTimer;
+    const recover = () => {
+      if (mode === 'compare') return Promise.resolve();
+      recoveryRequest = dispatch(recoverLatestReview());
+      // Axios has its own timeout; abort the thunk too so even an adapter or
+      // interceptor that never settles cannot wedge a keyed library retry.
+      recoveryTimer = setTimeout(() => recoveryRequest.abort(), REVIEW_RECOVERY_TIMEOUT_MS);
+      return recoveryRequest.finally(() => clearTimeout(recoveryTimer));
+    };
     const finish = () => { if (mounted) setCheckingRecovery(false); };
-    const cleanup = () => { mounted = false; };
+    const cleanup = () => {
+      mounted = false;
+      clearTimeout(recoveryTimer);
+      recoveryRequest?.abort();
+    };
 
-    if (!slot?.jobId || !slot?.startedAt) { recover().finally(finish); return cleanup; }
+    if (!slot?.jobId || !slot?.startedAt || !pendingJobMatchesRecording(slot, recording)) {
+      recover().finally(finish); return cleanup;
+    }
     if (Date.now() - slot.startedAt > PENDING_JOB_TTL_MS) {
       // The JOB is almost certainly dead on the BE, so don't poll it — but the
       // RESULT may well exist. Clear the slot and recover from the server.
@@ -469,10 +484,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       recover().finally(finish);
       return cleanup;
     }
-    dispatch(resumeAnalysisJob({ jobId: slot.jobId, kind: slot.kind || 'review' }))
+    dispatch(resumeAnalysisJob({ ...slot, kind: slot.kind || 'review' }))
       .then(result => {
         // Expired/missing jobs can still have a durable completed SessionLog.
-        if (resumeAnalysisJob.rejected.match(result) && result.payload?.reuseKey !== false) return recover();
+        if (mounted && resumeAnalysisJob.rejected.match(result) && result.payload?.reuseKey !== false) return recover();
       }).finally(finish);
     return cleanup;
   // Mount-only: reads Redux snapshot at mount to guard against double-dispatch.
@@ -569,7 +584,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   };
 
   const submit = async () => {
-    if ((!file && !recording) || tapeReviewLoading || checkingRecovery) return;
+    if ((!file && !recording) || tapeReviewLoading || (recording && checkingRecovery)) return;
     if (firstReview) {
       // H-05: this was hardcoded 'onboarding', so every Home-hero start was
       // filed under onboarding and the two entry paths could not be compared.
@@ -1148,7 +1163,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         <button
           onClick={submit}
-          disabled={checkingRecovery || (!file && !recording)}
+          disabled={!!(recording && checkingRecovery) || (!file && !recording)}
           className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
           style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
         >

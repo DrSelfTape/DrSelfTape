@@ -31,20 +31,32 @@ const _sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // Keep the key as a module constant so both the save and resume paths agree on
 // the exact string without needing to export it.
 const PENDING_JOB_KEY = 'dst_pending_analysis';
+export const REVIEW_RECOVERY_TIMEOUT_MS = 8000;
+
+// Legacy slots have no identity. They may recover on an empty review screen,
+// but must never take over a specific library selection.
+export function pendingJobMatchesRecording(slot, recording) {
+  return !recording || (slot?.kind === 'review' && slot.recordingId === recording.id &&
+    !!slot.idempotencyKey && slot.idempotencyKey === recording.idempotencyKey);
+}
 
 // Persist a running job so it can be resumed after a page reload or app
-// restart. The slot holds the minimal info needed to re-attach: jobId + kind
-// + startedAt for the 30-minute TTL check in TapeReview. Wrapped in try/catch
+// restart. Include the recording and action identity so another library
+// selection cannot resume this job. startedAt bounds recovery to 30 minutes.
+// Wrapped in try/catch
 // — localStorage can throw in private/incognito mode.
-function savePendingJob(jobId, kind) {
+function savePendingJob(jobId, kind, recordingId = null, idempotencyKey = null) {
   try {
-    localStorage.setItem(PENDING_JOB_KEY, JSON.stringify({ jobId, kind, startedAt: Date.now() }));
+    localStorage.setItem(PENDING_JOB_KEY, JSON.stringify({ jobId, kind, recordingId, idempotencyKey, startedAt: Date.now() }));
   } catch { /* private mode */ }
 }
 
 // Clear only when the job settles (or is confirmed missing on resume).
-function clearPendingJob() {
-  try { localStorage.removeItem(PENDING_JOB_KEY); } catch { /* private mode */ }
+function clearPendingJob(jobId) {
+  try {
+    const slot = JSON.parse(localStorage.getItem(PENDING_JOB_KEY));
+    if (slot?.jobId === jobId) localStorage.removeItem(PENDING_JOB_KEY);
+  } catch { /* private mode */ }
 }
 
 // When the BE runs the analysis off the request thread (AI_ASYNC_ANALYSIS), the
@@ -90,25 +102,25 @@ function shouldReuseKey(err) {
 // job to poll. Normalizes both to the final result. When the response is async,
 // persists the job to localStorage (so TapeReview can resume after a reload).
 // Unknown outcomes keep that slot; only settled outcomes clear it.
-async function resolveAnalysis(payload, { signal, kind } = {}) {
+async function resolveAnalysis(payload, { signal, kind, recordingId, idempotencyKey } = {}) {
   // A retry can reach a job that finished since the original POST. The job
   // endpoint already trims its result; unwrap that same response shape here.
   if (payload?.job_id && payload.status === 'done') {
-    clearPendingJob();
+    clearPendingJob(payload.job_id);
     return payload.result;
   }
   if (payload?.job_id && payload.status === 'failed') {
-    clearPendingJob();
+    clearPendingJob(payload.job_id);
     throw { settled: true, response: { status: 502, data: { message: payload.error || 'Analysis failed. Please try again.' } } };
   }
   if (payload && payload.job_id && payload.status === 'pending') {
-    savePendingJob(payload.job_id, kind);
+    savePendingJob(payload.job_id, kind, recordingId, idempotencyKey);
     try {
       const result = await pollAnalysisJob(payload.job_id, { signal });
-      clearPendingJob();
+      clearPendingJob(payload.job_id);
       return result;
     } catch (err) {
-      if (!shouldReuseKey(err)) clearPendingJob();
+      if (!shouldReuseKey(err)) clearPendingJob(payload.job_id);
       throw err;
     }
   }
@@ -381,7 +393,7 @@ export const reviewTape = createAsyncThunk(
         }));
       }
 
-      const result = await resolveAnalysis(data?.data || data, { signal, kind: 'review' });
+      const result = await resolveAnalysis(data?.data || data, { signal, kind: 'review', recordingId, idempotencyKey });
       // An empty/partial body charges a token but has nothing to show — take the
       // clean error path instead of fulfilling a hollow result (BUG 3).
       if (!tapeReviewHasContent(result)) {
@@ -430,7 +442,7 @@ export const compareTakes = createAsyncThunk(
         },
         signal,
       });
-      const result = await resolveAnalysis(data?.data || data, { signal, kind: 'compare' });
+      const result = await resolveAnalysis(data?.data || data, { signal, kind: 'compare', idempotencyKey });
       trackEvent(Events.COMPARE_TAKES, { count: takes.length });
       return result;
     } catch (err) {
@@ -458,7 +470,7 @@ export const recoverLatestReview = createAsyncThunk(
     try {
       const selected = getState().jericho.reviewRecording;
       const { data } = await axios.get(endPoints.latestReview, {
-        signal,
+        signal, timeout: REVIEW_RECOVERY_TIMEOUT_MS,
         ...(selected?.idempotencyKey ? { params: { recording_review_key: selected.idempotencyKey } } : {}),
       });
       // Check recovery even for a fresh selection, but an unrelated historical
@@ -487,11 +499,11 @@ export const resumeAnalysisJob = createAsyncThunk(
   async ({ jobId, kind }, { rejectWithValue, signal }) => {
     try {
       const result = await pollAnalysisJob(jobId, { signal });
-      clearPendingJob();
+      clearPendingJob(jobId);
       return { result, kind };
     } catch (err) {
       const reuseKey = shouldReuseKey(err);
-      if (!reuseKey || err?.response?.status === 404) clearPendingJob();
+      if (!reuseKey || err?.response?.status === 404) clearPendingJob(jobId);
       // 404 = job expired/not found on the BE; canceled = user navigated away.
       // Both are "silent" — no error banner, just clear and move on.
       if (
@@ -502,7 +514,8 @@ export const resumeAnalysisJob = createAsyncThunk(
       }
       return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed'), reuseKey });
     }
-  }
+  },
+  { condition: (slot, { getState }) => pendingJobMatchesRecording(slot, getState().jericho.reviewRecording) }
 );
 
 /** Fetch recent session history */
@@ -740,6 +753,7 @@ const jerichoSlice = createSlice({
         state.uploadProgress = 100;
       })
       .addCase(resumeAnalysisJob.fulfilled, (state, action) => {
+        if (!pendingJobMatchesRecording(action.meta.arg, state.reviewRecording)) return;
         const { result, kind } = action.payload;
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;
@@ -758,7 +772,7 @@ const jerichoSlice = createSlice({
           action.meta.recoveryRecordingId !== (state.reviewRecording?.id ?? null) ||
           action.meta.recoveryKey !== (state.reviewRecording?.idempotencyKey ?? null)
         )) return;
-        if (action.payload && !state.tapeReviewResult && !state.compareResult) {
+        if (action.payload && !state.tapeReviewLoading && !state.compareLoading && !state.tapeReviewResult && !state.compareResult) {
           applyRecoveredReview(state, action.payload);
         }
       })
@@ -766,6 +780,7 @@ const jerichoSlice = createSlice({
       .addCase(recoverLatestReview.rejected, () => {})
 
       .addCase(resumeAnalysisJob.rejected, (state, action) => {
+        if (!pendingJobMatchesRecording(action.meta.arg, state.reviewRecording)) return;
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;
         const { silent, message } = action.payload || {};
