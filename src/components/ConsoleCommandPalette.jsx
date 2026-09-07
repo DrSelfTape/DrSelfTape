@@ -31,7 +31,17 @@ export default function ConsoleCommandPalette() {
     );
   }, [commands, query]);
 
-  const close = useCallback(() => { setOpen(false); setQuery(''); setCursor(0); }, []);
+  // Focus returns to the element that had it when the palette opened (a11y
+  // dialog contract; the recap card and any other dialog rely on it).
+  const restoreFocusRef = useRef(null);
+  const close = useCallback(() => {
+    setOpen(false); setQuery(''); setCursor(0);
+    const previous = restoreFocusRef.current;
+    restoreFocusRef.current = null;
+    if (previous && previous.isConnected && typeof previous.focus === 'function') {
+      requestAnimationFrame(() => previous.focus());
+    }
+  }, []);
 
   const go = useCallback((cmd) => {
     if (!cmd) return;
@@ -58,7 +68,9 @@ export default function ConsoleCommandPalette() {
   }, [open, close]);
 
   useEffect(() => {
-    if (open) requestAnimationFrame(() => inputRef.current?.focus());
+    if (!open) return;
+    restoreFocusRef.current = document.activeElement;
+    requestAnimationFrame(() => inputRef.current?.focus());
   }, [open]);
 
   useEffect(() => { setCursor(0); }, [query]);
@@ -68,6 +80,7 @@ export default function ConsoleCommandPalette() {
   return (
     <div
       onClick={close}
+      data-dst-overlay="palette"
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(0,0,0,0.45)',

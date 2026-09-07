@@ -22,16 +22,18 @@ export default function RecapStoryCard({ review, band, avg, firstName, thumbnail
   const go = useCallback((delta) => setIndex((i) => Math.max(0, Math.min(last, i + delta))), [last]);
 
   useEffect(() => { if (pages.length) cardRef.current?.focus(); }, [pages.length]);
-  // Another surface (the ⌘K palette) may take focus and then unmount without
-  // handing it back; when focus falls to <body> while we are open, reclaim it
-  // so arrows/Escape/Tab keep reaching the dialog. Never steals from a real
-  // target — only from the empty document.
+  // When focus falls to <body> while we are open (a blurred control, a
+  // dismissed popover), reclaim it so arrows/Escape/Tab keep reaching the
+  // dialog. Never steals from a real target, and never while another overlay
+  // (⌘K palette, consent, paywall) is on top — that surface owns focus and
+  // hands it back on close (ConsoleCommandPalette does).
   useEffect(() => {
     if (!pages.length) return undefined;
+    const overlayOnTop = () => !!document.querySelector('[data-dst-overlay], [aria-modal="true"]:not(.dst-recap-card)');
     const onFocusOut = (e) => {
       if (e.relatedTarget) return;
       requestAnimationFrame(() => {
-        if (document.activeElement === document.body && cardRef.current) cardRef.current.focus();
+        if (document.activeElement === document.body && cardRef.current && !overlayOnTop()) cardRef.current.focus();
       });
     };
     document.addEventListener('focusout', onFocusOut);

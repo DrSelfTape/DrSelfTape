@@ -180,10 +180,15 @@ export default function NotificationBell({ onNavigate }) {
         room_invite:         { web: '/dashboard/green-room',        mobile: { tab: 'green-room' } },
         booking_confirmed:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
         booking_cancelled:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
+        // Coach collaboration flow — same targets routes/notificationConfig.js
+        // gives the full Notifications page. Desktop only: the mobile shell has
+        // no collaboration panel, so those clicks just mark read there.
+        script_share_invite:   { web: '/collaboration?tab=1' },
+        script_share_accepted: { web: '/scene-study/live-rehearsal' },
       };
       const dest = DEST[notif.type];
       if (dest) {
-        if (isMobile && onNavigate) { onNavigate(dest.mobile); }
+        if (isMobile && onNavigate) { if (dest.mobile) onNavigate(dest.mobile); }
         else { navigate(dest.web); }
       }
     }, 150);

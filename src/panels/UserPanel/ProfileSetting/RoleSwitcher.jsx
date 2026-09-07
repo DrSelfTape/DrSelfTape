@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { switchRole } from '../../../redux/features/auth/authSlice';
 import { setAuthToken } from '../../../redux/http';
+import { persistor } from '../../../redux/store';
 import { getFirstRouteByRole } from '../../../routes/routeHelpers';
 import { useStoreData } from '../../../hooks/useStoreData';
 import { useSnackbar } from '../../../hooks/useSnackbar';
@@ -30,7 +31,9 @@ export default function RoleSwitcher() {
       toast.success(`Successfully switched to ${label(target)} role.`);
       // A full navigation, not router navigate(): the new role's token is then
       // the only one any surface has seen, and it works inside Capacitor where
-      // navigate() is a no-op (reference_mobile_navigation).
+      // navigate() is a no-op (reference_mobile_navigation). redux-persist
+      // writes on a timer — flush first or a fast reload rehydrates the OLD role.
+      await persistor.flush();
       window.location.replace(getFirstRouteByRole(target));
     } catch (error) {
       toast.error(typeof error === 'string' ? error : error?.message || 'Failed to switch role. Please try again.');

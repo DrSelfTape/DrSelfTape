@@ -2,6 +2,8 @@ import React from 'react';
 import ConsoleFrame from '../../../panels/Dashboard/ConsoleFrame.jsx';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { consoleSurfaceEnabled } from '../../../utils/consoleSurface';
+import { useStoreData } from '../../../hooks/useStoreData';
+import { getFirstRouteByRole } from '../../../routes/routeHelpers';
 
 // V-02: wrapper for the routes that live outside the /dashboard Outlet
 // (/settings, /notifications, scene study, the auditions tracker). Desktop
@@ -10,6 +12,7 @@ import { consoleSurfaceEnabled } from '../../../utils/consoleSurface';
 // route can trapdoor a desktop user out of the console any more.
 export const Layout = ({ children }) => {
   const isMobile = useIsMobile();
+  const { role } = useStoreData();
   if (isMobile) {
     return (
       // 100dvh + min-h-0 give the page a DEFINITE height so a screen built on
@@ -32,7 +35,7 @@ export const Layout = ({ children }) => {
             <a href="/settings" className="font-semibold" style={{ color: 'var(--aurora-gold)', fontSize: 'var(--type-sm)' }}>
               Settings
             </a>
-            <a href="/dashboard" className="font-semibold" style={{ color: 'var(--aurora-gold)', fontSize: 'var(--type-sm)' }}>
+            <a href={getFirstRouteByRole(role) === '/login' ? '/dashboard' : getFirstRouteByRole(role)} className="font-semibold" style={{ color: 'var(--aurora-gold)', fontSize: 'var(--type-sm)' }}>
               Home
             </a>
           </div>

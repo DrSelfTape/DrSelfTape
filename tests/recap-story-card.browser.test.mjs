@@ -110,7 +110,7 @@ btest('every Tab transition stays inside the dialog and the backdrop click close
   assert.equal(await page.evaluate(() => window.__closed), 1);
 });
 
-btest('focus comes back to the dialog when another surface drops it on <body>', async () => {
+btest('focus comes back to the dialog when a control blurs to <body> — unless an overlay is on top', async () => {
   await mount();
   await page.$eval('#outside', (el) => el.focus());
   assert.equal(await page.evaluate(() => document.activeElement.id), 'outside', 'a real target is never stolen');
@@ -118,6 +118,11 @@ btest('focus comes back to the dialog when another surface drops it on <body>', 
   await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'dialog');
   await page.keyboard.press('ArrowRight');
   assert.equal(await page.$eval('[role="tab"][aria-selected="true"]', (el) => el.getAttribute('aria-label')), 'Page 2 of 3');
+  // An overlay on top (the ⌘K palette marks itself data-dst-overlay) owns focus.
+  await page.evaluate(() => { const o = document.createElement('div'); o.setAttribute('data-dst-overlay', 'palette'); document.body.appendChild(o); });
+  await page.$eval('#outside', (el) => { el.focus(); el.blur(); });
+  await new Promise((r) => setTimeout(r, 80));
+  assert.equal(await page.evaluate(() => document.activeElement === document.body), true, 'the recap did not steal focus from under the overlay');
 });
 
 btest('an uploaded take renders its poster from the File; a library take from its URL', async () => {
