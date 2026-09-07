@@ -459,7 +459,7 @@ function AuroraHeroRing({ stats, auditions }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <span className="aurora-eyebrow">{active === 'cb' ? 'CALLBACK RATE' : active === 'sub' ? 'SUBMISSIONS' : 'BOOKINGS'}</span>
         <span className="aurora-mono" style={{
-          fontSize: 11, padding: '3px 10px', borderRadius: 100,
+          fontSize: 'var(--type-sm)', padding: '3px 10px', borderRadius: 100,
           background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
           color: 'color-mix(in oklch, var(--aurora-mint) 70%, var(--aurora-text))',
           letterSpacing: '0.05em',
@@ -476,7 +476,7 @@ function AuroraHeroRing({ stats, auditions }) {
             className="aurora-mono"
             style={{
               padding: '8px 0', borderRadius: 100, border: 'none', cursor: 'pointer',
-              fontSize: 11, letterSpacing: '0.1em',
+              fontSize: 'var(--type-sm)', letterSpacing: '0.1em',
               background: active === x.id ? x.color : 'var(--aurora-line-soft)',
               color: active === x.id ? '#0E0D0A' : 'var(--aurora-sub)',
               boxShadow: active === x.id ? `0 4px 12px ${x.shadow}` : 'none',
@@ -513,7 +513,7 @@ function AuroraHeroRing({ stats, auditions }) {
             {m.value}
             <span style={{ fontSize: 24, color: 'var(--aurora-dim)', marginLeft: 2 }}>{m.suffix}</span>
           </span>
-          <span style={{ fontSize: 13, color: 'var(--aurora-sub)', marginTop: -4 }}>{m.subline}</span>
+          <span style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', marginTop: -4 }}>{m.subline}</span>
         </div>
       </div>
     </div>
@@ -573,7 +573,7 @@ function AuroraPracticeStrip() {
           {todayMin} <span style={{ color: 'var(--aurora-dim)' }}>/ {goalMin} min</span>
           {todaySeconds >= goal && (
             <span style={{
-              marginLeft: 8, fontSize: 10, padding: '2px 8px', borderRadius: 100,
+              marginLeft: 8, fontSize: 'var(--type-xs)', padding: '2px 8px', borderRadius: 100,
               background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
               color: 'color-mix(in oklch, var(--aurora-mint) 75%, var(--aurora-text))',
               letterSpacing: '0.08em',
@@ -655,7 +655,7 @@ function AuroraPipeline({ stats, auditions, setTab }) {
           style={{
             background: 'none', border: 'none', color: 'var(--aurora-sub)',
             cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-            fontSize: 10, letterSpacing: '0.15em',
+            fontSize: 'var(--type-xs)', letterSpacing: '0.15em',
           }}
         >
           VIEW ALL →
@@ -683,7 +683,7 @@ function AuroraPipeline({ stats, auditions, setTab }) {
                 }}
               >
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.6)' }} />
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 18, color: '#0A0A0A', fontWeight: 600 }}>{b.val}</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--type-lg)', color: '#0A0A0A', fontWeight: 600 }}>{b.val}</span>
               </div>
               <div
                 style={{
@@ -841,7 +841,7 @@ function AuroraToday({ auditions, submissions, scripts, setTab, setCurrentPanel 
                 <span className="aurora-micro" style={{ fontSize: 8, letterSpacing: '0.12em', color: on ? 'var(--aurora-accent-deep)' : 'var(--aurora-dim)' }}>{day.d}</span>
                 <span className="aurora-mono" style={{
                   width: 32, height: 32, borderRadius: 100, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 13, fontWeight: 500,
+                  fontSize: 'var(--type-base)', fontWeight: 500,
                   background: on ? 'var(--aurora-heritage-gold)' : isToday ? 'rgba(212,168,95,0.18)' : 'transparent',
                   color: on ? '#1A1408' : 'var(--aurora-text)',
                   boxShadow: on ? '0 4px 12px rgba(212,168,95,0.40)' : 'none',
@@ -899,7 +899,7 @@ function AuroraToday({ auditions, submissions, scripts, setTab, setCurrentPanel 
                 </div>
                 <div style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, letterSpacing: '-0.2px', color: 'var(--aurora-text)' }}>{t.label}</div>
-                  <div className="aurora-mono" style={{ fontSize: 10, color: 'var(--aurora-sub)', marginTop: 2, letterSpacing: '0.05em' }}>
+                  <div className="aurora-mono" style={{ fontSize: 'var(--type-xs)', color: 'var(--aurora-sub)', marginTop: 2, letterSpacing: '0.05em' }}>
                     {t.done}{t.unit} / {t.goal}{t.unit}
                   </div>
                 </div>
@@ -1435,7 +1435,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <p style={{ fontSize: 15, fontWeight: 600, color: '#FFFFFF', margin: 0 }}>
             Rehearse with an AI scene partner
           </p>
-          <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.62)', margin: '2px 0 0' }}>
+          <p style={{ fontSize: 'var(--type-sm)', color: 'rgba(255,255,255,0.62)', margin: '2px 0 0' }}>
             Load your sides · run the scene out loud
           </p>
         </div>
@@ -1481,7 +1481,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "3px 0 0", lineHeight: 1.3 }}>{nextStep.desc}</p>
         </div>
         <span className="aurora-micro" style={{
-          fontSize: 11, fontWeight: 700, color: "#fff",
+          fontSize: 'var(--type-sm)', fontWeight: 700, color: "#fff",
           background: 'var(--aurora-accent)', padding: "8px 14px", borderRadius: 100,
           whiteSpace: "nowrap", flexShrink: 0,
           boxShadow: 'var(--aurora-shadow-coral)',
@@ -1510,13 +1510,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
             <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>NEXT CALLBACK</span>
             <span className="aurora-mono" style={{
-              fontSize: 11, padding: '4px 10px', borderRadius: 100,
+              fontSize: 'var(--type-sm)', padding: '4px 10px', borderRadius: 100,
               background: 'rgba(10,10,10,0.85)', color: '#fff',
             }}>
               {callbackBadge(firstCallback.callbackDate)?.text?.toUpperCase()}
             </span>
           </div>
-          <div className="aurora-display" style={{ fontSize: 22, color: '#0E0D0A', lineHeight: 1.2, marginBottom: 4 }}>
+          <div className="aurora-display" style={{ fontSize: 'var(--type-display)', color: '#0E0D0A', lineHeight: 1.2, marginBottom: 4 }}>
             {firstCallback.project} — {firstCallback.character}
           </div>
           <div className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)', marginTop: 8 }}>
@@ -1621,7 +1621,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <div
             className="aurora-display"
             style={{
-              fontSize: 18,
+              fontSize: 'var(--type-lg)',
               color: '#FFF',
               letterSpacing: '-0.4px',
               lineHeight: 1.1,
@@ -1680,7 +1680,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <span
           className="aurora-micro"
           style={{
-            fontSize: 11,
+            fontSize: 'var(--type-sm)',
             fontWeight: 700,
             color: '#0E0D0A',
             background: 'rgba(255,255,255,0.7)',
@@ -1734,7 +1734,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
                       border: '2px solid var(--aurora-surface-solid)',
                       boxShadow: '0 2px 8px rgba(10,10,10,0.10)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#0E0D0A', fontSize: 11, fontWeight: 700,
+                      color: '#0E0D0A', fontSize: 'var(--type-sm)', fontWeight: 700,
                       zIndex: 3 - i,
                     }}
                   >
@@ -1750,14 +1750,14 @@ function HomeScreen({ setTab, setCurrentPanel }) {
               <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
                 {count} reader{count !== 1 ? 's' : ''} active this month
               </p>
-              <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+              <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
                 Swipe to run sides together
               </p>
             </div>
             <span
               className="aurora-mono"
               style={{
-                fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)',
+                fontSize: 'var(--type-sm)', fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)',
                 letterSpacing: '0.12em',
               }}
             >
@@ -1778,7 +1778,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
               style={{
                 background: 'none', border: 'none', color: 'var(--aurora-sub)',
                 cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace',
-                fontSize: 10, letterSpacing: '0.15em',
+                fontSize: 'var(--type-xs)', letterSpacing: '0.15em',
               }}
             >
               VIEW ALL →
@@ -1825,7 +1825,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
                   {sub.character && (
                     <div
                       className="aurora-mono"
-                      style={{ fontSize: 10, color: 'var(--aurora-dim)', marginTop: 3, letterSpacing: '0.05em' }}
+                      style={{ fontSize: 'var(--type-xs)', color: 'var(--aurora-dim)', marginTop: 3, letterSpacing: '0.05em' }}
                     >
                       {String(sub.character).toUpperCase()}
                     </div>
@@ -1866,7 +1866,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             width: 44, height: 44, borderRadius: 14,
             background: 'color-mix(in oklch, var(--aurora-heritage-gold) 22%, transparent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, flexShrink: 0,
+            fontSize: 'var(--type-display)', flexShrink: 0,
           }}
         >
           🎭
@@ -1881,13 +1881,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
             Get coaching notes on your scene
           </p>
-          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+          <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
             Upload sides · expert feedback on your read
           </p>
         </div>
         <span
           className="aurora-mono"
-          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+          style={{ fontSize: 'var(--type-sm)', fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
         >
           OPEN →
         </span>
@@ -1911,7 +1911,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             width: 44, height: 44, borderRadius: 14,
             background: 'color-mix(in oklch, #FCE072 30%, transparent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22, flexShrink: 0,
+            fontSize: 'var(--type-display)', flexShrink: 0,
           }}
         >
           🏆
@@ -1926,13 +1926,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
             Filmed 3 takes? AI picks the winner
           </p>
-          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+          <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
             Upload 2–4 takes · ranked with reasons
           </p>
         </div>
         <span
           className="aurora-mono"
-          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+          style={{ fontSize: 'var(--type-sm)', fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
         >
           RANK →
         </span>
@@ -1961,7 +1961,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             background: isAvailable ? 'var(--aurora-mint)' : 'var(--aurora-dim)',
             boxShadow: isAvailable ? '0 0 8px var(--aurora-mint)' : 'none',
           }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: isAvailable ? 'var(--aurora-mint)' : 'var(--aurora-sub)' }}>
+          <span style={{ fontSize: 'var(--type-base)', fontWeight: 600, color: isAvailable ? 'var(--aurora-mint)' : 'var(--aurora-sub)' }}>
             {isAvailable ? "Available for readers" : "Go available"}
           </span>
         </button>
@@ -1979,7 +1979,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             <span style={{ fontSize: 12, fontWeight: 700 }}>
               {matchingStats.pending_likes_count} matches
             </span>
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--aurora-accent)' }}>View →</span>
+            <span style={{ fontSize: 'var(--type-sm)', fontWeight: 600, color: 'var(--aurora-accent)' }}>View →</span>
           </button>
         )}
       </div>
@@ -2002,10 +2002,10 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <span style={{ fontSize: 16 }}>🎟️</span>
           <div style={{ flex: 1 }}>
             {tokensUnlimited ? (
-              <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>Unlimited AI</span>
+              <span className="aurora-mono" style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-mint)' }}>Unlimited AI</span>
             ) : (
               <>
-                <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{balance}</span>
+                <span className="aurora-mono" style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-mint)' }}>{balance}</span>
                 <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}> AI tokens remaining</span>
               </>
             )}
@@ -2014,7 +2014,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
               ≤3 is where the next AI action is at risk. */}
           {!tokensUnlimited && balance <= 3 && (
             <span style={{
-              fontSize: 11, fontWeight: 700, color: '#fff',
+              fontSize: 'var(--type-sm)', fontWeight: 700, color: '#fff',
               background: 'var(--aurora-accent)', padding: '4px 10px', borderRadius: 100,
             }}>
               Upgrade
@@ -2263,11 +2263,11 @@ function AuditionsScreen() {
               }}
             >
               {scanLoading ? (
-                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--aurora-accent-deep)' }}>Scanning with AI...</span>
+                <span style={{ fontSize: 'var(--type-base)', fontWeight: 600, color: 'var(--aurora-accent-deep)' }}>Scanning with AI...</span>
               ) : (
                 <>
-                  <span style={{ fontSize: 18 }}>📸</span>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--aurora-text)' }}>Scan Screenshot with AI</span>
+                  <span style={{ fontSize: 'var(--type-lg)' }}>📸</span>
+                  <span style={{ fontSize: 'var(--type-base)', fontWeight: 600, color: 'var(--aurora-text)' }}>Scan Screenshot with AI</span>
                 </>
               )}
             </button>
@@ -2343,7 +2343,7 @@ function AuditionsScreen() {
         {[{ key: "tracker", label: "Tracker" }, { key: "submissions", label: "Submissions" }].map(sec => (
           <button key={sec.key} onClick={() => setViewSection(sec.key)} className="aurora-mono" style={{
             padding: "6px 16px", borderRadius: 100, border: "none", cursor: "pointer",
-            fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+            fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase',
             background: viewSection === sec.key ? 'var(--aurora-text)' : "transparent",
             color: viewSection === sec.key ? 'var(--aurora-bg)' : 'var(--aurora-dim)',
             transition: 'all 0.2s',
@@ -2369,7 +2369,7 @@ function AuditionsScreen() {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.3s",
                 }}>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: "#fff" }}>{count}</span>
+                  <span style={{ fontSize: 'var(--type-xs)', fontWeight: 700, color: "#fff" }}>{count}</span>
                 </div>
               );
             })}
@@ -2382,7 +2382,7 @@ function AuditionsScreen() {
               return (
                 <div key={col.id} style={{ display: "flex", alignItems: "center", gap: 4 }}>
                   <div style={{ width: 6, height: 6, borderRadius: "50%", background: STATUS_COLORS[col.id] }} />
-                  <span style={{ fontSize: 10, color: TEXT_SECONDARY }}>{col.label} ({count})</span>
+                  <span style={{ fontSize: 'var(--type-xs)', color: TEXT_SECONDARY }}>{col.label} ({count})</span>
                 </div>
               );
             })}
@@ -2393,7 +2393,7 @@ function AuditionsScreen() {
       {viewSection === "submissions" ? (
         <div>
           {submissions.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "48px 0", color: 'var(--aurora-dim)', fontSize: 13 }}>No submissions yet — start tracking your work.</div>
+            <div style={{ textAlign: "center", padding: "48px 0", color: 'var(--aurora-dim)', fontSize: 'var(--type-base)' }}>No submissions yet — start tracking your work.</div>
           ) : submissions.map(sub => {
             const auroraColor = { sent: 'var(--aurora-sky)', viewed: 'var(--aurora-purple)', callback: 'var(--aurora-heritage-gold)', booked: 'var(--aurora-mint)' }[sub.status] || 'var(--aurora-dim)';
             return (
@@ -2401,7 +2401,7 @@ function AuditionsScreen() {
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
                   <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{sub.project_name || "Untitled"}</p>
                   <span className="aurora-mono" style={{
-                    fontSize: 10, padding: "3px 10px", borderRadius: 100, marginLeft: 8,
+                    fontSize: 'var(--type-xs)', padding: "3px 10px", borderRadius: 100, marginLeft: 8,
                     background: auroraColor, color: '#0A0A0A',
                     textTransform: "uppercase", whiteSpace: "nowrap", letterSpacing: '0.08em',
                   }}>{sub.status || "sent"}</span>
@@ -2419,7 +2419,7 @@ function AuditionsScreen() {
                   background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)',
                   border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 35%, transparent)',
                   borderRadius: 100,
-                  padding: "8px 14px", cursor: "pointer", fontSize: 11, fontWeight: 600,
+                  padding: "8px 14px", cursor: "pointer", fontSize: 'var(--type-sm)', fontWeight: 600,
                   color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.1em',
                   textTransform: 'uppercase', width: "100%",
                 }}>
@@ -2439,7 +2439,7 @@ function AuditionsScreen() {
           return (
             <button key={t.key} onClick={() => setFilter(t.key)} className="aurora-mono" style={{
               padding: "7px 14px", borderRadius: 100, cursor: "pointer", whiteSpace: "nowrap",
-              fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+              fontSize: 'var(--type-sm)', letterSpacing: '0.05em', textTransform: 'uppercase',
               background: active ? 'var(--aurora-text)' : 'var(--aurora-glass)',
               color: active ? 'var(--aurora-bg)' : 'var(--aurora-sub)',
               border: active ? 'none' : '1px solid var(--aurora-glass-border)',
@@ -2454,7 +2454,7 @@ function AuditionsScreen() {
 
       {/* Compact List */}
       {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "48px 0", color: TEXT_MUTED, fontSize: 13 }}>
+        <div style={{ textAlign: "center", padding: "48px 0", color: TEXT_MUTED, fontSize: 'var(--type-base)' }}>
           No auditions yet — tap + to add one.
         </div>
       ) : (
@@ -2480,13 +2480,13 @@ function AuditionsScreen() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                   <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{a.project}</p>
                   <span className="aurora-mono" style={{
-                    fontSize: 10, padding: "3px 10px", borderRadius: 100,
+                    fontSize: 'var(--type-xs)', padding: "3px 10px", borderRadius: 100,
                     background: statusColor, color: '#0A0A0A', textTransform: 'uppercase',
                     letterSpacing: '0.08em', marginLeft: 8, whiteSpace: 'nowrap', flexShrink: 0,
                   }}>{statusLabel}</span>
                 </div>
                 {a.character && (
-                  <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "0 0 4px" }}>{a.character}</p>
+                  <p style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', margin: "0 0 4px" }}>{a.character}</p>
                 )}
                 <div className="aurora-micro" style={{ color: 'var(--aurora-dim)' }}>
                   {[a.cd, a.type?.toUpperCase()].filter(Boolean).join(' · ')}
@@ -2539,7 +2539,7 @@ function AuditionsScreen() {
               position: "absolute", top: 16, right: 16, width: 32, height: 32, borderRadius: 100,
               background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)',
               display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-              color: 'var(--aurora-sub)', fontSize: 18, lineHeight: 1,
+              color: 'var(--aurora-sub)', fontSize: 'var(--type-lg)', lineHeight: 1,
               backdropFilter: 'blur(12px)',
             }}>×</button>
 
@@ -2557,7 +2557,7 @@ function AuditionsScreen() {
               </p>
               <span className="aurora-mono" style={{
                 display: "inline-block", marginTop: 10,
-                fontSize: 11, padding: "4px 12px", borderRadius: 100,
+                fontSize: 'var(--type-sm)', padding: "4px 12px", borderRadius: 100,
                 background: STATUS_COLORS[selected.status] || 'var(--aurora-line)',
                 color: '#0A0A0A', textTransform: "uppercase", letterSpacing: '0.1em',
               }}>{(selected.status || "").replace("_", " ")}</span>
@@ -2578,7 +2578,7 @@ function AuditionsScreen() {
                 <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)', display: 'block' }}>
                   CALLBACK CONFIRMED
                 </span>
-                <p className="aurora-display" style={{ fontSize: 18, color: '#0E0D0A', margin: '4px 0 0' }}>
+                <p className="aurora-display" style={{ fontSize: 'var(--type-lg)', color: '#0E0D0A', margin: '4px 0 0' }}>
                   {selected.callbackDate}
                 </p>
               </div>
@@ -2624,7 +2624,7 @@ function AuditionsScreen() {
                       className="aurora-mono"
                       style={{
                         padding: "8px 14px", borderRadius: 100, cursor: "pointer",
-                        fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
+                        fontSize: 'var(--type-sm)', letterSpacing: '0.08em', textTransform: 'uppercase',
                         background: isActive ? color : 'var(--aurora-glass)',
                         color: isActive ? '#0A0A0A' : 'var(--aurora-sub)',
                         border: isActive ? 'none' : '1px solid var(--aurora-glass-border)',
@@ -2868,7 +2868,7 @@ function ScenesScreen({ setTab }) {
           <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--aurora-text)', overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selectedScript.title}</span>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px", WebkitOverflowScrolling: "touch" }}>
-          <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}><div style={{ fontSize: 13, color: "var(--aurora-sub)" }}>Loading...</div></div>}>
+          <Suspense fallback={<div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}><div style={{ fontSize: 'var(--type-base)', color: "var(--aurora-sub)" }}>Loading...</div></div>}>
             <SceneStudy key={selectedScript.id} />
           </Suspense>
         </div>
@@ -2928,8 +2928,8 @@ function ScenesScreen({ setTab }) {
                 <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" style={{ opacity: 0.25 }} />
                 <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
               </svg>
-              <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: 0 }}>{pdfLoading ? "Reading your PDF…" : "Saving..."}</p>
-              {pdfLoading && <p style={{ fontSize: 11, color: 'var(--aurora-dim)', margin: '2px 0 0' }}>This can take up to 90 seconds</p>}
+              <p style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', margin: 0 }}>{pdfLoading ? "Reading your PDF…" : "Saving..."}</p>
+              {pdfLoading && <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-dim)', margin: '2px 0 0' }}>This can take up to 90 seconds</p>}
             </div>
           ) : (
             <>
@@ -2984,13 +2984,13 @@ function ScenesScreen({ setTab }) {
           <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
             Try a sample scene
           </p>
-          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+          <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
             No script needed — run a short comedy two-hander with the AI reader
           </p>
         </div>
         <span
           className="aurora-mono"
-          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+          style={{ fontSize: 'var(--type-sm)', fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
         >
           PLAY →
         </span>
@@ -3023,13 +3023,13 @@ function ScenesScreen({ setTab }) {
           <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
             Record a take
           </p>
-          <p style={{ fontSize: 11, color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+          <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
             Film in-app · then get AI casting notes on it
           </p>
         </div>
         <span
           className="aurora-mono"
-          style={{ fontSize: 11, fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
+          style={{ fontSize: 'var(--type-sm)', fontWeight: 700, color: 'var(--aurora-heritage-gold-deep)', letterSpacing: '0.12em' }}
         >
           REC →
         </span>
@@ -3049,7 +3049,7 @@ function ScenesScreen({ setTab }) {
         }}
       />
 
-      <p style={{ fontSize: 11, fontWeight: 600, color: 'var(--aurora-dim)', margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "1px" }}>Your Scripts</p>
+      <p style={{ fontSize: 'var(--type-sm)', fontWeight: 600, color: 'var(--aurora-dim)', margin: "0 0 14px", textTransform: "uppercase", letterSpacing: "1px" }}>Your Scripts</p>
 
       {/* Confirm delete dialog */}
       {confirmDelete && (
@@ -3063,8 +3063,8 @@ function ScenesScreen({ setTab }) {
             boxShadow: 'var(--aurora-shadow-modal)',
           }}>
             <div style={{ width: 36, height: 4, borderRadius: 2, background: "var(--aurora-line)", margin: "0 auto 20px" }} />
-            <p className="aurora-display" style={{ fontSize: 18, color: 'var(--aurora-text)', margin: "0 0 6px", textAlign: "center", letterSpacing: '-0.3px' }}>Delete Script?</p>
-            <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "0 0 24px", textAlign: "center" }}>
+            <p className="aurora-display" style={{ fontSize: 'var(--type-lg)', color: 'var(--aurora-text)', margin: "0 0 6px", textAlign: "center", letterSpacing: '-0.3px' }}>Delete Script?</p>
+            <p style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', margin: "0 0 24px", textAlign: "center" }}>
               "{confirmDelete.title}" will be permanently removed.
             </p>
             <div style={{ display: "flex", gap: 10 }}>
@@ -3138,7 +3138,7 @@ function LiveScreen() {
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px", WebkitOverflowScrolling: "touch" }}>
         <Suspense fallback={
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-            <div style={{ fontSize: 13, color: TEXT_SECONDARY }}>Loading Scene Study...</div>
+            <div style={{ fontSize: 'var(--type-base)', color: TEXT_SECONDARY }}>Loading Scene Study...</div>
           </div>
         }>
           <div style={{ minHeight: 200 }}>
@@ -3240,7 +3240,7 @@ function ProfileScreen({ setCurrentPanel }) {
           )}
         </div>
 
-        <h1 className="aurora-display" style={{ fontSize: 22, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.4px' }}>
+        <h1 className="aurora-display" style={{ fontSize: 'var(--type-display)', color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.4px' }}>
           {userName}
         </h1>
         <p className="aurora-micro" style={{ color: 'var(--aurora-dim)', margin: "6px 0 0" }}>
@@ -3251,7 +3251,7 @@ function ProfileScreen({ setCurrentPanel }) {
           <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
             {union && (
               <span className="aurora-mono" style={{
-                fontSize: 10, padding: "4px 12px", borderRadius: 100,
+                fontSize: 'var(--type-xs)', padding: "4px 12px", borderRadius: 100,
                 background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
                 color: 'color-mix(in oklch, var(--aurora-mint) 75%, var(--aurora-text))',
                 border: '1px solid color-mix(in oklch, var(--aurora-mint) 35%, transparent)',
@@ -3260,7 +3260,7 @@ function ProfileScreen({ setCurrentPanel }) {
             )}
             {basedIn && (
               <span className="aurora-mono" style={{
-                fontSize: 10, padding: "4px 12px", borderRadius: 100,
+                fontSize: 'var(--type-xs)', padding: "4px 12px", borderRadius: 100,
                 background: 'var(--aurora-glass)',
                 color: 'var(--aurora-sub)',
                 border: '1px solid var(--aurora-glass-border)',
@@ -3278,7 +3278,7 @@ function ProfileScreen({ setCurrentPanel }) {
               const badge = PLAN_BADGES[subStatus.plan];
               return badge ? (
                 <span className="aurora-mono" style={{
-                  fontSize: 10, color: badge.color,
+                  fontSize: 'var(--type-xs)', color: badge.color,
                   padding: '5px 14px', borderRadius: 100, background: badge.bg,
                   display: 'inline-flex', alignItems: 'center', gap: 5,
                   letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -3288,7 +3288,7 @@ function ProfileScreen({ setCurrentPanel }) {
               ) : null;
             })()}
             <span className="aurora-mono" style={{
-              fontSize: 10, color: 'color-mix(in oklch, var(--aurora-mint) 75%, var(--aurora-text))',
+              fontSize: 'var(--type-xs)', color: 'color-mix(in oklch, var(--aurora-mint) 75%, var(--aurora-text))',
               padding: '5px 14px', borderRadius: 100,
               background: 'color-mix(in oklch, var(--aurora-mint) 18%, transparent)',
               border: '1px solid color-mix(in oklch, var(--aurora-mint) 35%, transparent)',
@@ -3381,7 +3381,7 @@ function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
             className="aurora-mono"
             style={{
               padding: "6px 16px", borderRadius: 100, border: "none", cursor: "pointer",
-              fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+              fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase',
               background: active.key === sec.key ? 'var(--aurora-text)' : "transparent",
               color: active.key === sec.key ? 'var(--aurora-bg)' : 'var(--aurora-dim)',
               transition: 'all 0.2s',
@@ -3412,7 +3412,7 @@ function MoreScreen({ setCurrentPanel }) {
       <div style={{ padding: "24px 0 22px" }}>
         <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>EXPLORE</span>
         <h1 className="aurora-display" style={{ fontSize: 26, color: 'var(--aurora-text)', margin: 0, letterSpacing: '-0.6px' }}>More features</h1>
-        <p style={{ fontSize: 13, color: 'var(--aurora-sub)', margin: "6px 0 0" }}>All your tools in one place</p>
+        <p style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', margin: "6px 0 0" }}>All your tools in one place</p>
       </div>
       {/* Grouped like the web sidebar — section headers instead of one
           flat 15-tile grid (the sidebar's proven AI Studio grouping). */}
@@ -3464,7 +3464,7 @@ function MoreScreen({ setCurrentPanel }) {
           border: "1px solid color-mix(in oklch, var(--aurora-rose) 40%, transparent)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
           cursor: "pointer", color: '#C04949',
-          fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+          fontSize: 'var(--type-sm)', letterSpacing: '0.12em', textTransform: 'uppercase',
           backdropFilter: 'blur(12px)',
         }}
       >
@@ -3497,7 +3497,7 @@ function GreenRoomChatWrapper({ matchId, onBack }) {
   return (
     <Suspense fallback={
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-        <div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div>
+        <div style={{ fontSize: 'var(--type-base)', color: "#8a9a96" }}>Loading...</div>
       </div>
     }>
       <GreenRoomChat matchId={matchId} onBack={onBack} />
@@ -3514,7 +3514,7 @@ function ReaderProfileWrapper({ readerId, onBack }) {
   return (
     <Suspense fallback={
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-        <div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div>
+        <div style={{ fontSize: 'var(--type-base)', color: "#8a9a96" }}>Loading...</div>
       </div>
     }>
       <ReaderProfile readerId={readerId} onBack={onBack} />
@@ -3527,7 +3527,7 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
   return (
     <Suspense fallback={
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-        <div style={{ fontSize: 13, color: "#8a9a96" }}>Loading...</div>
+        <div style={{ fontSize: 'var(--type-base)', color: "#8a9a96" }}>Loading...</div>
       </div>
     }>
       <ItsAScene matchId={matchId} onGoToGreenRoom={onGoToGreenRoom} onKeepBrowsing={onKeepBrowsing} />
@@ -3621,7 +3621,7 @@ function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
       </div>
       <Suspense fallback={
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-          <div style={{ fontSize: 13, color: 'var(--aurora-sub)' }}>Loading...</div>
+          <div style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)' }}>Loading...</div>
         </div>
       }>
         {(isDark || isFullBleed) ? (
@@ -3718,7 +3718,7 @@ function TopBarAvatar({ active, onClick }) {
             justifyContent: "center",
             background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT}, ${CORAL})`,
             color: BG_DEEPEST,
-            fontSize: 13,
+            fontSize: 'var(--type-base)',
             fontWeight: 700,
             fontFamily: "'Playfair Display', serif",
           }}
@@ -4034,11 +4034,11 @@ export default function DrSelfTapeApp() {
       <div style={{ padding: '2px 16px 20px' }}>
         <div style={{ marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 22 }}>🎥</span>
+            <span style={{ fontSize: 'var(--type-display)' }}>🎥</span>
             <h1 className="aurora-display" style={{ fontSize: 24, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.4px' }}>Tape Review</h1>
-            <span style={{ fontSize: 10, fontWeight: 800, background: 'var(--aurora-accent-light)', color: 'var(--aurora-accent-deep)', padding: '2px 8px', borderRadius: 999, letterSpacing: '0.04em' }}>AI</span>
+            <span style={{ fontSize: 'var(--type-xs)', fontWeight: 800, background: 'var(--aurora-accent-light)', color: 'var(--aurora-accent-deep)', padding: '2px 8px', borderRadius: 999, letterSpacing: '0.04em' }}>AI</span>
           </div>
-          <p style={{ fontSize: 13, color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.4 }}>
+          <p style={{ fontSize: 'var(--type-base)', color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.4 }}>
             Submit a self-tape and get casting-grade acting notes: your performance, framing, eyeline, and the moves that book the room.
           </p>
         </div>
@@ -4116,7 +4116,7 @@ export default function DrSelfTapeApp() {
             pointerEvents: 'all',
           }}>
             <div style={{ fontSize: 48, marginBottom: 12 }}>🎬</div>
-            <h2 className="aurora-display" style={{ fontSize: 22, color: 'var(--aurora-text)', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
+            <h2 className="aurora-display" style={{ fontSize: 'var(--type-display)', color: 'var(--aurora-text)', margin: '0 0 8px', letterSpacing: '-0.3px' }}>
               Welcome to Dr Self Tape
             </h2>
             <p style={{ fontSize: 14, color: 'var(--aurora-sub)', margin: '0 0 20px', lineHeight: 1.5 }}>
@@ -4187,7 +4187,7 @@ export default function DrSelfTapeApp() {
                 background: 'var(--aurora-surface-solid)',
                 padding: 2,
               }} />
-              <span className="aurora-micro" style={{ color: 'var(--aurora-dim)', fontSize: 10 }}>
+              <span className="aurora-micro" style={{ color: 'var(--aurora-dim)', fontSize: 'var(--type-xs)' }}>
                 DR · SELF · TAPE
               </span>
             </div>
@@ -4235,6 +4235,10 @@ export default function DrSelfTapeApp() {
                 fixed header, only on the main tab screens (not full-screen
                 panels). Scrolls with content so the header never covers it. */}
             {!currentPanel && <AnnouncementBanner />}
+            {/* V-03: one page-in for every destination — the panel or tab
+                remounts under a fresh key, so the 320ms aurora-page-in runs on
+                each transition (App.css disables it under reduced motion). */}
+            <div key={currentPanel || tab} className="aurora-page-in">
             {currentPanel ? (
               <PanelScreen
                 // Re-key on the pending sub-panel so a fresh deep-link (e.g. a
@@ -4256,6 +4260,7 @@ export default function DrSelfTapeApp() {
             ) : (
               screens[tab]
             )}
+            </div>
           </div>
 
           {/* Bottom Tab Bar — floating glass pill w/ active-pill highlight.
@@ -4384,7 +4389,7 @@ export default function DrSelfTapeApp() {
               </div>
               <div>
                 <span style={{ fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.3px", display: "block" }}>Dr Self Tape</span>
-                <span style={{ fontSize: 10, color: TEXT_MUTED, fontStyle: "italic", fontFamily: "'Playfair Display', serif" }}>One take at a time</span>
+                <span style={{ fontSize: 'var(--type-xs)', color: TEXT_MUTED, fontStyle: "italic", fontFamily: "'Playfair Display', serif" }}>One take at a time</span>
               </div>
             </div>
 
@@ -4430,10 +4435,10 @@ export default function DrSelfTapeApp() {
               display: "flex", alignItems: "center", gap: 10, padding: "12px",
               borderRadius: 14, background: `${MINT}06`,
             }}>
-              <div style={{ width: 34, height: 34, borderRadius: "50%", background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: BG_DEEPEST }}>D</div>
+              <div style={{ width: 34, height: 34, borderRadius: "50%", background: `linear-gradient(135deg, ${MINT}, ${CORAL_SOFT})`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 'var(--type-base)', fontWeight: 700, color: BG_DEEPEST }}>D</div>
               <div>
-                <p style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY, margin: 0 }}>Demo Actor</p>
-                <p style={{ fontSize: 11, color: TEXT_MUTED, margin: 0 }}>Pro</p>
+                <p style={{ fontSize: 'var(--type-base)', fontWeight: 600, color: TEXT_PRIMARY, margin: 0 }}>Demo Actor</p>
+                <p style={{ fontSize: 'var(--type-sm)', color: TEXT_MUTED, margin: 0 }}>Pro</p>
               </div>
             </div>
           </div>
