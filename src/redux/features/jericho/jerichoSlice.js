@@ -78,7 +78,7 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
 // a job the BE marked 'failed') means the BE already refunded, so a retry must
 // RE-CHARGE → the component rotates the key.
 function shouldReuseKey(err) {
-  return err?.response == null || err?.unknownOutcome === true;
+  return err?.response == null || err?.unknownOutcome === true || err?.response?.data?.code === 'review_in_progress';
 }
 
 // A tape-review / compare response is either the synchronous result or a pending
@@ -87,6 +87,12 @@ function shouldReuseKey(err) {
 // and clears the slot in a finally block — the clear is guaranteed regardless
 // of whether the poll succeeds, fails, or times out.
 async function resolveAnalysis(payload, { signal, kind } = {}) {
+  // A retry can reach a job that finished since the original POST. The job
+  // endpoint already trims its result; unwrap that same response shape here.
+  if (payload?.job_id && payload.status === 'done') return payload.result;
+  if (payload?.job_id && payload.status === 'failed') {
+    throw { response: { status: 502, data: { message: payload.error || 'Analysis failed. Please try again.' } } };
+  }
   if (payload && payload.job_id && payload.status === 'pending') {
     savePendingJob(payload.job_id, kind);
     try {
@@ -270,7 +276,7 @@ async function captureUploadFailure(feature, err, startedAt, loaded, total, time
 
 export const reviewTape = createAsyncThunk(
   'jericho/reviewTape',
-  async ({ video, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
+  async ({ video, recordingId, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
     const startedAt = Date.now();
     let lastLoaded = 0, lastTotal = 0;
     const onUploadProgress = (e) => {
@@ -289,7 +295,7 @@ export const reviewTape = createAsyncThunk(
       // fails for any reason, fall back to the direct multipart upload below so
       // this can never be a hard regression.
       let r2Key = null;
-      try {
+      if (!recordingId) try {
         const contentType = video?.type || 'application/octet-stream';
         const { data: presign } = await axios.post(endPoints.jerichoTapeReviewPresign, {
           filename: video?.name || 'tape.mov',
@@ -312,7 +318,17 @@ export const reviewTape = createAsyncThunk(
       }
 
       let data;
-      if (r2Key) {
+      if (recordingId) {
+        // The owned recording is fetched by Django. Never HEAD/fetch its public
+        // URL or re-upload the actor's library video from the device.
+        dispatch(setUploadProgress(100));
+        ({ data } = await axios.post(endPoints.jerichoReviewRecording, {
+          recording_id: recordingId, sides, role, tone,
+        }, {
+          headers: { 'Idempotency-Key': idempotencyKey },
+          timeout: 900000, signal,
+        }));
+      } else if (r2Key) {
         // Small request: the BE pulls the already-uploaded object from R2.
         const fd = new FormData();
         fd.append('r2_key', r2Key);
@@ -354,7 +370,7 @@ export const reviewTape = createAsyncThunk(
         // turns a thin result into a refunded error before a 200 reaches here.)
         return rejectWithValue({ message: 'This review came back incomplete. Your token was refunded. Please try again.', reuseKey: false });
       }
-      trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role, via: r2Key ? 'r2' : 'direct' });
+      trackEvent(Events.TAPE_REVIEW, { has_sides: !!sides, has_role: !!role, via: recordingId ? 'library' : r2Key ? 'r2' : 'direct' });
       return result;
     } catch (err) {
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
@@ -510,6 +526,7 @@ const jerichoSlice = createSlice({
     tapeReviewLoading: false,
     tapeReviewResult: null,
     tapeReviewError: null,
+    reviewRecording: null,
     compareLoading: false,
     compareResult: null,
     compareError: null,
@@ -546,6 +563,17 @@ const jerichoSlice = createSlice({
     clearTapeReview: (state) => {
       state.tapeReviewResult = null;
       state.tapeReviewError = null;
+      state.reviewRecording = null;
+    },
+    selectReviewRecording: (state, action) => {
+      if (state.tapeReviewLoading || state.compareLoading) return;
+      // Keep only display context and the server id, never a URL/full review.
+      state.reviewRecording = { id: action.payload.id, title: action.payload.title, role: action.payload.role_name || '' };
+      state.tapeReviewResult = null;
+      state.tapeReviewError = null;
+      state.compareResult = null;
+      state.compareError = null;
+      state.notesReady = false;
     },
     clearCompare: (state) => {
       state.compareResult = null;
@@ -707,5 +735,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, clearCompare, clearNotesReady } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, selectReviewRecording, clearCompare, clearNotesReady } = jerichoSlice.actions;
 export default jerichoSlice.reducer;

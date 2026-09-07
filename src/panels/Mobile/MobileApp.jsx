@@ -3734,7 +3734,10 @@ function TopBarAvatar({ active, onClick }) {
    APP SHELL — Mobile + Desktop
    ═══════════════════════════════════════════════════ */
 export default function DrSelfTapeApp() {
-  const [tab, setTab] = useState("home");
+  // The AI consent update can remount the shell. Redux retains the selected
+  // library tape, so continue that handoff instead of bouncing back home.
+  const reviewRecording = useSelector((s) => s.jericho?.reviewRecording);
+  const [tab, setTab] = useState(() => reviewRecording ? 'tape-review' : 'home');
   const [currentPanel, setCurrentPanel] = useState(null);
   // "Notes ready" return cue — a tape review / compare finished (often while
   // the user wandered to another tab during the multi-minute analysis). Shows
