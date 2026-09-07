@@ -15,8 +15,10 @@ import { openExternal } from './utils/openExternal';
 import { resumeQueue } from './utils/uploadQueue';
 import AIConsentModal from './components/AIConsent/AIConsentModal';
 import AgeGateModal from './components/AgeGate/AgeGateModal';
+import usePendingPersonalization from './panels/Onboarding/usePendingPersonalization';
 
 function App() {
+  usePendingPersonalization();
   const dispatch = useDispatch();
   const user = useSelector((s) => s.auth?.user);
   const userId = user?.id;

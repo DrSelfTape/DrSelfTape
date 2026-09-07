@@ -29,7 +29,22 @@ export const setAuthToken = (token) => {
 // The header must also be in the backend's CORS_ALLOW_HEADERS or WKWebView
 // silently blocks the POST at preflight (house rule 8) — it is, alongside
 // idempotency-key.
-axiosInstance.interceptors.request.use((config) => {
+export const STALE_AUTH_REQUEST = 'ERR_STALE_AUTH_REQUEST';
+const assertRequestUser = (config, store) => {
+  if (config._authUserId !== (store.getState().auth?.user?.id ?? null)) {
+    throw new axios.AxiosError('Request belongs to a previous user; not applied.', STALE_AUTH_REQUEST, config);
+  }
+};
+
+axiosInstance.interceptors.request.use(async (config) => {
+  // Import lazily to avoid store → slice → http → store initialization cycles.
+  const { store } = await import('./store');
+  if (Object.prototype.hasOwnProperty.call(config, '_authUserId')) {
+    // Preserve the original actor on retries, including across async imports.
+    assertRequestUser(config, store);
+  } else {
+    config._authUserId = store.getState().auth?.user?.id ?? null;
+  }
   try {
     const id = getDeviceId();
     if (id) {
@@ -74,19 +89,18 @@ let refreshPromise = null;
 // blacklists the used token, so when two tabs share a session the copy in
 // this tab's redux store can already be dead — the persisted one is the
 // live one.
-const readPersistedRefresh = () => {
+const readPersistedRefresh = (userId) => {
   try {
     const root = JSON.parse(localStorage.getItem('persist:root') || '{}');
     const auth = JSON.parse(root?.auth || '{}');
-    return auth?.user?.refresh || null;
+    return auth?.user?.id === userId ? auth.user.refresh || null : null;
   } catch { return null; }
 };
 
-const refreshSession = async () => {
+const refreshSession = async (failedConfig, store) => {
   // Sequential dynamic imports for the same circular-dep reason as the
   // logout path below.
-  const storeMod = await import('./store');
-  const store = storeMod?.store;
+  assertRequestUser(failedConfig, store);
   const refresh = store?.getState?.()?.auth?.user?.refresh;
   if (!refresh) throw new Error('no refresh token stored');
   // Bare axios, NOT axiosInstance: skips this interceptor (no recursion)
@@ -100,7 +114,8 @@ const refreshSession = async () => {
     // 401 here can mean another tab already rotated this token. Retry once
     // with the persisted copy before giving up — otherwise this tab's
     // failure purges the OTHER tab's perfectly valid session.
-    const persisted = readPersistedRefresh();
+    assertRequestUser(failedConfig, store);
+    const persisted = readPersistedRefresh(failedConfig._authUserId);
     if (err?.response?.status === 401 && persisted && persisted !== refresh) {
       ({ data } = await postRefresh(persisted));
     } else {
@@ -109,14 +124,25 @@ const refreshSession = async () => {
   }
   if (!data?.access) throw new Error('refresh response missing access token');
   const authMod = await import('./features/auth/authSlice');
+  assertRequestUser(failedConfig, store);
   store.dispatch(authMod.setTokens({ access: data.access, refresh: data.refresh }));
   setAuthToken(data.access);
   return data.access;
 };
 
 const trySessionRefresh = async (failedConfig) => {
-  refreshPromise = refreshPromise || refreshSession().finally(() => { refreshPromise = null; });
-  const access = await refreshPromise;
+  const { store } = await import('./store');
+  assertRequestUser(failedConfig, store);
+  // A new actor must never join the previous actor's in-flight refresh.
+  if (!refreshPromise || refreshPromise.userId !== failedConfig._authUserId) {
+    const flight = { userId: failedConfig._authUserId };
+    flight.promise = refreshSession(failedConfig, store).finally(() => {
+      if (refreshPromise === flight) refreshPromise = null;
+    });
+    refreshPromise = flight;
+  }
+  const access = await refreshPromise.promise;
+  assertRequestUser(failedConfig, store);
   const retryConfig = {
     ...failedConfig,
     headers: { ...(failedConfig?.headers || {}), Authorization: `Bearer ${access}` },
@@ -160,6 +186,10 @@ axiosInstance.interceptors.response.use(
     }
 
     if (error?.response?.status === 401) {
+      const { store } = await import('./store');
+      // Do this before refresh, the expiry latch, or logout: an old response
+      // must neither replay its payload nor expire the current actor's session.
+      assertRequestUser(error.config, store);
       const requestUrl = error?.config?.url || '';
       const hadAuthHeader = !!error?.config?.headers?.Authorization;
       const isPublicAuth = PUBLIC_AUTH_PATHS.some((p) => requestUrl.includes(p));
@@ -177,10 +207,13 @@ axiosInstance.interceptors.response.use(
           error.config._authRetried = true;
           try {
             return await trySessionRefresh(error.config);
-          } catch { /* refresh failed — fall through to session-expired logout */ }
+          } catch (refreshError) {
+            if (refreshError?.code === STALE_AUTH_REQUEST) return Promise.reject(refreshError);
+            assertRequestUser(error.config, store);
+            // Refresh failed for the same actor — fall through to logout.
+          }
         }
         if (sessionExpiredHandled) return Promise.reject(error);
-        sessionExpiredHandled = true;
         // Sequential awaits, not Promise.all — the modules form a small
         // circular dep graph (store ↔ http.js indirectly through the
         // auth slice), and parallel evaluation can leave one module's
@@ -192,6 +225,9 @@ axiosInstance.interceptors.response.use(
           const snackMod = await import('./features/snackbarSlice/snackbarSlice');
           const store = storeMod?.store;
           const persistor = storeMod?.persistor;
+          assertRequestUser(error.config, store);
+          if (sessionExpiredHandled) return Promise.reject(error);
+          sessionExpiredHandled = true;
           if (store && persistor) {
             store.dispatch(authMod.logoutUser());
             setAuthToken(null);
@@ -202,6 +238,7 @@ axiosInstance.interceptors.response.use(
             await persistor.purge();
           }
         } catch (e) {
+          if (e?.code === STALE_AUTH_REQUEST) return Promise.reject(e);
           // If the dynamic imports themselves fail (stale chunk after
           // deploy, network hiccup), we still want to bounce the user
           // to /login rather than crash the app.
