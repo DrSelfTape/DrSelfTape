@@ -2,6 +2,7 @@
 // key means it's a no-op right now anyway. We also skip init entirely until
 // a real key is set, so the chunk never downloads on first paint.
 
+import { Capacitor } from '@capacitor/core';
 import { baseURL } from '../redux/constant';
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
@@ -38,9 +39,32 @@ export async function initAnalytics() {
       capture_exceptions: true,
       loaded: () => { initialized = true; },
     });
+    // E-03: stamp WHICH client this is on every event. Native builds report
+    // their real MARKETING_VERSION + build number so PostHog can answer "what
+    // share of iOS sessions run ≥ build N" — the readiness gate for flipping
+    // REVIEW_GATE_STRIP_SCORES (older clients derived the free gauge from the
+    // per-dimension scores). Fire-and-forget; init never waits on it.
+    registerClientVersion(posthog);
   } catch (e) {
     console.warn('PostHog init failed:', e);
   }
+}
+
+async function registerClientVersion(posthog) {
+  const props = {
+    app_platform: Capacitor.getPlatform(),               // 'ios' | 'android' | 'web'
+    app_version: import.meta.env.VITE_APP_VERSION || '', // web bundle stamp when set
+    app_build: '',
+  };
+  try {
+    if (Capacitor.isNativePlatform()) {
+      const { App } = await import('@capacitor/app');
+      const info = await App.getInfo();
+      if (info?.version) props.app_version = info.version;
+      if (info?.build) props.app_build = String(info.build);
+    }
+  } catch { /* fail open — the platform alone is still registered */ }
+  try { posthog.register(props); } catch { /* noop */ }
 }
 
 export async function identifyUser(user) {
