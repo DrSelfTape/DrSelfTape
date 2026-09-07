@@ -847,6 +847,7 @@ button:not(:disabled):active,
 .dst-recap-score span { font-size: calc(var(--type-display, 22px) * 2); font-weight: 800; color: #F5EDDC; }
 .dst-recap-body { font-size: var(--type-lg, 18px); line-height: 1.35; margin: 0; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
 .dst-recap-list { margin: 0; padding-left: 1.1em; font-size: var(--type-base, 16px); line-height: 1.4; display: grid; gap: 10px; }
+.dst-recap-thumb { width: 84px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 12px; border: 1px solid rgba(245,237,220,0.22); background: rgba(0,0,0,0.3); }
 .dst-recap-tags { display: flex; flex-wrap: wrap; gap: 8px; }
 .dst-recap-tags span { font-size: var(--type-xs, 12px); padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(245,237,220,0.22); }
 .dst-recap-zone { position: absolute; top: 14%; bottom: 26%; width: 38%; background: transparent; border: 0; padding: 0; cursor: pointer; z-index: 2; }

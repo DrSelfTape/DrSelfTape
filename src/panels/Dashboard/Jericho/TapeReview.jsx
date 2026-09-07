@@ -787,7 +787,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         <TapeReviewShareCardStory ref={shareStoryRef} verdict={r.verdict} tags={tags} band={band} avg={heroAvg} />
         {/* V-02: the 9:16 reveal — only for a review that just finished */}
         {revealPending && (
-          <RecapStoryCard review={r} band={band} avg={heroAvg} firstName={firstName}
+          <RecapStoryCard review={r} band={band} avg={heroAvg} firstName={firstName} thumbnailUrl={tapeReviewPlaybackUrl}
             onClose={() => dispatch(dismissReveal())} onShare={handleShare} sharing={sharing} />
         )}
       </DesktopTapeReport>;

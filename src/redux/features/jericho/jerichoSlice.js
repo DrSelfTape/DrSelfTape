@@ -158,6 +158,7 @@ function applyReviewResult(state, result) {
 function applyCompareResult(state, result) {
   state.compareResult = result;
   state.notesReady = 'compare';
+  state.revealPending = false;
   try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
 }
 
@@ -545,9 +546,8 @@ export const fetchRecentSessions = createAsyncThunk(
 
 // ─── Slice ─────────────────────────────────────────────────────────────
 
-const jerichoSlice = createSlice({
-  name: 'jericho',
-  initialState: {
+// Hoisted so the logout reducer can restore a pristine slice.
+const initialState = {
     // Actor's AI memory profile
     memory: null,
     memoryLoading: false,
@@ -599,7 +599,11 @@ const jerichoSlice = createSlice({
     lastSessionLogId: null,
 
     error: null,
-  },
+};
+
+const jerichoSlice = createSlice({
+  name: 'jericho',
+  initialState,
   reducers: {
     clearJerichoError: (state) => {
       state.error = null;
@@ -629,6 +633,7 @@ const jerichoSlice = createSlice({
     selectReviewRecording: (state, action) => {
       if (state.tapeReviewLoading || state.compareLoading) return;
       state.tapeReviewPlaybackUrl = null;
+      state.revealPending = false;
       // Playback is display-only, from the owned library row. Analysis still
       // sends only the server id; never use this URL to fetch/charge a review.
       const previous = state.reviewRecording;
@@ -664,6 +669,9 @@ const jerichoSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // V-02 review catch: the in-memory result, pending job and reveal flag
+      // must not survive into the next account on this browser.
+      .addCase('auth/logoutUser', () => ({ ...initialState }))
       // ── Actor Memory ──
       .addCase(fetchActorMemory.pending, (state) => {
         state.memoryLoading = true;

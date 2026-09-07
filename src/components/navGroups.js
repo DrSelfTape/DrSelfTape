@@ -1,7 +1,7 @@
 import {
   Monitor, BookOpen, Target, Send, LayoutDashboard, Users2, MessageSquare,
   UserCircle, Clapperboard, Sparkles, Video, Crown, Film,
-  Brain, FileText, Trophy, Gift,
+  Brain, FileText, Trophy, Gift, Settings,
 } from 'lucide-react';
 
 /* ── Grouped desktop navigation ──
@@ -77,6 +77,8 @@ export const NAV_GROUPS = [
     items: [
       { label: 'My Profile', path: '/dashboard/profile', icon: UserCircle },
       { label: 'Subscription', path: '/dashboard/membership', icon: Crown },
+      // V-02: the legacy header that carried Settings is gone; the rail owns it.
+      { label: 'Settings', path: '/settings', icon: Settings },
     ],
   },
 ];

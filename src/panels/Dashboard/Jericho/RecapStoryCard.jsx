@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { buildRecapPages } from './recapPages';
 
@@ -6,8 +7,13 @@ import { buildRecapPages } from './recapPages';
  * reveal moment, paged like a story: the read → what's working → the one
  * thing. Recovered/historical results never trigger it (jerichoSlice only
  * raises revealPending from a review that just finished). 260ms enter,
- * reduced-motion gets the final state, arrows/Escape work, dots page. */
-export default function RecapStoryCard({ review, band, avg, firstName, onClose, onShare, sharing }) {
+ * reduced-motion gets the final state, arrows/Escape work, dots page.
+ *
+ * Portaled to <body>: it mounts from inside DesktopTapeReport, whose
+ * `.noir-review button` / `h2` rules would otherwise restyle the tap zones and
+ * the hero (review catch). Keyboard handling is scoped to the dialog itself so
+ * an open ⌘K palette or any input behind it keeps its own arrows/Escape. */
+export default function RecapStoryCard({ review, band, avg, firstName, thumbnailUrl, onClose, onShare, sharing }) {
   useHideMobileHeader(true);
   const pages = buildRecapPages(review, { band, avg, firstName });
   const last = pages.length - 1;
@@ -15,32 +21,44 @@ export default function RecapStoryCard({ review, band, avg, firstName, onClose, 
   const cardRef = useRef(null);
   const go = useCallback((delta) => setIndex((i) => Math.max(0, Math.min(last, i + delta))), [last]);
 
-  useEffect(() => { cardRef.current?.focus(); }, []);
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') { e.preventDefault(); onClose?.(); }
-      else if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
-      else if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [go, onClose]);
+  useEffect(() => { if (pages.length) cardRef.current?.focus(); }, [pages.length]);
 
   if (!pages.length) return null;
   const page = pages[index];
   const accent = band?.color || 'var(--aurora-gold)';
   const atEnd = index === last;
 
-  return (
+  const onKeyDown = (e) => {
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); onClose?.(); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); go(1); return; }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); return; }
+    if (e.key !== 'Tab') return;
+    // Focus stays inside the dialog while it is open.
+    const nodes = cardRef.current?.querySelectorAll('button:not(:disabled)');
+    if (!nodes?.length) return;
+    const first = nodes[0];
+    const end = nodes[nodes.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === first || active === cardRef.current)) { e.preventDefault(); end.focus(); }
+    else if (!e.shiftKey && active === end) { e.preventDefault(); first.focus(); }
+  };
+
+  const card = (
     <div className="dst-recap-backdrop" role="presentation" onClick={onClose}>
       <div ref={cardRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label="Your tape recap"
-        className="dst-recap-card" style={{ '--recap-accent': accent }} onClick={(e) => e.stopPropagation()}>
+        className="dst-recap-card" style={{ '--recap-accent': accent }}
+        onClick={(e) => e.stopPropagation()} onKeyDown={onKeyDown}>
         <div className="dst-recap-progress" aria-hidden="true">
           {pages.map((p, i) => <span key={p.key} className={i <= index ? 'is-on' : ''} />)}
         </div>
         <button type="button" className="dst-recap-close" aria-label="Close recap" onClick={onClose}>×</button>
 
         <div key={page.key} className="dst-recap-page">
+          {page.key === 'read' && thumbnailUrl && (
+            // The take itself, as a poster frame — display only, never fetched
+            // for analysis. Muted + metadata so nothing plays or downloads.
+            <video className="dst-recap-thumb" src={thumbnailUrl} muted playsInline preload="metadata" aria-label="Your take" />
+          )}
           <p className="dst-recap-kicker">{page.kicker}</p>
           <h2 className="dst-recap-title">{page.title}</h2>
           {page.score != null && <p className="dst-recap-score"><span>{page.score}</span>/10</p>}
@@ -75,4 +93,5 @@ export default function RecapStoryCard({ review, band, avg, firstName, onClose, 
       </div>
     </div>
   );
+  return typeof document === 'undefined' ? card : createPortal(card, document.body);
 }

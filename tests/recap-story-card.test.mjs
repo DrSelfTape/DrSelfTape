@@ -52,6 +52,18 @@ test('a full review yields read → working → one thing, capped and real', () 
   assert.equal(pages[2].body, 'Land the last line a half-beat later');
 });
 
+test('the shapes the BE actually emits all read: {title,detail}, bare string, the_one_thing', () => {
+  const pages = buildRecapPages({
+    verdict: 'v', whats_working: [{ title: 'Listening', detail: 'You hear her.' }],
+    adjustments: [{ title: 'Pace', note: 'Slow the last line.', why: 'w' }], the_one_thing: 'Breathe before the last line.',
+  }, { band, avg: 7 });
+  assert.deepEqual(pages[1].body, ['Listening — You hear her.']);
+  assert.equal(pages[2].body, 'Breathe before the last line.', 'the_one_thing wins over adjustments[0]');
+  const stringShaped = buildRecapPages({ verdict: 'v', whats_working: 'One strength as a string' }, {});
+  assert.deepEqual(stringShaped[1].body, ['One strength as a string']);
+  assert.equal(buildRecapPages({ verdict: 'v', whats_working: 42, tone_tags: 'nope' }, {}).length, 1, 'malformed fields are ignored, never thrown');
+});
+
 test('a trimmed free result yields only the read; nothing is invented', () => {
   const pages = buildRecapPages({ verdict: 'Free headline' }, { band: null, avg: undefined });
   assert.equal(pages.length, 1);
@@ -72,7 +84,7 @@ test('the card renders as a dialog with one dot per page and the band as the her
   assert.ok(html.includes('8.2</span>/10'));
   assert.ok(html.includes('You let the silence do the work.'));
   assert.ok(html.includes('--recap-accent:#22c55e'));
-  assert.ok(html.includes('Next'), 'first page advances rather than closes');
+  assert.match(html, /class="dst-recap-primary">Next</, 'the primary CTA advances on the first page');
   assert.ok(!html.includes('Share to Story'), 'no share button without a share handler');
 });
 
