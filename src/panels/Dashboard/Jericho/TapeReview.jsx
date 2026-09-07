@@ -12,10 +12,11 @@ import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X, Lock,
   RotateCcw, ChevronDown, Trophy, HelpCircle,
 } from 'lucide-react';
-import { reviewTape, clearTapeReview, resumeAnalysisJob, recoverLatestReview, clearCompare, clearReviewRecording, consumeRecordingNavigation, pendingJobMatchesRecording, REVIEW_RECOVERY_TIMEOUT_MS } from '../../../redux/features/jericho/jerichoSlice';
+import { reviewTape, clearTapeReview, dismissReveal, resumeAnalysisJob, recoverLatestReview, clearCompare, clearReviewRecording, consumeRecordingNavigation, pendingJobMatchesRecording, REVIEW_RECOVERY_TIMEOUT_MS } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeReviewNotes from './TapeReviewNotes';
 import DesktopTapeReport from './DesktopTapeReport';
+import RecapStoryCard from './RecapStoryCard';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { TECH_SCORES, DNA } from './reviewResultFields';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
@@ -229,7 +230,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // would be skipped and the API would hard-403.
   useAIGate();
   const dispatch = useDispatch();
-  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl } = useSelector((s) => s.jericho);
+  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl, revealPending } = useSelector((s) => s.jericho);
   const hasAiConsent = useSelector((s) => !!s.auth?.user?.ai_consent_accepted_at);
   const [checkingRecovery, setCheckingRecovery] = useState(() => !(tapeReviewLoading || tapeReviewResult || compareLoading || compareResult));
   // Full-read gate: Premium (unlimited) sees the complete casting read; free
@@ -784,6 +785,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {showTutorial && <TapeAnalyzerTutorial onClose={() => setShowTutorial(false)} />}
         <TapeReviewShareCard ref={shareRef} verdict={r.verdict} tags={tags} band={band} avg={heroAvg} />
         <TapeReviewShareCardStory ref={shareStoryRef} verdict={r.verdict} tags={tags} band={band} avg={heroAvg} />
+        {/* V-02: the 9:16 reveal — only for a review that just finished */}
+        {revealPending && (
+          <RecapStoryCard review={r} band={band} avg={heroAvg} firstName={firstName}
+            onClose={() => dispatch(dismissReveal())} onShare={handleShare} sharing={sharing} />
+        )}
       </DesktopTapeReport>;
     }
 

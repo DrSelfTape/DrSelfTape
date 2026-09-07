@@ -147,6 +147,7 @@ function applyReviewResult(state, result) {
   // sent compare results back to single mode, where they were
   // unreachable (codex review catch).
   state.notesReady = 'review';
+  state.revealPending = true;
   // A token was just spent — nudge useTokenBalance past its cache so
   // every surface shows the post-charge number (codex review catch:
   // the recorder path showed the pre-charge balance until an
@@ -169,6 +170,7 @@ function applyRecoveredReview(state, result) {
   state.tapeReviewPlaybackUrl = state.reviewRecording?.playbackUrl || null;
   state.reviewRecording = null;
   state.notesReady = 'review';
+  state.revealPending = false;
 }
 
 // Defense in depth (BUG 3): the BE can return 200 with an empty/near-empty body
@@ -589,6 +591,9 @@ const jerichoSlice = createSlice({
     // another tab). The mobile tab bar shows a "notes ready" dot on the Review
     // tab while this is set; visiting the tab clears it.
     notesReady: false,
+    // V-02: true only for a review that JUST finished (never a recovered or
+    // historical one) — drives the desktop RecapStoryCard reveal.
+    revealPending: false,
 
     // Last logged session ID (for attaching post-session feedback)
     lastSessionLogId: null,
@@ -616,6 +621,10 @@ const jerichoSlice = createSlice({
       state.tapeReviewPlaybackUrl = null;
       state.tapeReviewError = null;
       state.reviewRecording = null;
+      state.revealPending = false;
+    },
+    dismissReveal: (state) => {
+      state.revealPending = false;
     },
     selectReviewRecording: (state, action) => {
       if (state.tapeReviewLoading || state.compareLoading) return;
@@ -814,5 +823,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, selectReviewRecording, rememberRecordingAttempt, consumeRecordingNavigation, clearReviewRecording, clearCompare, clearNotesReady } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, selectReviewRecording, rememberRecordingAttempt, consumeRecordingNavigation, clearReviewRecording, clearCompare, clearNotesReady, dismissReveal } = jerichoSlice.actions;
 export default jerichoSlice.reducer;
