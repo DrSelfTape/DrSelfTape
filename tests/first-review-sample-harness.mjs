@@ -41,6 +41,7 @@ export async function startHarness(port = 0, { firstReviewFlow = true, onboardin
       export const useStore = () => store;
       export const useSelector = fn => { useSyncExternalStore(store.subscribe, () => revision); return fn(state()); };
       const dispatch = action => {
+        if (typeof action === 'function') return action(dispatch, state);
         if (action.type === 'test/settings') window.__settingsWrites.push(action.payload);
         const p = action.type === 'test/profile'
           ? (window.__holdProfileWrite
@@ -52,7 +53,7 @@ export async function startHarness(port = 0, { firstReviewFlow = true, onboardin
         p.unwrap = () => p; return p;
       };
       export const useDispatch = () => dispatch;`,
-    'profileSlice': 'export const updateProfileThunk = fd => { window.__profileWrites.push(Object.fromEntries(fd)); return { type: "test/profile" }; }; export const fetchProfileThunk = () => ({});',
+    'profileSlice': 'export const updateProfileThunk = fd => dispatch => { window.__profileWrites.push(Object.fromEntries(fd)); return dispatch({ type: "test/profile" }); }; export const fetchProfileThunk = () => dispatch => dispatch({});',
     'userSettingsSlice': 'export const patchUserSettings = payload => ({type: "test/settings", payload});',
     'usePushNotifications': 'export const usePushNotifications = () => ({ permission: "prompt", requestPermission: async () => {} });',
     'AIConsentModal': `export const requestAiConsent = () => {

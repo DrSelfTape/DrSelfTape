@@ -23,7 +23,7 @@ for (const boundary of ['logout and another account', 'logout and the same accou
     store.dispatch({ type: 'account', payload: { id: boundary === 'logout and another account' ? 99 : 42, token: 'b' } });
     resolve({ first_name: 'Actor A' });
     assert.equal(await pending, false);
-    assert.equal(aborted, true);
+    assert.equal(aborted, false);
     assert.equal(store.getState().profile, null);
     let dispatched = false;
     assert.equal(await scope.run(() => { dispatched = true; }, {}), false);
@@ -57,13 +57,21 @@ for (const boundary of ['unmount', 'token rotation']) {
   });
 }
 
-test('a stalled save times out without acknowledging the draft', async () => {
+test('a pending save has no eight-second deadline and waits for acknowledgment', async t => {
+  t.mock.timers.enable({apis: ['setTimeout']});
   let aborted = false;
+  let resolve;
   const store = {getState: () => ({auth: {user: {id: 42, token: 'a'}}}), subscribe: () => () => {}};
   const scope = createOnboardingSession(store);
-  const result = await scope.run(() => ({unwrap: () => new Promise(() => {}), abort: () => { aborted = true; }}), {}, 10);
-  assert.equal(result, false);
-  assert.equal(aborted, true);
+  let settled = false;
+  const result = scope.run(() => ({unwrap: () => new Promise(done => {resolve = done;}), abort: () => { aborted = true; }}), {})
+    .then(saved => {settled = true; return saved;});
+  t.mock.timers.tick(9000);
+  await Promise.resolve();
+  assert.equal(settled, false);
+  assert.equal(aborted, false);
   assert.equal(scope.current(), true);
+  resolve({});
+  assert.equal(await result, true);
   scope.dispose();
 });

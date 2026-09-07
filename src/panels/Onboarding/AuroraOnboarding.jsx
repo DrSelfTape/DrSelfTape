@@ -1179,7 +1179,7 @@ export default function AuroraOnboarding({ onClose }) {
         // saved on another device. Snapshot each attempt so a late ACK cannot
         // discard edits made while a resumed request was in flight.
         const payload = JSON.stringify(answerPatch(dataRef.current));
-        if (!await scope.wait(flushPendingPersonalization(store, dispatch)) || !scope.current()) return false;
+        if (!await scope.wait(flushPendingPersonalization(store, dispatch, payload)) || !scope.current()) return false;
         if (payload !== JSON.stringify(answerPatch(dataRef.current))) continue;
         const nd = { ...dataRef.current, personalization_pending: false };
         dataRef.current = nd;

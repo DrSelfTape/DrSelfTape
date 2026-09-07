@@ -45,6 +45,47 @@ test('successful same-account refresh through the real HTTP interceptor saves an
   await page.waitForFunction(() => localStorage.getItem('dst_onb_step_v3') === '2');
 });
 
+test('a successful nine-second refresh saves without session-expired logout', async t => {
+  const page = await open(t);
+  await click(page, 'Between jobs');
+  await page.evaluate(() => {window.expireNext = true; window.refreshDelay = 9000;});
+  await click(page, 'Continue');
+  await page.waitForFunction(() => sessionStorage.getItem('refreshed') === 'true', {timeout: 12000});
+  await page.waitForFunction(() => {
+    const actions = JSON.parse(sessionStorage.getItem('actions') || '[]');
+    return actions.includes('profile/updateProfile/fulfilled') || actions.includes('auth/logoutUser');
+  });
+  assert.equal(await page.evaluate(() => JSON.parse(sessionStorage.getItem('actions')).includes('auth/logoutUser')), false);
+  await page.waitForFunction(() => window.events.some(e => e.event === 'first_review_offer_shown'));
+  assert.deepEqual(await page.evaluate(() => window.serverProfile.onboarding_personalization), {plate: 'between_jobs'});
+  assert.equal(await page.evaluate(() => window.store.getState().auth.user.token), 'fresh');
+  assert.equal(await page.evaluate(() => window.purges), 0);
+});
+
+test('QuotaExceededError cannot acknowledge answers before a real profile PATCH', async t => {
+  const page = await open(t);
+  await page.evaluate(() => {
+    const setItem = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(key, value) {
+      if (key === 'dst_onb_pending:42') throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      return setItem.call(this, key, value);
+    };
+    window.holdWrites = true;
+  });
+  await click(page, 'Building my reel');
+  await click(page, 'Yes');
+  await click(page, 'Continue');
+  await page.waitForFunction(() => window.attempts.length || window.events.some(e => e.event === 'first_review_offer_shown'));
+  assert.equal(await page.evaluate(() => window.attempts.length), 1);
+  assert.equal(await page.evaluate(() => localStorage.getItem('dst_onb_pending:42')), null);
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('dst_onb_data')).personalization_pending), true);
+  assert.equal(await page.evaluate(() => window.accepted.length), 0);
+  await page.evaluate(() => {window.holdWrites = false; window.releaseWrite();});
+  await page.waitForFunction(() => window.events.some(e => e.event === 'first_review_offer_shown'));
+  assert.deepEqual(await page.evaluate(() => window.serverProfile.onboarding_personalization), {plate: 'building_reel', taped_before: 'yes'});
+  assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('dst_onb_data')).personalization_pending), false);
+});
+
 for (const flag of [false, true]) test(`flag ${flag}: completion closes and really unmounts before a delayed profile save is acknowledged`, async t => {
   const page = await open(t, flag);
   await click(page, 'SAG-AFTRA');
@@ -57,6 +98,7 @@ for (const flag of [false, true]) test(`flag ${flag}: completion closes and real
   await page.waitForFunction(() => !!window.releaseWrite);
   await page.waitForSelector('[data-testid="closed"]');
   assert.equal(await page.$('h1'), null);
+  if (!flag) await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 9000)));
   assert.equal(await page.evaluate(() => window.accepted.some(p => p.union_status)), false);
   await page.evaluate(() => {window.holdWrites = false; window.releaseWrite();});
   await page.waitForFunction(() => window.serverProfile.union_status === 'SAG-AFTRA');
@@ -128,7 +170,8 @@ test('closing then switching accounts cannot apply a delayed completion to the n
   await page.waitForFunction(() => !!window.releaseWrite);
   const fulfilledBefore = await page.evaluate(() => window.actions.filter(a => a === 'profile/updateProfile/fulfilled').length);
   await page.evaluate(() => {window.logout(); window.signIn(99); window.holdWrites = false; window.releaseWrite();});
-  await page.waitForFunction(() => window.actions.includes('profile/updateProfile/rejected'));
+  await page.waitForFunction(() => window.accepted.some(p => p.first_name));
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 20)));
   assert.equal(await page.evaluate(() => window.actions.filter(a => a === 'profile/updateProfile/fulfilled').length), fulfilledBefore);
   assert.equal(await page.evaluate(() => window.serverSettings.reader_onboarding_seen), undefined);
   assert.equal(await page.evaluate(() => window.store.getState().auth.user.id), 99);
@@ -143,9 +186,10 @@ test('unmount during personalization still observes logout and login to the same
   await click(page, 'Parent closes onboarding');
   await page.waitForSelector('[data-testid="closed"]');
   await page.evaluate(() => {window.logout(); window.signIn(42); window.holdWrites = false; window.releaseWrite();});
-  await page.waitForFunction(() => window.actions.includes('profile/updateProfile/rejected'));
+  await page.waitForFunction(() => window.accepted.length === 1);
+  await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 20)));
   assert.equal(await page.evaluate(() => window.attempts.length), 1);
-  assert.equal(await page.evaluate(() => window.accepted.length), 0);
+  assert.equal(await page.evaluate(() => window.actions.includes('profile/updateProfile/fulfilled')), false);
   assert.ok(await page.evaluate(() => localStorage.getItem('dst_onb_pending:42')));
   assert.equal(await page.evaluate(() => window.serverSettings.reader_onboarding_seen), undefined);
 });

@@ -12,8 +12,6 @@ export function createOnboardingSession(store) {
   };
   const cancel = () => {
     cancelled = true;
-    requests.forEach(request => request.abort?.());
-    requests.clear();
   };
   const unsubscribe = store.subscribe(() => { if (!matches()) cancel(); });
   const release = request => {
@@ -29,23 +27,22 @@ export function createOnboardingSession(store) {
       requests.add(promise);
       return promise.finally(() => release(promise));
     },
-    async run(dispatch, action, timeoutMs = 8000) {
+    async run(dispatch, action) {
       if (cancelled || !matches()) return false;
-      const request = dispatch(action);
+      // Let the HTTP request (including silent refresh) finish. Guard Redux
+      // application by actor identity instead of aborting a valid request.
+      const request = dispatch((apply, getState, extra) => action(
+        next => !cancelled && matches() ? apply(next) : next,
+        getState,
+        extra,
+      ));
       requests.add(request);
-      let timeout;
       try {
-        await Promise.race([
-          request.unwrap(),
-          new Promise((_, reject) => {
-            timeout = setTimeout(() => { request.abort?.(); reject(new Error('Onboarding save timed out')); }, timeoutMs);
-          }),
-        ]);
+        await request.unwrap();
         return !cancelled && matches();
       } catch {
         return false;
       } finally {
-        clearTimeout(timeout);
         release(request);
       }
     },

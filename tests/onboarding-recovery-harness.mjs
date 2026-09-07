@@ -62,7 +62,9 @@ export async function recoveryBundle(firstReviewFlow = true) {
       const fail = (config, status) => { throw new AxiosError('test failure', 'ERR_BAD_RESPONSE', config, null, {status, data: {}, config}); };
       bareAxios.defaults.adapter = async config => {
         if (!config.url.endsWith('/token/refresh/')) throw new Error('Unexpected bare HTTP request');
-        window.refreshes++; sessionStorage.setItem('refreshed', 'true'); return response(config, {access: 'fresh', refresh: 'refresh-b'});
+        window.refreshes++;
+        if (window.refreshDelay) await new Promise(resolve => setTimeout(resolve, window.refreshDelay));
+        sessionStorage.setItem('refreshed', 'true'); return response(config, {access: 'fresh', refresh: 'refresh-b'});
       };
       http.defaults.adapter = async config => {
         if (config.url.endsWith('/settings/')) {

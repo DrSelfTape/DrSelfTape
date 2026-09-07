@@ -186,7 +186,7 @@ btest('identity retains the original union and pronoun chips before the new ques
   await page.waitForFunction(() => window.__profileWrites.some(w => w.union_status === 'SAG-AFTRA' && w.pronouns === 'they/them'));
 });
 
-btest('an account switch during a pending save cancels deferred profile and completion writes', async () => {
+btest('an account switch during a pending save prevents deferred writes without aborting the request', async () => {
   await identity();
   await page.evaluate(() => { window.__holdProfileWrite = true; });
   await click('Between jobs');
@@ -202,7 +202,7 @@ btest('an account switch during a pending save cancels deferred profile and comp
   await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 50)));
   assert.equal(await page.evaluate(() => window.__profileWrites.length), 1);
   assert.equal(await page.evaluate(() => window.__settingsWrites.length), 0);
-  assert.ok(await page.evaluate(() => window.__abortedWrites > 0));
+  assert.equal(await page.evaluate(() => window.__abortedWrites), 0);
 });
 
 btest('late matching profile hydrates untouched answers without replacing an edited answer', async () => {

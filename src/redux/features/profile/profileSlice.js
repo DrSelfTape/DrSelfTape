@@ -25,10 +25,9 @@ export const fetchProfileThunk = createAsyncThunk(
 
 export const updateProfileThunk = createAsyncThunk(
   'profile/updateProfile',
-  async (formData, { rejectWithValue, signal }) => {
+  async (formData, { rejectWithValue }) => {
     try {
       const { data } = await axios.patch(endPoints.profile, formData, {
-        signal,
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return data?.data || data;
