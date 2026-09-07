@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { after, before, test } from 'node:test';
+import { after, afterEach, before, test } from 'node:test';
 import { startHistoryHarness } from './durable-review-notes-harness.mjs';
 
 // Matches the existing browser suite: use installed optional Puppeteer, add no
@@ -13,16 +13,27 @@ before(async () => {
   harness = await startHistoryHarness();
   browser = await puppeteer.launch({ headless: true });
   page = await browser.newPage();
-  await page.setViewport({ width: 375, height: 667 });
+  await page.setViewport({ width: 375, height: 667, hasTouch: true });
   page.on('pageerror', error => errors.push(error.message));
   await page.setRequestInterception(true);
   page.on('request', request => request.url().startsWith(harness.url) ? request.continue() : request.abort());
 });
 after(async () => { await browser?.close(); await harness?.close(); });
+afterEach(async () => {
+  if (!page) return;
+  const close = await page.$('[aria-label="Close review"]');
+  if (close) {
+    await close.click();
+    await page.waitForSelector('[role="dialog"]', { hidden: true });
+  }
+});
 const btest = (name, fn) => test(name, async t => puppeteer ? fn() : t.skip('puppeteer not installed'));
 
-async function fresh(paid = true) {
+async function fresh(paid = true, width = 375) {
   errors.length = 0;
+  // useIsMobile checks touch capability as well as the short edge. Width alone
+  // leaves Puppeteer on the desktop report even at 375px.
+  await page.setViewport({ width, height: width === 375 ? 667 : 1000, hasTouch: width === 375 });
   await page.goto(harness.url);
   await page.waitForFunction(() => typeof window.mountHistory === 'function');
   if (!paid) await page.evaluate(() => window.mountHistory(false));
@@ -45,20 +56,47 @@ async function resolve(feedback) {
 }
 const text = () => page.$eval('[role="dialog"]', node => node.textContent);
 
-btest('history row fetches durable notes and renders the full real results after the job expired', async () => {
-  await fresh(); await open();
+btest('desktop history opens the fetched dated report and shares its server-gated read', async () => {
+  await page.setViewport({ width: 1440, height: 1000 });
+  try {
+    await fresh(false, 1440); await open();
+    await resolve({ verdict: 'SERVER HEADLINE', headline_score: 7.2, adjustments: [{ note: 'Listen at 0:12' }] });
+    assert.equal(await page.$$eval('[role="dialog"] .noir-review', nodes => nodes.length), 1);
+    assert.match(await text(), /Generated/);
+    assert.doesNotMatch(await text(), /CACHED|Performance DNA/);
+    assert.match(await text(), /original video isn’t available/);
+    await click('Share to Story');
+    await page.waitForFunction(() => window.__captures.length === 1);
+    assert.match(await page.evaluate(() => window.__captures[0].text), /SERVER HEADLINE/);
+    await click('Close review');
+    await page.waitForSelector('[role="dialog"]', { hidden: true });
+    assert.deepEqual(errors, []);
+  } finally { await page.setViewport({ width: 375, height: 667, hasTouch: true }); }
+});
+
+for (const width of [375, 1440]) {
+btest(`history row renders the fetched ${width === 375 ? 'mobile sheet' : 'desktop report'} after the job expired (${width}px)`, async () => {
+  await fresh(true, width); await open();
   assert.match(await text(), /Loading your review/);
   assert.doesNotMatch(await text(), /CACHED/);
   assert.deepEqual(await page.evaluate(() => window.__requests.map(r => r.url)), ['/v1/ai/session-log/101/']);
   await resolve();
   const full = await text();
-  for (const section of ['Quick read', "What's working", 'Your next take', 'Performance read', 'The one thing', 'Tape scores', 'Performance DNA']) assert.ok(full.includes(section), section);
+  const sections = width === 375
+    ? ['Quick read', "What's working", 'Your next take', 'Performance read', 'The one thing', 'Tape scores', 'Performance DNA']
+    : ['QUICK READ', 'What’s working', 'One note. Another take.', 'Performance read', 'Tape scores', 'Performance DNA', 'Generated'];
+  assert.equal(await page.$$eval('[role="dialog"] .noir-review', nodes => nodes.length), width === 375 ? 0 : 1);
+  for (const section of sections) assert.ok(full.includes(section), section);
   const fixture = await page.evaluate(() => window.__fullReview);
   for (const value of [fixture.verdict, fixture.the_one_thing, ...Object.values(fixture.performance)]) assert.ok(full.includes(value));
   assert.equal(await page.evaluate(() => localStorage.getItem('dst_personal_bests')), 'UNCHANGED');
   assert.equal(await page.evaluate(() => window.__modalCount), 1);
+  await click('Close review');
+  await page.waitForSelector('[role="dialog"]', { hidden: true });
+  assert.equal(await page.evaluate(() => window.__modalCount), 0);
   assert.deepEqual(errors, []);
 });
+}
 
 for (const legacyScores of [false, true]) {
   btest(`free history renders only the server-trimmed notes (legacy scores: ${legacyScores})`, async () => {

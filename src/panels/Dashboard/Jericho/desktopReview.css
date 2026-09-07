@@ -1,0 +1,86 @@
+/* Ring 3 is opt-in through an actual desktop component. No mobile selectors. */
+.noir-review {
+  --nr-stage: #0b0a08;
+  --nr-panel: #141210;
+  --nr-raised: #1b1815;
+  --nr-line: rgba(245, 237, 220, .12);
+  --nr-text: #f5eddc;
+  --nr-dim: #a69c89;
+  --nr-gold: #d4a85f;
+  background: var(--nr-stage);
+  color: var(--nr-text);
+  font: var(--type-body, 14px)/1.6 'Space Grotesk', sans-serif;
+  border: 1px solid var(--nr-line);
+  border-radius: 18px;
+  padding: 28px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.noir-review :is(h2,h3,h4,p) { margin: 0; }
+.noir-review h2 { font: 400 32px/1.15 'Instrument Serif', serif; }
+.noir-review h2 span { color: var(--nr-dim); }
+.noir-review h3 { font: 400 25px/1.2 'Instrument Serif', serif; margin-bottom: 14px; }
+.noir-review h4 { font-size: var(--type-sm, 13px); font-weight: 600; margin-bottom: 5px; }
+.noir-review .nr-eyebrow { font: 11px/1.5 'JetBrains Mono', monospace; letter-spacing: .08em; color: var(--nr-dim); margin-bottom: 12px; }
+.noir-review .nr-muted { color: var(--nr-dim); font-size: var(--type-sm, 13px); }
+.noir-review .nr-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding-bottom: 24px; }
+.noir-review .nr-header h2 { margin-bottom: 10px; }
+.noir-review .nr-actions, .noir-review .nr-evidence, .noir-review .nr-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.noir-review .nr-actions { justify-content: flex-end; max-width: 260px; }
+.noir-review button, .noir-review .nr-evidence a {
+  border: 1px solid var(--nr-line); border-radius: 8px; background: var(--nr-panel);
+  color: var(--nr-text); padding: 9px 12px; font-size: var(--type-xs, 12px); cursor: pointer;
+  text-decoration: none; transition: opacity 120ms ease-out, transform 120ms ease-out;
+}
+.noir-review button:disabled { opacity: .5; cursor: default; }
+.noir-review :is(button,a,summary):focus-visible { outline: 2px solid var(--nr-gold); outline-offset: 4px; }
+@media (hover: hover) { .noir-review button:not(:disabled):hover, .noir-review .nr-evidence a:hover { background: var(--nr-raised); } }
+.noir-review .nr-evidence { padding: 16px 0; border-top: 1px solid var(--nr-line); border-bottom: 1px solid var(--nr-line); }
+.noir-review .nr-evidence a { color: var(--nr-dim); font-family: 'JetBrains Mono', monospace; border-radius: 30px; }
+.noir-review .nr-headline { display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 24px 0; }
+.noir-review .nr-headline h3 { font-size: 32px; margin: 0; }
+.noir-review .nr-grade { font: 44px/1.2 'Instrument Serif', serif; color: var(--nr-gold); }
+.noir-review .nr-grade small { font: 12px 'JetBrains Mono', monospace; color: var(--nr-dim); margin-left: 4px; }
+.noir-review .nr-readiness { position: relative; grid-column: 1/-1; height: 1px; background: var(--nr-line); margin: 8px 5px; }
+.noir-review .nr-readiness span { position: absolute; width: 8px; height: 8px; top: -4px; transform: translateX(-50%); border-radius: 50%; background: var(--nr-gold); }
+.noir-review .nr-reading-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(240px, 1fr); gap: 24px; align-items: start; margin-top: 24px; }
+.noir-review .nr-notes, .noir-review .nr-pinned { display: grid; gap: 16px; min-width: 0; }
+.noir-review .nr-rail { min-width: 0; position: sticky; top: 20px; }
+.noir-review .nr-pinned { max-height: calc(100vh - 40px); overflow-y: auto; overscroll-behavior: contain; }
+.noir-review .nr-section { padding: 22px; border: 1px solid var(--nr-line); border-radius: 12px; background: var(--nr-panel); scroll-margin-top: 24px; }
+.noir-review .nr-verdict > p:not(.nr-eyebrow), .noir-review .nr-pullquote { font: 25px/1.35 'Instrument Serif', serif; }
+.noir-review .nr-tags { margin-top: 18px; }
+.noir-review .nr-tags span { font-size: 11px; color: var(--nr-gold); border: 1px solid var(--nr-line); border-radius: 30px; padding: 3px 9px; }
+.noir-review .nr-note + .nr-note, .noir-review .nr-note + button { margin-top: 20px; }
+.noir-review .nr-note p { color: var(--nr-dim); }
+.noir-review .nr-pullquote { padding-bottom: 20px; }
+.noir-review .nr-primary { background: linear-gradient(135deg, #d4a85f, #fce072); color: #141210; font-weight: 600; }
+.noir-review .nr-score-list { margin: 0; }
+.noir-review .nr-score-list > div { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--nr-line); }
+.noir-review .nr-score-list dd { font-family: 'JetBrains Mono', monospace; color: var(--nr-gold); }
+.noir-review .nr-score-list dd span { color: var(--nr-dim); font-size: 10px; }
+.noir-review .nr-rail video { width: 100%; max-height: 320px; background: #000; border-radius: 6px; }
+.noir-review .nr-empty { color: var(--nr-dim); padding: 14px 0; }
+.noir-review .nr-sides { white-space: pre-wrap; margin-top: 16px !important; color: var(--nr-dim); }
+.noir-review .nr-moments { padding: 18px; }
+.noir-review .nr-moments button { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 10px; width: 100%; text-align: left; margin-top: 12px; padding: 10px; }
+.noir-review .nr-moments time { color: var(--nr-gold); font-family: 'JetBrains Mono', monospace; }
+.noir-review .nr-moments span { color: var(--nr-dim); }
+@media (max-width: 1199px) { .noir-review .nr-header { flex-direction: column; } .noir-review .nr-actions { max-width: none; justify-content: flex-start; } .noir-review { padding: 20px; } .noir-review .nr-reading-grid { gap: 16px; } }
+@media (prefers-reduced-motion: reduce) { .noir-review *, .noir-review *::before, .noir-review *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+/* Mounted legacy overlays keep their own light palette. Only report notes
+   receive text overrides; coaching-style siblings are outside this root. */
+.noir-review > .nr-reading-grid [class*="text-[#0A0A0A]"] { color: var(--nr-text); }
+.noir-review > .nr-reading-grid [class*="text-[rgba(10,10,10,"] { color: var(--nr-dim); }
+.noir-review .nr-timeline svg { width: 100%; max-height: 140px; }
+.noir-review .nr-average-bars > div { display: grid; grid-template-columns: 110px 1fr 35px; align-items: center; gap: 12px; font-size: var(--type-xs, 12px); margin-top: 12px; }
+.noir-review .nr-average-bars [role="meter"] { height: 3px; background: var(--nr-line); }
+.noir-review .nr-average-bars i { display: block; height: 3px; background: var(--nr-gold); }
+.noir-review .nr-average-bars > div:last-child i { background: var(--nr-dim); }
+.noir-review .tr-reveal { animation-duration: 300ms !important; }
+.noir-review [style*="tapeTutPop"] { animation-duration: 300ms !important; animation-name: nr-tutorial-in !important; animation-timing-function: ease-out !important; }
+@keyframes nr-tutorial-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .noir-review .tr-reveal, .noir-review [style*="tapeTutPop"] { animation: none !important; }
+}

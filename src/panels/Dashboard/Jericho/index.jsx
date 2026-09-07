@@ -19,6 +19,8 @@ import {
 } from '../../../redux/features/jericho/jerichoSlice';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import TapeReview from './TapeReview';
+import DesktopTapeReport from './DesktopTapeReport';
+import { getScoreHistory } from '../../../utils/personalRecords';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Capacitor } from '@capacitor/core';
 import TapeReviewNotes from './TapeReviewNotes';
@@ -79,6 +81,8 @@ const TAP_STYLE = { touchAction: 'manipulation', WebkitTapHighlightColor: 'trans
 
 function ReviewDetailSheet({ session, onClose }) {
   useHideMobileHeader(true);
+  const mobile = useIsMobile();
+  const desktop = !mobile && !Capacitor.isNativePlatform();
   const { isPaid, loading: entLoading, error: entError, balance } = useTokenBalance();
   const locked = !entLoading && !entError && balance !== null && !isPaid;
   const [detail, setDetail] = useState(null);
@@ -219,7 +223,7 @@ function ReviewDetailSheet({ session, onClose }) {
           aria-label="Close review"
         ><X size={16} /></button>
       </div>
-      <div className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
+      <div className={`flex-1 px-4 py-6 ${desktop ? 'max-w-7xl' : 'max-w-2xl'} mx-auto w-full`}>
         {loading && (
           <div role="status" className="flex items-center justify-center gap-3 py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
@@ -239,7 +243,11 @@ function ReviewDetailSheet({ session, onClose }) {
             {band && <p className="text-sm font-bold text-[#7A5A18]">{band.label} · {avg.toFixed(1)}/10</p>}
             {hasTapeKeys ? (
               <>
-                <TapeReviewNotes review={notes} />
+                {desktop ? <DesktopTapeReport review={notes} headlineScore={avg} band={band}
+                  renderDna={renderDesktopDna}
+                  sessionId={detail.id || session.id} createdAt={detail.created_at || session.created_at}
+                  role={detail.role_played || session.role_played} scoreHistory={getScoreHistory()}
+                  onShare={handleShare} sharing={sharing} /> : <TapeReviewNotes review={notes} />}
                 {/* Old tone-only responses have no verdict card to host chips. */}
                 {!feedback.verdict && tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">{tags.map((tag, i) => (
@@ -274,7 +282,7 @@ function ReviewDetailSheet({ session, onClose }) {
             )}
             {(feedback?.verdict || tags.length > 0) && (
               <>
-                <div className="flex gap-2">
+                {(!desktop || !hasTapeKeys) && <div className="flex gap-2">
                   {['story', 'square'].map((format) => (
                     <button key={format} type="button" disabled={sharing}
                       onClick={() => handleShare(format)}
@@ -285,7 +293,7 @@ function ReviewDetailSheet({ session, onClose }) {
                       {sharing ? 'Preparing your card…' : format === 'story' ? 'Share to Story' : 'Square post'}
                     </button>
                   ))}
-                </div>
+                </div>}
                 {shareError && <p role="alert" className="text-sm text-[#b91c1c]">{shareError}</p>}
                 <TapeReviewShareCard ref={shareRef} verdict={feedback.verdict} tags={tags} band={band} avg={avg} />
                 <TapeReviewShareCardStory ref={shareStoryRef} verdict={feedback.verdict} tags={tags} band={band} avg={avg} />

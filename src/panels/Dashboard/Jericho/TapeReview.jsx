@@ -14,6 +14,8 @@ import {
 import { reviewTape, clearTapeReview, resumeAnalysisJob, recoverLatestReview, clearCompare, clearReviewRecording, consumeRecordingNavigation, pendingJobMatchesRecording, REVIEW_RECOVERY_TIMEOUT_MS } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeReviewNotes from './TapeReviewNotes';
+import DesktopTapeReport from './DesktopTapeReport';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import { TECH_SCORES, DNA } from './reviewResultFields';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
@@ -218,13 +220,15 @@ function NotificationsNudge() {
 }
 
 export default function TapeReview({ firstReview = false, onUpgrade, onExitFirstReview }) {
+  const isMobile = useIsMobile();
+  const desktopReport = !isMobile && !Capacitor.isNativePlatform();
   // Apple 5.1.1(i) — the analyzer pipes video frames + audio through Claude /
   // Whisper. Gate here too: on mobile this screen mounts standalone (not inside
   // the Jericho panel that already gates), so without this the consent prompt
   // would be skipped and the API would hard-403.
   useAIGate();
   const dispatch = useDispatch();
-  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording } = useSelector((s) => s.jericho);
+  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl } = useSelector((s) => s.jericho);
   const hasAiConsent = useSelector((s) => !!s.auth?.user?.ai_consent_accepted_at);
   const [checkingRecovery, setCheckingRecovery] = useState(() => !(tapeReviewLoading || tapeReviewResult || compareLoading || compareResult));
   // Full-read gate: Premium (unlimited) sees the complete casting read; free
@@ -756,6 +760,35 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     }
     const newRecords = recordsRef.current.key === resultKey ? recordsRef.current.records : [];
     const scoreHistory = recordsRef.current.key === resultKey ? (recordsRef.current.history || getScoreHistory()) : getScoreHistory();
+
+    // Additive Ring 3 presentation. Native (including tablets) retains the
+    // original result JSX below. Pass only the already-trimmed read to desktop.
+    if (desktopReport) {
+      const band = heroAvg != null ? gradeBand(heroAvg) : null;
+      return <DesktopTapeReport
+        renderDna={values => renderDesktopDna(values, firstName)}
+        key={resultKey} review={r} headlineScore={heroAvg} band={band} firstName={firstName}
+        file={file} playbackUrl={tapeReviewPlaybackUrl} role={role || recording?.role} sides={sides} scoreHistory={scoreHistory}
+        sessionId={raw._session_id} duration={raw._meta?.duration_s}
+        onReset={reset} onShare={handleShare} sharing={sharing}
+        onNextTake={firstReview ? undefined : startNextTakeMission}
+        onCompare={firstReview ? undefined : () => setMode('compare')}
+        onSlate={window.__dstSlateHost ? () => {
+          trackEvent('scene_coach_open');
+          window.dispatchEvent(new CustomEvent('drst-open-slate', { detail: { review: {
+            band: band?.label, verdict: r.verdict || '',
+            adjustments: adjustments.slice(0, 3).map((a) => typeof a === 'string' ? a : a?.text || a?.note || ''),
+          } } }));
+        } : undefined}
+        footer={firstReview
+          ? <FirstReviewPaywall onUpgrade={() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_TAP); onUpgrade?.(); }} />
+          : locked ? <FullReadLocked onUpgrade={handleUpgrade} /> : null}
+      >
+        {showTutorial && <TapeAnalyzerTutorial onClose={() => setShowTutorial(false)} />}
+        <TapeReviewShareCard ref={shareRef} verdict={r.verdict} tags={tags} band={band} avg={heroAvg} />
+        <TapeReviewShareCardStory ref={shareStoryRef} verdict={r.verdict} tags={tags} band={band} avg={heroAvg} />
+      </DesktopTapeReport>;
+    }
 
     return (
       <div className="space-y-4 sm:space-y-5">
