@@ -3,6 +3,8 @@
  * Shows performance DNA, coaching insights, evolution timeline, and session history.
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
+import DesktopPerformanceDNA from './DesktopPerformanceDNA';
+import DesktopDNAOverview from './DesktopDNAOverview';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -19,6 +21,10 @@ import {
 } from '../../../redux/features/jericho/jerichoSlice';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import TapeReview from './TapeReview';
+import DesktopTapeReport from './DesktopTapeReport';
+import { getScoreHistory } from '../../../utils/personalRecords';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import { Capacitor } from '@capacitor/core';
 import TapeReviewNotes from './TapeReviewNotes';
 import TapeReviewShareCard, { TapeReviewShareCardStory } from './TapeReviewShareCard';
 import { TECH_SCORES } from './reviewResultFields';
@@ -33,6 +39,8 @@ import { goUpgrade } from '../../../utils/goUpgrade';
 import { Lock } from 'lucide-react';
 
 // ─── Performance DNA Metrics ───────────────────────────────────────────
+
+const renderDesktopDna = values => <DesktopPerformanceDNA dna={values} />;
 
 const DNA_METRICS = [
   { key: 'emotional_range', label: 'Emotional Range', icon: Heart, color: '#D4A85F' },
@@ -75,6 +83,8 @@ const TAP_STYLE = { touchAction: 'manipulation', WebkitTapHighlightColor: 'trans
 
 function ReviewDetailSheet({ session, onClose }) {
   useHideMobileHeader(true);
+  const mobile = useIsMobile();
+  const desktop = !mobile && !Capacitor.isNativePlatform();
   const { isPaid, loading: entLoading, error: entError, balance } = useTokenBalance();
   const locked = !entLoading && !entError && balance !== null && !isPaid;
   const [detail, setDetail] = useState(null);
@@ -215,7 +225,7 @@ function ReviewDetailSheet({ session, onClose }) {
           aria-label="Close review"
         ><X size={16} /></button>
       </div>
-      <div className="flex-1 px-4 py-6 max-w-2xl mx-auto w-full">
+      <div className={`flex-1 px-4 py-6 ${desktop ? 'max-w-7xl' : 'max-w-2xl'} mx-auto w-full`}>
         {loading && (
           <div role="status" className="flex items-center justify-center gap-3 py-20">
             <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
@@ -235,7 +245,11 @@ function ReviewDetailSheet({ session, onClose }) {
             {band && <p className="text-sm font-bold text-[#7A5A18]">{band.label} · {avg.toFixed(1)}/10</p>}
             {hasTapeKeys ? (
               <>
-                <TapeReviewNotes review={notes} />
+                {desktop ? <DesktopTapeReport review={notes} headlineScore={avg} band={band}
+                  renderDna={renderDesktopDna}
+                  sessionId={detail.id || session.id} createdAt={detail.created_at || session.created_at}
+                  role={detail.role_played || session.role_played} scoreHistory={getScoreHistory()}
+                  onShare={handleShare} sharing={sharing} /> : <TapeReviewNotes review={notes} />}
                 {/* Old tone-only responses have no verdict card to host chips. */}
                 {!feedback.verdict && tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">{tags.map((tag, i) => (
@@ -270,7 +284,7 @@ function ReviewDetailSheet({ session, onClose }) {
             )}
             {(feedback?.verdict || tags.length > 0) && (
               <>
-                <div className="flex gap-2">
+                {(!desktop || !hasTapeKeys) && <div className="flex gap-2">
                   {['story', 'square'].map((format) => (
                     <button key={format} type="button" disabled={sharing}
                       onClick={() => handleShare(format)}
@@ -281,7 +295,7 @@ function ReviewDetailSheet({ session, onClose }) {
                       {sharing ? 'Preparing your card…' : format === 'story' ? 'Share to Story' : 'Square post'}
                     </button>
                   ))}
-                </div>
+                </div>}
                 {shareError && <p role="alert" className="text-sm text-[#b91c1c]">{shareError}</p>}
                 <TapeReviewShareCard ref={shareRef} verdict={feedback.verdict} tags={tags} band={band} avg={avg} />
                 <TapeReviewShareCardStory ref={shareStoryRef} verdict={feedback.verdict} tags={tags} band={band} avg={avg} />
@@ -396,6 +410,8 @@ function DNABars({ dna = {} }) {
 // ─── Main Component ────────────────────────────────────────────────────
 
 export default function JerichoDashboard() {
+  const isMobile = useIsMobile();
+  const desktopDNA = !isMobile && !Capacitor.isNativePlatform();
   // Apple Guideline 5.1.1(i) — affirmative AI consent required before
   // we fetch the actor-memory profile (which the BE then mixes into
   // every AI prompt).
@@ -655,6 +671,7 @@ export default function JerichoDashboard() {
                 )}
 
                 {/* Performance DNA */}
+                {desktopDNA ? <DesktopDNAOverview /> : (
                 <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                   <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
                     <Zap size={16} className="text-[#7A5A18]" /> Performance DNA
@@ -667,6 +684,7 @@ export default function JerichoDashboard() {
                     <DNABars dna={dna} />
                   </div>
                 </div>
+                )}
 
                 {/* Strengths & Growth Areas */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

@@ -1,0 +1,29 @@
+.noir-dna { background: #141210; color: #f5eddc; border: 1px solid rgba(245,237,220,.12); border-radius: 12px; padding: 24px; font: var(--type-sm, 13px)/1.6 'Space Grotesk', sans-serif; min-width: 0; }
+.noir-dna h3 { font: 400 28px/1.2 'Instrument Serif', serif; margin: 0 0 8px; }
+.nd-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.noir-dna p { margin: 0; color: #a69c89; }
+.noir-dna .nd-eyebrow { font: 10px/1.6 'JetBrains Mono', monospace; letter-spacing: .06em; margin-bottom: 12px; }
+.noir-dna button { border: 1px solid rgba(245,237,220,.16); border-radius: 7px; color: #f5eddc; background: #141210; padding: 8px 10px; font-size: var(--type-xs, 12px); cursor: pointer; }
+.noir-dna button[aria-pressed="true"] { color: #d4a85f; border-color: #d4a85f; }
+.noir-dna button:disabled { opacity: .45; cursor: default; }
+.noir-dna button:focus-visible { outline: 2px solid #d4a85f; outline-offset: 3px; }
+.nd-controls { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0; }
+.nd-chart { width: 100%; max-width: 540px; display: block; margin: 0 auto 20px; overflow: visible; }
+.nd-grid { fill: none; stroke: rgba(245,237,220,.15); stroke-width: 1; }
+.nd-current { stroke: #d4a85f; stroke-width: 2; fill: rgba(212,168,95,.13); }
+.nd-current circle { fill: #d4a85f; stroke: #141210; stroke-width: 1; }
+.nd-average { stroke: #a69c89; stroke-width: 1.5; stroke-dasharray: 4 4; fill: none; }
+.nd-average circle { fill: #a69c89; stroke-dasharray: none; }
+.nd-vertex { font: 10px 'Space Grotesk', sans-serif; fill: #a69c89; }
+.nd-number { fill: #f5eddc; font: 13px 'JetBrains Mono', monospace; }
+.nd-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; font-size: var(--type-xs, 12px); }
+.nd-legend span:first-child { color: #d4a85f; }
+.noir-dna .nd-footnote { font-size: var(--type-xs, 12px); margin-top: 12px; }
+.nd-table-wrap { overflow: auto; margin: 22px 0; }
+.noir-dna table { border-collapse: collapse; width: 100%; text-align: left; }
+.noir-dna caption { text-align: left; color: #a69c89; padding-bottom: 12px; }
+.noir-dna :is(th,td) { border-bottom: 1px solid rgba(245,237,220,.12); padding: 12px 8px; }
+.noir-dna th { font-weight: 400; color: #a69c89; }
+.noir-dna td { font: 12px 'JetBrains Mono', monospace; }
+.nd-status { padding: 12px 0; }
+@media (prefers-reduced-motion: reduce) { .noir-dna * { animation: none !important; transition: none !important; } }

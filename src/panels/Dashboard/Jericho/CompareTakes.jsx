@@ -14,6 +14,9 @@ import {
 import { compareTakes, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
 import { goUpgrade } from '../../../utils/goUpgrade';
 import { tapSelect, cheer, warn } from '../../../utils/haptics';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import { Capacitor } from '@capacitor/core';
+import DesktopCompareMatrix from './DesktopCompareMatrix';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 const GOLD = '#D4A85F';
@@ -44,6 +47,8 @@ function ScoreBar100({ value, gold }) {
 }
 
 export default function CompareTakes({ seed = null }) {
+  const isMobile = useIsMobile();
+  const desktopMatrix = !isMobile && !Capacitor.isNativePlatform();
   const dispatch = useDispatch();
   const { compareLoading, compareResult, compareError, uploadProgress } = useSelector((s) => s.jericho);
   // Full-notes gate: Premium unlocks each take's deep breakdown; free users keep
@@ -192,6 +197,9 @@ export default function CompareTakes({ seed = null }) {
         </div>
       );
     }
+
+    if (desktopMatrix) return <DesktopCompareMatrix result={r} files={files} role={role}
+      locked={notesLocked} hideDetails={entitlementLoading || notesLocked || (!entitlementError && tokenBalance === null)} onUpgrade={goPremium} onReset={reset} />;
 
     return (
       <div className="space-y-4 sm:space-y-5">

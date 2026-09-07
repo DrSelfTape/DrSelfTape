@@ -132,6 +132,7 @@ async function resolveAnalysis(payload, { signal, kind, recordingId, idempotency
 // originating thunks instead of duplicating it.
 function applyReviewResult(state, result) {
   state.tapeReviewResult = result;
+  state.tapeReviewPlaybackUrl = state.reviewRecording?.playbackUrl || null;
   state.reviewRecording = null;
   // Kind-tagged (truthy) so the Review tab lands in the matching mode
   // when the user returns via the notes-ready dot — a plain boolean
@@ -157,6 +158,7 @@ function applyCompareResult(state, result) {
 // re-fetch the balance for nothing on each cold start.
 function applyRecoveredReview(state, result) {
   state.tapeReviewResult = result;
+  state.tapeReviewPlaybackUrl = state.reviewRecording?.playbackUrl || null;
   state.reviewRecording = null;
   state.notesReady = 'review';
 }
@@ -567,6 +569,7 @@ const jerichoSlice = createSlice({
     tapeReviewResult: null,
     tapeReviewError: null,
     reviewRecording: null,
+    tapeReviewPlaybackUrl: null,
     compareLoading: false,
     compareResult: null,
     compareError: null,
@@ -602,15 +605,19 @@ const jerichoSlice = createSlice({
     /** Reset the tape-review result (e.g. to analyze another take) */
     clearTapeReview: (state) => {
       state.tapeReviewResult = null;
+      state.tapeReviewPlaybackUrl = null;
       state.tapeReviewError = null;
       state.reviewRecording = null;
     },
     selectReviewRecording: (state, action) => {
       if (state.tapeReviewLoading || state.compareLoading) return;
-      // Keep only display context and the server id, never a URL/full review.
+      state.tapeReviewPlaybackUrl = null;
+      // Playback is display-only, from the owned library row. Analysis still
+      // sends only the server id; never use this URL to fetch/charge a review.
       const previous = state.reviewRecording;
       state.reviewRecording = {
         id: action.payload.id, title: action.payload.title, role: action.payload.role_name || '',
+        playbackUrl: action.payload.video_url || null,
         idempotencyKey: previous?.id === action.payload.id ? previous.idempotencyKey : null,
         navigationPending: true,
       };

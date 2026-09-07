@@ -71,6 +71,7 @@ export async function startHistoryHarness(port = 0) {
         window.mountHistory();`,
     },
     bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
+    loader: { '.css': 'empty' },
     plugins: [{
       name: 'history-services',
       setup(builder) {
