@@ -42,6 +42,7 @@ export default function DesktopTapeReport({ review, headlineScore, band, firstNa
   const adjustments = Array.isArray(review.adjustments) ? review.adjustments : [];
   const focus = review.the_one_thing || noteText(adjustments[0]);
   const title = role || metadata?.role_played || 'Your take';
+  const canShare = Boolean(review.verdict || (Array.isArray(review.tone_tags) && review.tone_tags.length > 0));
 
   return (
     <article className="noir-review" aria-label="Tape review report">
@@ -55,8 +56,8 @@ export default function DesktopTapeReport({ review, headlineScore, band, firstNa
         </div>
         <div className="nr-actions">
           {onReset && <button type="button" onClick={onReset}>Re-run review</button>}
-          <button type="button" onClick={() => onShare('story')} disabled={sharing || !review.verdict}>{sharing ? 'Preparing…' : 'Share to Story'}</button>
-          <button type="button" onClick={() => onShare('square')} disabled={sharing || !review.verdict}>Square post</button>
+          <button type="button" onClick={() => onShare('story')} disabled={sharing || !canShare}>{sharing ? 'Preparing…' : 'Share to Story'}</button>
+          <button type="button" onClick={() => onShare('square')} disabled={sharing || !canShare}>Square post</button>
         </div>
       </header>
 

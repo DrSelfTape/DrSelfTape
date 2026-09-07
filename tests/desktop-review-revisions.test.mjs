@@ -34,6 +34,22 @@ test('library playback reaches the report player without a local File', () => {
   assert.ok(render(current.TapeReview).includes('src="https://media.example.test/owned.mp4"'));
 });
 
+test('desktop sharing accepts legacy tone tags and still blocks empty or busy reviews', () => {
+  setupReviewRender();
+  for (const [review, sharing, disabled] of [
+    [{ tone_tags: ['Grounded'] }, false, false],
+    [{ verdict: 'A thought' }, false, false],
+    [{ tone_tags: [] }, false, true],
+    [{}, false, true],
+    [{ tone_tags: ['Grounded'] }, true, true],
+  ]) {
+    const html = render(current.DesktopTapeReport, { review, sharing, onShare: () => {} });
+    const buttons = [...html.matchAll(/<button\b([^>]*)>(.*?)<\/button>/g)];
+    assert.equal(buttons.length, 2);
+    for (const [, attributes] of buttons) assert.equal(attributes.includes('disabled=""'), disabled);
+  }
+});
+
 test('desktop styles cannot recolor console siblings and cap mounted motion', () => {
   for (const name of ['desktopReview', 'desktopCompare']) {
     const css = readFileSync(new URL(`../src/panels/Dashboard/Jericho/${name}.css`, import.meta.url), 'utf8');

@@ -74,6 +74,35 @@ btest('desktop history opens the fetched dated report and shares its server-gate
   } finally { await page.setViewport({ width: 375, height: 667, hasTouch: true }); }
 });
 
+btest('desktop legacy tone-only history enables and captures both share formats', async () => {
+  await fresh(true, 1440); await open();
+  await resolve({ tone_tags: ['Grounded'] });
+  assert.equal(await page.$$eval('[role="dialog"] .noir-review', nodes => nodes.length), 1);
+  assert.deepEqual(await page.$$eval('.noir-review .nr-actions button', buttons =>
+    buttons.map(button => ({ label: button.textContent, disabled: button.disabled }))), [
+    { label: 'Share to Story', disabled: false },
+    { label: 'Square post', disabled: false },
+  ]);
+  for (const [index, label, height, filename] of [
+    [0, 'Share to Story', 1920, 'my-tape-review-story.png'],
+    [1, 'Square post', 1080, 'my-tape-review.png'],
+  ]) {
+    await click(label);
+    await page.waitForFunction(count => window.__saves.length === count, {}, index + 1);
+    const capture = await page.evaluate(i => window.__captures[i], index);
+    assert.deepEqual(capture.dimensions, { width: 1080, height, scale: 1 });
+    assert.match(capture.text, /Grounded/);
+    assert.match(capture.text, /Casting-grade notes on my self-tape\./);
+    assert.doesNotMatch(capture.text, /CACHED|undefined|NaN/);
+    assert.equal(await page.evaluate(i => window.__saves[i].filename, index), filename);
+  }
+  assert.equal(await page.evaluate(() => window.__captures.length), 2);
+  assert.deepEqual(await page.evaluate(() => window.__events.map(event => event.props)), [
+    { format: 'story', source: 'history' }, { format: 'square', source: 'history' },
+  ]);
+  assert.deepEqual(errors, []);
+});
+
 for (const width of [375, 1440]) {
 btest(`history row renders the fetched ${width === 375 ? 'mobile sheet' : 'desktop report'} after the job expired (${width}px)`, async () => {
   await fresh(true, width); await open();
