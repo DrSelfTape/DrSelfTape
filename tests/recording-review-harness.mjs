@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const require = createRequire(import.meta.url);
 const root = fileURLToPath(new URL('../', import.meta.url));
 
-export async function loadRecordingReview() {
+export async function loadRecordingReview({ realTokenBalance = false } = {}) {
   const mocks = {
     'react-redux': `export const useSelector = fn => fn(globalThis.__reviewStore.getState());
       export const useDispatch = () => globalThis.__reviewStore.dispatch;`,
@@ -41,9 +41,12 @@ export async function loadRecordingReview() {
     'AnnouncementBanner.jsx': 'export default function AnnouncementBanner() { return null; }',
     'ConsoleCommandPalette.jsx': 'export default function ConsoleCommandPalette() { return null; }',
   };
+  if (realTokenBalance) delete mocks.useTokenBalance;
   const result = await build({
     stdin: { resolveDir: root, contents: `
       export * from './src/redux/features/jericho/jerichoSlice.js';
+      export { usePersonalRecords } from './src/hooks/usePersonalRecords.js';
+      export { resetTokenCache } from './src/hooks/useTokenBalance.js';
       export { default as reducer } from './src/redux/features/jericho/jerichoSlice.js';
       export { default as TapeReview } from './src/panels/Dashboard/Jericho/TapeReview.jsx';
       export { TapeCard, default as SelfTapes } from './src/panels/Dashboard/SelfTapes/index.jsx';
@@ -54,7 +57,7 @@ export async function loadRecordingReview() {
     define: { 'import.meta.env': '{}' },
     plugins: [{ name: 'recording-review-services', setup(builder) {
       builder.onResolve({ filter: /.*/ }, ({ path, importer }) => {
-        if (path === 'react' && /(?:TapeReview\.jsx|DashboardLayout\.jsx|SelfTapes\/index\.jsx|useIsMobile\.js)$/.test(importer)) {
+        if (path === 'react' && /(?:TapeReview\.jsx|DashboardLayout\.jsx|SelfTapes\/index\.jsx|useIsMobile\.js|usePersonalRecords\.js|useTokenBalance\.js)$/.test(importer)) {
           return { path: 'hooks', namespace: 'mock' };
         }
         if (path === 'react') return { path, external: true };
@@ -67,6 +70,7 @@ export async function loadRecordingReview() {
         export const useState = (...a) => (globalThis.__hooks || React).useState(...a);
         export const useRef = (...a) => (globalThis.__hooks || React).useRef(...a);
         export const useEffect = (...a) => (globalThis.__hooks || React).useEffect(...a);
+        export const useCallback = (...a) => (globalThis.__hooks || React).useCallback(...a);
       ` : mocks[path], loader: 'js' }));
     } }],
   });
@@ -88,6 +92,11 @@ export function mountComponent(Component, props = {}) {
       return [slots[i], value => { slots[i] = typeof value === 'function' ? value(slots[i]) : value; }];
     },
     useRef(initial) { const [ref] = hooks.useState(() => ({ current: initial })); return ref; },
+    useCallback(fn, deps) {
+      const i = cursor++;
+      if (!slots[i] || deps.some((v, j) => v !== slots[i].deps[j])) slots[i] = { fn, deps };
+      return slots[i].fn;
+    },
     useEffect(fn, deps) {
       const i = cursor++;
       if (!slots[i] || !deps || deps.some((v, j) => v !== slots[i][j])) {

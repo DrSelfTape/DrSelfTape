@@ -93,7 +93,7 @@ test('selected recording resumes a pending job and consumes selection on complet
   const mounted = mountComponent(TapeReview);
   mounted.render(); mounted.flush();
   await new Promise(resolve => setTimeout(resolve, 2600));
-  assert.deepEqual(store.getState().jericho.tapeReviewResult, notes);
+  assert.deepEqual(store.getState().jericho.tapeReviewResult, { ...notes, _meta: { job_id: 12 } });
   assert.equal(store.getState().jericho.reviewRecording, null);
   assert.equal(store.getState().jericho.tapeReviewPlaybackUrl, recording.video_url);
   assert.equal(requests.length, 0);
@@ -402,7 +402,7 @@ test('completed async replay unwraps the server-trimmed notes without polling', 
   globalThis.__reviewHttp.post = async () => ({ data: { data: { job_id: 12, status: 'done', result: notes } } });
   const result = await store.dispatch(reviewTape({ recordingId: 42, idempotencyKey: 'same-action' }));
   assert.ok(reviewTape.fulfilled.match(result));
-  assert.deepEqual(result.payload, notes);
+  assert.deepEqual(result.payload, { ...notes, _meta: { job_id: 12 } });
   assert.ok(!('performance_dna' in store.getState().jericho.tapeReviewResult));
   assert.ok(removed.includes('dst_pending_analysis'));
 });
@@ -415,7 +415,7 @@ test('pending async recording uses existing polling and restores the final trimm
   };
   const result = await store.dispatch(reviewTape({ recordingId: 42, idempotencyKey: 'pending-action' }));
   assert.ok(reviewTape.fulfilled.match(result));
-  assert.deepEqual(result.payload, notes);
+  assert.deepEqual(result.payload, { ...notes, _meta: { job_id: 12 } });
 });
 
 test('network errors and a starting duplicate preserve the action key; definitive errors retire it', async () => {

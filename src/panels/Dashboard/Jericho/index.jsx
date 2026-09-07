@@ -22,7 +22,7 @@ import {
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import TapeReview from './TapeReview';
 import DesktopTapeReport from './DesktopTapeReport';
-import { getScoreHistory } from '../../../utils/personalRecords';
+import { usePersonalRecords } from '../../../hooks/usePersonalRecords';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Capacitor } from '@capacitor/core';
 import TapeReviewNotes from './TapeReviewNotes';
@@ -88,6 +88,7 @@ function ReviewDetailSheet({ session, onClose }) {
   const { isPaid, loading: entLoading, error: entError, balance } = useTokenBalance();
   const locked = !entLoading && !entError && balance !== null && !isPaid;
   const [detail, setDetail] = useState(null);
+  const personalRecords = usePersonalRecords({ enabled: desktop && !!detail, allowDimensions: isPaid });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [attempt, setAttempt] = useState(0);
@@ -248,7 +249,7 @@ function ReviewDetailSheet({ session, onClose }) {
                 {desktop ? <DesktopTapeReport review={notes} headlineScore={avg} band={band}
                   renderDna={renderDesktopDna}
                   sessionId={detail.id || session.id} createdAt={detail.created_at || session.created_at}
-                  role={detail.role_played || session.role_played} scoreHistory={getScoreHistory()}
+                  role={detail.role_played || session.role_played} scoreHistory={personalRecords?.history || []}
                   onShare={handleShare} sharing={sharing} /> : <TapeReviewNotes review={notes} />}
                 {/* Old tone-only responses have no verdict card to host chips. */}
                 {!feedback.verdict && tags.length > 0 && (
