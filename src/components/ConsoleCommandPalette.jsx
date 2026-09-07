@@ -38,8 +38,10 @@ export default function ConsoleCommandPalette() {
     setOpen(false); setQuery(''); setCursor(0);
     const previous = restoreFocusRef.current;
     restoreFocusRef.current = null;
-    if (previous && previous.isConnected && typeof previous.focus === 'function') {
-      requestAnimationFrame(() => previous.focus());
+    if (previous && typeof previous.focus === 'function') {
+      // Checked inside the frame: `go()` closes and then navigates, and the
+      // element that had focus may unmount before the frame fires.
+      requestAnimationFrame(() => { if (previous.isConnected) previous.focus(); });
     }
   }, []);
 

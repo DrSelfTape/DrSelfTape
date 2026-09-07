@@ -33,7 +33,7 @@ export default function RoleSwitcher() {
       // the only one any surface has seen, and it works inside Capacitor where
       // navigate() is a no-op (reference_mobile_navigation). redux-persist
       // writes on a timer — flush first or a fast reload rehydrates the OLD role.
-      await persistor.flush();
+      try { await persistor.flush(); } catch { /* storage unavailable — the reload still carries the in-memory role via the token */ }
       window.location.replace(getFirstRouteByRole(target));
     } catch (error) {
       toast.error(typeof error === 'string' ? error : error?.message || 'Failed to switch role. Please try again.');
