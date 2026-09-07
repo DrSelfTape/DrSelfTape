@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Loader2, Users, Users2 } from 'lucide-react';
 import ReaderListItem from './components/ReaderListItem';
 import { fetchMatches } from '../../../redux/features/readers/readersMatchSlice';
@@ -9,6 +11,7 @@ import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 const GreenRoom = ({ onSelectMatch } = {}) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const { matches, matchesLoading } = useSelector(
     (state) => state.readersMatch
@@ -50,11 +53,15 @@ const GreenRoom = ({ onSelectMatch } = {}) => {
                 20-cap deck). One surface owns supply numbers now. */}
 
             <button
-              onClick={() => navigate('/dashboard/find-a-reader')}
+              // V-03: navigate() no-ops inside the Capacitor shell, so this CTA
+              // was dead on a phone; drst-navigate opens the Readers panel there.
+              onClick={() => (isMobile || Capacitor.isNativePlatform())
+                ? window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'find-a-reader' } }))
+                : navigate('/dashboard/find-a-reader')}
               className="aurora-mono px-8 py-3 rounded-full text-white transition-all"
               style={{
                 background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
-                fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+                fontSize: 'var(--type-sm)', letterSpacing: '0.12em', textTransform: 'uppercase',
                 boxShadow: 'var(--aurora-shadow-coral)',
               }}
             >
