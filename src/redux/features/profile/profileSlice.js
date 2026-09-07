@@ -57,7 +57,7 @@ const profileSlice = createSlice({
       // A scoped onboarding save suppresses its terminal action after logout.
       // Clear the old actor's data and both in-flight flags at auth boundaries.
       .addCase('auth/logoutUser', () => ({ ...initialState }))
-      .addCase('auth/loginUser/fulfilled', () => ({ ...initialState }))
+      .addCase('auth/login/fulfilled', () => ({ ...initialState }))
       // Fetch profile
       .addCase(fetchProfileThunk.pending, (state) => {
         state.loading = true;

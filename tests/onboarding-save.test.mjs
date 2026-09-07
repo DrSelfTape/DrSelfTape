@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
 import {before, test} from 'node:test';
 import {setTimeout as delay} from 'node:timers/promises';
 import {createRequire} from 'node:module';
@@ -31,6 +32,13 @@ before(async () => {
   bundle = result.outputFiles[0].text;
 });
 
+// The login boundary is pinned to the REAL thunk prefix in authSlice.js (review #5 catch:
+// the reducer and this test both used an invented 'auth/loginUser/fulfilled' string).
+const AUTH_SLICE_SRC = readFileSync(new URL('../src/redux/features/auth/authSlice.js', import.meta.url), 'utf8');
+const LOGIN_PREFIX = AUTH_SLICE_SRC.match(/export const loginUser = createAsyncThunk\(\s*'([^']+)'/)[1];
+const LOGIN_FULFILLED = `${LOGIN_PREFIX}/fulfilled`;
+assert.equal(LOGIN_FULFILLED, 'auth/login/fulfilled');
+
 function harness(t) {
   const values = new Map();
   const storage = {getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value), removeItem: key => values.delete(key)};
@@ -47,7 +55,7 @@ function harness(t) {
     profile: api.profile,
     auth: (state = {user: {id: 42, token: 'expired', refresh: 'refresh-a'}}, action) => {
       if (action.type === 'auth/logoutUser') return {user: null};
-      if (action.type === 'auth/loginUser/fulfilled') return {user: action.payload};
+      if (action.type === LOGIN_FULFILLED) return {user: action.payload};
       if (action.type === 'auth/setTokens') return {user: {...state.user, token: action.payload.access}};
       return state;
     },
@@ -86,7 +94,7 @@ test('real interceptor: a nine-second successful refresh acknowledges the save w
 
 function switchActor(h) {
   h.store.dispatch({type: 'auth/logoutUser'});
-  h.store.dispatch({type: 'auth/loginUser/fulfilled', payload: {id: 99, token: 'actor-b', refresh: 'refresh-b'}});
+  h.store.dispatch({type: LOGIN_FULFILLED, payload: {id: 99, token: 'actor-b', refresh: 'refresh-b'}});
   h.setAuthToken('actor-b');
 }
 
@@ -184,7 +192,7 @@ test('concurrent 401s for the same actor still share one refresh and both retry'
   assert.equal(h.actions.includes('auth/logoutUser'), false);
 });
 
-for (const boundary of ['auth/logoutUser', 'auth/loginUser/fulfilled']) {
+for (const boundary of ['auth/logoutUser', LOGIN_FULFILLED]) {
   test(`real profile reducer clears both pending flags and old profile on ${boundary}`, t => {
     const h = harness(t);
     h.store.dispatch(h.fetchProfileThunk.fulfilled({id: 42}, 'fetch'));
