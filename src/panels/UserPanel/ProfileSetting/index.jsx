@@ -2,6 +2,7 @@
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
+import RoleSwitcher from './RoleSwitcher';
 
 // Local Imports
 import {
@@ -704,6 +705,7 @@ const Profile = () => {
           onComplete={onCropDone}
         />
       )}
+      <RoleSwitcher />
       {/* Section 1: Personal Information */}
       <div className='card-section m-[10px]'>
         <h2 className='text-xl md:2xl font-semibold mb-6'>

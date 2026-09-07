@@ -2,6 +2,7 @@
  * Jericho — Self-Evolving AI Coach
  * Redux slice for actor memory, session logs, insights, and evolution metrics.
  */
+import { guardUser } from './userGuard';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import rawAxios from 'axios';
 import axios from '../../http';
@@ -147,6 +148,7 @@ function applyReviewResult(state, result) {
   // sent compare results back to single mode, where they were
   // unreachable (codex review catch).
   state.notesReady = 'review';
+  state.revealPending = true;
   // A token was just spent — nudge useTokenBalance past its cache so
   // every surface shows the post-charge number (codex review catch:
   // the recorder path showed the pre-charge balance until an
@@ -157,6 +159,7 @@ function applyReviewResult(state, result) {
 function applyCompareResult(state, result) {
   state.compareResult = result;
   state.notesReady = 'compare';
+  state.revealPending = false;
   try { window.dispatchEvent(new Event('dst-tokens-changed')); } catch { /* SSR/noop */ }
 }
 
@@ -169,6 +172,7 @@ function applyRecoveredReview(state, result) {
   state.tapeReviewPlaybackUrl = state.reviewRecording?.playbackUrl || null;
   state.reviewRecording = null;
   state.notesReady = 'review';
+  state.revealPending = false;
 }
 
 // Defense in depth (BUG 3): the BE can return 200 with an empty/near-empty body
@@ -311,7 +315,7 @@ async function captureUploadFailure(feature, err, startedAt, loaded, total, time
 
 export const reviewTape = createAsyncThunk(
   'jericho/reviewTape',
-  async ({ video, recordingId, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch, getState }) => {
+  guardUser(async ({ video, recordingId, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch, getState }) => {
     if (recordingId) {
       const selected = getState().jericho.reviewRecording;
       const savedKey = selected?.id === recordingId ? selected.idempotencyKey : null;
@@ -419,13 +423,13 @@ export const reviewTape = createAsyncThunk(
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
       return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: shouldReuseKey(err) });
     }
-  }
+  })
 );
 
 /** Compare 2-4 takes of the same audition → ranked winner + why */
 export const compareTakes = createAsyncThunk(
   'jericho/compareTakes',
-  async ({ takes = [], sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
+  guardUser(async ({ takes = [], sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
     const startedAt = Date.now();
     let lastLoaded = 0, lastTotal = 0;
     try {
@@ -459,7 +463,7 @@ export const compareTakes = createAsyncThunk(
       captureUploadFailure('compare_takes_upload', err, startedAt, lastLoaded, lastTotal, 900000);
       return rejectWithValue({ message: aiErrorMessage(err, 'Take comparison failed'), reuseKey: shouldReuseKey(err) });
     }
-  }
+  })
 );
 
 /**
@@ -476,7 +480,7 @@ export const compareTakes = createAsyncThunk(
  */
 export const recoverLatestReview = createAsyncThunk(
   'jericho/recoverLatestReview',
-  async (_arg, { rejectWithValue, fulfillWithValue, signal, getState }) => {
+  guardUser(async (_arg, { rejectWithValue, fulfillWithValue, signal, getState }) => {
     try {
       const selected = getState().jericho.reviewRecording;
       const { data } = await axios.get(endPoints.latestReview, {
@@ -501,12 +505,12 @@ export const recoverLatestReview = createAsyncThunk(
       // never produce an error banner — the user did not ask for this.
       return rejectWithValue(null);
     }
-  }
+  })
 );
 
 export const resumeAnalysisJob = createAsyncThunk(
   'jericho/resumeAnalysisJob',
-  async ({ jobId, kind }, { rejectWithValue, signal }) => {
+  guardUser(async ({ jobId, kind }, { rejectWithValue, signal }) => {
     try {
       const result = await pollAnalysisJob(jobId, { signal });
       clearPendingJob(jobId);
@@ -524,7 +528,7 @@ export const resumeAnalysisJob = createAsyncThunk(
       }
       return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed'), reuseKey });
     }
-  },
+  }),
   { condition: (slot, { getState }) => pendingJobMatchesRecording(slot, getState().jericho.reviewRecording) }
 );
 
@@ -543,9 +547,8 @@ export const fetchRecentSessions = createAsyncThunk(
 
 // ─── Slice ─────────────────────────────────────────────────────────────
 
-const jerichoSlice = createSlice({
-  name: 'jericho',
-  initialState: {
+// Hoisted so the logout reducer can restore a pristine slice.
+const initialState = {
     // Actor's AI memory profile
     memory: null,
     memoryLoading: false,
@@ -589,12 +592,19 @@ const jerichoSlice = createSlice({
     // another tab). The mobile tab bar shows a "notes ready" dot on the Review
     // tab while this is set; visiting the tab clears it.
     notesReady: false,
+    // V-02: true only for a review that JUST finished (never a recovered or
+    // historical one) — drives the desktop RecapStoryCard reveal.
+    revealPending: false,
 
     // Last logged session ID (for attaching post-session feedback)
     lastSessionLogId: null,
 
     error: null,
-  },
+};
+
+const jerichoSlice = createSlice({
+  name: 'jericho',
+  initialState,
   reducers: {
     clearJerichoError: (state) => {
       state.error = null;
@@ -616,10 +626,15 @@ const jerichoSlice = createSlice({
       state.tapeReviewPlaybackUrl = null;
       state.tapeReviewError = null;
       state.reviewRecording = null;
+      state.revealPending = false;
+    },
+    dismissReveal: (state) => {
+      state.revealPending = false;
     },
     selectReviewRecording: (state, action) => {
       if (state.tapeReviewLoading || state.compareLoading) return;
       state.tapeReviewPlaybackUrl = null;
+      state.revealPending = false;
       // Playback is display-only, from the owned library row. Analysis still
       // sends only the server id; never use this URL to fetch/charge a review.
       const previous = state.reviewRecording;
@@ -655,6 +670,9 @@ const jerichoSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // V-02 review catch: the in-memory result, pending job and reveal flag
+      // must not survive into the next account on this browser.
+      .addCase('auth/logoutUser', () => ({ ...initialState }))
       // ── Actor Memory ──
       .addCase(fetchActorMemory.pending, (state) => {
         state.memoryLoading = true;
@@ -736,6 +754,7 @@ const jerichoSlice = createSlice({
         applyReviewResult(state, action.payload);
       })
       .addCase(reviewTape.rejected, (state, action) => {
+        if (action.payload?.stale) return; // completed for a user who is gone
         state.tapeReviewLoading = false;
         state.tapeReviewError = action.payload?.message || action.payload || 'Tape review failed';
         state.uploadProgress = 0;
@@ -752,6 +771,7 @@ const jerichoSlice = createSlice({
         applyCompareResult(state, action.payload);
       })
       .addCase(compareTakes.rejected, (state, action) => {
+        if (action.payload?.stale) return; // completed for a user who is gone
         state.compareLoading = false;
         state.compareError = action.payload?.message || action.payload || 'Take comparison failed';
         state.uploadProgress = 0;
@@ -795,6 +815,7 @@ const jerichoSlice = createSlice({
       .addCase(recoverLatestReview.rejected, () => {})
 
       .addCase(resumeAnalysisJob.rejected, (state, action) => {
+        if (action.payload?.stale) return; // completed for a user who is gone
         if (!pendingJobMatchesRecording(action.meta.arg, state.reviewRecording)) return;
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;
@@ -814,5 +835,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, selectReviewRecording, rememberRecordingAttempt, consumeRecordingNavigation, clearReviewRecording, clearCompare, clearNotesReady } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, selectReviewRecording, rememberRecordingAttempt, consumeRecordingNavigation, clearReviewRecording, clearCompare, clearNotesReady, dismissReveal } = jerichoSlice.actions;
 export default jerichoSlice.reducer;

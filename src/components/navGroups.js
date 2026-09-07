@@ -1,7 +1,7 @@
 import {
   Monitor, BookOpen, Target, Send, LayoutDashboard, Users2, MessageSquare,
   UserCircle, Clapperboard, Sparkles, Video, Crown, Film,
-  Brain, FileText, Trophy, Gift,
+  Brain, FileText, Trophy, Gift, Settings, Bell,
 } from 'lucide-react';
 
 /* ── Grouped desktop navigation ──
@@ -73,10 +73,30 @@ export const NAV_GROUPS = [
     ],
   },
   {
+    // V-02: the coach workspace lived in the deleted legacy side menu; coaches
+    // need a way back to it once they leave for Settings or Home.
+    key: 'coach',
+    label: 'Coaching',
+    icon: Users2,
+    roles: ['coach'],
+    items: [
+      { label: 'Collaboration', path: '/collaboration', icon: Users2 },
+    ],
+  },
+  {
     key: 'profile',
     items: [
       { label: 'My Profile', path: '/dashboard/profile', icon: UserCircle },
       { label: 'Subscription', path: '/dashboard/membership', icon: Crown },
+      // V-02: the legacy header that carried Settings and the full
+      // Notifications page is gone; the rail owns both.
+      { label: 'Notifications', path: '/notifications', icon: Bell },
+      { label: 'Settings', path: '/settings', icon: Settings },
     ],
   },
 ];
+
+/* Groups visible to a role: a group with `roles` only shows for those roles.
+ * Both consumers (Sidebar, ConsoleCommandPalette) filter through here. */
+export const navGroupsForRole = (role) =>
+  NAV_GROUPS.filter((group) => !group.roles || group.roles.includes(role));

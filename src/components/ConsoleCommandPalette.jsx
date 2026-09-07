@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NAV_GROUPS } from './navGroups';
+import { useSelector } from 'react-redux';
+import { navGroupsForRole } from './navGroups';
 
 /**
  * ⌘K command palette — the desktop jump list. Opens on Cmd/Ctrl+K or the
@@ -17,9 +18,10 @@ export default function ConsoleCommandPalette() {
   const [cursor, setCursor] = useState(0);
   const inputRef = useRef(null);
 
-  const commands = useMemo(() => NAV_GROUPS.flatMap((g) =>
+  const role = useSelector((s) => s.auth?.user?.role);
+  const commands = useMemo(() => navGroupsForRole(role).flatMap((g) =>
     g.items.map((it) => ({ ...it, group: g.label || 'Studio' }))
-  ), []);
+  ), [role]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -29,7 +31,19 @@ export default function ConsoleCommandPalette() {
     );
   }, [commands, query]);
 
-  const close = useCallback(() => { setOpen(false); setQuery(''); setCursor(0); }, []);
+  // Focus returns to the element that had it when the palette opened (a11y
+  // dialog contract; the recap card and any other dialog rely on it).
+  const restoreFocusRef = useRef(null);
+  const close = useCallback(() => {
+    setOpen(false); setQuery(''); setCursor(0);
+    const previous = restoreFocusRef.current;
+    restoreFocusRef.current = null;
+    if (previous && typeof previous.focus === 'function') {
+      // Checked inside the frame: `go()` closes and then navigates, and the
+      // element that had focus may unmount before the frame fires.
+      requestAnimationFrame(() => { if (previous.isConnected) previous.focus(); });
+    }
+  }, []);
 
   const go = useCallback((cmd) => {
     if (!cmd) return;
@@ -56,7 +70,9 @@ export default function ConsoleCommandPalette() {
   }, [open, close]);
 
   useEffect(() => {
-    if (open) requestAnimationFrame(() => inputRef.current?.focus());
+    if (!open) return;
+    restoreFocusRef.current = document.activeElement;
+    requestAnimationFrame(() => inputRef.current?.focus());
   }, [open]);
 
   useEffect(() => { setCursor(0); }, [query]);
@@ -66,6 +82,7 @@ export default function ConsoleCommandPalette() {
   return (
     <div
       onClick={close}
+      data-dst-overlay="palette"
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
         background: 'rgba(0,0,0,0.45)',

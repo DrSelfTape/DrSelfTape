@@ -1,34 +1,24 @@
 import React, { useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { sideMenuRoutes } from './sideMenuConfig';
 
+
+// V-02: the legacy side-menu config was retired with the MUI shell; the
+// first route per role is now declared here, matching the console Sidebar.
+// Any other real role (e.g. `agent`) took the actor menu's first route in the
+// old config's default branch, so it lands on /dashboard — never /login.
+const FIRST_ROUTE_BY_ROLE = {
+  admin: '/admin/dashboard',
+  actor: '/dashboard',
+  casting_director: '/dashboard',
+  coach: '/collaboration',
+};
 
 export const getFirstRouteByRole = (role) => {
   if (!role || typeof role !== 'string') {
     return '/login';
   }
-  try {
-    const routes = sideMenuRoutes(role);
-    if (routes && routes.length > 0 && routes[0]?.path) {
-      return routes[0].path;
-    }
-  } catch (error) {
-    console.warn(
-      'Error getting first route from sideMenuRoutes, using fallback:',
-      error
-    );
-  }
-
-  // Fallback routes if sideMenuRoutes fails or returns empty
-  const fallbackRoutes = {
-    admin: '/admin/dashboard',
-    actor: '/dashboard',
-    casting_director: '/dashboard',
-    coach: '/collaboration',
-  };
-
-  return fallbackRoutes[role] || '/login';
+  return FIRST_ROUTE_BY_ROLE[role] || '/dashboard';
 };
 
 export const RoleBasedRedirect = () => {

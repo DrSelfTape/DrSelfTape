@@ -519,8 +519,10 @@ input:-webkit-autofill:active {
   /* Chrome/Safari */
 }
 
+/* V-02: legacy UserPanel pages now sit on the console paper; the border
+   follows the token instead of a hard-coded MUI-era grey. */
 .border-style {
-  @apply border-[#3A3A3A];
+  border-color: var(--aurora-line, #3A3A3A);
 }
 
 .center {
@@ -830,4 +832,40 @@ button:not(:disabled):active,
   .dst-banner-in {
     animation: none !important;
   }
+}
+/* ── V-02 RecapStoryCard — the 9:16 reveal over a fresh desktop result ── */
+.dst-recap-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(6,5,3,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: dst-recap-fade 260ms ease-out both; }
+.dst-recap-card { position: relative; height: min(86vh, 720px); aspect-ratio: 9 / 16; border-radius: 28px; overflow: hidden; color: #F5EDDC; background: linear-gradient(135deg, #1A1305 0%, #3A2A0E 46%, #7A5A18 100%); box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--aurora-line-soft, rgba(245,237,220,0.08)); padding: 28px 26px 24px; display: flex; flex-direction: column; outline: none; animation: dst-recap-in 260ms cubic-bezier(0.2,0.8,0.2,1) both; }
+.dst-recap-progress { display: flex; gap: 6px; margin-bottom: 22px; }
+.dst-recap-progress span { flex: 1; height: 3px; border-radius: 2px; background: rgba(245,237,220,0.18); }
+.dst-recap-progress span.is-on { background: var(--recap-accent, var(--aurora-gold)); }
+.dst-recap-close { position: absolute; top: 14px; right: 14px; z-index: 3; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(245,237,220,0.18); background: rgba(0,0,0,0.25); color: #F5EDDC; font-size: var(--type-display, 22px); line-height: 1; cursor: pointer; }
+.dst-recap-page { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; animation: dst-recap-fade 180ms ease-out both; }
+.dst-recap-kicker { font-size: var(--type-xs, 12px); letter-spacing: 0.14em; text-transform: uppercase; color: rgba(245,237,220,0.62); margin: 0; }
+.dst-recap-title { font-size: calc(var(--type-display, 22px) * 2); line-height: 1.02; letter-spacing: -0.02em; font-weight: 800; margin: 0; color: var(--recap-accent, var(--aurora-gold)); }
+.dst-recap-score { font-size: var(--type-sm, 14px); color: rgba(245,237,220,0.7); margin: 0; }
+.dst-recap-score span { font-size: calc(var(--type-display, 22px) * 2); font-weight: 800; color: #F5EDDC; }
+.dst-recap-body { font-size: var(--type-lg, 18px); line-height: 1.35; margin: 0; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.dst-recap-list { margin: 0; padding-left: 1.1em; font-size: var(--type-base, 16px); line-height: 1.4; display: grid; gap: 10px; }
+.dst-recap-thumb { width: 84px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 12px; border: 1px solid rgba(245,237,220,0.22); background: rgba(0,0,0,0.3); }
+.dst-recap-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.dst-recap-tags span { font-size: var(--type-xs, 12px); padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(245,237,220,0.22); }
+.dst-recap-zone { position: absolute; top: 14%; bottom: 26%; width: 38%; background: transparent; border: 0; padding: 0; cursor: pointer; z-index: 2; }
+.dst-recap-zone:disabled { cursor: default; }
+.dst-recap-zone-prev { left: 0; }
+.dst-recap-zone-next { right: 0; }
+.dst-recap-foot { position: relative; z-index: 3; display: flex; flex-direction: column; gap: 14px; }
+.dst-recap-dots { display: flex; justify-content: center; gap: 8px; }
+.dst-recap-dots button { width: 8px; height: 8px; border-radius: 50%; border: 0; padding: 0; background: rgba(245,237,220,0.28); cursor: pointer; transition: transform 160ms, background 160ms; }
+.dst-recap-dots button.is-on { background: var(--recap-accent, var(--aurora-gold)); transform: scale(1.35); }
+.dst-recap-actions { display: flex; gap: 10px; }
+.dst-recap-actions button { flex: 1; height: 46px; border-radius: 14px; font-weight: 700; font-size: var(--type-base, 16px); cursor: pointer; }
+.dst-recap-share { background: transparent; color: #F5EDDC; border: 1px solid rgba(245,237,220,0.28); }
+.dst-recap-share:disabled { opacity: 0.6; cursor: default; }
+.dst-recap-primary { background: var(--recap-accent, var(--aurora-gold)); color: #1A1305; border: 0; }
+@keyframes dst-recap-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes dst-recap-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .dst-recap-backdrop, .dst-recap-card, .dst-recap-page { animation: none !important; }
+  .dst-recap-dots button { transition: none !important; }
 }

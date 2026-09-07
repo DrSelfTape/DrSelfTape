@@ -19,7 +19,6 @@ export { CustomTabPanel } from './CustomTabPanel';
 export { CreateLoader } from './CreateLoader';
 export { CustomButton } from './CustomButton';
 export { Layout } from './Layout';
-export { Header } from './Header';
 export { StatsCard } from './StatsCard';
 export { Line } from './Line';
 export { Search } from './Search';
