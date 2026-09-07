@@ -3,6 +3,8 @@
  * Shows performance DNA, coaching insights, evolution timeline, and session history.
  */
 import { useEffect, useState, useCallback, useRef } from 'react';
+import DesktopPerformanceDNA from './DesktopPerformanceDNA';
+import DesktopDNAOverview from './DesktopDNAOverview';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -38,7 +40,7 @@ import { Lock } from 'lucide-react';
 
 // ─── Performance DNA Metrics ───────────────────────────────────────────
 
-const renderDesktopDna = values => <TapeReviewNotes review={{ performance_dna: values }} />;
+const renderDesktopDna = values => <DesktopPerformanceDNA dna={values} />;
 
 const DNA_METRICS = [
   { key: 'emotional_range', label: 'Emotional Range', icon: Heart, color: '#D4A85F' },
@@ -408,6 +410,8 @@ function DNABars({ dna = {} }) {
 // ─── Main Component ────────────────────────────────────────────────────
 
 export default function JerichoDashboard() {
+  const isMobile = useIsMobile();
+  const desktopDNA = !isMobile && !Capacitor.isNativePlatform();
   // Apple Guideline 5.1.1(i) — affirmative AI consent required before
   // we fetch the actor-memory profile (which the BE then mixes into
   // every AI prompt).
@@ -667,6 +671,7 @@ export default function JerichoDashboard() {
                 )}
 
                 {/* Performance DNA */}
+                {desktopDNA ? <DesktopDNAOverview /> : (
                 <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                   <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
                     <Zap size={16} className="text-[#7A5A18]" /> Performance DNA
@@ -679,6 +684,7 @@ export default function JerichoDashboard() {
                     <DNABars dna={dna} />
                   </div>
                 </div>
+                )}
 
                 {/* Strengths & Growth Areas */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

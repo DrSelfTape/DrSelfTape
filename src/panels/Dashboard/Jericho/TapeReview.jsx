@@ -5,6 +5,7 @@
  * grounded in the in-house coaching doctrine. Powered by /ai/jericho/tape-review/.
  */
 import { useState, useRef, useEffect } from 'react';
+import DesktopPerformanceDNA from './DesktopPerformanceDNA';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTokenBalance } from '../../../hooks/useTokenBalance';
 import {
@@ -42,7 +43,7 @@ const MAX_TAPE_MB = 500; // matches the advertised cap; reject before a doomed u
 
 // Keep the renderer choice separate from the report branch so either desktop
 // feature can be reverted while the surviving view keeps its own renderer.
-const renderDesktopDna = values => <TapeReviewNotes review={{ performance_dna: values }} />;
+const renderDesktopDna = (values, firstName) => <DesktopPerformanceDNA dna={values} firstName={firstName} />;
 
 // Matches the key and TTL used in jerichoSlice's persistence helpers.
 const PENDING_JOB_KEY = 'dst_pending_analysis';
