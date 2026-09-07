@@ -20,7 +20,7 @@ import VisibilityPrompt from "../../components/Shared/VisibilityPrompt";
 import { markStep } from "../../components/Dashboard/TutorialChecklist";
 import { logoutUser, performLogout } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
-import { clearNotesReady } from "../../redux/features/jericho/jerichoSlice";
+import { clearNotesReady, consumeRecordingNavigation } from "../../redux/features/jericho/jerichoSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
 import ProfileCompleteness from "../../components/Dashboard/ProfileCompleteness";
 import DeleteAccountModal from "../../components/Dashboard/DeleteAccountModal";
@@ -3734,12 +3734,18 @@ function TopBarAvatar({ active, onClick }) {
    APP SHELL — Mobile + Desktop
    ═══════════════════════════════════════════════════ */
 export default function DrSelfTapeApp() {
-  const [tab, setTab] = useState("home");
+  // A library handoff survives consent, but is consumed on consented arrival
+  // (TapeReview) or deliberate departure. Retained retry state is not a route.
+  const reviewRecording = useSelector((s) => s.jericho?.reviewRecording);
+  const [tab, setTab] = useState(() => reviewRecording?.navigationPending ? 'tape-review' : 'home');
   const [currentPanel, setCurrentPanel] = useState(null);
   // "Notes ready" return cue — a tape review / compare finished (often while
   // the user wandered to another tab during the multi-minute analysis). Shows
   // a mint dot on the Review tab; visiting the tab acknowledges + clears it.
   const reduxDispatch = useDispatch();
+  useEffect(() => {
+    if (tab !== 'tape-review' || currentPanel) reduxDispatch(consumeRecordingNavigation());
+  }, [tab, currentPanel, reduxDispatch]);
   const notesReady = useSelector((s) => !!s.jericho?.notesReady);
   // Live context fed to Slate so it can be specific ("your detective read for
   // the CBS pilot") instead of generic ("your tape").

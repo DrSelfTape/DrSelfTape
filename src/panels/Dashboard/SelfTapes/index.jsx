@@ -1,5 +1,10 @@
 import { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import { selectReviewRecording } from '../../../redux/features/jericho/jerichoSlice';
 import {
   Play, Upload, Send, X, Film, Calendar, Clock, Check,
   Loader2, AlertCircle, HardDriveDownload, Pencil, Trash2,
@@ -478,9 +483,9 @@ const _iconBtn = {
   touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
 };
 
-function TapeCard({
+export function TapeCard({
   tape, onPlay, onSubmitCasting, syncState, syncProgress, onRetry, onFreeUpSpace,
-  onDelete, onRename,
+  onDelete, onRename, onReview, reviewBusy,
 }) {
   const isLocalOnly = !tape.id && !!tape.localId;
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -616,6 +621,18 @@ function TapeCard({
           )}
         </div>
 
+        <button
+          type="button"
+          onClick={() => onReview(tape)}
+          onTouchEnd={(e) => { e.preventDefault(); if (!isLocalOnly && !reviewBusy) onReview(tape); }}
+          disabled={isLocalOnly || reviewBusy}
+          className="w-full mt-3 py-2.5 rounded-lg text-xs font-semibold disabled:opacity-50"
+          style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+        >
+          Get casting notes
+        </button>
+        {isLocalOnly && <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>Available after this tape syncs.</p>}
+        {reviewBusy && !isLocalOnly && <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>A review is already in progress.</p>}
         <div className="flex gap-2 mt-3">
           <button
             onClick={() => onPlay(tape)}
@@ -645,6 +662,21 @@ function TapeCard({
 }
 
 export default function SelfTapes() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const isMobile = useIsMobile();
+  const reviewBusy = useSelector((s) => s.jericho.tapeReviewLoading || s.jericho.compareLoading);
+  const handleReview = (tape) => {
+    if (!tape.id || reviewBusy) return;
+    dispatch(selectReviewRecording(tape));
+    // MobileApp receives phone navigation; DashboardLayout receives the same
+    // review event on native tablets, where navigate() is unreliable.
+    if (isMobile || Capacitor.isNativePlatform()) {
+      window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'tape-review' } }));
+    } else {
+      navigate('/dashboard/jericho?tab=tape');
+    }
+  };
   const [tapes, setTapes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
@@ -925,6 +957,8 @@ export default function SelfTapes() {
                 onFreeUpSpace={handleFreeUpSpace}
                 onDelete={handleDeleteTape}
                 onRename={handleRenameTape}
+                onReview={handleReview}
+                reviewBusy={reviewBusy}
               />
             );
           })}
