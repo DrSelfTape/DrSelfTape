@@ -10,7 +10,12 @@ export function auditionNotificationDestination(data = {}) {
   const auditionId = id(data.audition_id);
   const submissionId = id(data.submission_id);
   const panel = !auditionId && submissionId ? 'submissions' : 'auditions';
-  return { panel, id: auditionId || submissionId, web: `/dashboard/${panel}` };
+  // `mobile` is the shape MobileApp's drst-navigate handler accepts: the
+  // audition tracker is a TAB (a registered screen, reachable via setTab even
+  // though it left the tab bar), while Submissions is a registered PANEL.
+  // A {panel:'auditions'} would be silently dropped by the panel registry.
+  const mobile = panel === 'auditions' ? { tab: 'auditions' } : { panel: 'submissions' };
+  return { panel, id: auditionId || submissionId, web: `/dashboard/${panel}`, mobile };
 }
 
 export function findNotifiedAudition(tracker, id) {

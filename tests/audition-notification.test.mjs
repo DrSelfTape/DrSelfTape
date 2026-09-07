@@ -8,15 +8,15 @@ import {
 
 afterEach(() => clearAuditionNotification(getPendingAuditionNotification()));
 
-test('slot reminders route to the registered panel, never the retired audition tab', () => {
+test('slot reminders route to the audition tracker TAB on mobile (a registered screen, not a panel)', () => {
   assert.deepEqual(auditionNotificationDestination({ type: 'audition_update', audition_id: 42 }), {
-    panel: 'auditions', id: '42', web: '/dashboard/auditions',
+    panel: 'auditions', id: '42', web: '/dashboard/auditions', mobile: { tab: 'auditions' },
   });
 });
 
 test('standalone submission reminders open their own tracker', () => {
   assert.deepEqual(auditionNotificationDestination({ type: 'audition_update', submission_id: '7' }), {
-    panel: 'submissions', id: '7', web: '/dashboard/submissions',
+    panel: 'submissions', id: '7', web: '/dashboard/submissions', mobile: { panel: 'submissions' },
   });
 });
 

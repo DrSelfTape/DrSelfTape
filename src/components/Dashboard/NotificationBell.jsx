@@ -166,7 +166,7 @@ export default function NotificationBell({ onNavigate }) {
       // understands (react-router navigate() no-ops inside the app shell).
       const auditionTarget = queueAuditionNotification({ ...notif.data, type: notif.type });
       if (auditionTarget) {
-        if (isMobile && onNavigate) onNavigate({ panel: auditionTarget.panel });
+        if (isMobile && onNavigate) onNavigate(auditionTarget.mobile);
         else navigate(auditionTarget.web);
         return;
       }
