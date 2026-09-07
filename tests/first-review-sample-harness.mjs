@@ -21,6 +21,7 @@ export async function loadResults() {
     },
     bundle: true, write: false, platform: 'node', format: 'cjs',
     packages: 'external', jsx: 'automatic',
+    loader: { '.css': 'empty' },
   });
   const mod = { exports: {} };
   new Function('require', 'module', 'exports', result.outputFiles[0].text)(require, mod, mod.exports);
@@ -65,6 +66,7 @@ export async function startHarness(port = 0) {
       resolveDir: root, loader: 'jsx',
     },
     bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
+    loader: { '.css': 'empty' },
     define: { 'import.meta.env': JSON.stringify({ VITE_FIRST_REVIEW_FLOW: 'true' }) },
     plugins: [{
       name: 'isolated-onboarding-services',

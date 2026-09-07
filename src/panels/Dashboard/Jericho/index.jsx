@@ -19,6 +19,8 @@ import {
 } from '../../../redux/features/jericho/jerichoSlice';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import TapeReview from './TapeReview';
+import { useIsMobile } from '../../../hooks/useIsMobile';
+import { Capacitor } from '@capacitor/core';
 import TapeReviewNotes from './TapeReviewNotes';
 import TapeReviewShareCard, { TapeReviewShareCardStory } from './TapeReviewShareCard';
 import { TECH_SCORES } from './reviewResultFields';
@@ -33,6 +35,8 @@ import { goUpgrade } from '../../../utils/goUpgrade';
 import { Lock } from 'lucide-react';
 
 // ─── Performance DNA Metrics ───────────────────────────────────────────
+
+const renderDesktopDna = values => <TapeReviewNotes review={{ performance_dna: values }} />;
 
 const DNA_METRICS = [
   { key: 'emotional_range', label: 'Emotional Range', icon: Heart, color: '#D4A85F' },

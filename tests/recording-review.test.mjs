@@ -95,6 +95,7 @@ test('selected recording resumes a pending job and consumes selection on complet
   await new Promise(resolve => setTimeout(resolve, 2600));
   assert.deepEqual(store.getState().jericho.tapeReviewResult, notes);
   assert.equal(store.getState().jericho.reviewRecording, null);
+  assert.equal(store.getState().jericho.tapeReviewPlaybackUrl, recording.video_url);
   assert.equal(requests.length, 0);
   mounted.unmount();
 });
@@ -320,15 +321,26 @@ test('stalled keyed recovery times out and re-enables submission with the same a
   mounted.unmount();
 });
 
-test('selecting a library tape clears prior results and retains no media URL or cached notes', () => {
+test('selecting a library tape keeps owned playback for display but clears cached notes', () => {
   store.dispatch(reviewTape.fulfilled({ verdict: 'Old private notes' }, 'old', {}));
   store.dispatch(selectReviewRecording(recording));
   const state = store.getState().jericho;
-  assert.deepEqual(state.reviewRecording, { id: 42, title: 'Callback take', role: 'Morgan', idempotencyKey: null, navigationPending: true });
+  assert.deepEqual(state.reviewRecording, { id: 42, title: 'Callback take', role: 'Morgan', playbackUrl: recording.video_url, idempotencyKey: null, navigationPending: true });
   assert.equal(state.tapeReviewResult, null);
   assert.equal(state.notesReady, false);
   store.dispatch(clearTapeReview());
   assert.equal(store.getState().jericho.reviewRecording, null);
+});
+
+test('completed library playback survives selection cleanup but never follows a different review', () => {
+  store.dispatch(selectReviewRecording(recording));
+  store.dispatch(reviewTape.fulfilled(notes, 'library', {}));
+  assert.equal(store.getState().jericho.reviewRecording, null);
+  assert.equal(store.getState().jericho.tapeReviewPlaybackUrl, recording.video_url);
+  store.dispatch(clearTapeReview());
+  assert.equal(store.getState().jericho.tapeReviewPlaybackUrl, null);
+  store.dispatch(reviewTape.fulfilled(notes, 'upload', {}));
+  assert.equal(store.getState().jericho.tapeReviewPlaybackUrl, null);
 });
 
 test('a library handoff cannot clear a running review', () => {

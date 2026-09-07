@@ -38,6 +38,10 @@ import { usePushNotifications, isCapacitorNative, openNotificationSettings } fro
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 const MAX_TAPE_MB = 500; // matches the advertised cap; reject before a doomed upload
 
+// Keep the renderer choice separate from the report branch so either desktop
+// feature can be reverted while the surviving view keeps its own renderer.
+const renderDesktopDna = values => <TapeReviewNotes review={{ performance_dna: values }} />;
+
 // Matches the key and TTL used in jerichoSlice's persistence helpers.
 const PENDING_JOB_KEY = 'dst_pending_analysis';
 const PENDING_JOB_TTL_MS = 30 * 60 * 1000; // 30 minutes

@@ -41,7 +41,7 @@ function ScoreBar({ label, value, color = '#D4A85F', chip = null }) {
 // Presentation only: callers supply the already-trimmed review. Never fetch,
 // recover cached notes, check entitlements, or record review activity here.
 // The onboarding sample and live results deliberately share this renderer.
-export default function TapeReviewNotes({ review: r, revealStage = 3, afterNotes = null }) {
+export default function TapeReviewNotes({ review: r, revealStage = 3, afterNotes = null, renderDna }) {
   const working = Array.isArray(r.whats_working) ? r.whats_working : [];
   const adjustments = Array.isArray(r.adjustments) ? r.adjustments : [];
   const scores = r.scores || {};
@@ -49,6 +49,10 @@ export default function TapeReviewNotes({ review: r, revealStage = 3, afterNotes
   const tags = Array.isArray(r.tone_tags) ? r.tone_tags : [];
   const hasScores = TECH_SCORES.some((s) => scores[s.key] != null);
   const hasDna = DNA.some((d) => dna[d.key] != null);
+
+  // The desktop report opts into this slot. The shared sample, mobile results
+  // and history keep their original markup and reveal stages below.
+  if (renderDna && hasDna && revealStage >= 3) return renderDna(dna);
 
   return (
     <>

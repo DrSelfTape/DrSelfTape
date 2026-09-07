@@ -50,6 +50,7 @@ export async function loadRecordingReview() {
       export { default as DashboardLayout } from './src/panels/Dashboard/DashboardLayout.jsx';
     ` },
     bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external', jsx: 'automatic',
+    loader: { '.css': 'empty' },
     define: { 'import.meta.env': '{}' },
     plugins: [{ name: 'recording-review-services', setup(builder) {
       builder.onResolve({ filter: /.*/ }, ({ path, importer }) => {
