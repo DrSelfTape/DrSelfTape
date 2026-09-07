@@ -7,6 +7,7 @@ import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
 import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
 import SampleReview from './SampleReview';
 import { createOnboardingSession } from './onboardingSession';
+import { flushPendingPersonalization, pendingKey } from './pendingPersonalization';
 import { PLATE_OPTIONS, TAPED_OPTIONS, normalizePersonalization, getOfferCopy, personalizationProperties } from '../../data/onboardingPersonalization';
 
 /* ── Aurora post-signup onboarding flow ────────────────────────────────
@@ -79,7 +80,6 @@ const UNIONS = ['SAG-AFTRA', 'Eligible', 'Non-union'];
 
 const STORAGE_STEP = 'dst_onb_step_v3'; // v3: flow cut to 3 screens — old numeric indices meant different steps, so ignore stale v1/v2 progress (entered data in STORAGE_DATA is preserved)
 const STORAGE_DATA = 'dst_onb_data';
-const pendingKey = (userId) => `dst_onb_pending:${userId}`;
 const answerPatch = (d) => Object.fromEntries(
   (d.personalization_keys || []).filter(key => ['plate', 'taped_before'].includes(key))
     .map(key => [key, d.onboarding_personalization[key]]),
@@ -1173,23 +1173,19 @@ export default function AuroraOnboarding({ onClose }) {
     if (personalizationSave.current) return personalizationSave.current;
     const scope = session.current;
     if (!FIRST_REVIEW_FLOW || !scope?.current()) return Promise.resolve(false);
-    const userId = store.getState().auth?.user?.id;
     const pending = (async () => {
       while (scope.current() && dataRef.current.personalization_pending) {
         // Omit answers that have not hydrated. A blank would clear a value
         // saved on another device. Snapshot each attempt so a late ACK cannot
         // discard edits made while a resumed request was in flight.
         const payload = JSON.stringify(answerPatch(dataRef.current));
-        const fd = new FormData();
-        fd.append('onboarding_personalization', payload);
-        if (!await scope.run(dispatch, updateProfileThunk(fd))) return false;
+        if (!await scope.wait(flushPendingPersonalization(store, dispatch)) || !scope.current()) return false;
         if (payload !== JSON.stringify(answerPatch(dataRef.current))) continue;
         const nd = { ...dataRef.current, personalization_pending: false };
         dataRef.current = nd;
         setData(nd);
         try {
           window.localStorage.setItem(STORAGE_DATA, JSON.stringify(nd));
-          window.localStorage.removeItem(pendingKey(userId));
         } catch { /* storage unavailable */ }
       }
       return scope.current();
@@ -1220,6 +1216,8 @@ export default function AuroraOnboarding({ onClose }) {
   };
 
   const finishLegacy = useCallback((opts) => {
+    const scope = session.current;
+    if (!scope?.current()) return;
     // Mark onboarding seen, clear local progress, and CLOSE IMMEDIATELY. The
     // profile PATCH (especially a multi-MB headshot upload) is best-effort and
     // runs in the background — awaiting it here previously trapped the user on
@@ -1232,7 +1230,7 @@ export default function AuroraOnboarding({ onClose }) {
 
     // Snapshot the data now; the component may unmount before this resolves.
     const d = data;
-    (async () => {
+    void scope.wait((async () => {
       try {
         if (!session.current?.current()) return;
         const fd = new FormData();
@@ -1262,7 +1260,7 @@ export default function AuroraOnboarding({ onClose }) {
           if (session.current.current()) await session.current.run(dispatch, fetchProfileThunk());
         }
       } catch { /* profile patch best-effort */ }
-    })();
+    })());
 
     if (onClose) onClose(opts);
   }, [data, dispatch, onClose]);
@@ -1276,8 +1274,8 @@ export default function AuroraOnboarding({ onClose }) {
     }
     transitioning.current = true;
     setSaving(true);
-    // Completion retries failed answers. Preserve the draft and seen=false
-    // until both answers and identity have been acknowledged by the server.
+    // Settle answers before the AI handoff. The identity save below continues
+    // after close, just as in the legacy flow; unmount is not session loss.
     const answersSaved = await persistPersonalization();
     if (!scope.current()) return false;
     const d = dataRef.current;
@@ -1285,17 +1283,19 @@ export default function AuroraOnboarding({ onClose }) {
     for (const key of ['first_name', 'last_name', 'city', 'bio', 'pronouns', 'union_status', 'representation']) {
       if (d[key]) fd.append(key, d[key]);
     }
-    const profileSaved = ![...fd.keys()].length || await scope.run(dispatch, updateProfileThunk(fd));
-    if (!scope.current()) return false;
-    if (answersSaved && profileSaved) {
-      dispatch(patchUserSettings({ reader_onboarding_seen: true }));
-      try {
-        window.localStorage.removeItem(STORAGE_STEP);
-        window.localStorage.removeItem(STORAGE_DATA);
-      } catch { /* storage unavailable */ }
-    }
-    // A failed request still lets the actor leave. The next onboarding mount
-    // retries the retained draft because completion was not marked as seen.
+    void (async () => {
+      const profileSaved = ![...fd.keys()].length || await scope.run(dispatch, updateProfileThunk(fd));
+      if (!scope.current()) return;
+      if (answersSaved && profileSaved) {
+        dispatch(patchUserSettings({ reader_onboarding_seen: true }));
+        try {
+          window.localStorage.removeItem(STORAGE_STEP);
+          window.localStorage.removeItem(STORAGE_DATA);
+        } catch { /* storage unavailable */ }
+      }
+    })();
+    // Failed answers remain account-scoped for the app-level retry, even if
+    // desktop Home independently marks onboarding seen on the server.
     transitioning.current = false;
     setSaving(false);
     if (opts?.launchFirstReview) {
