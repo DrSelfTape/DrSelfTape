@@ -528,15 +528,13 @@ export default function JerichoDashboard() {
             <Brain className="w-12 h-12 text-[#7A5A18]" />
           </div>
           <h1 className="text-2xl font-bold text-[#0A0A0A] mb-3">Meet Jericho</h1>
-          <p className="text-[rgba(10,10,10,0.62)] text-sm mb-2 max-w-md mx-auto leading-relaxed">
-            Your self-evolving AI acting coach. Jericho learns your strengths,
-            patterns, and growth areas from every session to give you increasingly
-            personalized coaching.
+          {/* V-03: one honest sentence, one CTA to the real next action. The
+              secondary raw-href link is gone — a full navigation out of the
+              mobile shell was the only thing it did on a phone. */}
+          <p className="text-[rgba(10,10,10,0.62)] text-sm mb-8 max-w-md mx-auto leading-relaxed">
+            Jericho builds your actor profile from every session — it starts with your first Tape Review.
           </p>
-          <p className="text-[rgba(10,10,10,0.4)] text-xs mb-8">
-            Start a coaching session or scene study to begin building your actor profile.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex justify-center">
             <button
               onClick={() => { setActiveTab('tape'); setEntered(true); }}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
@@ -544,12 +542,6 @@ export default function JerichoDashboard() {
             >
               <Film size={16} /> Review a Self-Tape
             </button>
-            <a
-              href="/dashboard/scene-study"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-medium border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:text-[#0A0A0A] hover:border-[#555] transition-colors"
-            >
-              <Mic size={16} /> Practice a Scene
-            </a>
           </div>
         </div>
       </div>
