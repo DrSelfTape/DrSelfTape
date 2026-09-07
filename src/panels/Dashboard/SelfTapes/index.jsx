@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useIsMobile } from '../../../hooks/useIsMobile';
-import { Capacitor } from '@capacitor/core';
 import { selectReviewRecording } from '../../../redux/features/jericho/jerichoSlice';
 import {
   Play, Upload, Send, X, Film, Calendar, Clock, Check,
@@ -669,7 +668,9 @@ export default function SelfTapes() {
   const handleReview = (tape) => {
     if (!tape.id || reviewBusy) return;
     dispatch(selectReviewRecording(tape));
-    if (isMobile || Capacitor.isNativePlatform()) {
+    // Match DashboardLayout's rendered shell. Native iPad uses its router
+    // Outlet; only MobileApp listens for the tab-navigation event.
+    if (isMobile) {
       window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'tape-review' } }));
     } else {
       navigate('/dashboard/jericho?tab=tape');

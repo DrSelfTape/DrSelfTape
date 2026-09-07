@@ -3,9 +3,9 @@ import { beforeEach, test } from 'node:test';
 import { configureStore } from '@reduxjs/toolkit';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { loadRecordingReview } from './recording-review-harness.mjs';
+import { loadRecordingReview, mountComponent } from './recording-review-harness.mjs';
 
-const { reducer, reviewTape, compareTakes, selectReviewRecording, clearTapeReview, TapeReview, TapeCard } = await loadRecordingReview();
+const { reducer, reviewTape, compareTakes, selectReviewRecording, clearTapeReview, rememberRecordingAttempt, recoverLatestReview, TapeReview, TapeCard, SelfTapes } = await loadRecordingReview();
 const recording = { id: 42, title: 'Callback take', role_name: 'Morgan', video_url: 'https://unreachable-r2.test/video.mov' };
 const notes = { verdict: 'An honest pause', headline_score: 7, whats_working: ['Listening'], adjustments: [{ note: 'Wait for the thought' }] };
 const render = (component, props) => renderToStaticMarkup(createElement(component, props));
@@ -13,6 +13,11 @@ let store, requests;
 beforeEach(() => {
   requests = [];
   globalThis.window = { sessionStorage: { getItem: () => null, removeItem() {} } };
+  window.addEventListener = () => {}; window.removeEventListener = () => {};
+  window.dispatchEvent = event => { globalThis.__navEvents.push(event); };
+  window.innerWidth = 1024; window.innerHeight = 1366; window.ontouchstart = null;
+  globalThis.document = { visibilityState: 'hidden', addEventListener() {}, removeEventListener() {} };
+  globalThis.__navEvents = []; globalThis.__routes = []; globalThis.__native = false;
   globalThis.localStorage = { getItem: () => null, setItem() {}, removeItem() {} };
   globalThis.__reviewEvents = [];
   globalThis.__reviewHttp = {
@@ -23,15 +28,187 @@ beforeEach(() => {
   store = configureStore({ reducer: { jericho: reducer,
     userSettings: () => ({ data: { tutorial_progress: { first_review: true } } }),
     profile: () => ({ profile: { first_name: 'Alex' } }),
+    auth: () => ({ user: { ai_consent_accepted_at: '2026-09-01' } }),
   } });
   globalThis.__reviewStore = store;
+});
+
+const tick = () => new Promise(resolve => setImmediate(resolve));
+function findNode(node, predicate) {
+  if (!node || typeof node !== 'object') return null;
+  if (predicate(node)) return node;
+  for (const child of [node.props?.children].flat(Infinity)) {
+    const found = findNode(child, predicate); if (found) return found;
+  }
+  return null;
+}
+const button = (tree, label) => findNode(tree, n => n.type === 'button' && renderToStaticMarkup(n).includes(label));
+
+test('uncertain submission survives unmount and reselection with exactly the same action key', async () => {
+  store.dispatch(selectReviewRecording(recording));
+  globalThis.__reviewHttp.get = async () => ({ data: { data: null } });
+  globalThis.__reviewHttp.post = async (url, body, options) => {
+    requests.push({url, body, options}); throw new Error('response lost');
+  };
+  const first = mountComponent(TapeReview);
+  first.render(); first.flush(); await tick();
+  await button(first.render(), 'Get my notes').props.onClick();
+  first.unmount();
+  assert.ok(store.getState().jericho.reviewRecording.idempotencyKey);
+  store.dispatch(selectReviewRecording(recording));
+  const second = mountComponent(TapeReview);
+  second.render(); second.flush(); await tick();
+  await button(second.render(), 'Get my notes').props.onClick();
+  assert.equal(requests[0].options.headers['Idempotency-Key'], requests[1].options.headers['Idempotency-Key']);
+  second.unmount();
+});
+
+test('selected recording checks recovery before enabling any charged attempt', async () => {
+  store.dispatch(selectReviewRecording(recording));
+  let resolve;
+  globalThis.__reviewHttp.get = async url => {
+    assert.equal(url, '/latest/');
+    return await new Promise(r => { resolve = r; });
+  };
+  const mounted = mountComponent(TapeReview);
+  const initial = mounted.render();
+  assert.equal(button(initial, 'Get my notes').props.disabled, true);
+  mounted.flush(); await tick();
+  assert.equal(typeof resolve, 'function');
+  await button(mounted.render(), 'Get my notes').props.onClick();
+  assert.equal(requests.length, 0);
+  resolve({ data: { data: null } }); await tick();
+  assert.equal(button(mounted.render(), 'Get my notes').props.disabled, false);
+  mounted.unmount();
+});
+
+test('selected recording resumes a pending job and consumes selection on completion', async () => {
+  store.dispatch(selectReviewRecording(recording));
+  globalThis.localStorage.getItem = key => key === 'dst_pending_analysis' ? JSON.stringify({jobId: 12, kind: 'review', startedAt: Date.now()}) : null;
+  globalThis.__reviewHttp.get = async url => {
+    assert.equal(url, '/jobs/12/'); return { data: { data: {status: 'done', result: notes} } };
+  };
+  const mounted = mountComponent(TapeReview);
+  mounted.render(); mounted.flush();
+  await new Promise(resolve => setTimeout(resolve, 2600));
+  assert.deepEqual(store.getState().jericho.tapeReviewResult, notes);
+  assert.equal(store.getState().jericho.reviewRecording, null);
+  assert.equal(requests.length, 0);
+  mounted.unmount();
+});
+
+test('selection is consumed on success, settled failure, reset and compare handoff', async () => {
+  for (const finish of [
+    () => store.dispatch(reviewTape.fulfilled(notes, 'ok', {})),
+    () => store.dispatch(reviewTape.rejected(null, 'failed', {}, {message: 'settled', reuseKey: false})),
+    () => store.dispatch(clearTapeReview()),
+  ]) {
+    store.dispatch(selectReviewRecording(recording)); finish();
+    assert.equal(store.getState().jericho.reviewRecording, null);
+  }
+  store.dispatch(selectReviewRecording(recording));
+  let removed = false;
+  window.sessionStorage.getItem = key => key === 'dst_compare_takes' ? '1' : null;
+  window.sessionStorage.removeItem = key => { if (key === 'dst_compare_takes') removed = true; };
+  const mounted = mountComponent(TapeReview);
+  assert.match(renderToStaticMarkup(mounted.render()), /Compare screen/);
+  mounted.flush();
+  assert.equal(removed, true);
+  assert.equal(store.getState().jericho.reviewRecording, null);
+  mounted.unmount();
+});
+
+test('consented arrival consumes only the shell handoff, retaining the recording for submission', async () => {
+  store.dispatch(selectReviewRecording(recording));
+  assert.equal(store.getState().jericho.reviewRecording.navigationPending, true);
+  globalThis.__reviewHttp.get = async () => ({ data: { data: null } });
+  const mounted = mountComponent(TapeReview);
+  mounted.render(); mounted.flush(); await tick();
+  assert.equal(store.getState().jericho.reviewRecording.navigationPending, false);
+  assert.equal(store.getState().jericho.reviewRecording.id, 42);
+  mounted.unmount();
+});
+
+test('native iPad library action follows the desktop shell route; phone uses its tab receiver', async () => {
+  globalThis.__native = true;
+  for (const [width, height, mobile] of [[1024, 1366, false], [390, 844, true]]) {
+    window.innerWidth = width; window.innerHeight = height;
+    globalThis.__reviewHttp.get = async url => ({ data: { data: url.endsWith('/quota/') ? {} : [recording] } });
+    const mounted = mountComponent(SelfTapes);
+    mounted.render(); mounted.flush(); await tick();
+    const card = findNode(mounted.render(), node => node.type === TapeCard);
+    assert.ok(card);
+    card.props.onReview(recording);
+    if (mobile) assert.equal(globalThis.__navEvents.at(-1).detail.tab, 'tape-review');
+    else {
+      assert.deepEqual(globalThis.__routes, ['/dashboard/jericho?tab=tape']);
+      assert.equal(globalThis.__navEvents.length, 0);
+    }
+    mounted.unmount();
+  }
+});
+
+test('selected recording card inherits theme colors', () => {
+  store.dispatch(selectReviewRecording(recording));
+  const mounted = mountComponent(TapeReview);
+  const title = findNode(mounted.render(), n => n.type === 'p' && n.props.children === recording.title);
+  assert.equal(title.props.style?.color, 'var(--aurora-text)');
+  const reset = button(mounted.render(), 'Choose a different take');
+  assert.equal(reset.props.style?.color, 'var(--aurora-accent-deep)');
+  mounted.unmount();
+});
+
+test('durable recovery uses the selected action key, preserves server trim and clears the selection', async () => {
+  store.dispatch(selectReviewRecording(recording));
+  store.dispatch(rememberRecordingAttempt({ id: 42, idempotencyKey: 'uncertain' }));
+  globalThis.__reviewHttp.get = async (url, options) => {
+    assert.equal(url, '/latest/');
+    assert.deepEqual(options.params, {recording_review_key: 'uncertain'});
+    return {data: {data: {id: 99, ai_feedback: notes}}};
+  };
+  const mounted = mountComponent(TapeReview);
+  mounted.render(); mounted.flush(); await tick();
+  assert.deepEqual(store.getState().jericho.tapeReviewResult, {...notes, _session_id: 99});
+  assert.equal(store.getState().jericho.reviewRecording, null);
+  assert.equal(requests.length, 0);
+  mounted.unmount();
+});
+
+test('fresh recording ignores unrelated history and late recovery cannot erase a new selection', async () => {
+  store.dispatch(selectReviewRecording(recording));
+  globalThis.__reviewHttp.get = async () => ({data: {data: {id: 99, ai_feedback: notes}}});
+  await store.dispatch(recoverLatestReview());
+  assert.equal(store.getState().jericho.tapeReviewResult, null);
+  assert.equal(store.getState().jericho.reviewRecording.id, 42);
+  store.dispatch(rememberRecordingAttempt({ id: 42, idempotencyKey: 'older-attempt' }));
+  let finish;
+  globalThis.__reviewHttp.get = async () => await new Promise(resolve => { finish = resolve; });
+  const pending = store.dispatch(recoverLatestReview());
+  store.dispatch(selectReviewRecording({...recording, id: 43}));
+  finish({data: {data: {id: 99, ai_feedback: notes}}});
+  await pending;
+  assert.equal(store.getState().jericho.tapeReviewResult, null);
+  assert.equal(store.getState().jericho.reviewRecording.id, 43);
+  assert.equal(store.getState().jericho.reviewRecording.idempotencyKey, null);
+});
+
+test('polling HTTP 500 preserves the pending slot and recording key for a later remount', async () => {
+  const saved = new Map();
+  globalThis.localStorage = {getItem: k => saved.get(k), setItem: (k, v) => saved.set(k, v), removeItem: k => saved.delete(k)};
+  store.dispatch(selectReviewRecording(recording));
+  globalThis.__reviewHttp.post = async () => ({data: {data: {job_id: 12, status: 'pending'}}});
+  globalThis.__reviewHttp.get = async () => { throw {response: {status: 500, data: {}}}; };
+  const result = await store.dispatch(reviewTape({recordingId: 42, idempotencyKey: 'poll-key'}));
+  assert.equal(result.payload.reuseKey, true);
+  assert.equal(store.getState().jericho.reviewRecording.idempotencyKey, 'poll-key');
+  assert.equal(JSON.parse(saved.get('dst_pending_analysis')).jobId, 12);
 });
 
 test('selecting a library tape clears prior results and retains no media URL or cached notes', () => {
   store.dispatch(reviewTape.fulfilled({ verdict: 'Old private notes' }, 'old', {}));
   store.dispatch(selectReviewRecording(recording));
   const state = store.getState().jericho;
-  assert.deepEqual(state.reviewRecording, { id: 42, title: 'Callback take', role: 'Morgan' });
+  assert.deepEqual(state.reviewRecording, { id: 42, title: 'Callback take', role: 'Morgan', idempotencyKey: null, navigationPending: true });
   assert.equal(state.tapeReviewResult, null);
   assert.equal(state.notesReady, false);
   store.dispatch(clearTapeReview());
@@ -55,15 +232,15 @@ test('a library handoff cannot replace an active charged comparison', () => {
   assert.equal(requests.length, 0);
 });
 
-test('library mode renders the real TapeReview with a ready CTA and no file picker', () => {
+test('library mode renders the real TapeReview with recovery-gated CTA and no file picker', () => {
   store.dispatch(selectReviewRecording(recording));
   const html = render(TapeReview);
   for (const text of ['Callback take', 'no upload needed', 'Get my notes', 'Choose a different take']) assert.ok(html.includes(text), text);
   assert.ok(!html.includes('type="file"'));
   assert.ok(!html.includes('Choose a video'));
   assert.ok(!html.includes('Compare takes'));
-  assert.ok(!html.includes('disabled=""'));
-  assert.equal(requests.length, 0, 'opening the screen never starts a charged request');
+  assert.ok(html.includes('disabled=""'));
+  assert.equal(requests.length, 0, 'static rendering sends no request; lifecycle test covers effects');
   store.dispatch(clearTapeReview());
   const picker = render(TapeReview);
   assert.ok(picker.includes('Choose a video'));
@@ -91,11 +268,14 @@ test('the real thunk sends only id/context and stable key, never fetches or uplo
 });
 
 test('completed async replay unwraps the server-trimmed notes without polling', async () => {
+  const removed = [];
+  globalThis.localStorage.removeItem = key => removed.push(key);
   globalThis.__reviewHttp.post = async () => ({ data: { data: { job_id: 12, status: 'done', result: notes } } });
   const result = await store.dispatch(reviewTape({ recordingId: 42, idempotencyKey: 'same-action' }));
   assert.ok(reviewTape.fulfilled.match(result));
   assert.deepEqual(result.payload, notes);
   assert.ok(!('performance_dna' in store.getState().jericho.tapeReviewResult));
+  assert.ok(removed.includes('dst_pending_analysis'));
 });
 
 test('pending async recording uses existing polling and restores the final trimmed result', async () => {

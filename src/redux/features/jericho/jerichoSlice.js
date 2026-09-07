@@ -42,8 +42,7 @@ function savePendingJob(jobId, kind) {
   } catch { /* private mode */ }
 }
 
-// Called once the job resolves (success OR failure OR poll timeout) so the
-// slot doesn't linger and the next mount skips a stale resume attempt.
+// Clear only when the job settles (or is confirmed missing on resume).
 function clearPendingJob() {
   try { localStorage.removeItem(PENDING_JOB_KEY); } catch { /* private mode */ }
 }
@@ -59,11 +58,19 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
     if (signal?.aborted) throw { name: 'CanceledError', code: 'ERR_CANCELED', aborted: true };
     await _sleep(interval);
     if (signal?.aborted) throw { name: 'CanceledError', code: 'ERR_CANCELED', aborted: true };
-    const { data } = await axios.get(`${endPoints.analysisJob}${jobId}/`, { signal });
+    let data;
+    try {
+      ({ data } = await axios.get(`${endPoints.analysisJob}${jobId}/`, { signal }));
+    } catch (err) {
+      // A polling HTTP error says nothing about whether the worker charged or
+      // finished. Keep both its slot and its action key for recovery.
+      err.unknownOutcome = true;
+      throw err;
+    }
     const j = data?.data || data;
     if (j?.status === 'done') return j.result;
     if (j?.status === 'failed') {
-      throw { response: { status: 502, data: { message: j.error || 'Analysis failed. Please try again.' } } };
+      throw { settled: true, response: { status: 502, data: { message: j.error || 'Analysis failed. Please try again.' } } };
     }
   }
   // Poll TIMEOUT (not a BE failure): the job may still finish, so the outcome is
@@ -72,33 +79,37 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
   throw { response: { status: 504, data: { message: 'Analysis took too long. Please try again.' } }, unknownOutcome: true };
 }
 
-// Keep the idempotency key ONLY when the outcome is genuinely unknown — a true
-// network/timeout/abort (no response) or an async poll that timed out on a job
-// that may still complete. A real server response (4xx/5xx from the request, or
-// a job the BE marked 'failed') means the BE already refunded, so a retry must
-// RE-CHARGE → the component rotates the key.
+// A gateway/server error is not proof of settlement. Only an explicit failed
+// job or a definitive refusal lets a later attempt retire its action key.
 function shouldReuseKey(err) {
-  return err?.response == null || err?.unknownOutcome === true || err?.response?.data?.code === 'review_in_progress';
+  if (err?.settled) return false;
+  return err?.response == null || err?.unknownOutcome === true || err?.response?.status >= 500 || err?.response?.data?.code === 'review_in_progress';
 }
 
 // A tape-review / compare response is either the synchronous result or a pending
 // job to poll. Normalizes both to the final result. When the response is async,
-// persists the job to localStorage (so TapeReview can resume after a reload)
-// and clears the slot in a finally block — the clear is guaranteed regardless
-// of whether the poll succeeds, fails, or times out.
+// persists the job to localStorage (so TapeReview can resume after a reload).
+// Unknown outcomes keep that slot; only settled outcomes clear it.
 async function resolveAnalysis(payload, { signal, kind } = {}) {
   // A retry can reach a job that finished since the original POST. The job
   // endpoint already trims its result; unwrap that same response shape here.
-  if (payload?.job_id && payload.status === 'done') return payload.result;
+  if (payload?.job_id && payload.status === 'done') {
+    clearPendingJob();
+    return payload.result;
+  }
   if (payload?.job_id && payload.status === 'failed') {
-    throw { response: { status: 502, data: { message: payload.error || 'Analysis failed. Please try again.' } } };
+    clearPendingJob();
+    throw { settled: true, response: { status: 502, data: { message: payload.error || 'Analysis failed. Please try again.' } } };
   }
   if (payload && payload.job_id && payload.status === 'pending') {
     savePendingJob(payload.job_id, kind);
     try {
-      return await pollAnalysisJob(payload.job_id, { signal });
-    } finally {
+      const result = await pollAnalysisJob(payload.job_id, { signal });
       clearPendingJob();
+      return result;
+    } catch (err) {
+      if (!shouldReuseKey(err)) clearPendingJob();
+      throw err;
     }
   }
   return payload;
@@ -109,6 +120,7 @@ async function resolveAnalysis(payload, { signal, kind } = {}) {
 // originating thunks instead of duplicating it.
 function applyReviewResult(state, result) {
   state.tapeReviewResult = result;
+  state.reviewRecording = null;
   // Kind-tagged (truthy) so the Review tab lands in the matching mode
   // when the user returns via the notes-ready dot — a plain boolean
   // sent compare results back to single mode, where they were
@@ -133,6 +145,7 @@ function applyCompareResult(state, result) {
 // re-fetch the balance for nothing on each cold start.
 function applyRecoveredReview(state, result) {
   state.tapeReviewResult = result;
+  state.reviewRecording = null;
   state.notesReady = 'review';
 }
 
@@ -276,7 +289,15 @@ async function captureUploadFailure(feature, err, startedAt, loaded, total, time
 
 export const reviewTape = createAsyncThunk(
   'jericho/reviewTape',
-  async ({ video, recordingId, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
+  async ({ video, recordingId, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch, getState }) => {
+    if (recordingId) {
+      const selected = getState().jericho.reviewRecording;
+      const savedKey = selected?.id === recordingId ? selected.idempotencyKey : null;
+      idempotencyKey = savedKey || idempotencyKey || (globalThis.crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+      // Save BEFORE sending. A component ref cannot survive tab switches or
+      // consent remounts while the recording selection remains in Redux.
+      dispatch(rememberRecordingAttempt({ id: recordingId, idempotencyKey }));
+    }
     const startedAt = Date.now();
     let lastLoaded = 0, lastTotal = 0;
     const onUploadProgress = (e) => {
@@ -419,11 +440,6 @@ export const compareTakes = createAsyncThunk(
   }
 );
 
-/** Re-attach to a job that was started in a previous session (page reload /
- *  app restart). Polls the same endpoint as a normal job, then dispatches into
- *  the same result/notesReady/token-event path via the shared reducer helpers.
- *  Clears the localStorage slot in a finally block so it's gone regardless of
- *  whether the poll succeeds, errors, or is canceled. */
 /**
  * H-08 — recover the most recent completed review from the server.
  *
@@ -438,16 +454,26 @@ export const compareTakes = createAsyncThunk(
  */
 export const recoverLatestReview = createAsyncThunk(
   'jericho/recoverLatestReview',
-  async (_arg, { rejectWithValue, signal }) => {
+  async (_arg, { rejectWithValue, fulfillWithValue, signal, getState }) => {
     try {
-      const { data } = await axios.get(endPoints.latestReview, { signal });
+      const selected = getState().jericho.reviewRecording;
+      const { data } = await axios.get(endPoints.latestReview, {
+        signal,
+        ...(selected?.idempotencyKey ? { params: { recording_review_key: selected.idempotencyKey } } : {}),
+      });
+      // Check recovery even for a fresh selection, but an unrelated historical
+      // review must not replace the library tape the actor just chose.
+      if (selected && !selected.idempotencyKey) return null;
       const payload = data?.data || null;
       const notes = payload?.ai_feedback || null;
       // An empty/near-empty body is nothing worth surfacing — reuse the same
       // content guard the live paths use so a hollow result never displaces
       // a real one.
       if (!notes || !tapeReviewHasContent(notes)) return null;
-      return { ...notes, _session_id: payload.id };
+      return fulfillWithValue({ ...notes, _session_id: payload.id }, {
+        recoveryRecordingId: selected?.id ?? null,
+        recoveryKey: selected?.idempotencyKey ?? null,
+      });
     } catch {
       // Recovery is best-effort and entirely invisible. A failure here must
       // never produce an error banner — the user did not ask for this.
@@ -461,19 +487,20 @@ export const resumeAnalysisJob = createAsyncThunk(
   async ({ jobId, kind }, { rejectWithValue, signal }) => {
     try {
       const result = await pollAnalysisJob(jobId, { signal });
+      clearPendingJob();
       return { result, kind };
     } catch (err) {
+      const reuseKey = shouldReuseKey(err);
+      if (!reuseKey || err?.response?.status === 404) clearPendingJob();
       // 404 = job expired/not found on the BE; canceled = user navigated away.
       // Both are "silent" — no error banner, just clear and move on.
       if (
         err?.name === 'CanceledError' || err?.code === 'ERR_CANCELED' || err?.aborted ||
         err?.response?.status === 404
       ) {
-        return rejectWithValue({ kind, silent: true });
+        return rejectWithValue({ kind, silent: true, reuseKey });
       }
-      return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed') });
-    } finally {
-      clearPendingJob();
+      return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed'), reuseKey });
     }
   }
 );
@@ -568,13 +595,27 @@ const jerichoSlice = createSlice({
     selectReviewRecording: (state, action) => {
       if (state.tapeReviewLoading || state.compareLoading) return;
       // Keep only display context and the server id, never a URL/full review.
-      state.reviewRecording = { id: action.payload.id, title: action.payload.title, role: action.payload.role_name || '' };
+      const previous = state.reviewRecording;
+      state.reviewRecording = {
+        id: action.payload.id, title: action.payload.title, role: action.payload.role_name || '',
+        idempotencyKey: previous?.id === action.payload.id ? previous.idempotencyKey : null,
+        navigationPending: true,
+      };
       state.tapeReviewResult = null;
       state.tapeReviewError = null;
       state.compareResult = null;
       state.compareError = null;
       state.notesReady = false;
     },
+    rememberRecordingAttempt: (state, action) => {
+      if (state.reviewRecording?.id === action.payload.id) {
+        state.reviewRecording.idempotencyKey = action.payload.idempotencyKey;
+      }
+    },
+    consumeRecordingNavigation: (state) => {
+      if (state.reviewRecording) state.reviewRecording.navigationPending = false;
+    },
+    clearReviewRecording: (state) => { state.reviewRecording = null; },
     clearCompare: (state) => {
       state.compareResult = null;
       state.compareError = null;
@@ -670,6 +711,7 @@ const jerichoSlice = createSlice({
         state.tapeReviewLoading = false;
         state.tapeReviewError = action.payload?.message || action.payload || 'Tape review failed';
         state.uploadProgress = 0;
+        if (action.payload?.reuseKey === false) state.reviewRecording = null;
       })
       .addCase(compareTakes.pending, (state) => {
         state.compareLoading = true;
@@ -710,6 +752,12 @@ const jerichoSlice = createSlice({
       // H-08 recovery. Only fills an EMPTY slot: a result already in state is
       // live and must never be displaced by an older one from the server.
       .addCase(recoverLatestReview.fulfilled, (state, action) => {
+        // A recovery launched on an earlier screen must not consume a later
+        // selection, reset, or comparison handoff when its GET finally lands.
+        if ('recoveryRecordingId' in action.meta && (
+          action.meta.recoveryRecordingId !== (state.reviewRecording?.id ?? null) ||
+          action.meta.recoveryKey !== (state.reviewRecording?.idempotencyKey ?? null)
+        )) return;
         if (action.payload && !state.tapeReviewResult && !state.compareResult) {
           applyRecoveredReview(state, action.payload);
         }
@@ -721,6 +769,7 @@ const jerichoSlice = createSlice({
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;
         const { silent, message } = action.payload || {};
+        if (action.payload?.reuseKey === false) state.reviewRecording = null;
         // silent = 404/expired or user canceled — clear the UI, no error banner
         if (!silent) state.tapeReviewError = message || 'Resume failed';
       })
@@ -735,5 +784,5 @@ const jerichoSlice = createSlice({
   },
 });
 
-export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, selectReviewRecording, clearCompare, clearNotesReady } = jerichoSlice.actions;
+export const { clearJerichoError, appendLocalSession, setLastSessionLogId, setUploadProgress, clearTapeReview, selectReviewRecording, rememberRecordingAttempt, consumeRecordingNavigation, clearReviewRecording, clearCompare, clearNotesReady } = jerichoSlice.actions;
 export default jerichoSlice.reducer;

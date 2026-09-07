@@ -11,7 +11,7 @@ import {
   Upload, Loader2, Film, CheckCircle2, Target, Sparkles, Bell, X, Lock,
   RotateCcw, ChevronDown, Trophy, HelpCircle,
 } from 'lucide-react';
-import { reviewTape, clearTapeReview, resumeAnalysisJob, recoverLatestReview, clearCompare } from '../../../redux/features/jericho/jerichoSlice';
+import { reviewTape, clearTapeReview, resumeAnalysisJob, recoverLatestReview, clearCompare, clearReviewRecording, consumeRecordingNavigation } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeReviewNotes from './TapeReviewNotes';
 import { TECH_SCORES, DNA } from './reviewResultFields';
@@ -221,6 +221,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   useAIGate();
   const dispatch = useDispatch();
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording } = useSelector((s) => s.jericho);
+  const hasAiConsent = useSelector((s) => !!s.auth?.user?.ai_consent_accepted_at);
+  const [checkingRecovery, setCheckingRecovery] = useState(() => !(tapeReviewLoading || tapeReviewResult || compareLoading || compareResult));
   // Full-read gate: Premium (unlimited) sees the complete casting read; free
   // users see the headline + an unlock CTA. onUpgrade is passed in the
   // first-review flow; elsewhere fall back to the global panel-nav event.
@@ -242,7 +244,6 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // the free first review: Compare costs tokens and would wall a Day-0 user
   // mid-activation, bypassing the free-review paywall.
   const [mode, setMode] = useState(() => {
-    if (recording) return 'single';
     let wantsCompare = false;
     try {
       wantsCompare = window.sessionStorage.getItem('dst_compare_takes') === '1';
@@ -251,6 +252,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     if (notesReadyKind === 'compare' && !firstReview) return 'compare';
     return wantsCompare && !firstReview ? 'compare' : 'single';
   });
+  useEffect(() => {
+    if (mode === 'compare') dispatch(clearReviewRecording());
+    else if (hasAiConsent) dispatch(consumeRecordingNavigation());
+    // Leave the handoff pending through the consent remount only.
+  }, [dispatch, mode, hasAiConsent]);
   const [file, setFile] = useState(null);
   const [fileError, setFileError] = useState('');
   // Next Take Mission: carry the original tape + a casting note into Compare Takes
@@ -437,7 +443,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // if Redux already carries an in-flight or completed result from the current
   // session (e.g. the user navigated away and back without reloading).
   useEffect(() => {
-    if (recording || tapeReviewLoading || tapeReviewResult || compareLoading || compareResult) return;
+    if (tapeReviewLoading || tapeReviewResult || compareLoading || compareResult) {
+      setCheckingRecovery(false);
+      return;
+    }
+    let mounted = true;
     let slot = null;
     try { slot = JSON.parse(localStorage.getItem(PENDING_JOB_KEY)); } catch { slot = null; }
 
@@ -447,17 +457,24 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // orphan case this fixes: finish a review, background the app >30 min with
     // notifications denied, reopen, and the result was gone forever having
     // already cost the user their one free review.
-    const recover = () => { dispatch(recoverLatestReview()); };
+    const recover = () => mode === 'compare' ? Promise.resolve() : dispatch(recoverLatestReview());
+    const finish = () => { if (mounted) setCheckingRecovery(false); };
+    const cleanup = () => { mounted = false; };
 
-    if (!slot?.jobId || !slot?.startedAt) { recover(); return; }
+    if (!slot?.jobId || !slot?.startedAt) { recover().finally(finish); return cleanup; }
     if (Date.now() - slot.startedAt > PENDING_JOB_TTL_MS) {
       // The JOB is almost certainly dead on the BE, so don't poll it — but the
       // RESULT may well exist. Clear the slot and recover from the server.
       try { localStorage.removeItem(PENDING_JOB_KEY); } catch { /* private mode */ }
-      recover();
-      return;
+      recover().finally(finish);
+      return cleanup;
     }
-    dispatch(resumeAnalysisJob({ jobId: slot.jobId, kind: slot.kind || 'review' }));
+    dispatch(resumeAnalysisJob({ jobId: slot.jobId, kind: slot.kind || 'review' }))
+      .then(result => {
+        // Expired/missing jobs can still have a durable completed SessionLog.
+        if (resumeAnalysisJob.rejected.match(result) && result.payload?.reuseKey !== false) return recover();
+      }).finally(finish);
+    return cleanup;
   // Mount-only: reads Redux snapshot at mount to guard against double-dispatch.
   // Adding these as deps would re-trigger the effect on every state change,
   // which is the opposite of what we want — run once, check once.
@@ -552,7 +569,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   };
 
   const submit = async () => {
-    if ((!file && !recording) || tapeReviewLoading) return;
+    if ((!file && !recording) || tapeReviewLoading || checkingRecovery) return;
     if (firstReview) {
       // H-05: this was hardcoded 'onboarding', so every Home-hero start was
       // filed under onboarding and the two entry paths could not be compared.
@@ -564,13 +581,12 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       // A returning actor started another review — the repeat half of ACTIVE.
       trackEvent(Events.REPEAT_REVIEW_STARTED);
     }
-    if (!idemKeyRef.current) {
+    if (!recording && !idemKeyRef.current) {
       idemKeyRef.current = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     }
-    const res = await dispatch(reviewTape({ video: file, recordingId: recording?.id, role, tone, sides, idempotencyKey: idemKeyRef.current }));
-    // The server definitively responded and the BE already refunded this attempt
-    // → a retry must RE-CHARGE, so mint a fresh key. Keep the key only on a true
-    // network/timeout (reuseKey), where dedup must protect against a double charge.
+    const res = await dispatch(reviewTape({ video: file, recordingId: recording?.id, role, tone, sides, idempotencyKey: recording ? recording.idempotencyKey : idemKeyRef.current }));
+    // Retire an upload key only on definitive settlement/refusal. Library
+    // attempt identity and its settled lifecycle live alongside it in Redux.
     if (reviewTape.rejected.match(res) && res.payload?.reuseKey === false) {
       idemKeyRef.current = null;
     }
@@ -1041,10 +1057,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Drop / pick */}
         {recording ? (
-          <div className="rounded-xl border border-[#D4A85F]/40 p-4">
-            <p className="text-sm font-semibold text-[#0A0A0A]">{recording.title}</p>
-            <p className="text-xs text-[rgba(10,10,10,0.5)] mt-1">From your Self-Tapes library · no upload needed</p>
-            <button type="button" onClick={reset} className="text-xs text-[#7A5A18] mt-3">Choose a different take</button>
+          <div className="rounded-xl border p-4" style={{ borderColor: 'var(--aurora-line)', background: 'var(--bg-surface)' }}>
+            <p className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{recording.title}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--aurora-sub)' }}>From your Self-Tapes library · no upload needed</p>
+            <button type="button" onClick={reset} className="text-xs mt-3" style={{ color: 'var(--aurora-accent-deep)' }}>Choose a different take</button>
           </div>
         ) : <>
         <button
@@ -1132,7 +1148,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         <button
           onClick={submit}
-          disabled={!file && !recording}
+          disabled={checkingRecovery || (!file && !recording)}
           className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
           style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
         >
