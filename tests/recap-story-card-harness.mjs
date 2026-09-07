@@ -22,8 +22,9 @@ export async function startHarness(port = 0) {
         const root = createRoot(document.getElementById('root'));
         window.mountRecap = (props = {}) => {
           window.__closed = 0; window.__shared = [];
+          const file = props.withFile ? new File([new Uint8Array([0, 0, 0, 24])], 'take.mp4', { type: 'video/mp4' }) : undefined;
           root.render(<RecapStoryCard key={Math.random()} review={props.review} band={props.band} avg={props.avg}
-            firstName={props.firstName} thumbnailUrl={props.thumbnailUrl} sharing={props.sharing}
+            firstName={props.firstName} thumbnailUrl={props.thumbnailUrl} file={file} sharing={props.sharing}
             onClose={() => { window.__closed++; }} onShare={props.share === false ? undefined : (f) => window.__shared.push(f)} />);
         };
         window.unmountRecap = () => root.render(null);`,

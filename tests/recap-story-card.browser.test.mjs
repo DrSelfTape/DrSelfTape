@@ -95,10 +95,38 @@ btest('a string-shaped whats_working and a trimmed result mount without throwing
   assert.deepEqual(errors, []);
 });
 
-btest('tab focus stays inside the dialog and the backdrop click closes', async () => {
+btest('every Tab transition stays inside the dialog and the backdrop click closes', async () => {
   await mount();
-  for (let i = 0; i < 12; i++) await page.keyboard.press('Tab');
-  assert.equal(await page.evaluate(() => !!document.activeElement.closest('[role="dialog"]')), true);
+  const inside = () => page.evaluate(() => !!document.activeElement.closest('[role="dialog"]'));
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('Tab');
+    assert.equal(await inside(), true, `Tab #${i + 1} left the dialog`);
+  }
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.down('Shift'); await page.keyboard.press('Tab'); await page.keyboard.up('Shift');
+    assert.equal(await inside(), true, `Shift+Tab #${i + 1} left the dialog`);
+  }
   await page.mouse.click(40, 40);
   assert.equal(await page.evaluate(() => window.__closed), 1);
+});
+
+btest('focus comes back to the dialog when another surface drops it on <body>', async () => {
+  await mount();
+  await page.$eval('#outside', (el) => el.focus());
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'outside', 'a real target is never stolen');
+  await page.$eval('#outside', (el) => el.blur()); // what an unmounting ⌘K input does
+  await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'dialog');
+  await page.keyboard.press('ArrowRight');
+  assert.equal(await page.$eval('[role="tab"][aria-selected="true"]', (el) => el.getAttribute('aria-label')), 'Page 2 of 3');
+});
+
+btest('an uploaded take renders its poster from the File; a library take from its URL', async () => {
+  await mount({ withFile: true });
+  const src = await page.$eval('.dst-recap-thumb', (el) => el.getAttribute('src'));
+  assert.ok(src.startsWith('blob:'), src);
+  await mount({ thumbnailUrl: 'https://cdn.example/take.mp4' });
+  assert.equal(await page.$eval('.dst-recap-thumb', (el) => el.getAttribute('src')), 'https://cdn.example/take.mp4');
+  await mount();
+  assert.equal(await page.$('.dst-recap-thumb'), null, 'no take, no poster');
+  assert.deepEqual(errors, []);
 });

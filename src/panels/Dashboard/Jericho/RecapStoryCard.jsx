@@ -13,7 +13,7 @@ import { buildRecapPages } from './recapPages';
  * `.noir-review button` / `h2` rules would otherwise restyle the tap zones and
  * the hero (review catch). Keyboard handling is scoped to the dialog itself so
  * an open ⌘K palette or any input behind it keeps its own arrows/Escape. */
-export default function RecapStoryCard({ review, band, avg, firstName, thumbnailUrl, onClose, onShare, sharing }) {
+export default function RecapStoryCard({ review, band, avg, firstName, thumbnailUrl, file, onClose, onShare, sharing }) {
   useHideMobileHeader(true);
   const pages = buildRecapPages(review, { band, avg, firstName });
   const last = pages.length - 1;
@@ -22,6 +22,31 @@ export default function RecapStoryCard({ review, band, avg, firstName, thumbnail
   const go = useCallback((delta) => setIndex((i) => Math.max(0, Math.min(last, i + delta))), [last]);
 
   useEffect(() => { if (pages.length) cardRef.current?.focus(); }, [pages.length]);
+  // Another surface (the ⌘K palette) may take focus and then unmount without
+  // handing it back; when focus falls to <body> while we are open, reclaim it
+  // so arrows/Escape/Tab keep reaching the dialog. Never steals from a real
+  // target — only from the empty document.
+  useEffect(() => {
+    if (!pages.length) return undefined;
+    const onFocusOut = (e) => {
+      if (e.relatedTarget) return;
+      requestAnimationFrame(() => {
+        if (document.activeElement === document.body && cardRef.current) cardRef.current.focus();
+      });
+    };
+    document.addEventListener('focusout', onFocusOut);
+    return () => document.removeEventListener('focusout', onFocusOut);
+  }, [pages.length]);
+  // An uploaded take has no library playback URL yet — mirror DesktopTapeReport
+  // and derive a poster from the File itself, revoked when it changes.
+  const [fileUrl, setFileUrl] = useState(null);
+  useEffect(() => {
+    if (!file || typeof URL === 'undefined' || !URL.createObjectURL) { setFileUrl(null); return undefined; }
+    const url = URL.createObjectURL(file);
+    setFileUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  const poster = thumbnailUrl || fileUrl;
 
   if (!pages.length) return null;
   const page = pages[index];
@@ -54,10 +79,10 @@ export default function RecapStoryCard({ review, band, avg, firstName, thumbnail
         <button type="button" className="dst-recap-close" aria-label="Close recap" onClick={onClose}>×</button>
 
         <div key={page.key} className="dst-recap-page">
-          {page.key === 'read' && thumbnailUrl && (
+          {page.key === 'read' && poster && (
             // The take itself, as a poster frame — display only, never fetched
             // for analysis. Muted + metadata so nothing plays or downloads.
-            <video className="dst-recap-thumb" src={thumbnailUrl} muted playsInline preload="metadata" aria-label="Your take" />
+            <video className="dst-recap-thumb" src={poster} muted playsInline preload="metadata" aria-label="Your take" />
           )}
           <p className="dst-recap-kicker">{page.kicker}</p>
           <h2 className="dst-recap-title">{page.title}</h2>

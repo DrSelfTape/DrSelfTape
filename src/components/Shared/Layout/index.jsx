@@ -12,22 +12,32 @@ export const Layout = ({ children }) => {
   const isMobile = useIsMobile();
   if (isMobile) {
     return (
-      <div className="min-h-screen flex flex-col" style={{
-        background: 'var(--aurora-bg)',
+      // 100dvh + min-h-0 give the page a DEFINITE height so a screen built on
+      // h-full with an inner scrolling list (Notifications) keeps its filters
+      // pinned instead of growing with the list.
+      <div className="flex flex-col" style={{
+        height: '100dvh', background: 'var(--aurora-bg)',
         paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)',
       }}>
-        <div className="flex items-center justify-between px-4 py-3 shrink-0">
+        <div className="flex items-center justify-between gap-4 px-4 py-3 shrink-0">
           <button type="button" onClick={() => window.history.back()}
             className="font-semibold" style={{ color: 'var(--aurora-gold)', fontSize: 'var(--type-sm)' }}>
             ← Back
           </button>
-          {/* A plain anchor: a full navigation works on mobile web whether or not
-              there is history to go back to, and never depends on router navigate(). */}
-          <a href="/dashboard" className="font-semibold" style={{ color: 'var(--aurora-gold)', fontSize: 'var(--type-sm)' }}>
-            Home
-          </a>
+          {/* Plain anchors: a full navigation works on mobile web whether or not
+              there is history to go back to, and never depends on router
+              navigate(). Settings carries the account controls (role switch)
+              the legacy header used to hold. */}
+          <div className="flex items-center gap-4">
+            <a href="/settings" className="font-semibold" style={{ color: 'var(--aurora-gold)', fontSize: 'var(--type-sm)' }}>
+              Settings
+            </a>
+            <a href="/dashboard" className="font-semibold" style={{ color: 'var(--aurora-gold)', fontSize: 'var(--type-sm)' }}>
+              Home
+            </a>
+          </div>
         </div>
-        <div className="flex-1 min-h-0">{children}</div>
+        <div className="flex-1 min-h-0 overflow-auto">{children}</div>
       </div>
     );
   }

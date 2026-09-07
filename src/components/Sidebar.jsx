@@ -11,7 +11,7 @@ import {
   ChevronDown,
   Search,
 } from 'lucide-react'
-import { NAV_GROUPS } from './navGroups'
+import { navGroupsForRole } from './navGroups'
 
 function SidebarGroup({ group, pendingLikes, expanded, onToggle }) {
   const location = useLocation()
@@ -123,7 +123,7 @@ export default function Sidebar() {
   // Auto-expand groups that contain the active route
   const getInitialExpanded = () => {
     const expanded = {}
-    NAV_GROUPS.forEach((group) => {
+    navGroupsForRole(user?.role).forEach((group) => {
       if (group.label) {
         const isActive = group.items.some((item) =>
           item.end ? location.pathname === item.path : location.pathname.startsWith(item.path)
@@ -142,7 +142,7 @@ export default function Sidebar() {
 
   // Build groups with optional admin
   const groups = [
-    ...NAV_GROUPS,
+    ...navGroupsForRole(user?.role),
     ...(user?.is_staff
       ? [{
           key: 'admin',

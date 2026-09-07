@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { NAV_GROUPS } from './navGroups';
+import { useSelector } from 'react-redux';
+import { navGroupsForRole } from './navGroups';
 
 /**
  * ⌘K command palette — the desktop jump list. Opens on Cmd/Ctrl+K or the
@@ -17,9 +18,10 @@ export default function ConsoleCommandPalette() {
   const [cursor, setCursor] = useState(0);
   const inputRef = useRef(null);
 
-  const commands = useMemo(() => NAV_GROUPS.flatMap((g) =>
+  const role = useSelector((s) => s.auth?.user?.role);
+  const commands = useMemo(() => navGroupsForRole(role).flatMap((g) =>
     g.items.map((it) => ({ ...it, group: g.label || 'Studio' }))
-  ), []);
+  ), [role]);
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();

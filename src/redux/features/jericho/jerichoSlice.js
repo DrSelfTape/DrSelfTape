@@ -2,6 +2,7 @@
  * Jericho — Self-Evolving AI Coach
  * Redux slice for actor memory, session logs, insights, and evolution metrics.
  */
+import { guardUser } from './userGuard';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import rawAxios from 'axios';
 import axios from '../../http';
@@ -314,7 +315,7 @@ async function captureUploadFailure(feature, err, startedAt, loaded, total, time
 
 export const reviewTape = createAsyncThunk(
   'jericho/reviewTape',
-  async ({ video, recordingId, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch, getState }) => {
+  guardUser(async ({ video, recordingId, sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch, getState }) => {
     if (recordingId) {
       const selected = getState().jericho.reviewRecording;
       const savedKey = selected?.id === recordingId ? selected.idempotencyKey : null;
@@ -422,13 +423,13 @@ export const reviewTape = createAsyncThunk(
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
       return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: shouldReuseKey(err) });
     }
-  }
+  })
 );
 
 /** Compare 2-4 takes of the same audition → ranked winner + why */
 export const compareTakes = createAsyncThunk(
   'jericho/compareTakes',
-  async ({ takes = [], sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
+  guardUser(async ({ takes = [], sides = '', role = '', tone = '', idempotencyKey = '' }, { rejectWithValue, signal, dispatch }) => {
     const startedAt = Date.now();
     let lastLoaded = 0, lastTotal = 0;
     try {
@@ -462,7 +463,7 @@ export const compareTakes = createAsyncThunk(
       captureUploadFailure('compare_takes_upload', err, startedAt, lastLoaded, lastTotal, 900000);
       return rejectWithValue({ message: aiErrorMessage(err, 'Take comparison failed'), reuseKey: shouldReuseKey(err) });
     }
-  }
+  })
 );
 
 /**
@@ -479,7 +480,7 @@ export const compareTakes = createAsyncThunk(
  */
 export const recoverLatestReview = createAsyncThunk(
   'jericho/recoverLatestReview',
-  async (_arg, { rejectWithValue, fulfillWithValue, signal, getState }) => {
+  guardUser(async (_arg, { rejectWithValue, fulfillWithValue, signal, getState }) => {
     try {
       const selected = getState().jericho.reviewRecording;
       const { data } = await axios.get(endPoints.latestReview, {
@@ -504,12 +505,12 @@ export const recoverLatestReview = createAsyncThunk(
       // never produce an error banner — the user did not ask for this.
       return rejectWithValue(null);
     }
-  }
+  })
 );
 
 export const resumeAnalysisJob = createAsyncThunk(
   'jericho/resumeAnalysisJob',
-  async ({ jobId, kind }, { rejectWithValue, signal }) => {
+  guardUser(async ({ jobId, kind }, { rejectWithValue, signal }) => {
     try {
       const result = await pollAnalysisJob(jobId, { signal });
       clearPendingJob(jobId);
@@ -527,7 +528,7 @@ export const resumeAnalysisJob = createAsyncThunk(
       }
       return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed'), reuseKey });
     }
-  },
+  }),
   { condition: (slot, { getState }) => pendingJobMatchesRecording(slot, getState().jericho.reviewRecording) }
 );
 
@@ -753,6 +754,7 @@ const jerichoSlice = createSlice({
         applyReviewResult(state, action.payload);
       })
       .addCase(reviewTape.rejected, (state, action) => {
+        if (action.payload?.stale) return; // completed for a user who is gone
         state.tapeReviewLoading = false;
         state.tapeReviewError = action.payload?.message || action.payload || 'Tape review failed';
         state.uploadProgress = 0;
@@ -769,6 +771,7 @@ const jerichoSlice = createSlice({
         applyCompareResult(state, action.payload);
       })
       .addCase(compareTakes.rejected, (state, action) => {
+        if (action.payload?.stale) return; // completed for a user who is gone
         state.compareLoading = false;
         state.compareError = action.payload?.message || action.payload || 'Take comparison failed';
         state.uploadProgress = 0;
@@ -812,6 +815,7 @@ const jerichoSlice = createSlice({
       .addCase(recoverLatestReview.rejected, () => {})
 
       .addCase(resumeAnalysisJob.rejected, (state, action) => {
+        if (action.payload?.stale) return; // completed for a user who is gone
         if (!pendingJobMatchesRecording(action.meta.arg, state.reviewRecording)) return;
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;
