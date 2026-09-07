@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { usePushNotifications } from "../../hooks/usePushNotifications";
+import { getPendingAuditionNotification, clearAuditionNotification } from "../../utils/auditionNotification";
+import useAuditionNotification from "../../hooks/useAuditionNotification";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
 import UpdateBanner from "../../components/UpdateBanner";
@@ -2077,6 +2079,26 @@ function AuditionsScreen() {
   const [selected, setSelected] = useState(null);
   const [viewSection, setViewSection] = useState("tracker");
   const [showAddForm, setShowAddForm] = useState(false);
+  // A deadline reminder (push or bell) hands this screen a record id. Refetch,
+  // then open that audition's detail from the fresh, user-scoped list. Never
+  // let an older handoff replace a newer one (clear checks identity).
+  const notificationTarget = useAuditionNotification('auditions');
+  useEffect(() => {
+    if (!notificationTarget) return;
+    let cancelled = false;
+    setViewSection('tracker');
+    Promise.resolve(dispatch(fetchAuditionsThunk())).then((res) => {
+      if (cancelled) return;
+      const payload = res?.payload;
+      const list = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : rawAuditions;
+      const hit = notificationTarget.id && list.find((a) => String(a.id) === notificationTarget.id);
+      if (hit) setSelected(mapAudition(hit));
+      clearAuditionNotification(notificationTarget);
+    }).catch(() => { /* keep the handoff; the next mount retries */ });
+    return () => { cancelled = true; };
+    // rawAuditions is only a fallback snapshot; the fetch result is authoritative.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notificationTarget, dispatch]);
   const [addForm, setAddForm] = useState({ project: '', role: '', casting_director: '', project_type: 'film', callback_date: '', notes: '' });
   const [addSaving, setAddSaving] = useState(false);
   const [scanLoading, setScanLoading] = useState(false);
@@ -3933,6 +3955,9 @@ export default function DrSelfTapeApp() {
       }
     };
     window.addEventListener('drst-navigate', handler);
+    // A deadline push can arrive before this shell mounts after a cold start.
+    const pendingAudition = getPendingAuditionNotification();
+    if (pendingAudition) handler({ detail: pendingAudition.mobile });
     return () => window.removeEventListener('drst-navigate', handler);
   }, []);
 

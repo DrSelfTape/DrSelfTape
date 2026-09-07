@@ -38,6 +38,9 @@ import {
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { markStep } from '../../../components/Dashboard/TutorialChecklist';
 import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
+import useAuditionNotification from '../../../hooks/useAuditionNotification';
+import { clearAuditionNotification, findNotifiedAudition } from '../../../utils/auditionNotification';
+import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 
 /* ─── constants ─────────────────────────────────────────────────── */
 
@@ -322,6 +325,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
 /* ─── detail side panel (portaled) ──────────────────────────────── */
 
 function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
+  useHideMobileHeader(Boolean(audition));
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -347,14 +351,6 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
       return () => document.removeEventListener('mousedown', handleClick);
     }
   }, [audition, onClose]);
-
-  // Hide MobileApp's persistent top bar while the audition detail
-  // panel is open (same overlap problem as NewAuditionModal).
-  useEffect(() => {
-    if (!audition) return;
-    window.dispatchEvent(new CustomEvent('drst-modal-open'));
-    return () => window.dispatchEvent(new CustomEvent('drst-modal-closed'));
-  }, [audition]);
 
   if (!audition) return null;
 
@@ -925,6 +921,7 @@ export default function DashboardAuditions() {
   const [activeDragId, setActiveDragId] = useState(null);
   const [selectedAudition, setSelectedAudition] = useState(null);
   const [showNewForm, setShowNewForm] = useState(false);
+  const notificationTarget = useAuditionNotification('auditions');
 
   const allAuditions = useMemo(() => {
     const data = tracker?.data || {};
@@ -970,6 +967,21 @@ export default function DashboardAuditions() {
   useEffect(() => {
     dispatch(fetchTrackerThunk());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!notificationTarget) return;
+    let cancelled = false;
+    setSelectedAudition(null);
+    // The panel can already be open when a push arrives. Read fresh scoped
+    // data, and never let a slower old notification replace the current one.
+    dispatch(fetchTrackerThunk()).unwrap().then(result => {
+      if (cancelled) return;
+      const audition = findNotifiedAudition(result, notificationTarget.id);
+      if (audition) setSelectedAudition(audition);
+      clearAuditionNotification(notificationTarget);
+    }).catch(() => { /* keep the handoff for retry on the next panel mount */ });
+    return () => { cancelled = true; };
+  }, [notificationTarget, dispatch]);
 
   const changeStatus = useCallback(
     async (auditionId, newColumn) => {
