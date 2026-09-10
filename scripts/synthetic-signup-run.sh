@@ -27,9 +27,14 @@ if [ -f "$OUT/latest.json" ]; then
     status=$("$NODE" -e 'console.log(decodeURIComponent(process.argv[1]))' "$status")
     stage=$("$NODE" -e 'console.log(decodeURIComponent(process.argv[1]))' "$stage")
     error=$("$NODE" -e 'console.log(decodeURIComponent(process.argv[1]))' "$error")
+    # A report we could not parse is a failure of the monitor, never silence.
+    [ -n "$status" ] || { status="CRASH"; stage="report_unreadable"; error="exit $code"; }
   fi
 fi
-if [ "$status" = "CRASH" ]; then error="exit $code: $(tail -c 200 "$OUT/run.err" | tr '\n' ' ')"; fi
+if [ "$status" = "CRASH" ]; then
+  detail="$(tail -c 120 "$OUT/run.err" 2>/dev/null; tail -c 120 "$OUT/run.out" 2>/dev/null)"
+  error="exit $code: $(printf '%s' "$detail" | tr '\n' ' ')"
+fi
 echo "$(date -u +%FT%TZ) status=$status stage=$stage code=$code" >> "$OUT/history.log"
 [ "$status" = "PASS" ] && exit 0
 
