@@ -3,8 +3,8 @@
 <plist version="1.0"><dict>
   <key>Label</key><string>com.drselftapes.synthetic-signup</string>
   <key>ProgramArguments</key><array>
-    <string>/opt/homebrew/bin/node</string>
-    <string>/Users/drselftape/Downloads/Projects/DrSelfTape-development/scripts/synthetic-signup.mjs</string>
+    <string>/bin/bash</string>
+    <string>/Users/drselftape/Downloads/Projects/DrSelfTape-development/scripts/synthetic-signup-run.sh</string>
   </array>
   <key>WorkingDirectory</key><string>/Users/drselftape/Downloads/Projects/DrSelfTape-development</string>
   <key>StartCalendarInterval</key><dict><key>Hour</key><integer>7</integer><key>Minute</key><integer>30</integer></dict>

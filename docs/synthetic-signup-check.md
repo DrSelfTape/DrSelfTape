@@ -30,6 +30,12 @@ Third-party browser telemetry and unrelated mutation requests are blocked. The s
 
 The monitor checks the registration endpoint's GET capability response before submitting. Until the backend changes are deployed, the full check reports BLOCKED and creates no account. The backend changes are in `apps/users/synthetic.py`, registration, signals, and the two analytics capture modules.
 
+## Alerting
+
+launchd runs `scripts/synthetic-signup-run.sh`, not the monitor directly. The wrapper runs the monitor, appends one line per run to `output/synthetic-signup/history.log`, and on anything other than PASS (FAIL, BLOCKED, or a crash before the report was written) POSTs `{check, status, stage, error, host}` to `POST /api/v1/notifications/system/ops-alert/` on the backend. That endpoint checks the `X-Ops-Alert-Token` header against `OPS_ALERT_TOKEN` in constant time and pushes an APNs alert to the phones registered to the accounts in `OPS_ALERT_EMAILS` (default `info@drselftapes.com`); if none of those accounts has an iOS device token it emails them instead. The Mac side reads the token from `~/.config/dst-synthetic/env` (`DST_OPS_ALERT_TOKEN=…`, mode 600, not in the repo). A PASS sends nothing.
+
+Test the whole chain without breaking anything: `manage.py ops_alert --dry-run` on Railway shows who would get it and how many phones; `manage.py ops_alert` sends a real test push. If the token is missing on the Mac the wrapper writes `ALERT NOT SENT` to history.log and exits 1.
+
 ## Interrupted runs
 
 A random password and non-deliverable address are written **before submission** to a mode-0600 `pending-account.json` in the ignored output directory. Tokens and passwords are never written to the public status report. A failure or uncertain signup response triggers cleanup by logging in with those exact credentials, verifying both email and account ID, and deleting that account only. If cleanup cannot be confirmed, the recovery file remains and subsequent signup runs stop. `--cleanup` retries the authenticated deletion.
