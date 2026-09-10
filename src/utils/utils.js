@@ -1,10 +1,7 @@
 import { useEffect } from 'react';
 
 // Email Validation
-export const validateEmail = (email) => {
-  var emailRegex = /^\w.+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$/;
-  return emailRegex.test(email);
-};
+export { validateEmail } from './email';
 
 // Password Validation
 export const validatePassword = (password) => ({

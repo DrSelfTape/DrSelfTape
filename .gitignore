@@ -56,3 +56,6 @@ android/key.properties
 
 # Firebase Android config (place locally; required to build Android FCM push)
 android/app/google-services.json
+
+# Synthetic check artifacts can contain temporary account recovery credentials.
+output/synthetic-signup/
