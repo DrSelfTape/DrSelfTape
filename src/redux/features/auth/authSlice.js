@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 // Local Imports
 import axios from '../../http';
+import { plainBody } from '../../../utils/plainBody';
 import endPoints from '../../constant';
 
 // Initial state for auth
@@ -62,7 +63,9 @@ export const registerUser = createAsyncThunk(
       // user — the race-proof identity stitch.
       let ph_distinct_id = '';
       try { ph_distinct_id = await (await import('../../../utils/analytics')).getPostHogDistinctId(); } catch { /* swallow */ }
-      const { data } = await axios.post(endPoints.register, { ...formData, ph_distinct_id });
+      // formData arrives as a FormData from the signup screen. Spreading it
+      // directly gives {} and the server sees no fields at all.
+      const { data } = await axios.post(endPoints.register, { ...plainBody(formData), ph_distinct_id });
       // user_signup is now fired SERVER-SIDE at user creation (BE
       // posthog_capture.py) — the canonical counter covering email AND Apple
       // paths. Firing it here too would double-count email signups.
