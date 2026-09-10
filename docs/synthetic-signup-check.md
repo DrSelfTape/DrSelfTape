@@ -54,6 +54,12 @@ Backend: `manage.py test apps.users.tests_synthetic_signup apps.analytics.tests`
 - Public production preflight failed at form submission (no POST reached the API), consistent with the old email validator. No production account was created. This is not a production end-to-end PASS.
 - Changes are local; production deployment and scheduled monitoring are not enabled.
 
+### Production validation recorded September 9, 2026, 8:00 PM (Pacific)
+
+- Backend (fb505b1) and frontend (63a7cb3) deployed. The script default API is now the Railway origin the production bundle posts to; the earlier production preflight failure was partly that mismatch (the interceptor aborts a registration POST aimed at any other origin), not only the old validator.
+- Production preflight PASS (form submitted, POST intercepted, no account). Production full PASS: `mode: full`, `status: PASS`, `cleanup: deleted`, under 6 seconds.
+- launchd job installed at `~/Library/LaunchAgents/com.drselftapes.synthetic-signup.plist`, daily 7:30 AM, and kickstarted once through launchd: PASS. Results land in `output/synthetic-signup/latest.json`; a FAIL is only visible there and in `scheduler-error.log` until it is wired to the dashboard or an alert.
+
 1. Review and deploy the backend protections and frontend email-validator fix through the normal release processes. The previous frontend validator rejects subdomains and long domain endings, including the reserved synthetic address.
 2. Run one full check and confirm `mode: full`, `status: PASS`, and `cleanup: deleted`.
 3. Enable a daily run on an always-on machine. Keep output private and surface the redacted report in the local dashboard; the monitor does not automatically message anyone.
