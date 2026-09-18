@@ -16,7 +16,7 @@ import {
 } from '../../../redux/features/readers/readersMatchSlice';
 import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
-import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import { tapPrimary, cheer } from '../../../utils/haptics';
 import { supplyLine } from '../../../utils/supply';
 import VisibilityPrompt from '../../../components/Shared/VisibilityPrompt';

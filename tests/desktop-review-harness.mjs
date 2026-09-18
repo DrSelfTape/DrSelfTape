@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const require = createRequire(import.meta.url);
 export const BASE = '3691147';
 
-export async function loadDesktopReview({ baseline = false, mutateSharedNotes = false } = {}) {
+export async function loadDesktopReview({ baseline = false, mutateSharedNotes = false, browserEntry = null } = {}) {
   const mocks = {
     'constant': 'export const baseURL = ""; export default {};',
     'react-redux': `export const useSelector = fn => fn(globalThis.__desktopState);
@@ -25,27 +25,28 @@ export async function loadDesktopReview({ baseline = false, mutateSharedNotes = 
       export const isCapacitorNative = () => !!globalThis.__desktopNative;
       export const openNotificationSettings = () => {};`,
     'goUpgrade': 'export const goUpgrade = () => {};',
-    'TutorialChecklist': 'export const markStep = () => {};',
+    'tutorialProgress': 'export const markStep = () => {};',
+    'TutorialChecklist': 'export const markStep = () => {};', // Historical baseline import.
     'TapeAnalyzerTutorial': 'export const TAPE_TUTORIAL_KEY = "tutorial"; export default function Tutorial() { return null; }',
     '@capacitor/core': 'export const Capacitor = { isNativePlatform: () => !!globalThis.__desktopNative, getPlatform: () => globalThis.__desktopNative ? "ios" : "web" };',
     'react-router-dom': `export const useSearchParams = () => [new URLSearchParams(globalThis.__desktopTab || '')];
       export const useNavigate = () => () => {};`,
   };
   const result = await build({
-    stdin: { resolveDir: root, contents: `
+    stdin: { resolveDir: root, loader: 'jsx', contents: browserEntry || `
       export { default as DesktopTapeReport } from './src/panels/Dashboard/Jericho/DesktopTapeReport.jsx';
       export { default as TapeReview } from './src/panels/Dashboard/Jericho/TapeReview.jsx';
       export { default as CompareTakes } from './src/panels/Dashboard/Jericho/CompareTakes.jsx';
       export { default as JerichoDashboard } from './src/panels/Dashboard/Jericho/index.jsx';
       export { ReviewDetailSheet } from './src/panels/Dashboard/Jericho/index.jsx';
     ` },
-    bundle: true, write: false, platform: 'node', format: 'cjs', packages: 'external', jsx: 'automatic',
+    bundle: true, write: false, platform: browserEntry ? 'browser' : 'node', format: browserEntry ? 'iife' : 'cjs', packages: browserEntry ? undefined : 'external', jsx: 'automatic',
     loader: { '.css': 'empty' }, define: { 'import.meta.env': '{}' },
     plugins: [{ name: 'desktop-render-services', setup(builder) {
       builder.onResolve({ filter: /.*/ }, ({ path, importer }) => {
         if (path === 'react' && /usePersonalRecords\.js$/.test(importer)) return { path: 'hooks', namespace: 'mock' };
         if (path === 'react' && (/\/(DesktopCompareMatrix|DesktopPerformanceDNA|DesktopTapeReport)\.jsx$/.test(importer) || /Jericho\/index\.jsx$|useIsMobile\.js$/.test(importer))) return { path: 'hooks', namespace: 'mock' };
-        if (path === 'react') return { path, external: true };
+        if (path === 'react') return browserEntry ? { path: require.resolve('react') } : { path, external: true };
         const key = Object.keys(mocks).find(name => path === name || path.endsWith('/' + name));
         if (key) return { path: key, namespace: 'mock' };
       });
@@ -64,13 +65,15 @@ export async function loadDesktopReview({ baseline = false, mutateSharedNotes = 
         let source = baseline
           ? execFileSync('git', ['show', `${BASE}:${path.slice(root.length)}`], { cwd: root, encoding: 'utf8' })
           : readFileSync(path, 'utf8');
-        if (!baseline && mutateSharedNotes && path.endsWith('/TapeReviewNotes.jsx')) source = source.replace('Quick read', 'SHARED RENDERER REGRESSION');
+        if (!baseline && mutateSharedNotes && path.endsWith('/TapeReviewNotes.jsx')) source = source.replace('Performance DNA', 'SHARED RENDERER REGRESSION');
         // Exercise every reveal stage, including the shared notes renderer.
+        if (browserEntry) return { contents: source, loader: 'jsx' };
         return { contents: source.replace('function ReviewDetailSheet(', 'export function ReviewDetailSheet(').replace('const [revealStage, setRevealStage] = useState(0)',
           'const [revealStage, setRevealStage] = useState(3)'), loader: 'jsx' };
       });
     } }],
   });
+  if (browserEntry) return result.outputFiles[0].text;
   const mod = { exports: {} };
   new Function('require', 'module', 'exports', result.outputFiles[0].text)(require, mod, mod.exports);
   return mod.exports;

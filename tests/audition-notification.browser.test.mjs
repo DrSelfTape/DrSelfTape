@@ -3,12 +3,10 @@ import { before, after, test } from 'node:test';
 import { build } from 'esbuild';
 import { fileURLToPath } from 'node:url';
 
-let puppeteer;
-try { ({ default: puppeteer } = await import('puppeteer')); } catch { /* optional, as in existing suites */ }
+import { launchBrowser } from './browser.mjs';
 let browser, page, bundle;
 const errors = [];
 before(async () => {
-  if (!puppeteer) return;
   const root = fileURLToPath(new URL('../', import.meta.url));
   const mocks = {
     'react-redux': `const dispatch = action => window.dispatchMock(action);
@@ -22,7 +20,7 @@ before(async () => {
       export const createSubmissionThunk = () => ({});
       export const updateSubmissionThunk = createSubmissionThunk, deleteSubmissionThunk = createSubmissionThunk,
         promoteToAuditionThunk = createSubmissionThunk;`,
-    'TutorialChecklist': 'export const markStep = () => {};',
+    'tutorialProgress': 'export const markStep = () => {};',
     'TalentReportImporter': 'export default function TalentReportImporter() { return null; }',
     'http': 'export default {};',
   };
@@ -68,12 +66,12 @@ before(async () => {
   });
   bundle = result.outputFiles[0].text;
   // No dev server needed: the sandbox may prohibit listening on localhost.
-  browser = await puppeteer.launch({ headless: true, pipe: true });
+  browser = await launchBrowser();
   page = await browser.newPage();
   page.on('pageerror', error => errors.push(error.message));
 });
 after(async () => { await browser?.close(); });
-const btest = (name, fn) => test(name, async t => puppeteer ? fn() : t.skip('puppeteer not installed'));
+const btest = test;
 
 async function mount(data, width = 375) {
   errors.length = 0;

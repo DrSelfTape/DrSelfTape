@@ -4,7 +4,7 @@
 // Handles mute, camera, screen sharing, and stream versioning.
 // ---------------------------------------------------------------
 
-import { useState, useCallback, useEffect, useRef, startTransition } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 
 export const useLocalStream = ({
   hasJoined,
@@ -14,10 +14,6 @@ export const useLocalStream = ({
   previousCameraTrackRef,
   screenVideoRef,
   setupAudioAnalyser,
-  setIsRemoteCameraOff,
-  remoteAudioContextRef,
-  audioLevelAnimationRef,
-  remoteVideoRef,
   initialCameraOff = false,
   initialMuted = false,
   sendScreenShare,
@@ -100,7 +96,7 @@ export const useLocalStream = ({
     
     // INSTANT sender track updates - update ALL audio senders
     if (hasJoined) {
-      const micTrackIds = new Set(micTracks.map(t => t.id));
+      new Set(micTracks.map(t => t.id));
       const allCalls = new Set();
       if (currentCallRef?.current) allCalls.add(currentCallRef.current);
       if (activeCallsRef?.current) {
@@ -137,7 +133,7 @@ export const useLocalStream = ({
     if (broadcastMediaStateFn) {
       try {
         broadcastMediaStateFn({ muted: newMuted });
-      } catch (err) {
+      } catch {
         // Silent fail
       }
     }
@@ -189,7 +185,7 @@ export const useLocalStream = ({
     
     // INSTANT sender track updates - update ALL non-screen-share video senders
     if (hasJoined) {
-      const cameraTrackIds = new Set(cameraTracks.map(t => t.id));
+      new Set(cameraTracks.map(t => t.id));
       const allCalls = new Set();
       if (currentCallRef?.current) allCalls.add(currentCallRef.current);
       if (activeCallsRef?.current) {
@@ -226,7 +222,7 @@ export const useLocalStream = ({
     if (broadcastMediaStateFn) {
       try {
         broadcastMediaStateFn({ cameraOff: newCameraOff });
-      } catch (err) {
+      } catch {
         // Silent fail
       }
     }
@@ -235,6 +231,39 @@ export const useLocalStream = ({
   // -------------------------------------------------------------
   // Screen sharing
   // -------------------------------------------------------------
+  const stopScreenShare = useCallback(() => {
+    // Notify remote participants immediately via data channel
+    if (broadcastMediaStateFn) {
+      broadcastMediaStateFn({ screenSharing: false });
+      console.log('📢 Broadcasting screen share stop notification');
+
+      // Retry sending the notification
+      setTimeout(() => {
+        broadcastMediaStateFn({ screenSharing: false });
+      }, 500);
+    }
+
+    // Stop screen share in peer connection first
+    if (stopScreenSharePeerFn) {
+      stopScreenSharePeerFn();
+    }
+
+    if (screenStreamRef.current) {
+      screenStreamRef.current.getTracks().forEach((track) => track.stop());
+      screenStreamRef.current = null;
+    }
+    setIsScreenSharing(false);
+    setIsScreenShareCollapsed(false);
+    setIsScreenShareFullscreen(false);
+    if (screenVideoRef.current) {
+      screenVideoRef.current.srcObject = null;
+    }
+
+    // Note: Mute state is already synced via the ref, so no need to sync here
+    // The mute toggle function handles state updates independently
+  }, [screenStreamRef, screenVideoRef, setIsScreenSharing, setIsScreenShareCollapsed, setIsScreenShareFullscreen, stopScreenSharePeerFn, broadcastMediaStateFn]);
+
+
   const startScreenShare = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
@@ -282,39 +311,8 @@ export const useLocalStream = ({
     } catch (err) {
       console.error('Screen share failed:', err);
     }
-  }, [screenStreamRef, screenVideoRef, sendScreenShareFn, broadcastMediaStateFn]);
+  }, [screenStreamRef, screenVideoRef, sendScreenShareFn, broadcastMediaStateFn, stopScreenShare]);
 
-  const stopScreenShare = useCallback(() => {
-    // Notify remote participants immediately via data channel
-    if (broadcastMediaStateFn) {
-      broadcastMediaStateFn({ screenSharing: false });
-      console.log('📢 Broadcasting screen share stop notification');
-      
-      // Retry sending the notification
-      setTimeout(() => {
-        broadcastMediaStateFn({ screenSharing: false });
-      }, 500);
-    }
-
-    // Stop screen share in peer connection first
-    if (stopScreenSharePeerFn) {
-      stopScreenSharePeerFn();
-    }
-
-    if (screenStreamRef.current) {
-      screenStreamRef.current.getTracks().forEach((track) => track.stop());
-      screenStreamRef.current = null;
-    }
-    setIsScreenSharing(false);
-    setIsScreenShareCollapsed(false);
-    setIsScreenShareFullscreen(false);
-    if (screenVideoRef.current) {
-      screenVideoRef.current.srcObject = null;
-    }
-    
-    // Note: Mute state is already synced via the ref, so no need to sync here
-    // The mute toggle function handles state updates independently
-  }, [screenStreamRef, screenVideoRef, setIsScreenSharing, setIsScreenShareCollapsed, setIsScreenShareFullscreen, stopScreenSharePeerFn, broadcastMediaStateFn, isMuted]);
 
   // -------------------------------------------------------------
   // Replace video track (for camera switching) - uses replaceTrack on senders

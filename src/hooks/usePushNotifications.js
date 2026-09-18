@@ -176,13 +176,13 @@ async function wireNativeListeners() {
         platform: Capacitor.getPlatform() === 'android' ? 'android' : 'ios',
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
+
       console.error('device-token POST failed:', err);
     }
   });
 
   PushNotifications.addListener('registrationError', (err) => {
-    // eslint-disable-next-line no-console
+
     console.warn('APNs registration error:', err);
   });
 
@@ -214,7 +214,7 @@ export async function unregisterPushToken() {
       data: { token },
     });
   } catch (err) {
-    // eslint-disable-next-line no-console
+
     console.warn('device-token DELETE failed:', err);
   }
 }
@@ -257,7 +257,7 @@ async function subscribeWeb() {
   // No VAPID public key configured on the BE → web push can't be set up.
   // Skip gracefully instead of letting atob(undefined) throw downstream.
   if (!vapidKey) {
-    // eslint-disable-next-line no-console
+
     console.warn('Web push skipped: VAPID public key is not configured.');
     return { granted: false };
   }
@@ -306,7 +306,7 @@ export function usePushNotifications() {
         setPermission('granted');
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
+
       console.error('Push subscription failed:', err);
     }
   };

@@ -54,7 +54,7 @@ const groupNotificationsByTime = (notifications) => {
     groups[group].push(notification);
   });
 
-  return Object.entries(groups).filter(([_, items]) => items.length > 0);
+  return Object.entries(groups).filter(([, items]) => items.length > 0);
 };
 
 // ============================================================

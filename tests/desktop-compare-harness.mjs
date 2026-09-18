@@ -24,7 +24,7 @@ export async function loadDesktopReview({ baseline = false } = {}) {
       export const isCapacitorNative = () => !!globalThis.__desktopNative;
       export const openNotificationSettings = () => {};`,
     'goUpgrade': 'export const goUpgrade = () => {};',
-    'TutorialChecklist': 'export const markStep = () => {};',
+    'tutorialProgress': 'export const markStep = () => {};',
     'TapeAnalyzerTutorial': 'export const TAPE_TUTORIAL_KEY = "tutorial"; export default function Tutorial() { return null; }',
     '@capacitor/core': 'export const Capacitor = { isNativePlatform: () => !!globalThis.__desktopNative, getPlatform: () => globalThis.__desktopNative ? "ios" : "web" };',
     'react-router-dom': `export const useSearchParams = () => [new URLSearchParams(globalThis.__desktopTab || '')];

@@ -23,13 +23,11 @@ import { CircularProgress } from '@mui/material';
  */
 const VideoTile = ({
   videoRef,
-  stream,
   label,
   isPinned = false,
   isLoading = false,
   showAvatar = false,
   avatarContent,
-  audioLevel = 0,
   variant = 'default',
   role,
   onTileSelect,

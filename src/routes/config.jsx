@@ -3,7 +3,7 @@ import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 
 // Local import
-import { RoleBasedRedirect } from './routeHelpers';
+import { RoleBasedRedirect } from './RoleBasedRedirect';
 // Direct file imports (not via the barrel) so tree-shaking can't pull in
 // the rest of components/Shared — keeps the initial bundle lean.
 import { ComingSoon } from '../components/Shared/ComingSoon';

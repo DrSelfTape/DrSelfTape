@@ -12,7 +12,7 @@ import useHideMobileHeader from './useHideMobileHeader';
  *   onSubmit     — (rating, review) => Promise<void>
  *   onClose      — dismiss without rating
  */
-export default function ReaderRatingModal({ partnerName, matchId, onSubmit, onClose }) {
+export default function ReaderRatingModal({ partnerName, onSubmit, onClose }) {
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [review, setReview] = useState('');

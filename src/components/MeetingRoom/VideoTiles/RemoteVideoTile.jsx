@@ -3,7 +3,7 @@
 // Remote participant tile (video or avatar)
 // ---------------------------------------------------------------
 
-import { useMemo, useRef, useEffect, memo } from 'react';
+import { useRef, useEffect, memo } from 'react';
 import { CircularProgress } from '@mui/material';
 import { MicOff } from '@mui/icons-material';
 
@@ -22,7 +22,6 @@ const RemoteVideoTile = memo(({
   getInitials,
   waitingMessage,
   remoteConnected,
-  remoteStreamVersion,
 }) => {
   const isCompact = variant === 'compact';
   
@@ -39,14 +38,14 @@ const RemoteVideoTile = memo(({
   
   // Make showAvatar reactive to isRemoteCameraOff and stream state
   // Don't depend on remoteStreamVersion to prevent flickering during mute/camera toggles
-  const showAvatar = useMemo(() => {
+  const showAvatar = (() => {
     if (isRemoteCameraOff) return true;
     if (!remoteStreamRef?.current) return true;
     const videoTracks = remoteStreamRef.current.getVideoTracks();
     if (!videoTracks || videoTracks.length === 0) return true;
     const hasEnabledTrack = videoTracks.some((t) => t.enabled && !t.muted);
     return !hasEnabledTrack;
-  }, [isRemoteCameraOff, remoteStreamRef, remoteStreamVersion]);
+  })();
 
   // Check if we have a stream - if stream exists, we're connected (even if tracks are disabled)
   // This prevents loading state from showing when camera/mic is toggled

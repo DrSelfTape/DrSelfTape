@@ -173,7 +173,7 @@ export const createNotes = createAsyncThunk(
 // Update Notes
 export const updateNotes = createAsyncThunk(
   'sceneStudyScripts/updateNotes',
-  async ({ analysisId, noteId, payload }, { rejectWithValue }) => {
+  async ({ analysisId, payload }, { rejectWithValue }) => {
     try {
       const { data } = await axios.put(
         `${endPoints.scriptAnalysis}/analysis/${analysisId}/notes/`,
@@ -413,7 +413,7 @@ export const sceneStudyScriptsSlice = createSlice({
         state.notesListingLoading = false;
         state.notes = action.payload || null;
       })
-      .addCase(getNotes.rejected, (state, action) => {
+      .addCase(getNotes.rejected, (state) => {
         state.notesListingLoading = false;
       })
 
@@ -425,7 +425,7 @@ export const sceneStudyScriptsSlice = createSlice({
         state.notesLoading = false;
         state.notes = action.payload?.notes || null;
       })
-      .addCase(createNotes.rejected, (state, action) => {
+      .addCase(createNotes.rejected, (state) => {
         state.notesLoading = false;
       })
 
@@ -437,7 +437,7 @@ export const sceneStudyScriptsSlice = createSlice({
         state.notesLoading = false;
         state.notes = action.payload?.notes || null;
       })
-      .addCase(updateNotes.rejected, (state, action) => {
+      .addCase(updateNotes.rejected, (state) => {
         state.notesLoading = false;
       })
 
@@ -445,10 +445,10 @@ export const sceneStudyScriptsSlice = createSlice({
       .addCase(deleteNotes.pending, (state) => {
         state.notesDeleteLoading = true;
       })
-      .addCase(deleteNotes.fulfilled, (state, action) => {
+      .addCase(deleteNotes.fulfilled, (state) => {
         state.notesDeleteLoading = false;
       })
-      .addCase(deleteNotes.rejected, (state, action) => {
+      .addCase(deleteNotes.rejected, (state) => {
         state.notesDeleteLoading = false;
       })
 
@@ -532,7 +532,7 @@ export const sceneStudyScriptsSlice = createSlice({
         state.rehearsalStartLoading = true;
         state.rehearsalError = null;
       })
-      .addCase(startRehearsalSession.fulfilled, (state, action) => {
+      .addCase(startRehearsalSession.fulfilled, (state) => {
         state.rehearsalStartLoading = false;
       })
       .addCase(startRehearsalSession.rejected, (state, action) => {

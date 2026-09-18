@@ -102,7 +102,7 @@ export const Signup = () => {
   }, []);
 
   const handleChange = (e) => {
-    let { name, value, type, files } = e.target;
+    let { name, value } = e.target;
 
     if (name === 'phoneNo') {
       value = value.replace(/[^0-9+\-\s()]/g, '');

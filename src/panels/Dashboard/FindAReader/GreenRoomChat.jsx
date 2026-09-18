@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { ReaderPortrait } from '../../../components/Aurora';
 import { hasAvatar } from '../../../components/Aurora/avatarStyle';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
@@ -66,7 +66,7 @@ const GreenRoomChat = (props = {}) => {
   const { greenRoomMessages: allMessages, messagesLoading, matches } = useSelector(
     (state) => state.readersMatch
   );
-  const greenRoomMessages = Array.isArray(allMessages?.[matchId]) ? allMessages[matchId] : [];
+  const greenRoomMessages = useMemo(() => Array.isArray(allMessages?.[matchId]) ? allMessages[matchId] : [], [allMessages, matchId]);
 
   // Blob URLs created locally when an upload fails — we render them as the
   // file preview, but we own the lifecycle. Revoke on unmount so they don't
@@ -103,7 +103,7 @@ const GreenRoomChat = (props = {}) => {
   const [rehearsalError, setRehearsalError] = useState('');
   const [showActions, setShowActions] = useState(false);
   const [sidesFile, setSidesFile] = useState(null);
-  const [uploadingFile, setUploadingFile] = useState(false);
+  const [, setUploadingFile] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState(30);
   const [bookingLoading, setBookingLoading] = useState(false);
@@ -415,7 +415,7 @@ const GreenRoomChat = (props = {}) => {
           style={{
             // ring color via inline style — Tailwind hex bracket safe-listing
             // is unreliable for CSS variables
-            // eslint-disable-next-line
+
           }}
         >
           <span

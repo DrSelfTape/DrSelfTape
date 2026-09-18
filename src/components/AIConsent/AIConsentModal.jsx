@@ -21,6 +21,8 @@ import axiosInstance from '../../redux/http';
 import { setAiConsentAcceptedAt } from '../../redux/features/auth/authSlice';
 import { openExternal } from '../../utils/openExternal';
 
+import { consentRequestState } from './consentRequest';
+
 const PRIVACY_URL = 'https://drselftape.app/privacy-policy.html';
 
 const PROVIDERS = [
@@ -43,28 +45,6 @@ const PROVIDERS = [
 
 const PRIMARY_GOLD = '#D4A85F';
 const DEEP_GOLD = '#7A5A18';
-
-let pendingResolve = null;
-
-/**
- * Opens the AI consent modal globally. Returns a Promise that resolves
- * with `true` when the user accepts, `false` when they decline. Callers
- * should be safe with either outcome — typically: bail out / navigate
- * back on `false`, proceed on `true`.
- *
- *   const ok = await requestAiConsent();
- *   if (!ok) return navigate(-1);
- */
-export function requestAiConsent() {
-  return new Promise((resolve) => {
-    pendingResolve = resolve;
-    try {
-      window.dispatchEvent(new CustomEvent('drst-open-ai-consent'));
-    } catch {
-      resolve(false);
-    }
-  });
-}
 
 function ProviderRow({ p }) {
   return (
@@ -108,7 +88,7 @@ export default function AIConsentModal() {
     // Clear the module-level pending slot unconditionally. The previous
     // check (`=== resolveRef.current`) compared against the just-nulled
     // ref, so it stayed pinned to the most-recent resolver across opens.
-    pendingResolve = null;
+    consentRequestState.pendingResolve = null;
   }, []);
 
   useEffect(() => {
@@ -117,14 +97,14 @@ export default function AIConsentModal() {
       // the modal never has to render. This makes it safe for every
       // AI feature to `await requestAiConsent()` defensively.
       if (user?.ai_consent_accepted_at) {
-        if (pendingResolve) {
-          pendingResolve(true);
-          pendingResolve = null;
+        if (consentRequestState.pendingResolve) {
+          consentRequestState.pendingResolve(true);
+          consentRequestState.pendingResolve = null;
         }
         return;
       }
-      resolveRef.current = pendingResolve;
-      pendingResolve = null;
+      resolveRef.current = consentRequestState.pendingResolve;
+      consentRequestState.pendingResolve = null;
       setOpen(true);
     };
     window.addEventListener('drst-open-ai-consent', handler);

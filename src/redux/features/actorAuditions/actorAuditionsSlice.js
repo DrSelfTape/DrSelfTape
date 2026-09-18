@@ -178,7 +178,7 @@ export const actorAuditionsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createActorAudition.fulfilled, (state, action) => {
+      .addCase(createActorAudition.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -192,7 +192,7 @@ export const actorAuditionsSlice = createSlice({
         state.materialLoading = true;
         state.materialError = null;
       })
-      .addCase(addActorAuditionMaterial.fulfilled, (state, action) => {
+      .addCase(addActorAuditionMaterial.fulfilled, (state) => {
         state.materialLoading = false;
         state.materialError = null;
       })
@@ -270,7 +270,7 @@ export const actorAuditionsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateActorAudition.fulfilled, (state, action) => {
+      .addCase(updateActorAudition.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -284,7 +284,7 @@ export const actorAuditionsSlice = createSlice({
         state.deleteLoading = true;
         state.error = null;
       })
-      .addCase(deleteActorAudition.fulfilled, (state, action) => {
+      .addCase(deleteActorAudition.fulfilled, (state) => {
         state.deleteLoading = false;
         state.error = null;
       })
@@ -298,7 +298,7 @@ export const actorAuditionsSlice = createSlice({
         state.materialLoading = true;
         state.materialError = null;
       })
-      .addCase(deleteActorAuditionMaterial.fulfilled, (state, action) => {
+      .addCase(deleteActorAuditionMaterial.fulfilled, (state) => {
         state.materialLoading = false;
         state.materialError = null;
       })

@@ -14,7 +14,6 @@ export const CustomModal = ({
   close,
   title,
   isDelete,
-  primaryButton,
   primaryButtonText,
   handleSave,
   disableSave,

@@ -41,7 +41,7 @@ function normalizeStoreUrl(url) {
 }
 
 export async function openExternal(url) {
-  if (!url) return;
+  if (!url) return false;
 
   if (Capacitor.isNativePlatform()) {
     // Store links → native App Store / Play Store via the system launcher.
@@ -49,24 +49,28 @@ export async function openExternal(url) {
       try {
         const { AppLauncher } = await import('@capacitor/app-launcher');
         const { completed } = await AppLauncher.openUrl({ url });
-        if (completed) return;
+        if (completed) return true;
       } catch { /* launcher unavailable — fall through */ }
       // Last resort: render the https store page in the in-app browser so the
       // tap still does something even if the OS refused the store scheme.
       try {
         const { Browser } = await import('@capacitor/browser');
         await Browser.open({ url: normalizeStoreUrl(url), presentationStyle: 'popover' });
-        return;
+        return true;
       } catch { /* fall through to window.open */ }
     } else {
       // Ordinary external content → SFSafariViewController (Apple 4.2).
       try {
         const { Browser } = await import('@capacitor/browser');
         await Browser.open({ url, presentationStyle: 'popover' });
-        return;
+        return true;
       } catch { /* plugin failed to load — fall through */ }
     }
   }
 
-  window.open(normalizeStoreUrl(url), '_blank', 'noopener,noreferrer');
+  // noopener can return null even on success; use a handle and immediately
+  // sever the opener so callers can distinguish blocked popups from success.
+  const opened = window.open('about:blank', '_blank');
+  if (opened) { opened.opener = null; opened.location.href = normalizeStoreUrl(url); return true; }
+  return false;
 }

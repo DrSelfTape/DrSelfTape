@@ -4,7 +4,7 @@
 // Handles device preview, name input, camera/mic toggles.
 // ---------------------------------------------------------------
 
-import { useEffect, useRef, useState, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CustomModal, CustomButton } from '../../../components/Shared';
 import {
   FormControl,
@@ -34,8 +34,6 @@ const PreJoinScreen = ({
   onJoin,
   isInitializing,
   setIsInitializing,
-  meetingError,
-  setMeetingError,
   setupAudioAnalyser,
   initialCameraState = true,
   initialMicState = true,
@@ -45,7 +43,7 @@ const PreJoinScreen = ({
   const [previewError, setPreviewError] = useState('');
   const [joinWithCam, setJoinWithCam] = useState(initialCameraState !== false);
   const [joinWithMic, setJoinWithMic] = useState(initialMicState !== false);
-  const [streamReady, setStreamReady] = useState(false);
+  const [, setStreamReady] = useState(false);
 
   // -------------------------------------------------------------
   // Start preview stream
@@ -96,6 +94,7 @@ const PreJoinScreen = ({
     joinWithCam,
     joinWithMic,
     setupAudioAnalyser,
+    preJoinVideoRef,
   ]);
 
   // -------------------------------------------------------------
@@ -118,14 +117,14 @@ const PreJoinScreen = ({
   // Avatar for preview
   // -------------------------------------------------------------
   const initials = getInitials(displayName);
-  const showAvatar = useMemo(() => {
+  const showAvatar = (() => {
     if (!joinWithCam) return true;
     if (!preJoinStreamRef.current) return true;
     const videoTracks = preJoinStreamRef.current.getVideoTracks();
     if (!videoTracks || videoTracks.length === 0) return true;
     const hasEnabledTrack = videoTracks.some((t) => t.enabled && !t.muted);
     return !hasEnabledTrack;
-  }, [joinWithCam, streamReady]);
+  })();
 
   const renderAvatar = () => {
     const intensity = Math.min(1, (localAudioLevel || 0) * 3);

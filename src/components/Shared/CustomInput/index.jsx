@@ -82,7 +82,7 @@ export const CustomInput = ({
           disabled={disabled}
           autoFocus={autoFocus}
           ref={ref}
-          autoComplete="off"
+          autoComplete={autoComplete}
           onKeyDown={type === 'number' ? handleKeyDown : undefined}
           className={`w-full px-4 py-2 min-w-[180px] h-[44px] sm:h-[48px] border text-input-size rounded-xl transition-all
             ${bgClass} ${textClass}

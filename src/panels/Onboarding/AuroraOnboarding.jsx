@@ -4,7 +4,7 @@ import { updateProfileThunk, fetchProfileThunk } from '../../redux/features/prof
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import useHideMobileHeader from '../../components/Shared/useHideMobileHeader';
-import { requestAiConsent } from '../../components/AIConsent/AIConsentModal';
+import { requestAiConsent } from '../../components/AIConsent/consentRequest';
 import SampleReview from './SampleReview';
 import { createOnboardingSession } from './onboardingSession';
 import { flushPendingPersonalization, pendingKey } from './pendingPersonalization';

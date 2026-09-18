@@ -5,7 +5,7 @@ import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 
-export default function DailyChallengeCard({ onNavigate }) {
+export default function DailyChallengeCard() {
   const dispatch = useDispatch();
   const [challenge, setChallenge] = useState(null);
   const [completed, setCompleted] = useState(false);

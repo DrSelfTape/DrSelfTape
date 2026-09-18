@@ -39,7 +39,7 @@ export const AuditionTracker = () => {
     goalProgress,
   } = useSelector((state) => state.auditionTracker);
 
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isSearchOpen] = useState(false);
   const [selectedBadge, setSelectedBadge] = useState(null);
   const [isBadgeModalOpen, setIsBadgeModalOpen] = useState(false);
 
@@ -50,7 +50,7 @@ export const AuditionTracker = () => {
     dispatch(getAuditionTracker({
       month: searchParams.get('date') || dayjs().format('YYYY-MM'),
     }));
-  }, [searchParams]);
+  }, [dispatch, searchParams]);
 
   const stats = [
     {
@@ -73,7 +73,7 @@ export const AuditionTracker = () => {
     },
     {
       name: 'Booking Rate',
-      amount: `${auditionTracker?.bookingRate?.value}%` || '0%',
+      amount: `${auditionTracker?.bookingRate?.value ?? 0}%`,
       percentage: auditionTracker?.bookingRate?.change || '0',
       metrics: auditionTracker?.bookingRate?.change || '0',
     },
@@ -177,7 +177,7 @@ export const AuditionTracker = () => {
 
   useEffect(() => {
     setSearchParams({ date: dayjs(date)?.format('YYYY-MM') });
-  }, [date]);
+  }, [date, setSearchParams]);
 
   const handleBadgeClick = (badge) => {
     setSelectedBadge(badge);

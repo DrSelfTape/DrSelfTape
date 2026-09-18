@@ -36,7 +36,7 @@ import {
   createAuditionThunk,
 } from '../../../redux/features/auditions/auditionsSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
-import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 import useAuditionNotification from '../../../hooks/useAuditionNotification';
 import { clearAuditionNotification, findNotifiedAudition } from '../../../utils/auditionNotification';

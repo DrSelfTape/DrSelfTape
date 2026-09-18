@@ -1,22 +1,17 @@
 // Browser regression tests. Uses the already-installed local Puppeteer and
-// Chrome; no production account, API, camera, or analytics service is used.
 import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { startHarness } from './first-review-sample-harness.mjs';
 
-// Puppeteer is optional tooling, not a declared dependency: a clean checkout
-// without it skips this file instead of failing the run.
-let puppeteer = null;
-try { ({ default: puppeteer } = await import('puppeteer')); } catch { /* not installed */ }
+import { launchBrowser } from './browser.mjs';
 
 let harness;
 let browser;
 let page;
 const errors = [];
 before(async () => {
-  if (!puppeteer) return; // cases skip themselves below
   harness = await startHarness();
-  browser = await puppeteer.launch({ headless: true });
+  browser = await launchBrowser();
   page = await browser.newPage();
   await page.setViewport({ width: 375, height: 667 });
   page.on('pageerror', error => errors.push(error.message));
@@ -25,8 +20,7 @@ before(async () => {
 });
 after(async () => { await browser?.close(); await harness?.close(); });
 
-// Each case skips (not fails) when the optional browser tooling is absent.
-const btest = (name, fn) => test(name, async (t) => (puppeteer ? fn(t) : t.skip('puppeteer not installed')));
+const btest = test;
 
 async function fresh() {
   errors.length = 0;

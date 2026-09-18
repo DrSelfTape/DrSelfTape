@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, Send, X } from 'lucide-react';
 
-export default function MeetingChat({ messages, onSend, unreadCount, onOpen }) {
+export default function MeetingChat({ messages, onSend, unreadCount }) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const bottomRef = useRef(null);

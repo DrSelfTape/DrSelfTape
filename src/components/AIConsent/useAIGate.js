@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 
-import { requestAiConsent } from './AIConsentModal';
+import { requestAiConsent } from './consentRequest';
 
 /**
  * useAIGate — Apple Guideline 5.1.1(i) consent gate for AI panels.

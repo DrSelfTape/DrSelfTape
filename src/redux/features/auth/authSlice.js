@@ -32,7 +32,7 @@ const handleApiError = (error) => {
       if (typeof entry === 'string') return entry;
       if (entry && typeof entry === 'object') {
         return Object.entries(entry)
-          .map(([field, msg]) => {
+          .map(([, msg]) => {
             const text = Array.isArray(msg) ? msg.join(' ') : String(msg);
             // Hide the field name on the common single-field cases —
             // "This email already exists" reads better than
@@ -177,7 +177,7 @@ export const updatePassword = createAsyncThunk(
 // Get Profile Details API Function
 export const getProfileDetails = createAsyncThunk(
   'auth/getProfileDetails',
-  async (params = {}, { rejectWithValue }) => {
+  async (_payload, { rejectWithValue }) => {
     try {
       const { data } = await axios.get(endPoints.profileDetails);
       // BE ProfileView returns the user object FLAT at data.data (there is no
@@ -379,7 +379,7 @@ export const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(forgotPassword.fulfilled, (state, action) => {
+      .addCase(forgotPassword.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -391,7 +391,7 @@ export const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(resetPassword.fulfilled, (state, action) => {
+      .addCase(resetPassword.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
         state.user = null;
@@ -405,7 +405,7 @@ export const authSlice = createSlice({
         state.updatePasswordLoading = true;
         state.error = null;
       })
-      .addCase(updatePassword.fulfilled, (state, action) => {
+      .addCase(updatePassword.fulfilled, (state) => {
         state.updatePasswordLoading = false;
         state.error = null;
       })
@@ -417,7 +417,7 @@ export const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateProfile.fulfilled, (state, action) => {
+      .addCase(updateProfile.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })

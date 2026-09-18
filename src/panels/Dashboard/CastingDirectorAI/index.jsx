@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axios from "../../../redux/http";
@@ -574,7 +574,7 @@ function GeneratorScreen() {
    ═══════════════════════════════════════════════════ */
 function RehearseScreen() {
   const navigate = useNavigate();
-  const [active, setActive] = useState(false);
+  const [active] = useState(false);
 
   return (
     <div>

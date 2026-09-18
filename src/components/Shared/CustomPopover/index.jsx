@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLatestCallback } from '../../../hooks/useLatestCallback';
 import Popover from '@mui/material/Popover';
 import { Box } from '@mui/material';
 
@@ -22,17 +23,17 @@ export const CustomPopover = ({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = useLatestCallback(() => {
     setAnchorEl(null);
     if (onOpenChange) {
       onOpenChange(false);
     }
-  };
+  });
   useEffect(() => {
     if (success) {
       handleClose();
     }
-  }, [success]);
+  }, [success, handleClose]);
   return (
     <>
       <Box

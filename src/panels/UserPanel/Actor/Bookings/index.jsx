@@ -1,5 +1,5 @@
 // Library imports
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { CircularProgress } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
@@ -26,15 +26,6 @@ import { ActorAuditions } from '../Audition/index.jsx';
 import AddIcon from '../../../../assets/icons/AddIcon.jsx';
 import { useNavigate } from 'react-router-dom';
 import { CustomTab, CustomTabs } from '../../../../components/Shared';
-
-// Custom debounce function
-const debounce = (func, delay) => {
-  let timeoutId;
-  return function (...args) {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => func.apply(this, args), delay);
-  };
-};
 
 export const ActorBooking = () => {
   const dispatch = useDispatch();
@@ -79,26 +70,19 @@ export const ActorBooking = () => {
     audition_type: searchParams.get('audition_type') || '',
   });
 
-  // Debounced search handler with custom debounce
-  const debouncedSearch = useCallback(
-    debounce((query) => {
+  // Cancel pending searches on edits/unmount and preserve current URL filters.
+  useEffect(() => {
+    if ((searchParams.get('search') || '') === searchQuery) return;
+    const timeoutId = setTimeout(() => {
       setSearchParams((prev) => {
         const newParams = new URLSearchParams(prev);
-        if (query) newParams.set('search', query);
+        if (searchQuery) newParams.set('search', searchQuery);
         else newParams.delete('search');
         return newParams;
       });
-    }, 500),
-    [setSearchParams]
-  );
-
-  useEffect(() => {
-    debouncedSearch(searchQuery);
-    return () => {
-      debouncedSearch.cancel = () => clearTimeout(debouncedSearch.timeoutId);
-      debouncedSearch.cancel();
-    };
-  }, [searchQuery, debouncedSearch]);
+    }, 500);
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchParams, setSearchParams]);
 
   useEffect(() => {
     const params = {

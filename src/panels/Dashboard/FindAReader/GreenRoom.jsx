@@ -6,7 +6,7 @@ import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Loader2, Users, Users2 } from 'lucide-react';
 import ReaderListItem from './components/ReaderListItem';
 import { fetchMatches } from '../../../redux/features/readers/readersMatchSlice';
-import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { markStep } from '../../../components/Dashboard/tutorialProgress';
 
 const GreenRoom = ({ onSelectMatch } = {}) => {
   const dispatch = useDispatch();

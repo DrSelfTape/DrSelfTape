@@ -62,6 +62,7 @@ export async function startHarness(port = 0, { firstReviewFlow = true, onboardin
     };`,
     'analytics': `${events}\nexport const trackEvent = (event, props) => window.__events.push({event, props});`,
   };
+  mocks.consentRequest = mocks.AIConsentModal;
   const result = await build({
     stdin: {
       contents: `import React from 'react';
@@ -96,7 +97,7 @@ export async function startHarness(port = 0, { firstReviewFlow = true, onboardin
       name: 'isolated-onboarding-services',
       setup(builder) {
         if (onboardingSource) builder.onLoad({ filter: /AuroraOnboarding\.jsx$/ }, () => ({ contents: onboardingSource, loader: 'jsx', resolveDir: path.join(root, 'src/panels/Onboarding') }));
-        builder.onResolve({ filter: /react-redux|profileSlice|userSettingsSlice|usePushNotifications|AIConsentModal|utils\/analytics$/ }, ({ path: importPath }) => {
+        builder.onResolve({ filter: /react-redux|profileSlice|userSettingsSlice|usePushNotifications|AIConsentModal|consentRequest|utils\/analytics$/ }, ({ path: importPath }) => {
           const key = Object.keys(mocks).find(name => importPath === name || importPath.endsWith('/' + name));
           if (key) return { path: key, namespace: 'mock' };
         });
@@ -125,7 +126,14 @@ export async function startHarness(port = 0, { firstReviewFlow = true, onboardin
     server.once('error', reject);
     server.listen(port, '127.0.0.1', resolve);
   });
-  return { url: `http://127.0.0.1:${server.address().port}`, close: () => new Promise(resolve => server.close(resolve)) };
+  return {
+    url: `http://127.0.0.1:${server.address().port}`,
+    close: () => new Promise(resolve => {
+      server.close(resolve);
+      // Pages are already closed by callers; release any remaining keep-alive sockets.
+      server.closeAllConnections();
+    }),
+  };
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

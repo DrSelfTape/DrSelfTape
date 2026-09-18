@@ -1,3 +1,4 @@
+import { useLatestCallback } from '../../../hooks/useLatestCallback';
 import { useRef, useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { Volume2, Download, RotateCcw, Square, Loader2 } from 'lucide-react';
@@ -44,7 +45,7 @@ function sectionToText(label, data) {
   return lines.join('. ');
 }
 
-function SectionCard({ label, data, voiceKey, isPlayingKey, onPlayToggle, playingSection }) {
+function SectionCard({ label, data, isPlayingKey, onPlayToggle, playingSection }) {
   const isLoading = isPlayingKey === label && playingSection === 'loading';
   const isPlaying = isPlayingKey === label && playingSection === 'playing';
 
@@ -107,14 +108,13 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
   const voiceKey = VOICE_KEY_MAP[selectedVoice] || 'cd_female';
 
   // Cleanup audio on unmount
-  useEffect(() => {
-    return () => {
-      fetchIdRef.current++; // Cancel any in-flight fetches
-      if (sourceRef.current) { try { sourceRef.current.stop(); } catch (_) {} }
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
-      if (audioCtxRef.current) { try { audioCtxRef.current.close(); } catch (_) {} }
-    };
-  }, []);
+  const cleanupPlayback = useLatestCallback(() => {
+    fetchIdRef.current++; // Cancel any in-flight fetches
+    if (sourceRef.current) { try { sourceRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ } }
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = ''; }
+    if (audioCtxRef.current) { try { audioCtxRef.current.close(); } catch { /* Optional operation failed; continue with the existing fallback. */ } }
+  });
+  useEffect(() => () => cleanupPlayback(), [cleanupPlayback]);
 
   // Get or create a shared AudioContext (must be created on user gesture)
   const getAudioCtx = () => {
@@ -144,7 +144,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
   const stopAudio = () => {
     // Stop AudioContext source
     if (sourceRef.current) {
-      try { sourceRef.current.stop(); } catch (_) {}
+      try { sourceRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       sourceRef.current = null;
     }
     // Stop HTML Audio fallback
@@ -157,7 +157,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
     setPlayingLabel(null);
   };
 
-  const playBlob = async (blob, label) => {
+  const playBlob = async (blob) => {
     // Try AudioContext first (bypasses autoplay policy)
     try {
       const ctx = getAudioCtx();

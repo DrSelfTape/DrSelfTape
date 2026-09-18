@@ -3,7 +3,7 @@
 // Self-view tile (camera or avatar + audio ring)
 // ---------------------------------------------------------------
 
-import { useMemo, memo } from 'react';
+import { memo } from 'react';
 import { MicOff } from '@mui/icons-material';
 
 const LocalVideoTile = memo(({
@@ -18,19 +18,18 @@ const LocalVideoTile = memo(({
   localAudioLevel,
   localLabel,
   getInitials,
-  localStreamVersion,
 }) => {
   const isCompact = variant === 'compact';
   
   // Make showAvatar reactive to isCameraOff and stream state
-  const showAvatar = useMemo(() => {
+  const showAvatar = (() => {
     if (isCameraOff) return true;
     if (!localStreamRef?.current) return true;
     const videoTracks = localStreamRef.current.getVideoTracks();
     if (!videoTracks || videoTracks.length === 0) return true;
     const hasEnabledTrack = videoTracks.some((t) => t.enabled && !t.muted);
     return !hasEnabledTrack;
-  }, [isCameraOff, localStreamRef, localStreamVersion]);
+  })();
   
   const initials = getInitials(localLabel);
   const intensity = Math.min(1, (localAudioLevel || 0) * 3);

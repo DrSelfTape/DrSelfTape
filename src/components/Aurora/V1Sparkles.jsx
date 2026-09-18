@@ -14,12 +14,13 @@ export default function V1Sparkles({
   style = {},
 }) {
   // `trigger` is intentionally a dep — bumping it re-shuffles the scatter.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   const sparks = useMemo(() => {
     return Array.from({ length: count }).map((_, i) => {
       const angle = (i / count) * Math.PI * 2 + rand(-0.25, 0.25);
       const distance = radius * rand(0.7, 1.0);
       return {
+        key: `${trigger}-${i}`,
         dx: `${Math.cos(angle) * distance}px`,
         dy: `${Math.sin(angle) * distance}px`,
         rot: `${rand(120, 360)}deg`,
@@ -42,9 +43,9 @@ export default function V1Sparkles({
       }}
       aria-hidden="true"
     >
-      {sparks.map((s, i) => (
+      {sparks.map((s) => (
         <span
-          key={`${trigger}-${i}`}
+          key={s.key}
           style={{
             position: 'absolute',
             width: s.size,

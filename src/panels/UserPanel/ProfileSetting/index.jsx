@@ -23,7 +23,7 @@ import {
   updateProfile,
 } from '../../../redux/features/auth/authSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
-import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import dayjs from 'dayjs';
 
 const Profile = () => {
@@ -145,8 +145,8 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    fetchUserDetails();
-  }, []);
+    dispatch(getProfileDetails());
+  }, [dispatch]);
 
   // Load user data into personal form
   useEffect(() => {

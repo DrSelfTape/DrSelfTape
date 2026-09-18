@@ -154,7 +154,7 @@ export const useNotificationActions = () => {
 
       // Refresh data and validate if needed
       let targetItem = null;
-      let hasOthers = false;
+
       
       if (config.refreshAction) {
         const result = await dispatch(config.refreshAction());
@@ -167,15 +167,6 @@ export const useNotificationActions = () => {
           targetItem = config.validateFn(result, targetId);
         }
         
-        // Check if there are other items (for "has others" message)
-        const payload = result?.payload;
-        if (Array.isArray(payload)) {
-          hasOthers = payload.length > 0;
-        } else if (payload?.pending || payload?.accepted) {
-          hasOthers = (payload.pending?.length > 0) || (payload.accepted?.length > 0);
-        } else if (payload?.shares) {
-          hasOthers = payload.shares.length > 0;
-        }
       } else {
         // No refresh action, assume item exists
         targetItem = { id: targetId };

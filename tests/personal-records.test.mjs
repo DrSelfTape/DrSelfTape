@@ -210,16 +210,16 @@ for (const scenario of [
   let tree = mounted.render(); mounted.flush(); await settle();
   mounted.render(); mounted.flush(); await settle();
   assert.equal(statusRequests, 1, 'Exercise the real subscription-status request');
-  // The existing reveal supports showing everything immediately.
+  // The Studio action reveals the full entitled report in one tap.
   const find = (node, label) => {
     if (!node || typeof node !== 'object') return null;
-    if (node.type === 'button' && [node.props.children].flat(Infinity).includes(label)) return node;
+    if (node.type === 'button' && [node.props.children].flat(Infinity).some(child => typeof child === 'string' && child.trim() === label)) return node;
     for (const child of [node.props?.children].flat(Infinity)) { const match = find(child, label); if (match) return match; }
     return null;
   };
   tree = mounted.render();
-  const show = find(tree, 'Show everything');
-  assert.ok(show, 'Existing reveal control remains available');
+  const show = find(tree, 'Explore my notes');
+  assert.ok(show, 'Full report action remains available');
   show.props.onClick(); tree = mounted.render();
   const html = renderToStaticMarkup(tree);
   assert.ok(html.includes('New personal best'));

@@ -27,6 +27,7 @@ export async function recoveryBundle(firstReviewFlow = true) {
     usePushNotifications: `export const usePushNotifications = () => ({permission: 'prompt', requestPermission: async () => {}});
       export const unregisterPushToken = async () => {};`,
     AIConsentModal: 'export default () => null; export const requestAiConsent = async () => true;',
+    consentRequest: 'export const requestAiConsent = async () => true;',
     AgeGateModal: 'export default () => null;',
     auditionsSlice: 'export const fetchAuditionStatsThunk = () => ({type: "test/noop"});',
     submissionsSlice: 'export const fetchSubmissionsThunk = () => ({type: "test/noop"});',

@@ -15,6 +15,18 @@ import {
 } from '../../../../../redux/features/actorBookings/actorBookingsSlice';
 import { useSnackbar } from '../../../../../hooks/useSnackbar';
 
+  const BookingTypeOptions = [
+    { label: 'Self Tape', value: 'self_tape' },
+    { label: 'Rehearsal', value: 'rehearsal' },
+    { label: 'Coaching', value: 'coaching' },
+  ];
+
+  const BookingStatusOptions = [
+    { label: 'Scheduled', value: 'scheduled' },
+    { label: 'Completed', value: 'completed' },
+    { label: 'Canceled', value: 'canceled' },
+  ];
+
 export const AddActorBooking = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,61 +46,33 @@ export const AddActorBooking = () => {
   });
   const [errors, setErrors] = useState({});
 
-  const BookingTypeOptions = [
-    { label: 'Self Tape', value: 'self_tape' },
-    { label: 'Rehearsal', value: 'rehearsal' },
-    { label: 'Coaching', value: 'coaching' },
-  ];
-
-  const BookingStatusOptions = [
-    { label: 'Scheduled', value: 'scheduled' },
-    { label: 'Completed', value: 'completed' },
-    { label: 'Canceled', value: 'canceled' },
-  ];
-
   const AuditionOptions =
     castingAuditions?.open?.map((audition) => ({
       label: audition.title,
       value: audition.id,
     })) || [];
   useEffect(() => {
-    if (restProps) {
-      let auditionId;
-      let newFormData = { ...formData };
-
+    if (!restProps) return;
+    setFormData((previous) => {
       if (restProps.row) {
-        auditionId = restProps.row.auditionID;
-
-        newFormData = {
-          id: restProps.row.id || '',
-          audition:
-            AuditionOptions.find((option) => option.value === auditionId) ||
-            null,
-          location: restProps.row.location || '',
-          type:
-            BookingTypeOptions.find(
-              (option) => option.value === restProps.row.type
-            ) || null,
-          status:
-            BookingStatusOptions.find(
-              (option) => option.value === restProps.row.status
-            ) || null,
-        };
-      } else if (restProps.audition) {
-        // Case 1: restProps contains audition object
-        auditionId = restProps.audition.id;
-
-        newFormData = {
-          ...newFormData,
-          audition:
-            AuditionOptions.find((option) => option.value === auditionId) ||
-            null,
+        const row = restProps.row;
+        return {
+          id: row.id || '',
+          audition: row.auditionID == null ? null : { value: row.auditionID, label: row.auditionTitle || '' },
+          location: row.location || '',
+          type: BookingTypeOptions.find((option) => option.value === row.type) || null,
+          status: BookingStatusOptions.find((option) => option.value === row.status) || null,
         };
       }
-
-      setFormData(newFormData);
-    }
+      if (restProps.audition) {
+        return { ...previous, audition: { value: restProps.audition.id, label: restProps.audition.title || '' } };
+      }
+      return previous;
+    });
   }, [restProps]);
+
+  // Resolve labels when auditions arrive without resetting the actor's edits.
+  const selectedAudition = AuditionOptions.find((option) => option.value === formData.audition?.value) || formData.audition;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -152,7 +136,7 @@ export const AddActorBooking = () => {
           <SelectDropdown
             label='Audition'
             name='audition'
-            value={formData.audition}
+            value={selectedAudition}
             onChange={handleChange}
             options={AuditionOptions}
             placeholder='Select Audition'

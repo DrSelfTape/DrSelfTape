@@ -119,7 +119,7 @@ export const castingAuditionsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createCastingAudition.fulfilled, (state, action) => {
+      .addCase(createCastingAudition.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -148,7 +148,7 @@ export const castingAuditionsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateCastingAudition.fulfilled, (state, action) => {
+      .addCase(updateCastingAudition.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -162,7 +162,7 @@ export const castingAuditionsSlice = createSlice({
         state.deleteLoading = true;
         state.error = null;
       })
-      .addCase(deleteCastingAudition.fulfilled, (state, action) => {
+      .addCase(deleteCastingAudition.fulfilled, (state) => {
         state.deleteLoading = false;
         state.error = null;
       })

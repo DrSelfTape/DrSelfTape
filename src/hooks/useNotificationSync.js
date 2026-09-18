@@ -13,7 +13,7 @@
 
 import { useEffect, useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { useSocket } from '../socket/socket';
+import { useSocket } from '../socket/useSocket';
 import { getNotifications } from '../redux/features/notifications/notificationsSlice';
 import { SOCKET_NOTIFICATION_HANDLERS } from '../routes/notificationConfig';
 import { useSnackbar } from './useSnackbar';

@@ -161,7 +161,6 @@ export const useScriptAudioPlayer = ({
   selectedAudioSpeed,
   setSelectedAudioSpeed,
   selectedVolume,
-  setSelectedVolume,
   scriptAnalysisMode, // 'actor' or 'coach' - used for conditional error messages
 }) => {
   // ==========================================================================
@@ -309,7 +308,7 @@ export const useScriptAudioPlayer = ({
     if (audioUrl) return audioUrl;
 
     return null;
-  }, [effectiveScriptLines, recordings, effectiveTone, effectiveIsUserLine, effectiveGetLineAudio]);
+  }, [effectiveScriptLines, recordings, effectiveTone, effectiveIsUserLine, effectiveGetLineAudio, audioData]);
 
   /**
    * ScriptAnalysis-specific: Get audio URL by lineId (instead of index)
@@ -624,7 +623,7 @@ export const useScriptAudioPlayer = ({
 
     // Check if there's an existing paused audio element for this line that we can resume
     const existingAudio = audioRefs.current[lineIndex];
-    const activeAudio = activeAudioRef.current;
+    activeAudioRef.current;
     
     // If we have an existing audio element for this line that is paused, resume it instead of creating new
     if (existingAudio && existingAudio.paused && activeLineIndexRef.current === lineIndex) {
@@ -925,7 +924,7 @@ export const useScriptAudioPlayer = ({
       handleAudioEnded();
     };
 
-    audio.onerror = (e) => {
+    audio.onerror = () => {
       // Prevent multiple error handlers from firing (prevent infinite loops)
       if (errorHandledFlags.current[lineIndex]) return;
       errorHandledFlags.current[lineIndex] = true;
@@ -1088,7 +1087,7 @@ export const useScriptAudioPlayer = ({
           resolve();
         };
         
-        const onError = (e) => {
+        const onError = () => {
           if (resolved) return;
           resolved = true;
           clearTimeout(loadTimeoutId);
@@ -1229,8 +1228,6 @@ export const useScriptAudioPlayer = ({
     getAudioUrlForLine,
     findNextCompletedLine,
     findNextPlayableLine,
-    stopAllPlayback,
-    cleanupAudio,
     scrollToLine,
     effectiveAutoAdvance,
     onLineComplete,
@@ -1542,10 +1539,11 @@ export const useScriptAudioPlayer = ({
   // ==========================================================================
   
   useEffect(() => {
+    // The registry is mutated in place as audio is created after mount.
+    const audioRegistry = audioRefs.current;
     return () => {
       stopAllPlayback();
-      // Cleanup all audio refs
-      Object.keys(audioRefs.current).forEach((key) => {
+      Object.keys(audioRegistry).forEach((key) => {
         cleanupAudio(parseInt(key));
       });
     };

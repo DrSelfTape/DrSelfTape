@@ -1,15 +1,23 @@
 import assert from 'node:assert/strict';
 import {before, after, test} from 'node:test';
-import puppeteer from 'puppeteer';
+import { launchBrowser } from './browser.mjs';
+import { stop as stopBundler } from 'esbuild';
 import {recoveryBundle} from './onboarding-recovery-harness.mjs';
 
 let browser;
 const bundles = new Map();
 before(async () => {
-  browser = await puppeteer.launch({headless: true});
+  browser = await launchBrowser();
   for (const flag of [true, false]) bundles.set(flag, await recoveryBundle(flag));
 });
-after(async () => {await browser?.close();});
+after(async () => {
+  try {
+    await browser?.close();
+  } finally {
+    // This suite builds two harnesses; close the owned bundler subprocess too.
+    stopBundler();
+  }
+});
 
 async function open(t, flag = true) {
   // Pages in the default context share localStorage. A preceding test's draft

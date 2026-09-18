@@ -138,7 +138,7 @@ export default function CDSim() {
   // Apple Guideline 5.1.1(i) — gate the entire panel behind the AI
   // consent modal. Bounces back to /dashboard if the user declines.
   useAIGate();
-  const navigate = useNavigate();
+  useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const sessionStartRef = useRef(null);
@@ -148,7 +148,7 @@ export default function CDSim() {
   const [selectedVoice, setSelectedVoice] = useState('');
   const [report, setReport] = useState(null);
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   // Bumped by the Retry button to force the coach-request effect to re-run
   // even though `step` is already 'analyzing' (otherwise Retry was a no-op
   // and the error screen stranded the user).
@@ -277,7 +277,7 @@ export default function CDSim() {
     return () => {
       cancelled = true;
     };
-  }, [step, scriptText, selectedRole, selectedVoice, retryNonce]);
+  }, [step, scriptText, selectedRole, selectedVoice, retryNonce, craftSkill, dispatch]);
 
   const currentStepIdx = STEPS.indexOf(step);
 

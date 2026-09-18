@@ -47,7 +47,7 @@ const DeviceSelectionPanel = ({
   /**
    * Handle camera toggle
    */
-  const handleCameraToggle = (event) => {
+  const handleCameraToggle = () => {
     if (localStream.toggleCamera) {
       localStream.toggleCamera();
     }
@@ -56,7 +56,7 @@ const DeviceSelectionPanel = ({
   /**
    * Handle microphone toggle
    */
-  const handleMicrophoneToggle = (event) => {
+  const handleMicrophoneToggle = () => {
     if (localStream.toggleMicrophone) {
       localStream.toggleMicrophone();
     }

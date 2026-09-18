@@ -5,7 +5,6 @@ import {
   Camera, Sparkles, Mic, Users2, Radio, MessageSquare, Target, Film,
   ChevronDown, ChevronUp, Check, ArrowRight, Trophy, Zap, X,
 } from 'lucide-react';
-import { store } from '../../redux/store';
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 import { useIsMobile } from '../../hooks/useIsMobile';
 
@@ -25,27 +24,6 @@ const STEPS = [
   { id: 'green_room', label: 'Open the Green Room', desc: 'See your matches and chat', icon: MessageSquare, route: '/dashboard/green-room', mobileTab: 'green-room' },
   { id: 'track_audition', label: 'Track an Audition', desc: 'Log your first audition', icon: Target, route: '/dashboard/auditions', mobileTab: 'auditions' },
 ];
-
-// Progress is now persisted server-side via UserSettings. We read the
-// current snapshot from the Redux store so markStep can be called from
-// anywhere (event handlers, async flows) without component plumbing.
-function getProgress() {
-  return store.getState()?.userSettings?.data?.tutorial_progress || {};
-}
-
-function markStep(stepId) {
-  const current = getProgress();
-  if (current[stepId]) return;
-  const next = { ...current, [stepId]: true };
-  store.dispatch(patchUserSettings({ tutorial_progress: next }));
-  // Fire analytics for each tutorial milestone — lazy-import so this file
-  // stays a tiny dependency-free helper for any panel that wants to mark.
-  import('../../utils/analytics').then(({ trackEvent, Events }) => {
-    trackEvent(Events.TUTORIAL_STEP, { step: stepId });
-  }).catch(() => { /* swallow */ });
-}
-
-export { markStep };
 
 export default function TutorialChecklist({ onNavigate }) {
   const navigate = useNavigate();

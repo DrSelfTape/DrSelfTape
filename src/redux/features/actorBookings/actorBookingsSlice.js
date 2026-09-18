@@ -106,7 +106,7 @@ export const actorBookingsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(createBooking.fulfilled, (state, action) => {
+      .addCase(createBooking.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -145,7 +145,7 @@ export const actorBookingsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(updateBooking.fulfilled, (state, action) => {
+      .addCase(updateBooking.fulfilled, (state) => {
         state.loading = false;
         state.error = null;
       })
@@ -157,7 +157,7 @@ export const actorBookingsSlice = createSlice({
         state.deleteLoading = true;
         state.error = null;
       })
-      .addCase(deleteBooking.fulfilled, (state, action) => {
+      .addCase(deleteBooking.fulfilled, (state) => {
         state.deleteLoading = false;
         state.error = null;
       })

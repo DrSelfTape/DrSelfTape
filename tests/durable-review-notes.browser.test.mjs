@@ -2,16 +2,12 @@ import assert from 'node:assert/strict';
 import { after, afterEach, before, test } from 'node:test';
 import { startHistoryHarness } from './durable-review-notes-harness.mjs';
 
-// Matches the existing browser suite: use installed optional Puppeteer, add no
-// dependency. A clean checkout without it explicitly skips these tests.
-let puppeteer;
-try { ({ default: puppeteer } = await import('puppeteer')); } catch { /* optional */ }
+import { launchBrowser } from './browser.mjs';
 let harness, browser, page;
 const errors = [];
 before(async () => {
-  if (!puppeteer) return;
   harness = await startHistoryHarness();
-  browser = await puppeteer.launch({ headless: true });
+  browser = await launchBrowser();
   page = await browser.newPage();
   await page.setViewport({ width: 375, height: 667, hasTouch: true });
   page.on('pageerror', error => errors.push(error.message));
@@ -27,7 +23,7 @@ afterEach(async () => {
     await page.waitForSelector('[role="dialog"]', { hidden: true });
   }
 });
-const btest = (name, fn) => test(name, async t => puppeteer ? fn() : t.skip('puppeteer not installed'));
+const btest = test;
 
 async function fresh(paid = true, width = 375) {
   errors.length = 0;

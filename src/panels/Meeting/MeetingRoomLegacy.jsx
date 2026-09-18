@@ -68,7 +68,7 @@ const Meeting = () => {
     };
     // Broadcast to all peers
     dataConnectionsRef.current.forEach((c) => {
-      if (c?.open) try { c.send(msg); } catch {}
+      if (c?.open) try { c.send(msg); } catch { /* Optional operation failed; continue with the existing fallback. */ }
     });
     // Add to local state
     setChatMessages((prev) => [...prev, { ...msg, isMine: true }]);
@@ -236,7 +236,7 @@ const Meeting = () => {
       broadcastMediaState({ cameraOff: isCameraOff, muted: isMuted });
     }, 500); // Small delay to ensure connection is ready
     return () => clearTimeout(timeoutId);
-  }, [broadcastMediaState, hasJoined]); // Removed isCameraOff and isMuted from dependencies
+  }, [broadcastMediaState, hasJoined, isCameraOff, isMuted]);
 
   useEffect(() => {
     if (!hasJoined) return;
@@ -330,7 +330,7 @@ const Meeting = () => {
         node.srcObject = localStreamRef.current;
       }
     },
-    [localStreamRef, localStreamVersion]
+    [localStreamRef]
   );
 
   const handleRemoteVideoRef = useCallback(
@@ -342,8 +342,18 @@ const Meeting = () => {
         node.srcObject = remoteStreamRef.current;
       }
     },
-    [remoteStreamRef, remoteStreamVersion]
+    [remoteStreamRef]
   );
+
+  useEffect(() => {
+    const node = localVideoRef.current;
+    if (node && node.srcObject !== localStreamRef.current) node.srcObject = localStreamRef.current;
+  }, [localStreamRef, localStreamVersion]);
+
+  useEffect(() => {
+    const node = remoteVideoRef.current;
+    if (node && node.srcObject !== remoteStreamRef.current) node.srcObject = remoteStreamRef.current;
+  }, [remoteStreamRef, remoteStreamVersion]);
 
   const handleScreenVideoRef = useCallback(
     (node) => {

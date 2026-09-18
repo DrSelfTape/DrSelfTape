@@ -4,20 +4,18 @@ import assert from 'node:assert/strict';
 import { after, before, test } from 'node:test';
 import { startHarness } from './recap-story-card-harness.mjs';
 
-let puppeteer = null;
-try { ({ default: puppeteer } = await import('puppeteer')); } catch { /* not installed */ }
+import { launchBrowser } from './browser.mjs';
 
 let harness; let browser; let page; const errors = [];
 before(async () => {
-  if (!puppeteer) return;
   harness = await startHarness();
-  browser = await puppeteer.launch({ headless: true });
+  browser = await launchBrowser();
   page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 900 });
   page.on('pageerror', (error) => errors.push(error.message));
 });
 after(async () => { await browser?.close(); await harness?.close(); });
-const btest = (name, fn) => test(name, async (t) => (puppeteer ? fn(t) : t.skip('puppeteer not installed')));
+const btest = test;
 
 const band = { label: 'Book It', color: '#22c55e' };
 const review = {

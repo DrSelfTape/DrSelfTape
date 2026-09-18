@@ -36,7 +36,7 @@ const TYPE_COLORS = {
   audition_prep: '#22c55e',
 };
 
-function StatCard({ icon: Icon, label, value, trend, sublabel }) {
+function StatCard({  label, value, trend, sublabel }) {
   const positive = trend > 0;
   const TrendIcon = positive ? TrendingUp : TrendingDown;
   return (

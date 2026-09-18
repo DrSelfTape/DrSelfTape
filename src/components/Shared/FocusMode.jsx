@@ -20,7 +20,7 @@ export default function FocusMode({ onComplete }) {
   const [started, setStarted] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(TOTAL_SECONDS);
   const [phase, setPhase] = useState('inhale'); // inhale | hold | exhale
-  const [phaseSeconds, setPhaseSeconds] = useState(0);
+  const [, setPhaseSeconds] = useState(0);
   const intervalRef = useRef(null);
 
   const getPhaseFromCycleSecond = (s) => {

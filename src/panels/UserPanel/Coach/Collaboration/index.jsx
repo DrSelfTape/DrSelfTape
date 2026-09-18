@@ -69,7 +69,7 @@ const CoachCollaboration = () => {
   // Sync tab with URL
   useEffect(() => {
     const currentTab = Number(searchParams.get('tab')) || 0;
-    if (currentTab !== value) setValue(currentTab);
+    setValue(currentTab);
   }, [searchParams]);
 
   // Update tab in URL on change

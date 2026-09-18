@@ -59,13 +59,27 @@ test('missing and malformed scores never become zero; real zero stays scored', (
   assert.equal(scoreValue('7.5'), 7.5);
 });
 
+test('mobile studio summary omits unavailable scores and preserves a real zero', () => {
+  for (const headline_score of [null, '', false, -1, 11]) {
+    setupReviewRender({ mobile: true, review: { verdict: 'Notes without a score', headline_score } });
+    assert.ok(!render(current.TapeReview).includes('class="studio-score"'));
+  }
+  setupReviewRender({ mobile: true, review: { verdict: 'A scored take', headline_score: 0 } });
+  assert.ok(render(current.TapeReview).includes('Overall score 0.0 out of 10'));
+});
+
 for (const native of [false, true]) for (const mobile of [false, true]) {
   if (!native && !mobile) continue;
-  for (const paid of [false, true]) test(`mobile result markup is byte-identical to main (native=${native}, small=${mobile}, paid=${paid})`, () => {
+  for (const paid of [false, true]) test(`mobile result preserves review content and access gates (native=${native}, small=${mobile}, paid=${paid})`, () => {
     setupReviewRender({ native, mobile, paid, review: full });
     const before = render(original.TapeReview);
     if (paid) for (const label of ['PAID CRAFT', 'PAID FIX', 'PAID ONE THING', 'Performance DNA']) assert.ok(before.includes(label), `fully revealed baseline: ${label}`);
     setupReviewRender({ native, mobile, paid, review: full });
-    assert.equal(render(current.TapeReview), before);
+    const updated = render(current.TapeReview);
+    for (const label of ['The thought arrives at 0:12.', 'You hear the silence at 0:18.', '7.4']) assert.ok(updated.includes(label), label);
+    for (const label of ['PAID CRAFT', 'PAID ONE THING']) assert.equal(updated.includes(label), paid, label);
+    assert.equal(updated.includes('Performance DNA'), before.includes('Performance DNA'), 'preserve the upgrade teaser without exposing private notes');
+    assert.ok(updated.includes('PAID FIX'), 'the first adjustment remains available to free actors');
+    assert.ok(updated.includes('studio-score'), 'compact score replaces the animated gauge');
   });
 }

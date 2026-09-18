@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import confetti from 'canvas-confetti';
+import { useLatestCallback } from '../hooks/useLatestCallback';
 import { Star, Clapperboard, X } from 'lucide-react';
 
 /**
@@ -18,8 +19,9 @@ import { Star, Clapperboard, X } from 'lucide-react';
  *  onDismiss   — called when overlay is fully done
  */
 export default function SceneCompleteBadge({ sceneName, sceneNumber, onDismiss }) {
+  const dismiss = useLatestCallback(() => onDismiss?.());
   const [phase, setPhase] = useState('enter'); // enter | hold | exit | done
-  const canvasRef = useRef(null);
+  useRef(null);
   const timerRef = useRef(null);
 
   // ── Confetti ──────────────────────────────────────────────
@@ -94,13 +96,13 @@ export default function SceneCompleteBadge({ sceneName, sceneNumber, onDismiss }
         // Phase: exit → done after 0.8s (exit animation)
         timerRef.current = setTimeout(() => {
           setPhase('done');
-          onDismiss?.();
+          dismiss();
         }, 800);
       }, 2500);
     }, 600);
 
     return () => clearTimeout(timerRef.current);
-  }, []);
+  }, [dismiss]);
 
   if (phase === 'done') return null;
 

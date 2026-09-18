@@ -260,7 +260,7 @@ export default function SidesUpload({ onSubmit }) {
   const [pdfStatus, setPdfStatus] = useState('');
   const [pdfError, setPdfError] = useState('');
   const [qualityWarning, setQualityWarning] = useState('');
-  const [rawCharCount, setRawCharCount] = useState(0);
+  const [, setRawCharCount] = useState(0);
   const fileInputRef = useRef(null);
 
   const handleFile = async (file) => {

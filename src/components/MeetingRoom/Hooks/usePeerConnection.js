@@ -5,6 +5,7 @@
 // ---------------------------------------------------------------
 
 import Peer from 'peerjs';
+import { useLatestCallback } from '../../../hooks/useLatestCallback';
 import { useCallback, useEffect, useRef } from 'react';
 import { clearMeetingHostFlag } from '../../../utils/meeting';
 
@@ -40,27 +41,17 @@ export const usePeerConnection = ({
   setMeetingError,
   setIsRemoteCameraOff,
   setIsRemoteMuted,         // <-- For remote mute state
-  setRemoteAudioLevel,          // <-- RECEIVED FROM useAudioAnalyser
-  setupAudioAnalyser,
-  remoteAudioContextRef,
-  audioLevelAnimationRef,
+  setRemoteAudioLevel,
   dataConnectionsRef,
   currentCallRef,
   activeCallsRef,  // Track all active calls for screen sharing
   peerRef,
-  localAudioContextRef,
   localVideoRef,
   remoteVideoRef,
   isCameraOff,
   setLocalStreamVersion,
-  localStreamVersion,
-  remoteStreamVersion,
   screenStreamRef,
   previousCameraTrackRef,
-  setIsScreenSharing,
-  setIsScreenShareCollapsed,
-  setIsScreenShareFullscreen,
-  replaceVideoTrack,
   setParticipants,              // <-- For multi-user support
   selectedCameraId,             // <-- From useMediaDevices
   selectedMicrophoneId,         // <-- From useMediaDevices
@@ -99,7 +90,7 @@ export const usePeerConnection = ({
               // Ignore errors if document is not active or already exited
             });
           }
-        } catch (err) {
+        } catch {
           // Ignore errors if document is not active
         }
       }
@@ -119,6 +110,7 @@ export const usePeerConnection = ({
     [
       isHost,
       meetingId,
+      activeCallsRef, currentCallRef, dataConnectionsRef, localStreamRef, peerRef, remoteStreamRef, screenStreamRef, setIsRemoteMuted,
       screenVideoRef,
       setRemoteConnected,
       setRemoteDisplayName,
@@ -341,6 +333,7 @@ export const usePeerConnection = ({
     },
     [
       meetingId,
+      activeCallsRef, currentCallRef, remoteStreamRef, setIsRemoteScreenSharing,
       displayNameRef,
       setRemoteStreamVersion,
       setRemoteConnected,
@@ -371,7 +364,7 @@ export const usePeerConnection = ({
       }
     });
     console.log(`📤 Sent message to ${sentCount}/${connections.length} connections`);
-  }, []);
+  }, [dataConnectionsRef]);
 
   const broadcastMediaState = useCallback(
     (state) => broadcastMessage({ type: 'media-state', ...state }),
@@ -627,7 +620,7 @@ export const usePeerConnection = ({
     [applyRemoteIdentity, displayNameRef, isHost, setIsRemoteCameraOff, setIsRemoteMuted, setIsRemoteScreenSharing]
   );
 
-  const registerDataConnection = useCallback(
+  const registerDataConnection = useLatestCallback(
     (conn) => {
       if (!conn) return;
       dataConnectionsRef.current.add(conn);
@@ -652,17 +645,7 @@ export const usePeerConnection = ({
         }
       });
     },
-    [
-      applyRemoteIdentity,
-      displayNameRef,
-      isHost,
-      isCameraOff,
-      isMuted,
-      broadcastMediaState,
-      setRemoteDisplayName,
-      setRemoteRole,
-      setRemoteAudioLevel,
-    ]
+
   );
 
   // -------------------------------------------------------------
@@ -672,7 +655,7 @@ export const usePeerConnection = ({
 
   // Helper to set up call handlers (extracted to avoid duplication)
   // MUST be defined BEFORE setupPeerHandlersInline since it's used there
-  const setupCallHandlers = useCallback((call, stream) => {
+  const setupCallHandlers = useCallback((call) => {
     call.on('stream', (remote) => {
       remoteStreamRef.current = remote;
       setRemoteStreamVersion((v) => v + 1);
@@ -779,7 +762,7 @@ export const usePeerConnection = ({
   // Helper function to set up peer event handlers (extracted to avoid duplication)
   // MUST be defined AFTER setupCallHandlers since it uses it
   // -------------------------------------------------------------
-  const setupPeerHandlersInline = useCallback((peer, stream) => {
+  const setupPeerHandlersInline = useLatestCallback((peer, stream) => {
     peer.on('open', () => {
       console.log('✅ Peer connection opened, peer ID:', peer.id);
       
@@ -822,13 +805,17 @@ export const usePeerConnection = ({
       console.error('Peer error:', err);
       setMeetingError(err.message || 'Peer connection error');
     });
-  }, [isHost, meetingId, displayNameRef, connectToHost, registerDataConnection, applyRemoteIdentity, currentCallRef, activeCallsRef, setMeetingError, setupCallHandlers]);
+  });
 
   // -------------------------------------------------------------
   // Peer initialization (runs ONCE after join)
   // CRITICAL: This effect must NEVER recreate peerConnection or streams
   // Guard against multiple initializations
   // -------------------------------------------------------------
+  const readMediaSettings = useLatestCallback(() => ({
+    selectedCameraId, selectedMicrophoneId, isCameraOff, isMuted,
+  }));
+
   useEffect(() => {
     if (!hasJoined) {
       // Reset initialization flag when leaving meeting
@@ -860,6 +847,8 @@ export const usePeerConnection = ({
           return;
         }
         
+        // Device and mute changes must not cancel an in-flight join.
+        const { selectedCameraId, selectedMicrophoneId } = readMediaSettings();
         // ---- Get local media ----
         const cam = selectedCameraId
           ? { deviceId: { exact: selectedCameraId } }
@@ -874,6 +863,7 @@ export const usePeerConnection = ({
 
         localStreamRef.current = stream;
 
+        const { isCameraOff, isMuted } = readMediaSettings();
         const videoTrack = stream.getVideoTracks()[0];
         previousCameraTrackRef.current = videoTrack;
         if (videoTrack) {
@@ -915,7 +905,7 @@ export const usePeerConnection = ({
       // Don't reset hasInitializedRef here - we want to prevent re-initialization
       // Only cleanup on unmount, not on dependency changes
     };
-  }, [hasJoined, isHost, meetingId, selectedCameraId, selectedMicrophoneId, isCameraOff, isMuted, displayNameRef, localStreamRef, previousCameraTrackRef, localVideoRef, setLocalStreamVersion, connectToHost, registerDataConnection, setMeetingError, applyRemoteIdentity, currentCallRef, activeCallsRef, remoteStreamRef, setRemoteStreamVersion, setRemoteConnected, remoteVideoRef, setIsRemoteScreenSharing, setRemoteAudioLevel]);
+  }, [hasJoined, isHost, meetingId, peerRef, localStreamRef, previousCameraTrackRef, localVideoRef, setLocalStreamVersion, setMeetingError, setupPeerHandlersInline, readMediaSettings]);
 
   // -------------------------------------------------------------
   // Return all needed functions and setters

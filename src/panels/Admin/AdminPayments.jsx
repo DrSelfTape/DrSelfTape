@@ -30,7 +30,7 @@ export default function AdminPayments() {
     dispatch(fetchAdminPayments());
   }, [dispatch]);
 
-  const paymentList = Array.isArray(payments) ? payments : [];
+  const paymentList = useMemo(() => Array.isArray(payments) ? payments : [], [payments]);
 
   const filteredPayments = useMemo(() => {
     let result = paymentList;

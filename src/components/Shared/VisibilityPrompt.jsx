@@ -5,7 +5,7 @@ import axios from '../../redux/http';
 import { baseURL } from '../../redux/constant';
 import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 import { fetchProfileThunk } from '../../redux/features/profile/profileSlice';
-import { markStep } from '../Dashboard/TutorialChecklist';
+import { markStep } from '../Dashboard/tutorialProgress';
 import { trackEvent, Events } from '../../utils/analytics';
 import { ReaderPortrait } from '../Aurora';
 import { avatarStyleFor } from '../Aurora/avatarStyle';

@@ -3,14 +3,12 @@ import { after, before, test } from 'node:test';
 import { startHarness } from './first-review-sample-harness.mjs';
 import { execFileSync } from 'node:child_process';
 
-let puppeteer;
-try { ({ default: puppeteer } = await import('puppeteer')); } catch { /* optional local tool */ }
+import { launchBrowser } from './browser.mjs';
 let harness, browser, page;
 const errors = [];
 before(async () => {
-  if (!puppeteer) return;
   harness = await startHarness();
-  browser = await puppeteer.launch({ headless: true });
+  browser = await launchBrowser();
   page = await browser.newPage();
   page.setDefaultTimeout(2000);
   await page.setViewport({ width: 375, height: 667 });
@@ -19,7 +17,7 @@ before(async () => {
   page.on('request', request => request.url().startsWith(harness.url) ? request.continue() : request.abort());
 });
 after(async () => { await browser?.close(); await harness?.close(); });
-const btest = (name, fn) => test(name, t => puppeteer ? fn(t) : t.skip('puppeteer not installed'));
+const btest = test;
 
 async function click(label) {
   const handle = await page.waitForFunction(text => [...document.querySelectorAll('button')].find(b => b.textContent === text && b.getClientRects().length), {}, label);

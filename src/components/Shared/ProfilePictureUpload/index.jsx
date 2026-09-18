@@ -44,7 +44,7 @@ export const ProfilePictureUpload = ({
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
   const [uploadError, setUploadError] = useState('');
-  const [fileName, setFileName] = useState('');
+  const [, setFileName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -71,7 +71,7 @@ export const ProfilePictureUpload = ({
   // Determine which image to show: preview > current > null
   const displayImageUrl = previewUrl || currentImageUrl;
   const hasImage = !!displayImageUrl;
-  const isNewUpload = !!previewUrl; // New file selected vs existing image
+   // New file selected vs existing image
 
   // Validate file before processing
   const validateFile = (file) => {

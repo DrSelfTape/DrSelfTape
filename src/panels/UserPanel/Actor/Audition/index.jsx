@@ -44,8 +44,8 @@ export const ActorAuditions = () => {
   }, [dispatch]);
 
   // Filters State
-  const [openFilter, setOpenFilter] = useState(false);
-  const [filterOptions] = useState({
+  useState(false);
+  useState({
     dateRange: [
       { label: '7 days', value: '7-days' },
       { label: '30 days', value: '30-days' },
@@ -53,7 +53,7 @@ export const ActorAuditions = () => {
     ],
   });
 
-  const [selectedFilters, setSelectedFilters] = useState({
+  useState({
     dateRange: null,
   });
 

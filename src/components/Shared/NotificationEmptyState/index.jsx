@@ -3,7 +3,6 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 const NotificationEmptyState = ({
   size = 'lg',
   hasNotifications = false,
-  onViewAll,
 }) => {
   const isSmall = size === 'sm';
 

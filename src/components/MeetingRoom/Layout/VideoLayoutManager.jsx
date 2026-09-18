@@ -10,7 +10,7 @@ import { RemoteVideoTile } from '../VideoTiles/RemoteVideoTile';
 import { ScreenShareTile } from '../VideoTiles/ScreenShareTile';
 
 const VideoLayoutManager = ({
-  participants,               // array of {id, stream, name, role, audioLevel}
+                 // array of {id, stream, name, role, audioLevel}
   localStreamRef,
   remoteStreamRef,
   screenStreamRef,
@@ -119,7 +119,7 @@ const VideoLayoutManager = ({
             remoteStreamVersion={remoteStreamVersion}
           />
         );
-      case 'screen':
+      case 'screen': {
         // Use remoteStreamRef if it's remote screen sharing, otherwise use screenStreamRef
         const screenStream = isRemoteScreenSharing ? remoteStreamRef : screenStreamRef;
         console.log('🎬 Rendering screen share tile:', {
@@ -145,6 +145,7 @@ const VideoLayoutManager = ({
             remoteDisplayName={remoteDisplayName}
           />
         );
+      }
       default:
         return null;
     }

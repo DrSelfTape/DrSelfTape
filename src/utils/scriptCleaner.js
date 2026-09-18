@@ -23,7 +23,7 @@
 
 const TIMESTAMP_RE = /\b\d{1,2}:\d{2}(:\d{2})?\b/g;
 const PAGE_NUMBER_RE = /^\s*\d+\.?\s*$|^\s*[Pp]age\s+\d+(\s+of\s+\d+)?\s*$/gm;
-const SCENE_HEADING_RE = /^\s*(INT|EXT|INT\/EXT|EXT\/INT)[\.\s].+$/gm;
+const SCENE_HEADING_RE = /^\s*(INT|EXT|INT\/EXT|EXT\/INT)[.\s].+$/gm;
 
 // Watermark / legal noise — case-insensitive full-line matches
 const WATERMARK_LINES = [
@@ -72,7 +72,7 @@ const INLINE_NOISE_RE = [
 ];
 
 // Repeated punctuation-only patterns from watermarks (e.g. ",," ".. " "- -")
-const WATERMARK_CHARS_RE = /^[,\.\-\s*_|:;!@#$%^&*()\[\]{}]{1,10}$/;
+const WATERMARK_CHARS_RE = /^[,.\-\s*_|:;!@#$%^&*()[\]{}]{1,10}$/;
 
 // ── Main cleaner ──────────────────────────────────────────────────────────────
 
@@ -152,7 +152,7 @@ export function cleanScriptText(rawText) {
  * (has character cues in ALL CAPS followed by dialogue).
  */
 export function detectScriptQuality(text) {
-  const allCapsLines = (text.match(/^[A-Z][A-Z\s'.\-]{2,}$/gm) || []).length;
+  const allCapsLines = (text.match(/^[A-Z][A-Z\s'.-]{2,}$/gm) || []).length;
   const totalLines = text.split('\n').filter((l) => l.trim()).length;
   const ratio = totalLines > 0 ? allCapsLines / totalLines : 0;
 

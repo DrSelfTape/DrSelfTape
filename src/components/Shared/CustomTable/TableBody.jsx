@@ -5,7 +5,7 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import { CustomCheckbox, NoDataFound } from '../../Shared';
 
-const BodyCell = styled(TableCell)(({ theme }) => ({
+const BodyCell = styled(TableCell)(() => ({
   color: 'var(--color-secondary-dark)',
   fontSize: '12px',
   height: '44px',
@@ -16,7 +16,7 @@ const BodyCell = styled(TableCell)(({ theme }) => ({
   direction: 'ltr',
 }));
 
-const BodyRow = styled(TableRow)(({ theme }) => ({
+const BodyRow = styled(TableRow)(() => ({
   backgroundColor: 'var(--color-white)',
   '&:nth-of-type(even)': {
     backgroundColor: 'var(--color-primary-light)',

@@ -26,7 +26,7 @@ export async function loadRecordingReview({ realTokenBalance = false } = {}) {
     'saveMedia': 'export const saveBlobUrl = async () => ({ok: true});',
     'haptics': 'export const tapSelect = () => {}; export const cheer = tapSelect, warn = tapSelect;',
     'goUpgrade': 'export const goUpgrade = () => {};',
-    'TutorialChecklist': 'export const markStep = () => {};',
+    'tutorialProgress': 'export const markStep = () => {};',
     'CompareTakes': 'export default function CompareTakes() { return "Compare screen"; }',
     'TapeAnalyzerTutorial': 'export const TAPE_TUTORIAL_KEY = "tutorial"; export default function Tutorial() { return null; }',
     'selfTapeStore': `export const isIOSNative = () => false; export const saveLocalTape = () => {};

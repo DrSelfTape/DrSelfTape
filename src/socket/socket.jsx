@@ -1,6 +1,7 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { SocketContext } from './useSocket';
 import ReconnectingWebSocket from "reconnecting-websocket";
 import { HeartHandshake, Video, PhoneOff } from "lucide-react";
 import { Haptics } from "@capacitor/haptics";
@@ -11,14 +12,7 @@ import { getNotifications } from "../redux/features/notifications/notificationsS
 import { baseURL } from "../redux/constant";
 import axiosInstance from "../redux/http";
 
-const SocketContext = React.createContext(null);
 const isMobile = () => window.innerWidth < 768;
-
-export const useSocket = () => {
-  const state = useContext(SocketContext);
-  if (!state) throw new Error("useSocket must be used within a SocketProvider");
-  return state;
-};
 
 export const SocketProvider = ({ children }) => {
   const dispatch = useDispatch();
@@ -305,7 +299,7 @@ export const SocketProvider = ({ children }) => {
       fetchActiveRing();
     };
     ws.onmessage = (event) => {
-      try { handleIncomingMessage(JSON.parse(event.data)); } catch (_) {}
+      try { handleIncomingMessage(JSON.parse(event.data)); } catch { /* Optional operation failed; continue with the existing fallback. */ }
     };
     ws.onerror = () => {};
     ws.onclose = () => { setIsSocketReady(false); };

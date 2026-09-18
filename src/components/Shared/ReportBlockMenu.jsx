@@ -33,8 +33,7 @@ export default function ReportBlockMenu({
   targetUserId,
   targetObjectId = null,
   targetName = 'this user',
-  variant = 'icon', // 'icon' | 'inline'
-  align = 'right',
+  variant = 'icon',
 }) {
   const dispatch = useDispatch();
   const [open, setOpen] = useState(false);

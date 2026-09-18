@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toggleAvailability } from '../../redux/features/readers/readersMatchSlice';
 import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
-import { markStep } from './TutorialChecklist';
+import { markStep } from './tutorialProgress';
 
 export default function AvailabilityToggle({ compact = false }) {
   const dispatch = useDispatch();

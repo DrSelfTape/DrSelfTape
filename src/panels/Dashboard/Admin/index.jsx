@@ -5,7 +5,7 @@ import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 
 export default function AdminDashboard() {
-  const user = useSelector((s) => s.auth?.user);
+  useSelector((s) => s.auth?.user);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [broadcastTitle, setBroadcastTitle] = useState('');
@@ -26,7 +26,7 @@ export default function AdminDashboard() {
     if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
     setSending(true);
     try {
-      const { data } = await axios.post(`${baseURL}/v1/notifications/broadcast/`, {
+      await axios.post(`${baseURL}/v1/notifications/broadcast/`, {
         title: broadcastTitle.trim(),
         message: broadcastMessage.trim(),
       });
