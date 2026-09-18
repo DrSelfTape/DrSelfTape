@@ -7,8 +7,6 @@ const ReaderCard = ({
   count,
   countLabel = 'reviews',
   status = '',
-  image,
-  user_image,
   headshot,
   onConnect,
   isOffline = false,

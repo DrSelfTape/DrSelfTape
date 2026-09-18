@@ -17,8 +17,9 @@ import { fetchSubmissionsThunk, promoteToAuditionThunk } from "../../redux/featu
 import { fetchScriptsThunk, createScriptThunk, deleteScriptThunk } from "../../redux/features/scripts/scriptsSlice";
 import { fetchProfileThunk } from "../../redux/features/profile/profileSlice";
 import VisibilityPrompt from "../../components/Shared/VisibilityPrompt";
-import { markStep } from "../../components/Dashboard/TutorialChecklist";
-import { logoutUser, performLogout } from "../../redux/features/auth/authSlice";
+import CastingConnections from "../../components/Shared/CastingConnections";
+import { markStep } from "../../components/Dashboard/tutorialProgress";
+import {  performLogout } from "../../redux/features/auth/authSlice";
 import { fetchMatchingStats, toggleAvailability } from "../../redux/features/readers/readersMatchSlice";
 import { clearNotesReady, consumeRecordingNavigation } from "../../redux/features/jericho/jerichoSlice";
 import PendingLikesBanner from "../../components/Dashboard/PendingLikesBanner";
@@ -270,6 +271,8 @@ function Icon({ name, size = 20, color = TEXT_SECONDARY }) {
     auditions: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01",
     target: "M12 21a9 9 0 100-18 9 9 0 000 18zm0-3a6 6 0 110-12 6 6 0 010 12zm0-3a3 3 0 100-6 3 3 0 000 6z",
     scenes: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
+    studioPractice: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M10 8l6 4-6 4V8",
+    studioReview: "M5 20v-7M12 20V4M19 20V9",
     mic: "M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z",
     profile: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z",
     plus: "M12 4v16m8-8H4",
@@ -336,8 +339,8 @@ function buildHeroData(auditions) {
     return x;
   };
   const startOfMonth = (d) => new Date(d.getFullYear(), d.getMonth(), 1);
-  const quarterOf = (d) => Math.floor(d.getMonth() / 3);
-  const startOfQuarter = (d) => new Date(d.getFullYear(), quarterOf(d) * 3, 1);
+
+
 
   const startOfDay = (d) => {
     const x = new Date(d);
@@ -713,9 +716,9 @@ function AuroraPipeline({ stats, auditions, setTab }) {
  *
  * Aurora handoff §14.3 — V1Today equivalent.
  */
-function AuroraToday({ auditions, submissions, scripts, setTab, setCurrentPanel }) {
+function AuroraToday({ auditions, submissions, setTab, setCurrentPanel }) {
   const today = new Date();
-  const todayN = today.getDate();
+  today.getDate();
   const isoToday = today.toISOString().slice(0, 10);
 
   // Build 7-day strip centered on today (3 before, today, 3 after)
@@ -767,7 +770,7 @@ function AuroraToday({ auditions, submissions, scripts, setTab, setCurrentPanel 
     return raw ? parseInt(raw, 10) || 0 : 0;
   });
   useEffect(() => {
-    try { window.localStorage.setItem(sidesKey, String(sidesDone)); } catch {}
+    try { window.localStorage.setItem(sidesKey, String(sidesDone)); } catch { /* Optional operation failed; continue with the existing fallback. */ }
   }, [sidesDone, sidesKey]);
 
   // Rehearsal minutes: pulled from /v1/growth/practice/week
@@ -945,8 +948,8 @@ function callbackBadge(dateStr) {
 // push deep-link and checklist step keeps working.
 const TABS = [
   { id: "home", icon: "home", label: "Home" },
-  { id: "scenes", icon: "scenes", label: "Practice" },
-  { id: "tape-review", icon: "tape", label: "Review", highlight: true },
+  { id: "scenes", icon: "studioPractice", label: "Practice" },
+  { id: "tape-review", icon: "studioReview", label: "Review" },
   { id: "connect", icon: "community", label: "Connect" },
   { id: "more", icon: "more", label: "More" },
 ];
@@ -1086,7 +1089,7 @@ const SLATE_TIPS = [
 
 function HomeScreen({ setTab, setCurrentPanel }) {
   const dispatch = useDispatch();
-  const { permission, subscribe, supported, showIOSPrompt, setShowIOSPrompt } = usePushNotifications();
+  usePushNotifications();
   const { balance, unlimited: tokensUnlimited, refresh: refreshTokens } = useTokenBalance();
   const rawAuditions = useSelector((state) => state.auditions.data || []);
   const rawScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
@@ -2414,7 +2417,7 @@ function AuditionsScreen() {
                     await dispatch(promoteToAuditionThunk({ id: sub.id })).unwrap();
                     dispatch(fetchAuditionsThunk());
                     dispatch(fetchAuditionStatsThunk());
-                  } catch {}
+                  } catch { /* Optional operation failed; continue with the existing fallback. */ }
                 }} className="aurora-mono" style={{
                   background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)',
                   border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 35%, transparent)',
@@ -2628,7 +2631,7 @@ function AuditionsScreen() {
                           dispatch(fetchAuditionsThunk());
                           dispatch(fetchAuditionStatsThunk());
                           setSelected({ ...selected, status: col.id });
-                        } catch {}
+                        } catch { /* Optional operation failed; continue with the existing fallback. */ }
                       }}
                       className="aurora-mono"
                       style={{
@@ -3197,8 +3200,8 @@ function ProfileScreen({ setCurrentPanel }) {
   const headshot = profileData?.user_image || profileData?.headshot || null;
   const union = profileData?.actor_profile?.union || null;
   const basedIn = profileData?.actor_profile?.based_in || profileData?.based_in || null;
-  const genres = profileData?.actor_profile?.genres || profileData?.genres || [];
-  const yearsExperience = profileData?.actor_profile?.years_experience || profileData?.years_experience || null;
+  profileData?.actor_profile?.genres || profileData?.genres || [];
+  profileData?.actor_profile?.years_experience || profileData?.years_experience || null;
 
   const [subStatus, setSubStatus] = useState(null);
 
@@ -3318,6 +3321,8 @@ function ProfileScreen({ setCurrentPanel }) {
           </div>
         ))}
       </div>
+
+      <CastingConnections />
 
       {/* ── Aurora progression: XP wheel + level/rank/Takes ── */}
       <div style={{ marginBottom: 22 }}>
@@ -4040,17 +4045,11 @@ export default function DrSelfTapeApp() {
       </Suspense>
     ),
     "tape-review": (
-      <div style={{ padding: '2px 16px 20px' }}>
-        <div style={{ marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 'var(--type-display)' }}>🎥</span>
-            <h1 className="aurora-display" style={{ fontSize: 24, color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.4px' }}>Tape Review</h1>
-            <span style={{ fontSize: 'var(--type-xs)', fontWeight: 800, background: 'var(--aurora-accent-light)', color: 'var(--aurora-accent-deep)', padding: '2px 8px', borderRadius: 999, letterSpacing: '0.04em' }}>AI</span>
-          </div>
-          <p style={{ fontSize: 'var(--type-base)', color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.4 }}>
-            Submit a self-tape and get casting-grade acting notes: your performance, framing, eyeline, and the moves that book the room.
-          </p>
-        </div>
+      <div className="dst-review-page">
+        <header className="studio-review-heading">
+          <h1>Your tape review</h1>
+          <p>A fresh perspective. A stronger next take.</p>
+        </header>
         <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading…</div>}>
           <TapeReview
             firstReview={firstReviewActive}
@@ -4077,7 +4076,6 @@ export default function DrSelfTapeApp() {
   return (
     <div style={{ background: "var(--bg-deep)", height: "100dvh", overflow: "hidden", fontFamily: '-apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif', color: "var(--text-primary)", transition: "background 0.3s, color 0.3s", position: "fixed", inset: 0 }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap" rel="stylesheet" />
-      <UpdateBanner />
       {/* What's New — auto after an update, or manually from the More menu via
           the drst-whats-new event. (WhatsNewModal shows once on its own; new
           users just get it as feature discovery.) */}
@@ -4147,7 +4145,7 @@ export default function DrSelfTapeApp() {
         </div>
       )}
       <style>{`
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        /* Tailwind preflight owns the reset; unlayered spacing overrides utilities. */
         html, body { height: 100%; overflow: hidden; position: fixed; width: 100%; }
         ::-webkit-scrollbar { display: none; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -4169,12 +4167,12 @@ export default function DrSelfTapeApp() {
       `}</style>
 
       {isMobile ? (
-        <div style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
+        <div className="studio-mobile-shell" style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
           {/* Top Bar — Aurora style: logo badge + mono wordmark, bell + avatar.
               Solid pinned bar with a subtle bottom hairline so the chrome
               reads as part of the build, not floating elements over the
               page gradient. Still slides up when a modal opens. */}
-          <div style={{
+          <div className="studio-app-header" style={{
             position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
             background: "var(--aurora-surface-solid)",
             borderBottom: "1px solid var(--aurora-line)",
@@ -4189,6 +4187,7 @@ export default function DrSelfTapeApp() {
             willChange: 'opacity, transform',
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10, pointerEvents: 'auto' }}>
+              <button type="button" className="studio-more-button" aria-label="More tools and settings" onClick={() => handleSetTab('more')}><Icon name="more" size={22} color="#20221f" /></button>
               <img src={logo} alt="Dr Self Tape" style={{
                 width: 32, height: 32, objectFit: "contain",
                 borderRadius: 10,
@@ -4197,7 +4196,7 @@ export default function DrSelfTapeApp() {
                 padding: 2,
               }} />
               <span className="aurora-micro" style={{ color: 'var(--aurora-dim)', fontSize: 'var(--type-xs)' }}>
-                DR · SELF · TAPE
+                DR SELF TAPE
               </span>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, pointerEvents: 'auto' }}>
@@ -4222,7 +4221,7 @@ export default function DrSelfTapeApp() {
           </div>
 
           {/* Logo watermark */}
-          <div style={{
+          <div className="studio-watermark" style={{
             position: "fixed", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
             pointerEvents: "none", zIndex: 0, opacity: 0.025,
           }}>
@@ -4243,6 +4242,7 @@ export default function DrSelfTapeApp() {
             {/* Announcement banner: top of the scrollable content, below the
                 fixed header, only on the main tab screens (not full-screen
                 panels). Scrolls with content so the header never covers it. */}
+            <UpdateBanner />
             {!currentPanel && <AnnouncementBanner />}
             {/* V-03: one page-in for every destination — the panel or tab
                 remounts under a fresh key, so the 320ms aurora-page-in runs on
@@ -4277,7 +4277,7 @@ export default function DrSelfTapeApp() {
            * iOS pattern — 6 of 7 tabs used to be anonymous glyphs).
            * Slides down + fades when a modal is open so bottom-sheet
            * action buttons (Cancel / Delete) aren't hidden behind it. */}
-          <div style={{
+          <div className="studio-tab-bar" role="navigation" aria-label="Main navigation" style={{
             position: "fixed",
             bottom: "calc(env(safe-area-inset-bottom, 0px) + 10px)",
             left: 12, right: 12,
@@ -4296,13 +4296,14 @@ export default function DrSelfTapeApp() {
             opacity: tabBarHidden ? 0 : 1,
             transform: tabBarHidden ? 'translateY(120%)' : 'translateY(0)',
           }}>
-            {TABS.map(t => {
+            {TABS.filter(t => t.id !== 'more').map(t => {
               const a = tab === t.id && !currentPanel;
               return (
                 <button
                   key={t.id}
                   onClick={() => handleSetTab(t.id)}
                   className="aurora-tab-btn"
+                  aria-current={a ? 'page' : undefined}
                   style={{
                     // Even distribution — every tab is icon-over-label now,
                     // so no active-pill width games are needed.
@@ -4359,7 +4360,7 @@ export default function DrSelfTapeApp() {
 
           {/* Slate copilot — gold FAB on the tab screens (hidden inside a panel,
               a modal, or when the console is up); full console / dock overlay. */}
-          {!copilotOpen && !currentPanel && !tabBarHidden && (
+          {!copilotOpen && !currentPanel && !tabBarHidden && tab !== 'tape-review' && (
             <SlateFAB onOpen={openSlate} />
           )}
           {copilotOpen && (

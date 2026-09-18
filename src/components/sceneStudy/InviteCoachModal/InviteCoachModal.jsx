@@ -197,7 +197,7 @@ const InviteCoachModal = ({ open, onClose, coachId, coachName = '', coachEmail =
       if (meetingUrl) {
         window.open(meetingUrl, '_blank');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to start meeting');
     }
   };

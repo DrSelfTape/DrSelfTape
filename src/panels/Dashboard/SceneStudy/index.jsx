@@ -10,7 +10,7 @@ import LiveSceneMode from './LiveSceneMode';
 import SelfTapeRecorder from './SelfTapeRecorder';
 import PostSessionJournal from '../../../components/Shared/PostSessionJournal';
 import FocusMode from '../../../components/Shared/FocusMode';
-import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { parseScript, extractCharacters } from '../../../utils/scriptParse';
 

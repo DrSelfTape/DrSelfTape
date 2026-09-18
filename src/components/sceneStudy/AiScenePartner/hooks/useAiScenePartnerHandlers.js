@@ -47,13 +47,12 @@ export const useAiScenePartnerHandlers = ({
     previewAudioRefs,
     setIsPlayingIndex,
     setPlaybackInfo,
-    reviewStartIndexRef,
     teleprompterMode,
     scriptData,
   } = state;
 
   const {
-    isRecording,
+
     recordTimer,
     mediaRecorderRef,
     chunksRef,
@@ -383,7 +382,8 @@ export const useAiScenePartnerHandlers = ({
     checkIsUserLine, // Add checkIsUserLine to dependencies
     tone,
     scriptAnalysis,
-    state.sessionId,
+    state,
+    setPendingSession,
     versionId,
     setSessionStarted,
     setReviewMode,

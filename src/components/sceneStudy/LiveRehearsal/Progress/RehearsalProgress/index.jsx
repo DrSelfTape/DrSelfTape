@@ -2,7 +2,7 @@ import { Line } from '../../../../Shared';
 import SessionHistory from './SessionHistory';
 import StatsGrid from './StatsGrid';
 
-const RehearsalProgress = ({ stats }) => {
+const RehearsalProgress = () => {
   const statsData = [
     { label: 'Total Sessions', value: '12', change: '+3 this month' },
     { label: 'Total Hours', value: '8.5', change: '+2.5 this month' },

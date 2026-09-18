@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import axiosInstance from '../../../redux/http';
 import endPoints from '../../../redux/constant';
-import { requestAiConsent } from '../../../components/AIConsent/AIConsentModal';
+import { requestAiConsent } from '../../../components/AIConsent/consentRequest';
 import { trackEvent, Events } from '../../../utils/analytics';
 import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 

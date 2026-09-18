@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+
 import {
   PreviousIcon,
   NextIcon,
@@ -117,4 +117,3 @@ export const ScriptPlaybackControls = ({
     </div>
   );
 };
-

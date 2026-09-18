@@ -12,15 +12,12 @@ const AiScenePartnerTeleprompter = ({
   isUserLine,
   hasRecording,
   getRecordingForIndex,
-  checkIsUserLine,
-  completedLines,
   completionRate,
   tone,
   isRecording,
   recordTimer,
   formatDuration,
   reviewMode,
-  teleprompterMode,
   audioPlayer,
   stopAllPlayback,
   setReviewMode,
@@ -36,7 +33,6 @@ const AiScenePartnerTeleprompter = ({
   handleNext,
   completedLines: completedLinesProp,
   findNextCompletedLine,
-  scriptLines: scriptLinesProp,
   playRecordingForIndex,
   isPlayingIndex,
   previewAudioRefs,
@@ -340,4 +336,3 @@ const AiScenePartnerTeleprompter = ({
 };
 
 export default AiScenePartnerTeleprompter;
-

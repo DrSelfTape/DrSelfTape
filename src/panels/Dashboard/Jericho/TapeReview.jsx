@@ -15,6 +15,8 @@ import {
 import { reviewTape, clearTapeReview, dismissReveal, resumeAnalysisJob, recoverLatestReview, clearCompare, clearReviewRecording, consumeRecordingNavigation, pendingJobMatchesRecording, REVIEW_RECOVERY_TIMEOUT_MS } from '../../../redux/features/jericho/jerichoSlice';
 import CompareTakes from './CompareTakes';
 import TapeReviewNotes from './TapeReviewNotes';
+import StudioReviewSummary from './StudioReviewSummary';
+import { scoreValue } from './desktopReviewData';
 import DesktopTapeReport from './DesktopTapeReport';
 import RecapStoryCard from './RecapStoryCard';
 import { useIsMobile } from '../../../hooks/useIsMobile';
@@ -22,6 +24,7 @@ import { TECH_SCORES, DNA } from './reviewResultFields';
 import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { trackEvent, Events } from '../../../utils/analytics';
+import { takeBannerAttribution } from '../../../utils/bannerState';
 import {
   claimFirstReviewOnce, clearFirstReviewOnce, getFirstReviewEntry,
 } from '../../../utils/firstReviewFunnel';
@@ -32,7 +35,7 @@ import { saveBlobUrl } from '../../../utils/saveMedia';
 import TapeReviewShareCard, { TapeReviewShareCardStory } from './TapeReviewShareCard';
 import { usePersonalRecords } from '../../../hooks/usePersonalRecords';
 import { Share2 } from 'lucide-react';
-import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import { PRACTICE_SCENE_TITLE, PRACTICE_SCENE_CONTENT } from '../../../data/practiceScene';
 import CameraPresell from '../../../components/Shared/CameraPresell';
 import { needsCameraPresell, markCameraPresellSeen } from '../../../components/Shared/cameraPresellGate';
@@ -125,52 +128,6 @@ function gradeBand(avg) {
   return { label: 'Keep Taping', color: '#FF8280' };
 }
 
-/* Staged-reveal hero: animated semicircle gauge + the band verdict, addressed
- * by first name. The arc sweep (800ms, strong ease-out) is the moment; the
- * number and band land on staggered delays behind it. Reduced motion gets the
- * final state without the sweep. */
-function GaugeHero({ avg, firstName }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    const id = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(id);
-  }, []);
-  const band = gradeBand(avg);
-  const R = 62;
-  const C = Math.PI * R;
-  const frac = Math.max(0, Math.min(1, avg / 10));
-  const landed = (delay) => ({
-    opacity: mounted ? 1 : 0,
-    transform: mounted ? 'translateY(0)' : 'translateY(6px)',
-    transition: `opacity 300ms ease-out ${delay}ms, transform 300ms cubic-bezier(0.23,1,0.32,1) ${delay}ms`,
-  });
-  return (
-    <div className="rounded-2xl border border-[#D4A85F]/25 p-5 text-center tr-reveal" style={{ '--tr-i': 0, background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
-      <p className="text-xs font-medium text-[rgba(10,10,10,0.5)]">
-        {firstName ? `The verdict on your take, ${firstName}` : 'The verdict on your take'}
-      </p>
-      <div style={{ position: 'relative', width: 172, height: 96, margin: '10px auto 0' }}>
-        <svg width="172" height="96" viewBox="0 0 172 96">
-          <path d="M 24 90 A 62 62 0 0 1 148 90" fill="none" stroke="rgba(10,10,10,0.08)" strokeWidth="10" strokeLinecap="round" />
-          <path
-            d="M 24 90 A 62 62 0 0 1 148 90" fill="none" stroke={band.color} strokeWidth="10" strokeLinecap="round"
-            strokeDasharray={C} strokeDashoffset={mounted ? C * (1 - frac) : C}
-            className="dst-gauge-arc"
-          />
-        </svg>
-        <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, ...landed(350) }}>
-          <span className="text-3xl font-bold text-[#0A0A0A]">{avg.toFixed(1)}</span>
-          <span className="text-xs text-[rgba(10,10,10,0.4)]"> /10</span>
-        </div>
-      </div>
-      <p className="text-base font-bold mt-1" style={{ color: band.color, ...landed(550) }}>
-        {band.label}
-      </p>
-      <style>{`.dst-gauge-arc{transition:stroke-dashoffset 800ms cubic-bezier(0.23,1,0.32,1) 150ms;}@media (prefers-reduced-motion: reduce){.dst-gauge-arc{transition:none;}}`}</style>
-    </div>
-  );
-}
-
 const NOTIF_NUDGE_KEY = 'dst_notif_nudge_dismissed';
 
 /* Denied-state recovery — once a user has denied push, iOS never re-prompts,
@@ -230,6 +187,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   // would be skipped and the API would hard-403.
   useAIGate();
   const dispatch = useDispatch();
+  const bannerUserId = useSelector(s => s.auth?.user?.id) || 'anonymous';
   const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl, revealPending } = useSelector((s) => s.jericho);
   const hasAiConsent = useSelector((s) => !!s.auth?.user?.ai_consent_accepted_at);
   const [checkingRecovery, setCheckingRecovery] = useState(() => !(tapeReviewLoading || tapeReviewResult || compareLoading || compareResult));
@@ -612,6 +570,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       idemKeyRef.current = (crypto?.randomUUID?.() || `tape-${Date.now()}-${Math.random().toString(36).slice(2)}`);
     }
     const res = await dispatch(reviewTape({ video: file, recordingId: recording?.id, role, tone, sides, idempotencyKey: recording ? recording.idempotencyKey : idemKeyRef.current }));
+    if (reviewTape.fulfilled.match(res)) {
+      const attribution = takeBannerAttribution('tape_review_completed', bannerUserId);
+      if (attribution.announcement_id) trackEvent('announcement_banner_completed', { ...attribution, action: 'tape_review' });
+    }
     // Retire an upload key only on definitive settlement/refusal. Library
     // attempt identity and its settled lifecycle live alongside it in Redux.
     if (reviewTape.rejected.match(res) && res.payload?.reuseKey === false) {
@@ -747,9 +709,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // `scores` map left to average — `headline_score` is the same number,
     // computed server-side, so the gauge survives the strip. Falls back to the
     // local average for paid users and for any older payload.
-    const heroVals = TECH_SCORES.map((sc) => raw.scores?.[sc.key]).map(Number).filter((n) => Number.isFinite(n));
+    const heroVals = TECH_SCORES.map((sc) => scoreValue(raw.scores?.[sc.key])).filter((n) => n != null);
     const localHeroAvg = heroVals.length ? heroVals.reduce((a, b) => a + b, 0) / heroVals.length : null;
-    const heroAvg = Number.isFinite(Number(raw.headline_score)) ? Number(raw.headline_score) : localHeroAvg;
+    const heroAvg = scoreValue(raw.headline_score) ?? localHeroAvg;
 
     // The server compares this saved review with earlier reviews across devices.
     // An unavailable aggregate hides the optional badge; notes remain usable.
@@ -794,7 +756,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     }
 
     return (
-      <div className="space-y-4 sm:space-y-5">
+      <div className="dst-review-result space-y-4 sm:space-y-5">
         {/* First-review "how to read your notes" walkthrough — the pre-upload
             tutorial is deferred to here for that flow (modeToggle, which
             normally hosts the overlay, doesn't render on the result screen). */}
@@ -805,7 +767,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Gauge hero — headline grade from the RAW scores (a single teaser
             number never leaks the gated per-dimension scorecard). */}
-        {heroAvg != null && <GaugeHero avg={heroAvg} firstName={firstName} />}
+        <StudioReviewSummary review={r} score={heroAvg} band={heroAvg != null ? gradeBand(heroAvg) : null}
+          file={file} playbackUrl={tapeReviewPlaybackUrl} role={role || recording?.role} />
 
         {/* Personal records — review #5 should motivate like review #1.
             Only renders when this tape actually beat a previous best. */}
@@ -856,7 +819,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {/* Next Take Mission — turn the note into action: re-record against it and
             compare to this take. Focus = the one thing, else the first fix. */}
-        <TapeReviewNotes review={r} revealStage={revealStage} afterNotes={(() => {
+        <TapeReviewNotes review={{ ...r, verdict: null }} revealStage={revealStage} afterNotes={(() => {
           if (revealStage < 2) return null;
           const a0 = adjustments[0];
           const focus = r.the_one_thing || a0?.note || (typeof a0 === 'string' ? a0 : '');
@@ -987,7 +950,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               <RotateCcw size={15} /> Review another take
             </button>
             {/* Clearance for the Slate FAB so it can't cover the last action */}
-            <div aria-hidden="true" style={{ height: 76 }} />
+            <div aria-hidden="true" style={{ height: 12 }} />
           </>
         ))}
 
@@ -996,25 +959,24 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             skip for repeat readers. onClick only: a tap-belt double-fire here
             would advance two stages. */}
         {revealStage < 3 && (
-          <div className="space-y-1">
+          <div className="studio-review-actions">
             <button
               type="button"
               onClick={() => {
-                trackEvent('reveal_stage_advance', { to: revealStage + 1 });
-                setRevealStage((v) => Math.min(3, v + 1));
+                trackEvent('reveal_stage_advance', { to: 3 });
+                setRevealStage(3);
               }}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
-              style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              className="studio-primary"
             >
-              {revealStage === 0 ? "See what's working →" : revealStage === 1 ? 'The one thing to fix →' : 'See your full casting notes →'}
+              Explore my notes <span aria-hidden="true">→</span>
             </button>
-            <button
+            {!firstReview && <button
               type="button"
-              onClick={() => { trackEvent('reveal_stage_advance', { to: 3, skipped: true }); setRevealStage(3); }}
-              className="w-full text-center text-xs font-medium text-[rgba(10,10,10,0.4)] py-1.5"
+              onClick={() => setMode('compare')}
+              className="studio-text-button"
             >
-              Show everything
-            </button>
+              Compare with another take
+            </button>}
           </div>
         )}
       </div>

@@ -84,7 +84,7 @@ export const useRecording = () => {
     const mime = pickAudioMime();
     try {
       mediaRecorderRef.current = createRecorder(mime ? { mimeType: mime } : undefined);
-    } catch (err) {
+    } catch {
       try {
         mediaRecorderRef.current = createRecorder();
       } catch (err2) {
@@ -130,4 +130,3 @@ export const useRecording = () => {
     teardownStream,
   };
 };
-

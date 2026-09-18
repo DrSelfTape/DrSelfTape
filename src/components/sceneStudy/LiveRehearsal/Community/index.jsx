@@ -10,8 +10,6 @@ const ReaderCommunity = ({
   rate,
   lastActive,
   isAvailable,
-  user_image,
-  image,
   headshot,
 }) => {
   return (

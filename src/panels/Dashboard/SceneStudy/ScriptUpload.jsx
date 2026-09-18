@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { cleanScriptText, detectScriptQuality } from '../../../utils/scriptCleaner';
+import { cleanScriptText } from '../../../utils/scriptCleaner';
 import axiosInstance from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import { isEmptyScript, pdfVisionFallback } from '../../../utils/pdfToScript';

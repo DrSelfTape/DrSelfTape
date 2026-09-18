@@ -3,7 +3,7 @@
   "appName": "Dr Self Tape",
   "webDir": "dist",
   "ios": {
-    "contentInset": "automatic",
+    "contentInset": "never",
     "backgroundColor": "#FAFAF7",
     "preferredContentMode": "mobile"
   },
@@ -15,7 +15,7 @@
       "launchAutoHide": true
     },
     "StatusBar": {
-      "style": "DARK",
+      "style": "LIGHT",
       "backgroundColor": "#FAFAF7"
     },
     "Keyboard": {

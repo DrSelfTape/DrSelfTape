@@ -2,7 +2,7 @@ import { StarIcon } from '../../../../assets/icons';
 import { CustomAvatar, CustomButton } from '../../../Shared';
 
 const ReaderProfileCard = ({
-  id,
+
   name,
   rating,
   reviewCount,
@@ -13,9 +13,7 @@ const ReaderProfileCard = ({
   hourlyRate,
   currency,
   yearsExperience,
-  languages = [],
   totalSessions,
-  meetingMethods = [],
   onRequestSession,
 }) => {
   // Format rating display

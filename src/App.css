@@ -1,5 +1,6 @@
 /* Fonts load from the single consolidated <link> in index.html (Ring 0). */
 @import 'tailwindcss';
+@import './studio.css';
 
 /* ── Theme Variables ─────────────────────────────────────────────────
  * Layered design:
@@ -799,6 +800,9 @@ button:not(:disabled):active,
 .aurora-page-in {
   animation: aurora-page-in 320ms cubic-bezier(.2,.7,.3,1);
 }
+/* Do not create a transformed containing block around full-screen rehearsals. */
+.aurora-page-in:has(.dst-rehearsal) { animation: none; }
+
 @media (prefers-reduced-motion: reduce) {
   .aurora-page-in {
     animation: none !important;

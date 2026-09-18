@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
 /**
  * VideoTrimmer
@@ -33,12 +33,12 @@ export default function VideoTrimmer({ videoUrl, videoBlob, onSave, onCancel }) 
     return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
-  const getTimeFromX = (clientX) => {
+  const getTimeFromX = useCallback((clientX) => {
     const rect = timelineRef.current?.getBoundingClientRect();
     if (!rect) return 0;
     const pct = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
     return pct * duration;
-  };
+  }, [duration]);
 
   const handleMouseDown = (handle) => (e) => {
     e.preventDefault();
@@ -64,7 +64,7 @@ export default function VideoTrimmer({ videoUrl, videoBlob, onSave, onCancel }) 
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onUp);
     };
-  }, [dragging, startTime, endTime, duration]);
+  }, [dragging, startTime, endTime, getTimeFromX]);
 
   const handlePreview = () => {
     const video = videoRef.current;

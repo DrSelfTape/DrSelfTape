@@ -42,7 +42,6 @@ const AiScenePartnerLayout = () => {
     characterOptions,
     toneOptions,
     teleprompterMode,
-    scriptId: versionId,
   } = state;
   
   // Read currentLineIndex directly from state to ensure it's always current

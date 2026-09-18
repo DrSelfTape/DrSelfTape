@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 const SPEED_MAP = { slow: 0.5, medium: 1, fast: 2 };
 const SPEED_LABELS = ['slow', 'medium', 'fast'];
 
-export default function Teleprompter({ lines, userRole, onRecord, onBack, onGoLive, onSelfTape, hideHeader = false }) {
+export default function Teleprompter({ lines, userRole, onBack, onSelfTape, hideHeader = false }) {
   const [autoScroll, setAutoScroll] = useState(false);
   const [speed, setSpeed] = useState('medium');
   const [paused, setPaused] = useState(false);

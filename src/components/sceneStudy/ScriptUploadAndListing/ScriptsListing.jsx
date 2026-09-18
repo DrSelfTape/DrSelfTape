@@ -7,8 +7,8 @@ import {
 import DescriptionSharpIcon from '@mui/icons-material/DescriptionSharp';
 import LegendToggleSharpIcon from '@mui/icons-material/LegendToggleSharp';
 import { CustomButton, CustomModal, TooltipText } from '../../Shared';
-import { useState, useEffect, useLayoutEffect, useRef } from 'react';
-import { flushSync, unstable_batchedUpdates } from 'react-dom';
+import { useState, useEffect, useRef } from 'react';
+
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { getAuditionTypeIcon } from '../../../utils/auditionIcons';
@@ -36,7 +36,7 @@ const ScriptsListing = ({
   
   // State for tracking which script is being analyzed
   const [analyzingScriptId, setAnalyzingScriptId] = useState(null);
-  const { isAnalyzing, currentMessage, startAnalysis, stopAnalysis } = useAnalysisLoading();
+  const {    stopAnalysis } = useAnalysisLoading();
   
   // Hard lock to prevent double-click navigation
   const navLockRef = useRef(false);
@@ -93,50 +93,10 @@ const ScriptsListing = ({
   };
 
   // Handle analyze button click for non-ready status (existing behavior)
-  const handleAnalyze = (file) => {
-    // Force immediate state updates for instant UI feedback
-    flushSync(() => {
-      // State 1: Immediately disable button (prevents double-click)
-      setAnalyzingScriptId(file.id);
-      
-      // State 2 & 3: Start loading with spinner and looping messages
-      startAnalysis();
-    });
-    
-    // Navigate to analysis page which will trigger the analysis
-    // The loading state will continue until extraction_status becomes 'ready'
-    navigate(`/scene-study/analysis/${file.id}`);
-  };
+
 
   // Handle analyze button click for ready status (navigation with message loop)
-  const handleAnalyzeReady = (file) => {
-    // Hard lock: prevent double-click
-    if (navLockRef.current) return;
-    
-    // IMMEDIATELY set ref for instant UI feedback (no React batching)
-    analyzingFileIdRef.current = file.id;
-    navLockRef.current = true;
-    
-    // Force synchronous state update
-    flushSync(() => {
-      setAnalyzingScriptId(file.id);
-      setNavMessageIndex(0);
-    });
-    
-    // Start message loop immediately (change every 2 seconds)
-    navIntervalRef.current = setInterval(() => {
-      setNavMessageIndex((prev) => (prev + 1) % NAV_MESSAGES.length);
-    }, 2000);
-    
-    // Calculate minimum duration for one full cycle (4 messages * 2 seconds = 8 seconds)
-    const minDuration = NAV_MESSAGES.length * 2000;
-    
-    // After one full cycle, navigate
-    navTimeoutRef.current = setTimeout(() => {
-      // Navigate - messages will continue looping until component unmounts
-      navigate(`/scene-study/analysis/${file.id}`);
-    }, minDuration);
-  };
+
 
   // Cleanup intervals and timeouts on unmount
   useEffect(() => {

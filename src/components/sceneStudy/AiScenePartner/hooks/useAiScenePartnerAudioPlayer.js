@@ -18,7 +18,6 @@ export const useAiScenePartnerAudioPlayer = ({
   setReviewMode,
   setCurrentLineIndex,
   scrollToLine,
-  findNextLineWithAudio,
 }) => {
   const player = useScriptAudioPlayer({
     scriptLines,
@@ -62,4 +61,3 @@ export const useAiScenePartnerAudioPlayer = ({
 
   return player;
 };
-

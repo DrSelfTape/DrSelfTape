@@ -15,7 +15,6 @@ const EndSessionModal = ({
   selectedCharacter,
   checkIsUserLine,
   formatDuration,
-  teleprompterMode,
   onConfirmEnd,
   onRecordMissing,
   loading = false,
@@ -257,4 +256,3 @@ const EndSessionModal = ({
 };
 
 export default EndSessionModal;
-

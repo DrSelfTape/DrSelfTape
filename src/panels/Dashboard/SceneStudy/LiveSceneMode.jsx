@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import ModePicker from './ModePicker';
+import StudioScript from './StudioScript';
+import { StudioRehearsalHeader, StudioRehearsalControls } from './StudioRehearsalChrome';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
 import PermissionsModal from '../../../components/PermissionsModal';
@@ -255,7 +257,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   useEffect(() => {
     return () => {
       if (audioContextRef.current) {
-        try { audioContextRef.current.close(); } catch(e) {}
+        try { audioContextRef.current.close(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
         audioContextRef.current = null;
       }
     };
@@ -365,7 +367,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           const decoded = JSON.parse(new TextDecoder().decode(err.response.data));
           errMsg = decoded?.message || errMsg;
         }
-      } catch {}
+      } catch { /* Optional operation failed; continue with the existing fallback. */ }
       setErrorMsg(`Voice error: ${errMsg}. Continuing without audio.`);
       setStatus('listening');
       return;
@@ -427,10 +429,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     try {
       // .slice(0) prevents "detached ArrayBuffer" crash in Chrome
       audioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
-    } catch (decodeErr) {
+    } catch {
       try {
         await playViaHtmlAudio();
-      } catch (fallbackErr) {
+      } catch {
         // fallback playback failed
       }
       return;
@@ -471,7 +473,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     let idx = startIdx;
 
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
     }
     // Route audio to the loud playback speaker before the reader speaks — the
     // native recognizer otherwise leaves the session on a quiet record route.
@@ -537,7 +539,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     scrollToLine(idx);
     setStatus('listening');
     beginListeningRef.current?.();
-  }, [lines, userRole, voice, playTTS, scrollToLine, setCurrentLine]);  // eslint-disable-line
+  }, [lines, userRole, voice, playTTS, scrollToLine, setCurrentLine]);
 
   /**
    * Called when actor finishes speaking. Records their line, then plays AI lines one by one.
@@ -593,7 +595,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         isProcessingRef.current = false;
       }
     },
-    [lines, userRole, playAiLinesFrom]
+    [lines, userRole, playAiLinesFrom, scrollToLine, setCurrentLine]
   );
 
   /**
@@ -604,7 +606,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
     // Clean up existing
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
     }
 
     const recognition = new SpeechRecognition();
@@ -673,7 +675,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (isActiveRef.current && statusRef.current === 'listening') {
         setTimeout(() => {
           if (isActiveRef.current) {
-            try { recognition.start(); } catch {}
+            try { recognition.start(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
           }
         }, 100);
       }
@@ -681,10 +683,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
     try {
       recognition.start();
-    } catch (err) {
+    } catch {
       // recognition start failed
     }
-  }, [SpeechRecognition, handleActorLineComplete, status]);
+  }, [SpeechRecognition, handleActorLineComplete]);
 
   // ── Native "listen" mode (iOS default): SFSpeechRecognizer via the Capgo
   // plugin + known-line endpointing. The actor's expected turn is KNOWN, so we
@@ -814,11 +816,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         contextualStrings: cueTokens(expected),  // bias toward the scripted words
         maxResults: 3,
       });
-    } catch (err) {
+    } catch {
       // Native recognition failed → fall back to pre-timed so the scene works.
       switchToPretimedRef.current?.();
     }
-  }, [expectedActorTurn, stopNativeListen, handleActorLineComplete]);
+  }, [expectedActorTurn, stopNativeListen, handleActorLineComplete, primeAudio]);
 
   // Route "now listen for the actor" to the right engine for the current mode.
   const beginListening = useCallback(() => {
@@ -936,7 +938,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         startRecognition();
       }
     },
-    [SpeechRecognition, lines, userRole, playAiLinesFrom, startRecognition, scrollToLine, canListen]
+    [SpeechRecognition, lines, userRole, playAiLinesFrom, startRecognition, scrollToLine, canListen, setCurrentLine]
   );
 
   // Start pre-timed mode — AI reads, then pauses for actor, then auto-advances
@@ -1048,12 +1050,12 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     setIsPaused(true);
     isActiveRef.current = false;
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
     }
     stopNativeListen();
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (audioRef.current) {
-      try { audioRef.current.stop(); } catch(e) {}
+      try { audioRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       audioRef.current = null;
     }
     if (audioContextRef.current?.state === 'running') {
@@ -1068,7 +1070,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       resolve();
     }
     setStatus('idle');
-  }, []);
+  }, [stopNativeListen]);
 
   /**
    * Resume from pause — restart recognition and audio context.
@@ -1096,7 +1098,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     } else if (currentLine && currentLine.character !== userRole) {
       playAiLinesFrom(currentLineIdxRef.current, conversationHistoryRef.current);
     }
-  }, [lines, userRole, startRecognition, playAiLinesFrom, readerMode, voice, prePauseSeconds]);
+  }, [lines, userRole, playAiLinesFrom, readerMode, voice, prePauseSeconds]);
 
   /**
    * End the scene and clean up.
@@ -1111,16 +1113,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       resolve();
     }
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
+      try { recognitionRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
     }
     stopNativeListen();
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (audioRef.current) {
-      try { audioRef.current.stop(); } catch(e) {}
+      try { audioRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       audioRef.current = null;
     }
     if (audioContextRef.current) {
-      try { audioContextRef.current.close(); } catch(e) {}
+      try { audioContextRef.current.close(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       audioContextRef.current = null;
     }
     // Log session to Jericho (fire and forget)
@@ -1149,14 +1151,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         .then(() => dispatch(fetchCraftJourney()));
     }
     onExit();
-  }, [onExit, dispatch, lines, userRole, craftSkill]);
+  }, [onExit, dispatch, lines, userRole, craftSkill, stopNativeListen]);
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
       isActiveRef.current = false;
       if (recognitionRef.current) {
-        try { recognitionRef.current.stop(); } catch {}
+        try { recognitionRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       }
       try { NativeSpeech.stop(); } catch { /* not running */ }
       try { NativeSpeech.removeAllListeners(); } catch { /* none */ }
@@ -1164,7 +1166,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (nativeConfirmRef.current) clearTimeout(nativeConfirmRef.current);
       if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
       if (audioRef.current) {
-        try { audioRef.current.stop(); } catch(e) {}
+        try { audioRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
         audioRef.current = null;
       }
       // If the user backed out without tapping End, the timer is still
@@ -1236,7 +1238,9 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col overflow-hidden"
+      className="dst-rehearsal fixed inset-0 z-[60] flex flex-col overflow-hidden"
+      data-started={sceneStarted}
+      data-paused={isPaused}
       style={{
         background: 'var(--aurora-bg, #FAFAF7)',
         // Full-screen takeover: keep the top bar out of the notch and the
@@ -1273,10 +1277,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         }}
       />
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
+      <StudioRehearsalHeader role={userRole} lineIndex={currentLineIdx} lineCount={lines.length} onEnd={endScene} />
+      <div className="dst-rehearsal-header flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-[#D4A85F] animate-pulse" />
-            <span className="text-[#0A0A0A] font-semibold text-sm">Live Study Mode</span>
+            <span className="text-[#0A0A0A] font-semibold text-sm">Scene study</span>
           {readerMode === 'pretimed' && (
             <span className="text-xs bg-[#D4A85F]/20 text-[#7A5A18] border border-[#D4A85F]/30 px-2 py-0.5 rounded-full font-semibold ml-2">
               ⏱ Pre-Timed
@@ -1322,7 +1327,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             once they finish delivering the line. A safety timer
             (pauseSecs * 2) still fires as a fallback. */}
         {status === 'listening' && lines[currentLineIdx]?.character === userRole && (
-          <div className="lg:hidden w-full">
+          <div className="dst-rehearsal-cue lg:hidden w-full">
             <button
               type="button"
               onClick={forceAdvanceActor}
@@ -1330,7 +1335,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-[#7A5A18] animate-pulse" />
-              {readerMode === 'listen' ? 'Listening. Say your line (tap to skip)' : 'Your line. Tap when done'}
+              {readerMode === 'listen' ? 'Your turn · tap to skip' : 'Your turn · tap when done'}
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14M13 5l7 7-7 7" />
               </svg>
@@ -1350,55 +1355,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             )}
           </div>
         )}
-        {/* Left: Script Panel */}
-        <div
-          ref={scriptPanelRef}
-          className="lg:w-80 lg:h-auto lg:border-r lg:border-b-0 border-b border-[#1a1a2e] overflow-y-auto p-3 block"
-          style={{ height: 'var(--script-panel-h, 38vh)' }}
-        >
-          <style>{`@media (min-width: 1024px) { :root { --script-panel-h: 100%; } }`}</style>
-          <h3 className="text-[rgba(10,10,10,0.62)] text-xs font-bold uppercase tracking-wider mb-4">Script</h3>
-          <div className="space-y-2">
-            {lines.map((line, i) => {
-              const isUser = line.character === userRole;
-              const isCurrent = i === currentLineIdx;
-              const isPast = i < currentLineIdx;
-              // Contrast tiers: PAST lines fade (opacity 65%) but stay
-              // legible; CURRENT line is full-strength ink with a tinted
-              // background; UPCOMING lines are slightly muted so the
-              // eye finds the current row instantly.
-              return (
-                <div
-                  key={i}
-                  data-line-idx={i}
-                  className={`rounded-lg p-2 lg:p-2.5 transition-all duration-300 ${
-                    isCurrent
-                      ? isUser
-                        ? 'bg-[#D4A85F]/20 border-l-4 border-[#D4A85F]'
-                        : 'bg-[#A7ECDA]/18 border-l-4 border-[#1AB680]'
-                      : isPast
-                        ? 'opacity-60'
-                        : 'opacity-85'
-                  }`}
-                >
-                  <span
-                    className={`text-[10px] font-bold uppercase tracking-wider block mb-0.5 ${
-                      isUser ? 'text-[#7A5A18]' : 'text-[rgba(10,10,10,0.78)]'
-                    }`}
-                  >
-                    {line.character}
-                  </span>
-                  <p className={`text-sm leading-snug ${isCurrent ? 'text-[#0A0A0A] font-medium' : 'text-[rgba(10,10,10,0.82)]'}`}>
-                    {line.dialogue}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <StudioScript lines={lines} userRole={userRole} currentLineIdx={currentLineIdx} panelRef={scriptPanelRef} />
 
         {/* Main Stage */}
-        <div className="flex-1 flex flex-col items-center justify-center px-4 lg:px-6 min-h-0 overflow-y-auto relative z-10 bg-[var(--aurora-bg,#FAFAF7)]">
+        <div className="dst-rehearsal-stage flex-1 flex flex-col items-center justify-center px-4 lg:px-6 min-h-0 overflow-y-auto relative z-10 bg-[var(--aurora-bg,#FAFAF7)]">
 
           {/* START SCREEN — shown before scene begins */}
           {status === 'idle' && !sceneStarted && (
@@ -1441,7 +1401,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
           {/* Paused Overlay */}
           {isPaused && sceneStarted && (
-            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-transparent/80 backdrop-blur-sm">
+            <div className="studio-paused-overlay absolute inset-0 z-20 flex flex-col items-center justify-center bg-transparent/80 backdrop-blur-sm">
               <div className="text-6xl mb-4">⏸</div>
               <h2 className="text-[#0A0A0A] text-2xl font-bold mb-2">Scene Paused</h2>
               <p className="text-[rgba(10,10,10,0.62)] text-sm mb-6">Take a moment. Resume when you&apos;re ready.</p>
@@ -1466,7 +1426,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               user's UPCOMING line in big teleprompter type so they can
               read it. When the AI is speaking, show the AI line. */}
           {(sceneStarted || status !== 'idle') && (
-          <div className="text-center max-w-2xl w-full mb-2 lg:mb-4">
+          <div className="dst-rehearsal-quote text-center max-w-2xl w-full mb-2 lg:mb-4">
             {status === 'playing' || aiCurrentLine ? (
               <>
                 <span className="text-[#7A5A18] text-xs font-bold uppercase tracking-widest block mb-3">
@@ -1494,11 +1454,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           {/* Status Indicator */}
           <>
             <span className="hidden lg:block"><StatusIndicator status={status} /></span>
-            <span className="lg:hidden"><StatusIndicator status={status} compact={true} /></span>
+            <span className="dst-rehearsal-mic lg:hidden"><StatusIndicator status={status} compact={true} /></span>
           </>
 
           {/* Status Label */}
-          <div className="mt-2 mb-3 lg:mb-6">
+          <div className="dst-rehearsal-status mt-2 mb-3 lg:mb-6">
             <span
               className={`text-sm font-medium px-4 py-1.5 rounded-full ${
                 status === 'listening'
@@ -1506,7 +1466,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   : status === 'thinking'
                   ? 'bg-[#D4A85F]/10 text-[#7A5A18]'
                   : status === 'playing'
-                  ? 'bg-white/5 text-gray-300'
+                  ? 'bg-[#1AB680]/10 text-[#16634b]'
                   : status === 'error'
                   ? 'bg-red-500/10 text-red-400'
                   : 'text-[rgba(10,10,10,0.62)]'
@@ -1517,7 +1477,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           </div>
 
           {/* Live Transcript */}
-          <div className="max-w-xl w-full min-h-[60px] text-center">
+          <div className="dst-rehearsal-transcript max-w-xl w-full text-center">
             {liveTranscript && status === 'listening' && (
               <p className="text-[rgba(10,10,10,0.4)] text-lg italic animate-pulse">&ldquo;{liveTranscript}&rdquo;</p>
             )}
@@ -1530,14 +1490,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
               review catch — the June-29 silent reader stayed silent AND
               unexplained). playTTS clears it on each new line. */}
           {errorMsg && (
-            <div className="mt-4 bg-red-500/10 border border-red-500/20 rounded-xl px-6 py-3 max-w-md">
+            <div role="alert" className="studio-rehearsal-error mt-4 bg-red-500/10 border border-red-500/20 rounded-xl px-6 py-3 max-w-md">
               <p className="text-red-400 text-sm text-center">{errorMsg}</p>
             </div>
           )}
 
           {/* Conversation History (last few lines) */}
           {conversationHistory.length > 0 && (
-            <div className="mt-8 max-w-lg w-full space-y-2 lg:hidden">
+            <div className="dst-rehearsal-history mt-8 max-w-lg w-full space-y-2 lg:hidden">
               {conversationHistory.slice(-4).map((turn, i) => (
                 <div
                   key={i}
@@ -1559,7 +1519,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       </div>
 
       {/* Bottom Status Bar */}
-      <div className="px-4 sm:px-6 py-3 border-t border-[#1a1a2e] flex items-center justify-between">
+      {sceneStarted && <StudioRehearsalControls status={status} paused={isPaused}
+        actorTurn={status === 'listening' && lines[currentLineIdx]?.character === userRole}
+        readerMode={readerMode} transcript={liveTranscript} onNext={forceAdvanceActor}
+        onPause={pauseScene} onResume={resumeScene} onEnd={endScene} onTimed={() => switchToPretimedRef.current?.()} />}
+      <div className="dst-rehearsal-footer px-4 sm:px-6 py-3 border-t border-[#1a1a2e] flex items-center justify-between">
         <div className="flex items-center gap-3 sm:gap-4 text-xs text-[rgba(10,10,10,0.62)]">
           <span>
             Line {Math.min(currentLineIdx + 1, lines.length)} of {lines.length}
@@ -1579,13 +1543,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                     : 'border border-[#D4A85F]/40 text-[#7A5A18]'
                 }`}
               >
-                {isPaused ? '▶' : '⏸'}
+                {isPaused ? 'Resume' : 'Pause'}
               </button>
               <button
                 onClick={endScene}
                 className="min-h-[44px] min-w-[44px] inline-flex items-center justify-center px-3 rounded-lg border border-red-500/40 text-red-400 text-xs font-semibold transition-colors cursor-pointer"
               >
-                ✕
+                End
               </button>
             </div>
           )}

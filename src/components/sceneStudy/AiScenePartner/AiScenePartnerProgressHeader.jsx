@@ -13,7 +13,6 @@ const AiScenePartnerProgressHeader = ({
   sessionConfig = {},
   handlers = {},
   stateSetters = {},
-  recordingConfig = {},
 }) => {
   const {
     scriptLines,

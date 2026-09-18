@@ -40,31 +40,6 @@ const AiScenePartnerMainPanel = ({
     teleprompterMode,
   } = sessionConfig;
 
-  // Extract script lines configuration
-  const {
-    scriptLines,
-    currentLineIndex,
-    isPlayingIndex,
-    checkIsUserLine,
-    hasRecording,
-    getRecordingForIndex,
-    linesWithAudioIssues,
-    getLineAudio,
-    completedLines,
-    reviewMode,
-    audioPlayer,
-  } = scriptLinesConfig;
-
-  // Extract recording configuration
-  const {
-    isRecording,
-    recordTimer,
-    recordings,
-    previewAudioRefs,
-    playbackInfo,
-    partnerAudioRefs,
-  } = recordingConfig;
-
   // Extract handlers
   const {
     handleToneChange,
@@ -77,13 +52,6 @@ const AiScenePartnerMainPanel = ({
   const {
     setSelectedCharacter,
     setTeleprompterMode,
-    setIsPlayingIndex,
-    setCurrentLineIndex,
-    setPlaybackInfo,
-    setReviewMode,
-    getLastCompletedLineIndex,
-    reviewStartIndexRef,
-    stopRecording,
   } = stateSetters;
 
   const handleCharacterChange = (e) => {

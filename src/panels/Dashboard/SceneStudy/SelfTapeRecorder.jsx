@@ -3,11 +3,11 @@ import { useDispatch } from 'react-redux';
 import { Video, Square, X, Download, Send, RotateCcw, Volume2, Sparkles } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
-import endPoints from '../../../redux/constant';
+import '../../../redux/constant';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { saveBlobUrl } from '../../../utils/saveMedia';
 import { reviewTape } from '../../../redux/features/jericho/jerichoSlice';
-import { requestAiConsent } from '../../../components/AIConsent/AIConsentModal';
+import { requestAiConsent } from '../../../components/AIConsent/consentRequest';
 
 // Helper: pick a supported video mimeType (MP4 for Safari/iOS, WebM otherwise)
 function getSupportedMimeType() {
@@ -114,79 +114,6 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
     };
   }, []);
 
-  const startRecording = useCallback(async () => {
-    if (!streamRef.current) return;
-    chunksRef.current = [];
-    cancelledRef.current = false;
-    setRecordError(null);
-
-    // Lock to portrait so rotation doesn't kill the stream
-    await lockOrientation();
-
-    const mimeType = mimeTypeRef.current;
-    const recorderOpts = mimeType ? { mimeType } : undefined;
-
-    const recorder = new MediaRecorder(streamRef.current, recorderOpts);
-    recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data);
-    };
-    recorder.onstop = () => {
-      unlockOrientation();
-      // A recorder that errored mid-capture fires onerror BEFORE onstop and
-      // sets cancelledRef — don't surface a half/empty take as a good one.
-      if (cancelledRef.current && chunksRef.current.length === 0) return;
-      const actualType = mimeType || recorder.mimeType || 'video/webm';
-      const blob = new Blob(chunksRef.current, { type: actualType });
-      // Revoke any previous URL before replacing it (BUG 13 memory leak)
-      if (recordedUrlRef.current) URL.revokeObjectURL(recordedUrlRef.current);
-      const url = URL.createObjectURL(blob);
-      recordedUrlRef.current = url;
-      setRecordedUrl(url);
-      setRecordedBlob(blob);
-      // Fresh idempotency key per finalized take, so a retry of THIS take
-      // dedups server-side but a new/retaken take gets a new key (BUG 12).
-      setIdemKey(crypto.randomUUID());
-    };
-    // Surface a mid-capture failure instead of silently losing the take.
-    recorder.onerror = (e) => {
-      console.error('MediaRecorder runtime error', e?.error || e);
-      cancelledRef.current = true;
-      unlockOrientation();
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-      try {
-        if (recorder.state !== 'inactive') recorder.stop();
-      } catch { /* already stopped */ }
-      setRecording(false);
-      setRecordError('Recording failed mid-capture. Your take was not saved. Please try again.');
-    };
-
-    recorder.start(1000);
-    mediaRecorderRef.current = recorder;
-    setRecording(true);
-    setTimer(0);
-    timerRef.current = setInterval(() => setTimer((t) => t + 1), 1000);
-
-    // Play through lines with AI voice for partner lines
-    if (!hasLines) {
-      // Script-less take — nothing to prompt or read.
-    } else if (aiVoiceEnabled) {
-      playThroughLines(0);
-    } else {
-      // Just auto-scroll
-      if (scrollRef.current) {
-        const el = scrollRef.current;
-        const scroll = () => {
-          el.scrollTop += 0.8;
-          if (el.scrollTop < el.scrollHeight - el.clientHeight) requestAnimationFrame(scroll);
-        };
-        requestAnimationFrame(scroll);
-      }
-    }
-  }, [aiVoiceEnabled, hasLines]);
-
   // Play through lines — AI reads partner lines, pauses for user lines
   const playThroughLines = useCallback(async (startIdx) => {
     for (let i = startIdx; i < lines.length; i++) {
@@ -263,6 +190,79 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
       }
     }
   }, [lines, userRole, aiVoiceEnabled]);
+
+  const startRecording = useCallback(async () => {
+    if (!streamRef.current) return;
+    chunksRef.current = [];
+    cancelledRef.current = false;
+    setRecordError(null);
+
+    // Lock to portrait so rotation doesn't kill the stream
+    await lockOrientation();
+
+    const mimeType = mimeTypeRef.current;
+    const recorderOpts = mimeType ? { mimeType } : undefined;
+
+    const recorder = new MediaRecorder(streamRef.current, recorderOpts);
+    recorder.ondataavailable = (e) => {
+      if (e.data.size > 0) chunksRef.current.push(e.data);
+    };
+    recorder.onstop = () => {
+      unlockOrientation();
+      // A recorder that errored mid-capture fires onerror BEFORE onstop and
+      // sets cancelledRef — don't surface a half/empty take as a good one.
+      if (cancelledRef.current && chunksRef.current.length === 0) return;
+      const actualType = mimeType || recorder.mimeType || 'video/webm';
+      const blob = new Blob(chunksRef.current, { type: actualType });
+      // Revoke any previous URL before replacing it (BUG 13 memory leak)
+      if (recordedUrlRef.current) URL.revokeObjectURL(recordedUrlRef.current);
+      const url = URL.createObjectURL(blob);
+      recordedUrlRef.current = url;
+      setRecordedUrl(url);
+      setRecordedBlob(blob);
+      // Fresh idempotency key per finalized take, so a retry of THIS take
+      // dedups server-side but a new/retaken take gets a new key (BUG 12).
+      setIdemKey(crypto.randomUUID());
+    };
+    // Surface a mid-capture failure instead of silently losing the take.
+    recorder.onerror = (e) => {
+      console.error('MediaRecorder runtime error', e?.error || e);
+      cancelledRef.current = true;
+      unlockOrientation();
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      try {
+        if (recorder.state !== 'inactive') recorder.stop();
+      } catch { /* already stopped */ }
+      setRecording(false);
+      setRecordError('Recording failed mid-capture. Your take was not saved. Please try again.');
+    };
+
+    recorder.start(1000);
+    mediaRecorderRef.current = recorder;
+    setRecording(true);
+    setTimer(0);
+    timerRef.current = setInterval(() => setTimer((t) => t + 1), 1000);
+
+    // Play through lines with AI voice for partner lines
+    if (!hasLines) {
+      // Script-less take — nothing to prompt or read.
+    } else if (aiVoiceEnabled) {
+      playThroughLines(0);
+    } else {
+      // Just auto-scroll
+      if (scrollRef.current) {
+        const el = scrollRef.current;
+        const scroll = () => {
+          el.scrollTop += 0.8;
+          if (el.scrollTop < el.scrollHeight - el.clientHeight) requestAnimationFrame(scroll);
+        };
+        requestAnimationFrame(scroll);
+      }
+    }
+  }, [aiVoiceEnabled, hasLines, playThroughLines]);
 
   const stopRecording = useCallback(() => {
     cancelledRef.current = true;

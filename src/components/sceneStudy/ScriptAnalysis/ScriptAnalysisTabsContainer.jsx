@@ -30,7 +30,7 @@ export const ScriptAnalysisTabsContainer = ({
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { scriptId } = useParams();
+  useParams();
   const [value, setValue] = useState(0);
 
   const { scriptAnalysis } = useSelector((state) => state.sceneStudyScripts);

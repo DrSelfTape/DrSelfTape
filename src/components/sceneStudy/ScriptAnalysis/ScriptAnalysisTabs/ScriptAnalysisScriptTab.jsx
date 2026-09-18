@@ -133,7 +133,7 @@ export const ScriptAnalysisScriptTab = ({
             const isUserLine =
               line?.character?.toLowerCase() ===
               selectedCharacter?.character?.label?.toLowerCase();
-            const hasAudio = getAudioForLine(line.lineId);
+            getAudioForLine(line.lineId);
 
             const isActiveLine = index === currentLineIndex;
             const isSelectedCharacter =
@@ -172,4 +172,3 @@ export const ScriptAnalysisScriptTab = ({
     </CustomTabPanel>
   );
 };
-

@@ -1,11 +1,10 @@
-import { createContext, useContext, useEffect } from 'react';
+import { useEffect } from 'react';
+import { ThemeContext } from './useTheme';
 import { consoleSurfaceEnabled } from './consoleSurface';
 
 // Light-only mode (decision 2026-05-29). Dark theme retired in favor of the
 // single Aurora-derived light surface. We keep ThemeProvider + the useTheme
 // hook so existing imports don't break, but theme is now a constant.
-const ThemeContext = createContext({ theme: 'light', setTheme: () => {}, toggleTheme: () => {} });
-
 export function ThemeProvider({ children }) {
   // Pin the document attribute to 'light' on every mount. CSS variables keyed
   // to [data-theme="light"] resolve; the [data-theme="dark"] block is dead
@@ -27,8 +26,4 @@ export function ThemeProvider({ children }) {
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  return useContext(ThemeContext);
 }

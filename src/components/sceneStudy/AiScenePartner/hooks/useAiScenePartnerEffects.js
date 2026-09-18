@@ -1,5 +1,6 @@
 // Library imports
 import { useEffect, useRef } from 'react';
+import { useLatestCallback } from '../../../../hooks/useLatestCallback';
 import { useLocation, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { getUserItem, removeUserItem, getCurrentUserId } from '../../../../utils/userStorage';
@@ -21,7 +22,6 @@ export const useAiScenePartnerEffects = ({
   audioData,
   recording,
   audioPlayer,
-  checkIsUserLine,
   getLineAudio,
   scrollToLine,
 }) => {
@@ -44,7 +44,6 @@ export const useAiScenePartnerEffects = ({
     tone,
     sessionStarted,
     recordings,
-    completedLines,
     isPlayingIndex,
     currentLineIndex,
     teleprompterMode,
@@ -52,6 +51,10 @@ export const useAiScenePartnerEffects = ({
     reviewModeRef,
     setRecordings,
     setCompletedLines,
+    setLoadingPreviousAnalysis,
+    setPerformanceAnalysis,
+    setPerformanceAnalysisError,
+    setPendingSession,
   } = state;
 
   const {
@@ -74,7 +77,7 @@ export const useAiScenePartnerEffects = ({
   useEffect(() => {
     const audioPlayerLineIndex = audioPlayer?.currentLineIndex;
     const prevAudioPlayerLineIndex = prevAudioPlayerLineIndexRef.current;
-    const lineIndexChanged = audioPlayerLineIndex !== undefined &&
+    audioPlayerLineIndex !== undefined &&
       audioPlayerLineIndex !== null &&
       audioPlayerLineIndex !== prevAudioPlayerLineIndex;
 
@@ -135,7 +138,7 @@ export const useAiScenePartnerEffects = ({
   // Only clear it when audio stops completely or moves to a different line
   useEffect(() => {
     const currentLine = audioPlayer?.currentLineIndex;
-    const playing = audioPlayer?.isPlaying;
+    audioPlayer?.isPlaying;
     
     // If there's a current line index (playing or paused)
     if (currentLine !== undefined && currentLine !== null) {
@@ -208,7 +211,7 @@ export const useAiScenePartnerEffects = ({
           console.log('[useAiScenePartnerEffects] Found stored session data for current script, calling complete API:', sessionData);
           
           // Set loading state to show loading message (don't set pendingSession yet)
-          state.setLoadingPreviousAnalysis(true);
+          setLoadingPreviousAnalysis(true);
           
           // Always call complete API to get the last analysis
           const fd = new FormData();
@@ -222,18 +225,18 @@ export const useAiScenePartnerEffects = ({
               const status = statusData?.status;
               
               // Clear loading state
-              state.setLoadingPreviousAnalysis(false);
+              setLoadingPreviousAnalysis(false);
               
               // If analysis is available (status is not "running"), store it
               if (status !== 'running' && statusData && (statusData.memorization_percent !== undefined || statusData.coaching_tips)) {
-                state.setPerformanceAnalysis(statusData);
-                state.setPerformanceAnalysisError(null);
+                setPerformanceAnalysis(statusData);
+                setPerformanceAnalysisError(null);
                 // Don't set pendingSession for completed analysis
-                state.setPendingSession({ sessionId: null, versionId: null });
+                setPendingSession({ sessionId: null, versionId: null });
                 console.log('[useAiScenePartnerEffects] Loaded last analysis from stored session');
               } else if (status === 'running') {
                 // Still processing, set pendingSession for polling
-                state.setPendingSession({
+                setPendingSession({
                   sessionId: sessionData.sessionId,
                   versionId: sessionData.versionId,
                 });
@@ -243,12 +246,12 @@ export const useAiScenePartnerEffects = ({
             .catch((err) => {
               console.error('[useAiScenePartnerEffects] Error loading stored session analysis:', err);
               // Clear loading state on error
-              state.setLoadingPreviousAnalysis(false);
+              setLoadingPreviousAnalysis(false);
               // On error, clear the stored data if it's for a different script
               if (sessionData?.versionId !== versionId) {
                 removeUserItem(_uid, storageKey);
               }
-              state.setPendingSession({ sessionId: null, versionId: null });
+              setPendingSession({ sessionId: null, versionId: null });
             });
         } else if (sessionData?.versionId && sessionData.versionId !== versionId) {
           // Stored data is for a different script, clear it
@@ -268,7 +271,7 @@ export const useAiScenePartnerEffects = ({
         console.warn('[useAiScenePartnerEffects] Error clearing localStorage:', clearErr);
       }
     }
-  }, [dispatch, versionId]);
+  }, [dispatch, versionId, setLoadingPreviousAnalysis, setPerformanceAnalysis, setPerformanceAnalysisError, setPendingSession]);
 
   // Handle review mode initialization
   useEffect(() => {
@@ -463,7 +466,7 @@ export const useAiScenePartnerEffects = ({
 
   // Poll rehearsal session status using the complete endpoint
   // Pattern similar to ScriptUploadAndListing.jsx
-  const { pendingSession, setPendingSession } = state;
+  const { pendingSession } = state;
 
   useEffect(() => {
     // Check if we have a pending session AND it matches the current scriptId/versionId
@@ -513,8 +516,8 @@ export const useAiScenePartnerEffects = ({
           if (status !== 'running') {
             // Store analysis data if available
             if (statusData && (statusData.memorization_percent !== undefined || statusData.coaching_tips)) {
-              state.setPerformanceAnalysis(statusData);
-              state.setPerformanceAnalysisError(null);
+              setPerformanceAnalysis(statusData);
+              setPerformanceAnalysisError(null);
             }
             setPendingSession({ sessionId: null, versionId: null });
             
@@ -526,14 +529,14 @@ export const useAiScenePartnerEffects = ({
         .catch((err) => {
           console.error('Error checking rehearsal status:', err);
           // On error, stop polling and set error state
-          state.setPerformanceAnalysisError('Failed to load performance insights. Please try again.');
+          setPerformanceAnalysisError('Failed to load performance insights. Please try again.');
           setPendingSession({ sessionId: null, versionId: null });
         });
     }, 5000);
 
     // Cleanup: clear interval on unmount or when dependencies change
     return () => clearInterval(interval);
-  }, [pendingSession, versionId, dispatch, setPendingSession, state]);
+  }, [pendingSession, versionId, dispatch, setPendingSession, setPerformanceAnalysis, setPerformanceAnalysisError]);
 
   // Keep a live ref to recordings so the unmount cleanup revokes the blob
   // URLs that actually exist at teardown. The previous []-deps cleanup closed
@@ -542,25 +545,18 @@ export const useAiScenePartnerEffects = ({
   const recordingsRef = useRef(recordings);
   useEffect(() => { recordingsRef.current = recordings; }, [recordings]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (recording?.stopRecording) {
-        recording.stopRecording();
-      }
-      // Stop all playback logic
-      if (mediaStreamRef?.current) {
-        mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-      }
-      recordingsRef.current.forEach((r) => {
-        if (r.url) URL.revokeObjectURL(r.url);
-      });
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Read the latest recorder/stream only when leaving, never stop on rerenders.
+  const cleanupSession = useLatestCallback(() => {
+    recording?.stopRecording?.();
+    mediaStreamRef?.current?.getTracks().forEach((track) => track.stop());
+    recordingsRef.current.forEach((entry) => {
+      if (entry.url) URL.revokeObjectURL(entry.url);
+    });
+  });
+  useEffect(() => () => cleanupSession(), [cleanupSession]);
 
   return {
     versionId,
     scriptId,
   };
 };
-

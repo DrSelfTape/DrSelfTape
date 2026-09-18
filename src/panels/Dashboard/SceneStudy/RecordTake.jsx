@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { createAuditionThunk } from '../../../redux/features/auditions/auditionsSlice';
+
 import VideoTrimmer from './VideoTrimmer';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -22,7 +22,7 @@ function getSupportedMimeType() {
 }
 
 export default function RecordTake({ onBack }) {
-  const dispatch = useDispatch();
+  useDispatch();
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const streamRef = useRef(null);
@@ -121,7 +121,7 @@ export default function RecordTake({ onBack }) {
   const handleSaveToPhone = (blobToSave = recordedBlob, url = recordedUrl) => {
     if (!url) return;
     // Try to detect iOS — use MP4 if possible
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    /iPad|iPhone|iPod/.test(navigator.userAgent);
     const mimeType = blobToSave?.type || 'video/webm';
     const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
     const filename = `DrSelfTape-${new Date().toISOString().slice(0,10)}-take.${ext}`;

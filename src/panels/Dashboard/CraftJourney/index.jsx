@@ -153,9 +153,9 @@ export default function CraftJourney() {
   // CDSim, etc.) that completes a node lights this up on the next render
   // of CraftJourney, no matter which surface fired the dispatch.
   const [celebrate, setCelebrate] = useState(null);
-  const craftXp = useSelector((s) => s.craftJourney.craft_xp) || 0;
-  const cjLoading = useSelector((s) => s.craftJourney.loading);
-  const cjFetched = useSelector((s) => s.craftJourney.hasFetched);
+  useSelector((s) => s.craftJourney.craft_xp) || 0;
+  useSelector((s) => s.craftJourney.loading);
+  useSelector((s) => s.craftJourney.hasFetched);
   const [generating, setGenerating] = useState(null); // node id while AI generates
 
   // When BE confirms a node completion, fire the celebration overlay. We
