@@ -1,0 +1,12 @@
+.dst-banner { box-sizing: border-box; margin: 8px 12px 12px; padding: 14px; display: flex; align-items: flex-start; gap: 8px; border: 1px solid rgba(212,168,95,.55); border-radius: 16px; background: #fff7e6; color: #2a2115; font-family: -apple-system, BlinkMacSystemFont, 'Space Grotesk', sans-serif; }
+.dst-banner__content { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.dst-banner strong { font-size: 16px; line-height: 1.4; }
+.dst-banner p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; }
+.dst-banner__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.dst-banner button { min-height: 44px; min-width: 44px; padding: 10px 14px; border: 0; border-radius: 10px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; touch-action: manipulation; background: #2a2115; color: #fff7e6; }
+.dst-banner button:disabled { opacity: .65; cursor: wait; }
+.dst-banner button:focus-visible { outline: 3px solid #356aaf; outline-offset: 3px; }
+.dst-banner button.dst-banner__secondary, .dst-banner button.dst-banner__close { color: inherit; background: transparent; }
+.dst-banner button.dst-banner__close { display: grid; place-items: center; padding: 10px; flex-shrink: 0; }
+.dst-banner--update { position: relative; background: #a7ecda; color: #0a1a14; border-color: rgba(10,26,20,.15); }
+@media (prefers-reduced-motion: reduce) { .dst-banner-in { animation: none !important; } }

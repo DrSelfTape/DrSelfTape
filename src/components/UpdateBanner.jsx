@@ -1,158 +1,104 @@
-import { useEffect, useState } from "react";
-import { Capacitor } from "@capacitor/core";
-import { App as CapApp } from "@capacitor/app";
-import axiosInstance from "../redux/http";
-import { openExternal } from "../utils/openExternal";
-import { trackEvent } from "../utils/analytics";
+import { useEffect, useRef, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import axiosInstance from '../redux/http';
+import { openExternal } from '../utils/openExternal';
+import { trackEvent } from '../utils/analytics';
+import { REMIND_AFTER_MS, readStored, storeValue, snoozed, validVersion, versionGt } from '../utils/bannerState';
+import './banners.css';
 
-const APP_STORE_URL = "itms-apps://itunes.apple.com/app/id6770320460";
-const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.drselftape.app";
-
-// The right store per platform — itms-apps:// is dead on Android.
-function storeUrl() {
-  return Capacitor.getPlatform() === 'android' ? PLAY_STORE_URL : APP_STORE_URL;
-}
-
-// Web fallback only. On native we read the TRUE installed binary version at
-// runtime via CapApp.getInfo() (the iOS MARKETING_VERSION / Android
-// versionName), so a missed native bump can never silently fail-open the
-// banner. The banner only fires when the BE-reported live version is GREATER
-// than the installed version.
-const WEB_BUNDLE_VERSION = "1.0.11";
-
-const LS_DISMISSED = "updateBannerDismissed";
-const VERSION_ENDPOINT = "/v1/notifications/system/latest-version/";
-
-function versionGt(a, b) {
-  const pa = String(a || "0").split(".").map((n) => parseInt(n, 10) || 0);
-  const pb = String(b || "0").split(".").map((n) => parseInt(n, 10) || 0);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const ai = pa[i] || 0;
-    const bi = pb[i] || 0;
-    if (ai > bi) return true;
-    if (ai < bi) return false;
-  }
-  return false;
-}
-
+const SNOOZE_KEY = 'dst_update_snooze_v2';
+const ACTION_KEY = 'dst_update_action';
 export default function UpdateBanner() {
-  const [latest, setLatest] = useState(null);
-  const [bundleVersion, setBundleVersion] = useState(WEB_BUNDLE_VERSION);
+  const [versions, setVersions] = useState(null);
   const [opening, setOpening] = useState(false);
-
+  const [error, setError] = useState('');
+  const [snooze, setSnooze] = useState(() => readStored(SNOOZE_KEY));
+  const [now, setNow] = useState(Date.now);
+  const shown = useRef(new Set());
+  const busy = useRef(false);
+  const element = useRef(null);
   useEffect(() => {
-    // Source the REAL installed binary version on native (MARKETING_VERSION /
-    // versionName). Fail-open to the web fallback if getInfo errors.
-    if (Capacitor.isNativePlatform()) {
-      CapApp.getInfo()
-        .then((info) => { if (info?.version) setBundleVersion(info.version); })
-        .catch(() => { /* keep WEB_BUNDLE_VERSION fallback */ });
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
+    if (!Capacitor.isNativePlatform()) return;
+    let cancelled = false, refreshing = false;
+    const refresh = async () => {
+      if (refreshing) return;
+      refreshing = true;
+      setNow(Date.now());
       try {
-        const { data } = await axiosInstance.get(VERSION_ENDPOINT);
-        // Read the live version for THIS platform (ios / android).
-        const reported = Capacitor.getPlatform() === 'android' ? data?.android : data?.ios;
-        if (!cancelled && reported) setLatest(reported);
-      } catch { /* network down — banner stays hidden */ }
-    })();
-    return () => { cancelled = true; };
+        const [info, response] = await Promise.all([
+          CapApp.getInfo(), axiosInstance.get('/v1/notifications/system/latest-version/', { timeout: 8000 }),
+        ]);
+        const latest = response.data?.[Capacitor.getPlatform()];
+        if (cancelled) return;
+        if (!validVersion(info?.version) || !validVersion(latest)) { setVersions(null); return; }
+        setVersions({ installed: info.version, latest });
+        const action = readStored(ACTION_KEY);
+        if (validVersion(action?.target) && !versionGt(action.target, info.version)) {
+          trackEvent('update_banner_completed', { from: action.from, to: info.version });
+          storeValue(ACTION_KEY, null);
+        }
+      } catch { if (!cancelled) setVersions(null); }
+      finally { refreshing = false; }
+    };
+    const resume = () => {
+      if (document.visibilityState === 'hidden') return;
+      busy.current = false;
+      setOpening(false);
+      void refresh();
+    };
+    void refresh();
+    const listener = CapApp.addListener('appStateChange', ({ isActive }) => { if (isActive) resume(); });
+    document.addEventListener('visibilitychange', resume);
+    const timer = setInterval(resume, 60 * 1000);
+    return () => {
+      cancelled = true; clearInterval(timer);
+      document.removeEventListener('visibilitychange', resume);
+      listener.then(handle => handle.remove()).catch(() => {});
+    };
   }, []);
-
-  // Native only — links to the right store per platform. Web auto-updates via
-  // Vercel, so no nag there.
-  if (!Capacitor.isNativePlatform()) return null;
-  if (!latest) return null;
-  if (!versionGt(latest, bundleVersion)) return null;
-
-  let dismissedFor = null;
-  try { dismissedFor = localStorage.getItem(LS_DISMISSED); } catch { /* storage unavailable */ }
-  if (dismissedFor === latest) return null;
-
-  const handleUpdate = () => {
-    if (opening) return;
-    setOpening(true);
-    trackEvent("update_banner_tapped", { from: bundleVersion, to: latest });
-    openExternal(storeUrl());
+  const visible = !!versions && versionGt(versions.latest, versions.installed) && !snoozed(snooze, versions.latest, now);
+  useEffect(() => {
+    if (!visible || !element.current || shown.current.has(versions.latest)) return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(e => e.isIntersecting) && !shown.current.has(versions.latest)) {
+        shown.current.add(versions.latest);
+        trackEvent('update_banner_viewed', { from: versions.installed, to: versions.latest });
+      }
+    });
+    observer.observe(element.current);
+    return () => observer.disconnect();
+  }, [visible, versions]);
+  if (!visible) return null;
+  const android = Capacitor.getPlatform() === 'android';
+  const store = android ? 'Google Play' : 'App Store';
+  const handleUpdate = async () => {
+    if (busy.current) return;
+    busy.current = true; setOpening(true); setError('');
+    trackEvent('update_banner_tapped', { from: versions.installed, to: versions.latest });
+    try {
+      const url = android ? 'https://play.google.com/store/apps/details?id=com.drselftape.app' : 'itms-apps://itunes.apple.com/app/id6770320460';
+      if (await openExternal(url) === false) throw new Error('Store unavailable');
+      storeValue(ACTION_KEY, { from: versions.installed, target: versions.latest });
+    } catch {
+      setError(`Could not open ${store}. Please try again.`);
+      trackEvent('update_banner_open_failed', { to: versions.latest });
+    } finally { busy.current = false; setOpening(false); }
   };
-
-  const handleDismiss = () => {
-    trackEvent("update_banner_dismissed", { from: bundleVersion, to: latest });
-    try { localStorage.setItem(LS_DISMISSED, latest); } catch { /* storage unavailable */ }
-    setLatest(null);
+  const remindLater = () => {
+    const value = { version: versions.latest, until: Date.now() + REMIND_AFTER_MS };
+    storeValue(SNOOZE_KEY, value); setSnooze(value);
+    trackEvent('update_banner_dismissed', { to: versions.latest, remind_after_hours: 72 });
   };
-
-  return (
-    <div
-      className="dst-banner-in"
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        background: "linear-gradient(90deg, #5ee6b8 0%, #A7ECDA 100%)",
-        color: "#0a1a14",
-        padding: "10px 14px 10px 16px",
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        boxShadow: "0 2px 14px rgba(0,0,0,0.25)",
-        paddingTop: "calc(10px + env(safe-area-inset-top))",
-        fontFamily: "-apple-system, BlinkMacSystemFont, 'Space Grotesk', 'Poppins', sans-serif",
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 14, lineHeight: 1.2 }}>
-          Dr Self Tape {latest} is live
-        </div>
-        <div style={{ fontSize: 12, opacity: 0.8, lineHeight: 1.3, marginTop: 2 }}>
-          Tap to update from the App Store.
-        </div>
+  return <section ref={element} className="dst-banner dst-banner--update dst-banner-in" aria-label="App update">
+    <div className="dst-banner__content">
+      <strong>Dr Self Tape {versions.latest} is available</strong>
+      <p>Get the latest version from {store}.</p>
+      {error && <p role="alert">{error}</p>}
+      <div className="dst-banner__actions">
+        <button type="button" onClick={handleUpdate} disabled={opening}>{opening ? 'Opening…' : 'Update now'}</button>
+        <button type="button" className="dst-banner__secondary" onClick={remindLater}>Remind me in 3 days</button>
       </div>
-      <button
-        type="button"
-        onClick={handleUpdate}
-        disabled={opening}
-        style={{
-          background: "#0a1a14",
-          color: "#5ee6b8",
-          border: "none",
-          borderRadius: 8,
-          padding: "8px 14px",
-          fontWeight: 700,
-          fontSize: 13,
-          touchAction: "manipulation",
-          WebkitTapHighlightColor: "transparent",
-          cursor: "pointer",
-          opacity: opening ? 0.6 : 1,
-        }}
-      >
-        Update
-      </button>
-      <button
-        type="button"
-        aria-label="Dismiss"
-        onClick={handleDismiss}
-        style={{
-          background: "transparent",
-          color: "#0a1a14",
-          border: "none",
-          fontSize: 20,
-          lineHeight: 1,
-          padding: "4px 6px",
-          touchAction: "manipulation",
-          WebkitTapHighlightColor: "transparent",
-          cursor: "pointer",
-          opacity: 0.6,
-        }}
-      >
-        ×
-      </button>
     </div>
-  );
+  </section>;
 }
