@@ -4,13 +4,14 @@ import { useSearchParams } from 'react-router-dom';
 import { Camera, Upload, Loader2, Check, User, AlertCircle, DollarSign, ExternalLink, Copy, Share2, Gift, RefreshCw, Trash2 } from 'lucide-react';
 import { fetchProfileThunk, updateProfileThunk } from '../../../redux/features/profile/profileSlice';
 import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
-import { markStep } from '../../../components/Dashboard/TutorialChecklist';
+import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
 import ProfileCompleteBadge from '../../../components/ProfileCompleteBadge';
 import DeleteAccountModal from '../../../components/Dashboard/DeleteAccountModal';
 import HeadshotCropper from '../../../components/Shared/HeadshotCropper';
 import AppearanceCard from '../../../components/Shared/AppearanceCard';
+import CastingConnections from '../../../components/Shared/CastingConnections';
 import AuditionBadges, { BADGES } from '../../../components/AuditionBadges';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
 
@@ -47,7 +48,6 @@ export default function Profile() {
   // Opt-OUT semantics: absent/false means the user still gets nudges, so the
   // toggle reads inverted. Defaulting the other way would silently mute
   // everyone whose settings blob hasn't hydrated yet.
-  const auditionNudgesOptOut = useSelector((s) => !!s.userSettings?.data?.audition_nudges_opt_out);
   const avatarInputRef = useRef(null);
   const headshotInputRef = useRef(null);
   const resumeInputRef = useRef(null);
@@ -216,7 +216,7 @@ export default function Profile() {
         session_rate_30: parseFloat(readerForm.session_rate_30) || 10,
         session_rate_60: parseFloat(readerForm.session_rate_60) || 20,
       });
-    } catch {}
+    } catch { /* Optional operation failed; continue with the existing fallback. */ }
 
     const result = await dispatch(updateProfileThunk(fd));
     if (updateProfileThunk.fulfilled.match(result)) {
@@ -1004,36 +1004,7 @@ export default function Profile() {
         )}
       </div>
 
-      {/* ── Notifications ── H-09: the M/W/F audition nudge previously went to
-           every active user with no way out. The backend honours
-           `audition_nudges_opt_out` for nudge-type sends only, so transactional
-           notifications (your notes are ready, a reader replied) keep working
-           either way — which is why this is scoped as "reminders", not "all
-           notifications". Lives here rather than behind a deep link because an
-           opt-out nobody can find is not an opt-out. */}
-      <div className="aurora-card p-6 mt-6">
-        <h2 className="aurora-display text-lg mb-2" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.2px' }}>
-          Notifications
-        </h2>
-        <label className="flex items-start justify-between gap-4 cursor-pointer">
-          <span>
-            <span className="block text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>
-              Audition reminders
-            </span>
-            <span className="block text-sm mt-1" style={{ color: 'var(--aurora-sub)' }}>
-              An occasional nudge when it&apos;s a good day to tape. Turning this off
-              won&apos;t stop alerts about your own tapes or messages.
-            </span>
-          </span>
-          <input
-            type="checkbox"
-            role="switch"
-            checked={!auditionNudgesOptOut}
-            onChange={(e) => dispatch(patchUserSettings({ audition_nudges_opt_out: !e.target.checked }))}
-            className="mt-1 h-5 w-5 shrink-0 cursor-pointer accent-[color:var(--aurora-heritage-gold)]"
-          />
-        </label>
-      </div>
+      <CastingConnections />
 
       {/* ── Privacy & Account ── Apple guideline 5.1.1(v) requires an
            in-app account deletion option for any app that supports
