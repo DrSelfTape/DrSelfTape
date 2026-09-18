@@ -4404,6 +4404,8 @@ export default function DrSelfTapeApp() {
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
+              {/* Update banner for the tablet layout too; the phone branch renders its own. */}
+              <UpdateBanner />
               {TABS.map(t => {
                 const a = tab === t.id;
                 // handleSetTab (not raw setTab) so an open panel is cleared —

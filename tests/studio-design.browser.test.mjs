@@ -46,6 +46,7 @@ function Rehearsal() {
 }
 window.mountStudio = mode => root.render(mode === 'rehearsal' ? <Rehearsal/> : <main className="studio-mobile-shell" style={{ height:'100vh', overflow:'auto' }}><div className="dst-review-page"><div style={{fontFamily:'Georgia',letterSpacing:'.18em',textAlign:'center',fontSize:13,padding:'16px 0 24px'}}>DR SELF TAPE</div><header className="studio-review-heading"><h1>Your tape review</h1><p>A fresh perspective. A stronger next take.</p></header><TapeReview/></div></main>);
 window.mountStudio('review');
+window.mountComplete = () => root.render(<div className="dst-rehearsal" data-started="true"><StudioRehearsalControls complete status="idle" paused={false} actorTurn={false} readerMode="listen" onNext={() => {}} onPause={() => {}} onResume={() => {}} onEnd={() => { window.__ended = true; }} onTimed={() => {}}/></div>);
 window.mountVideo = file => root.render(<StudioReviewSummary review={{ verdict: 'Your notes remain available.' }} file={file} />);
 `;
 
@@ -94,6 +95,15 @@ test('Studio design preserves mobile review actions and rehearsal controls acros
     await page.click('.studio-text-button');
     assert.equal(await page.$('.studio-text-button'), null);
     await page.click('.studio-session-toolbar button:last-child');
+    assert.equal(await page.evaluate(() => window.__ended), true);
+    // Last line done: on phones the stage/quote area is hidden, so completion
+    // must surface in the controls with an enabled Finish action.
+    await page.evaluate(() => { window.__ended = false; window.mountComplete(); });
+    await page.waitForFunction(() => document.querySelector('.studio-listening h2')?.textContent === 'Scene complete');
+    assert.equal(await page.$eval('.studio-primary', n => n.disabled), false);
+    assert.ok((await page.$eval('.studio-primary', n => n.textContent)).includes('Finish scene'));
+    assert.equal(await page.$('.studio-text-button'), null);
+    await page.click('.studio-primary');
     assert.equal(await page.evaluate(() => window.__ended), true);
     // Preview URLs must not keep an actor's local recording alive after exit.
     await page.evaluate(() => {

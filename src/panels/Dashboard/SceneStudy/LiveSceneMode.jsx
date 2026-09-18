@@ -1519,7 +1519,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       </div>
 
       {/* Bottom Status Bar */}
-      {sceneStarted && <StudioRehearsalControls status={status} paused={isPaused}
+      {sceneStarted && <StudioRehearsalControls status={status} paused={isPaused} complete={sceneComplete}
         actorTurn={status === 'listening' && lines[currentLineIdx]?.character === userRole}
         readerMode={readerMode} transcript={liveTranscript} onNext={forceAdvanceActor}
         onPause={pauseScene} onResume={resumeScene} onEnd={endScene} onTimed={() => switchToPretimedRef.current?.()} />}
