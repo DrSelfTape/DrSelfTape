@@ -1,0 +1,10 @@
+Build 147 improves reliability in rehearsal audio, live-call setup, recording controls, and booking search. It also includes the updated announcement and app-update banners.
+
+Please test on your iPhone:
+1. Join a live call. Change mute/camera settings while granting permissions, then confirm your settings and the other participant's audio/video.
+2. Rehearse a scene: listen for newly available reader audio, pause/resume, and end the session. Confirm the microphone and playback stop after leaving.
+3. Record a self-tape with the AI reader and review the result.
+4. Search bookings quickly, change filters, and edit a booking without losing your changes.
+5. Check banner dismissal, update reminders, and retrying a link that fails to open.
+
+Please include the screen, steps, and whether you used headphones when reporting an audio issue.

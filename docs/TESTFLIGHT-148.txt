@@ -1,0 +1,8 @@
+Studio design refresh
+
+- A calmer rehearsal room: readable serif dialogue, a focused current-line highlight, compact listening status, and clear Next line, Pause, and End controls.
+- Redesigned tape reviews with video playback when available, a compact score, a quick read, and one focus for your next take. Tap Explore my notes for the full available report.
+- Slim four-tab navigation. More tools and settings are available from the top bar.
+- Improved spacing and contrast, with corrected iPhone status-bar colors and safe-area handling.
+
+Please test on iPhone: microphone permission and listening, next-line advancement, pause/resume, timed mode, ending a scene, portrait/landscape layout, video playback, and scrolling through review notes. Check More, notifications, and profile access from the top bar.
