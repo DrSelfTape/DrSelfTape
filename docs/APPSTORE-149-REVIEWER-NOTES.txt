@@ -1,0 +1,18 @@
+Dr Self Tape 1.0.28, build 149.
+
+Use the demo account supplied in the App Review sign-in fields. The production backend is live. Existing subscription products and plan allowances are unchanged by this release.
+
+Verified demo-account state: no active subscription, zero included AI-action credits, and AI consent not yet accepted. To test paid AI features, accept the consent prompt and use the Membership screen's Apple sandbox in-app purchase flow. The demo account is not pre-provisioned with Premium access.
+
+Changes and test paths:
+1. Practice: open Scene Study, select a script and character, and start rehearsal. The revised layout puts the script and listening controls first, with a visible Finish action after scene completion.
+2. Review: open Tape Review. Completed notes have a compact summary and expandable detail. Reopening saved notes should preserve access without starting another analysis. The analytics correction prevents a saved-note view from being recorded as another completed review.
+3. Profile: Actors Access and Casting Networks fields save links to public profiles and provide connection guidance. These are bookmarks, not audition-inbox synchronization or third-party login integrations.
+4. Navigation and update notices: the mobile studio shell and tablet update banner have been refined. Included-AI-action limit copy has been clarified; allowances are unchanged.
+
+Subscription and privacy checks:
+- Membership includes native Apple in-app purchase and Restore Purchases flows.
+- AI features require consent before sending content for analysis.
+- Account deletion remains available in Profile/Privacy settings.
+
+Reviewer login is checked before submission; no claim is made that new native-device purchase or microphone acceptance tests were performed for build 149.

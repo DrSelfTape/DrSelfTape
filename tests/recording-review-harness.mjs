@@ -16,7 +16,7 @@ export async function loadRecordingReview({ realTokenBalance = false } = {}) {
     'constant': `export const baseURL = '';
       export default { jerichoReviewRecording: '/v1/ai/jericho/review-recording/',
         jerichoTapeReview: '/v1/ai/jericho/tape-review/', jerichoTapeReviewPresign: '/presign/', analysisJob: '/jobs/', latestReview: '/latest/' };`,
-    'analytics': `export const Events = { TAPE_REVIEW: 'tape_review' };
+    'analytics': `export const Events = { TAPE_REVIEW: 'tape_review', FIRST_REVIEW_COMPLETED: 'first_review_completed', REPEAT_REVIEW_COMPLETED: 'repeat_review_completed' };
       export const trackEvent = (event, props) => globalThis.__reviewEvents.push({event, props});`,
     'useAIGate': 'export default function useAIGate() {}',
     'useTokenBalance': 'export const useTokenBalance = () => ({ isPaid: false, balance: 2, loading: false, error: null });',

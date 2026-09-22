@@ -1,0 +1,8 @@
+Dr Self Tape 1.0.28 (149)
+
+- Corrects review-completion analytics so reopening saved notes does not count as a new review.
+- Prevents duplicate first/repeat completion events after retries, remounts, and flow changes.
+- Adds a stable review identifier and tracking version for reconciling PostHog with backend results.
+- Clarifies the included-AI-actions limit message without changing plan allowances.
+
+Please test: complete a new review, reopen the notes, switch tabs, and return from the background. Saved notes should remain accessible. A completed review should count only once. Verify first-review, resumed-job, upgrade, and restore-purchase flows on device.

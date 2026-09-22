@@ -34,6 +34,44 @@ beforeEach(() => {
 });
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
+
+test('a new completion emits once across remounts, retries and recovered notes', async () => {
+  const done = { ...notes, _session_id: 99101 };
+  store.dispatch(reviewTape.fulfilled(done, 'request-a', { idempotencyKey: 'attempt-a' }));
+  const first = mountComponent(TapeReview);
+  first.render(); first.flush(); first.unmount();
+  const second = mountComponent(TapeReview);
+  second.render(); second.flush(); second.unmount();
+  store.dispatch(reviewTape.fulfilled(done, 'request-retry', { idempotencyKey: 'attempt-a' }));
+  const retry = mountComponent(TapeReview);
+  retry.render(); retry.flush(); retry.unmount();
+  const completions = () => globalThis.__reviewEvents.filter(e => e.event === 'repeat_review_completed');
+  assert.equal(completions().length, 1);
+  assert.equal(completions()[0].props.review_id, 'session:99101');
+  assert.equal(completions()[0].props.tracking_version, 2);
+  store.dispatch(clearTapeReview());
+  globalThis.__reviewHttp.get = async () => ({ data: { data: { id: 99101, ai_feedback: notes } } });
+  await store.dispatch(recoverLatestReview());
+  assert.equal(store.getState().jericho.tapeReviewCompletionId, null);
+  const recovered = mountComponent(TapeReview);
+  recovered.render(); recovered.flush(); recovered.unmount();
+  assert.equal(completions().length, 1);
+  store.dispatch(clearTapeReview());
+  store.dispatch(resumeAnalysisJob.fulfilled({ result: { ...notes, _session_id: 99102 }, kind: 'review' }, 'resume', { jobId: 'job-b', kind: 'review' }));
+  const resumed = mountComponent(TapeReview);
+  resumed.render(); resumed.flush(); resumed.unmount();
+  assert.equal(completions().length, 2);
+});
+
+test('first completion cannot turn into a repeat completion when the flow exits', () => {
+  store.dispatch(reviewTape.fulfilled({ ...notes, _session_id: 99103 }, 'first-flow', {}));
+  const first = mountComponent(TapeReview, { firstReview: true });
+  first.render(); first.flush(); first.unmount();
+  const reopened = mountComponent(TapeReview);
+  reopened.render(); reopened.flush(); reopened.unmount();
+  assert.equal(globalThis.__reviewEvents.filter(e => e.event === 'first_review_completed').length, 1);
+  assert.equal(globalThis.__reviewEvents.filter(e => e.event === 'repeat_review_completed').length, 0);
+});
 function findNode(node, predicate) {
   if (!node || typeof node !== 'object') return null;
   if (predicate(node)) return node;

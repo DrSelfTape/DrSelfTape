@@ -8,6 +8,7 @@ import rawAxios from 'axios';
 import axios from '../../http';
 import endPoints from '../../constant';
 import { trackEvent, Events } from '../../../utils/analytics';
+import { reviewCompletionId } from '../../../utils/reviewCompletion';
 
 // Map an AI-feature request error to a clear, actionable message. 402 = out of
 // tokens, 403 = AI consent not granted, 400 = the file(s) couldn't be read.
@@ -139,8 +140,9 @@ async function resolveAnalysis(payload, { signal, kind, recordingId, idempotency
 // ─── Shared result reducers ──────────────────────────────────────────────────
 // Extracted so resumeAnalysisJob can delegate to the same logic as the
 // originating thunks instead of duplicating it.
-function applyReviewResult(state, result) {
+function applyReviewResult(state, result, attempt) {
   state.tapeReviewResult = result;
+  state.tapeReviewCompletionId = reviewCompletionId(result, attempt);
   state.tapeReviewPlaybackUrl = state.reviewRecording?.playbackUrl || null;
   state.reviewRecording = null;
   // Kind-tagged (truthy) so the Review tab lands in the matching mode
@@ -169,6 +171,7 @@ function applyCompareResult(state, result) {
 // re-fetch the balance for nothing on each cold start.
 function applyRecoveredReview(state, result) {
   state.tapeReviewResult = result;
+  state.tapeReviewCompletionId = null;
   state.tapeReviewPlaybackUrl = state.reviewRecording?.playbackUrl || null;
   state.reviewRecording = null;
   state.notesReady = 'review';
@@ -578,6 +581,7 @@ const initialState = {
     // Tape Review — submit a self-tape, get structured acting notes
     tapeReviewLoading: false,
     tapeReviewResult: null,
+    tapeReviewCompletionId: null,
     tapeReviewError: null,
     reviewRecording: null,
     tapeReviewPlaybackUrl: null,
@@ -623,6 +627,7 @@ const jerichoSlice = createSlice({
     /** Reset the tape-review result (e.g. to analyze another take) */
     clearTapeReview: (state) => {
       state.tapeReviewResult = null;
+      state.tapeReviewCompletionId = null;
       state.tapeReviewPlaybackUrl = null;
       state.tapeReviewError = null;
       state.reviewRecording = null;
@@ -646,6 +651,7 @@ const jerichoSlice = createSlice({
       };
       state.tapeReviewResult = null;
       state.tapeReviewError = null;
+      state.tapeReviewCompletionId = null;
       state.compareResult = null;
       state.compareError = null;
       state.notesReady = false;
@@ -751,7 +757,7 @@ const jerichoSlice = createSlice({
       .addCase(reviewTape.fulfilled, (state, action) => {
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;
-        applyReviewResult(state, action.payload);
+        applyReviewResult(state, action.payload, action.meta);
       })
       .addCase(reviewTape.rejected, (state, action) => {
         if (action.payload?.stale) return; // completed for a user who is gone
@@ -795,7 +801,7 @@ const jerichoSlice = createSlice({
         if (kind === 'compare') {
           applyCompareResult(state, result);
         } else {
-          applyReviewResult(state, result);
+          applyReviewResult(state, result, action.meta);
         }
       })
       // H-08 recovery. Only fills an EMPTY slot: a result already in state is

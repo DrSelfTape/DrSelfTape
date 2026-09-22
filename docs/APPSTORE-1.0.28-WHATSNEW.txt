@@ -1,0 +1,7 @@
+A refreshed studio experience for rehearsal and tape review.
+
+- Cleaner rehearsal controls and easier-to-read scripts.
+- A clearer Tape Review summary with notes you can explore at your own pace.
+- Save links to your Actors Access and Casting Networks profiles.
+- Improved update notices, navigation, and review tracking.
+- Clearer messaging when your included AI actions are used up.

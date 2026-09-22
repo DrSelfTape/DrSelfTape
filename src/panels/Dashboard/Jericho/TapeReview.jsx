@@ -25,6 +25,7 @@ import TapeAnalyzerTutorial, { TAPE_TUTORIAL_KEY } from './TapeAnalyzerTutorial'
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { trackEvent, Events } from '../../../utils/analytics';
 import { takeBannerAttribution } from '../../../utils/bannerState';
+import { claimReviewCompletion } from '../../../utils/reviewCompletion';
 import {
   claimFirstReviewOnce, clearFirstReviewOnce, getFirstReviewEntry,
 } from '../../../utils/firstReviewFunnel';
@@ -188,7 +189,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   useAIGate();
   const dispatch = useDispatch();
   const bannerUserId = useSelector(s => s.auth?.user?.id) || 'anonymous';
-  const { tapeReviewLoading, tapeReviewResult, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl, revealPending } = useSelector((s) => s.jericho);
+  const { tapeReviewLoading, tapeReviewResult, tapeReviewCompletionId, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl, revealPending } = useSelector((s) => s.jericho);
   const hasAiConsent = useSelector((s) => !!s.auth?.user?.ai_consent_accepted_at);
   const [checkingRecovery, setCheckingRecovery] = useState(() => !(tapeReviewLoading || tapeReviewResult || compareLoading || compareResult));
   // Full-read gate: Premium (unlimited) sees the complete casting read; free
@@ -346,16 +347,13 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // the server-synced flag that retires the Home free-review offer + the
     // Get Started checklist entry (markStep no-ops once set).
     markStep('first_review');
+    // Recovered notes have no completion receipt. A fresh or resumed job
+    // gets one stable receipt, claimed across mounts and reloads per account.
+    if (!claimReviewCompletion(bannerUserId, tapeReviewCompletionId)) return;
+    const completion = { review_id: tapeReviewCompletionId, tracking_version: 2 };
     if (firstReview) {
-      // H-05: guarded across remounts for the same reason as upload_shown —
-      // this effect re-runs whenever a result is present, and a remount with a
-      // surfaced result (which H-08 will make more common, by design) would
-      // otherwise double-count the activation metric itself.
-      if (claimFirstReviewOnce('completed')) {
-        trackEvent(Events.FIRST_REVIEW_COMPLETED, { source: getFirstReviewEntry() });
-      }
-      // The attempt is over: any later review is a REPEAT and has its own
-      // events, so release the guards.
+      trackEvent(Events.FIRST_REVIEW_COMPLETED, { ...completion, source: getFirstReviewEntry() });
+      // Only upload-attempt guards are released; the completion receipt stays.
       clearFirstReviewOnce(['upload_shown', 'completed']);
       // The pre-upload tutorial was suppressed for this flow — surface it now
       // as the "how to read your notes" walkthrough, with the result behind it.
@@ -364,10 +362,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       } catch { /* private mode — just skip */ }
     } else if (alreadyReviewed) {
       // A returning actor finished another review — the repeat half of ACTIVE.
-      trackEvent(Events.REPEAT_REVIEW_COMPLETED);
+      trackEvent(Events.REPEAT_REVIEW_COMPLETED, completion);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [firstReview, tapeReviewResult]);
+  }, [firstReview, tapeReviewResult, tapeReviewCompletionId, bannerUserId]);
 
   // Upload-screen reached: the free-review offer was accepted and the actor
   // landed on the upload step. Fires once; the gap to FIRST_REVIEW_STARTED is

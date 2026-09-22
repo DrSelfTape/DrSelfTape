@@ -34,7 +34,7 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
       >
         <div className="text-5xl mb-4">🎬</div>
         <h2 className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.3px' }}>
-          That's today's free AI
+          You've used your included AI actions
         </h2>
         <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--aurora-sub)' }}>
           You're out of included AI actions for now. Premium removes the ceiling.
