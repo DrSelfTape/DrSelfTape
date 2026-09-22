@@ -3,6 +3,7 @@ import Sidebar from '../../components/Sidebar.jsx'
 import AnnouncementBanner from '../../components/AnnouncementBanner.jsx'
 import ConsoleCommandPalette from '../../components/ConsoleCommandPalette.jsx'
 import { consoleSurfaceEnabled } from '../../utils/consoleSurface';
+import { useLocation } from 'react-router-dom';
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen">
@@ -15,6 +16,8 @@ const Spinner = () => (
 // the legacy pages (/settings, /notifications, scene study, the tracker) that
 // used to mount the old MUI SideMenu/Header shell. One frame, no trapdoor.
 export default function ConsoleFrame({ children }) {
+  const { pathname } = useLocation();
+  const showAnnouncement = ['/dashboard', '/dashboard/profile', '/notifications', '/settings'].includes(pathname.replace(/\/$/, ''));
   // Aurora Noir Ring 2: the studio console. Noir stage + one light source;
   // the shared feature panels render on a light "script page" island
   // (.console-paper resets the tokens back to light) floating over it, so
@@ -31,7 +34,7 @@ export default function ConsoleFrame({ children }) {
             background: 'radial-gradient(55% 40% at 72% 0%, rgba(252,224,114,0.05) 0%, transparent 60%)',
           }} />
           <div className="relative z-[1] px-8 pt-6 pb-10" style={{ maxWidth: 1240, margin: '0 auto' }}>
-            <AnnouncementBanner />
+            {showAnnouncement && <AnnouncementBanner />}
             {/* The script page under the stage light */}
             <div className="console-paper" style={{
               borderRadius: 22, background: '#FAFAF7', padding: 32, minHeight: 'calc(100vh - 120px)',
@@ -59,7 +62,7 @@ export default function ConsoleFrame({ children }) {
           <img src="/logo.png" alt="" className="w-[500px] h-auto select-none" draggable={false} />
         </div>
         <div className="relative z-[1]">
-          <AnnouncementBanner />
+          {showAnnouncement && <AnnouncementBanner />}
           <Suspense fallback={<Spinner />}>{children}</Suspense>
         </div>
       </main>

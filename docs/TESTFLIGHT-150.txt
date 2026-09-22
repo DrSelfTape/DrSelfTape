@@ -1,0 +1,9 @@
+Dr Self Tape 1.0.28 (150)
+
+- Adds notification preferences for inbox messages, push, email consent, quiet hours, and time zone.
+- Adds older-message pagination, full announcement details, and safer notification navigation.
+- Makes banner dismissals persist across devices and keeps campaign banners away from rehearsal and recording.
+- Adds a staff Communications Center for audience previews, scheduling, consent-aware delivery, and engagement reporting.
+- Includes build 149's review-completion tracking and clearer included-AI-actions messaging.
+
+Please test on device: open the bell and notification preferences, save and reload preferences, load older messages, dismiss a banner, and follow a notification with the app foregrounded, backgrounded, and closed. Confirm rehearsal and recording remain uninterrupted. Also complete a new tape review and reopen saved notes, and verify purchase and restore flows. Staff campaign sending requires an explicit preview and schedule; this release does not automatically send a campaign.

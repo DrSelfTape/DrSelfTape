@@ -351,6 +351,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // gets one stable receipt, claimed across mounts and reloads per account.
     if (!claimReviewCompletion(bannerUserId, tapeReviewCompletionId)) return;
     const completion = { review_id: tapeReviewCompletionId, tracking_version: 2 };
+    if (tapeReviewResult?._session_id) {
+      import('../../../redux/http').then(({ default: http }) => http.post('/v1/notifications/communications/completion/', {
+        session_id: Number(tapeReviewResult._session_id),
+      })).catch(() => {});
+    }
     if (firstReview) {
       trackEvent(Events.FIRST_REVIEW_COMPLETED, { ...completion, source: getFirstReviewEntry() });
       // Only upload-attempt guards are released; the completion receipt stays.

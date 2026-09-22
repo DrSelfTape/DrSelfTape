@@ -8,6 +8,7 @@ import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
 import UpdateBanner from "../../components/UpdateBanner";
 import AnnouncementBanner from "../../components/AnnouncementBanner";
+import { clearCampaignNavigation, takeCampaignNavigation } from '../../utils/communications';
 import WhatsNewModal from "../../components/WhatsNewModal";
 import ReportProblemModal from "../../components/ReportProblemModal";
 import { isEmptyScript, pdfVisionFallback } from "../../utils/pdfToScript";
@@ -3748,6 +3749,7 @@ function TopBarAvatar({ active, onClick }) {
    APP SHELL — Mobile + Desktop
    ═══════════════════════════════════════════════════ */
 export default function DrSelfTapeApp() {
+  const communicationsUserId = useSelector(state => state.auth?.user?.id);
   // A library handoff survives consent, but is consumed on consented arrival
   // (TapeReview) or deliberate departure. Retained retry state is not a route.
   const reviewRecording = useSelector((s) => s.jericho?.reviewRecording);
@@ -3945,6 +3947,7 @@ export default function DrSelfTapeApp() {
   useEffect(() => {
     const handler = (e) => {
       const { tab: targetTab, panel: targetPanel, subPanel: targetSubPanel, matchId, readerId } = e.detail || {};
+      if (e.detail?.campaign_id) clearCampaignNavigation();
       if (targetTab) {
         setCurrentPanel(null);
         // A subPanel riding a TAB payload (e.g. tab:'green-room' +
@@ -3975,11 +3978,13 @@ export default function DrSelfTapeApp() {
       }
     };
     window.addEventListener('drst-navigate', handler);
+    const pendingCampaign = takeCampaignNavigation(communicationsUserId);
+    if (pendingCampaign) handler({ detail: pendingCampaign });
     // A deadline push can arrive before this shell mounts after a cold start.
     const pendingAudition = getPendingAuditionNotification();
     if (pendingAudition) handler({ detail: pendingAudition.mobile });
     return () => window.removeEventListener('drst-navigate', handler);
-  }, []);
+  }, [communicationsUserId]);
 
   // Manual "What's New" open from the More menu.
   useEffect(() => {
@@ -4243,7 +4248,7 @@ export default function DrSelfTapeApp() {
                 fixed header, only on the main tab screens (not full-screen
                 panels). Scrolls with content so the header never covers it. */}
             <UpdateBanner />
-            {!currentPanel && <AnnouncementBanner />}
+            {!currentPanel && ['home', 'profile', 'more'].includes(tab) && <AnnouncementBanner />}
             {/* V-03: one page-in for every destination — the panel or tab
                 remounts under a fresh key, so the 320ms aurora-page-in runs on
                 each transition (App.css disables it under reduced motion). */}
@@ -4406,6 +4411,7 @@ export default function DrSelfTapeApp() {
             <div style={{ display: "flex", flexDirection: "column", gap: 2, flex: 1 }}>
               {/* Update banner for the tablet layout too; the phone branch renders its own. */}
               <UpdateBanner />
+              {!currentPanel && ['home', 'profile', 'more'].includes(tab) && <AnnouncementBanner />}
               {TABS.map(t => {
                 const a = tab === t.id;
                 // handleSetTab (not raw setTab) so an open panel is cleared —

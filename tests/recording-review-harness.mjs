@@ -35,7 +35,7 @@ export async function loadRecordingReview({ realTokenBalance = false } = {}) {
     'openExternal': 'export const openExternal = () => {};',
     '@sentry/react': 'export const captureException = () => {};',
     '@capacitor/core': 'export const Capacitor = { isNativePlatform: () => !!globalThis.__native, getPlatform: () => globalThis.__native ? "ios" : "web" };',
-    'react-router-dom': 'export const useNavigate = () => path => globalThis.__routes.push(path); export const Outlet = () => null;',
+    'react-router-dom': 'export const useNavigate = () => path => globalThis.__routes.push(path); export const useLocation = () => ({pathname: "/dashboard"}); export const Outlet = () => null;',
     'Sidebar.jsx': 'export default function Sidebar() { return null; }',
     'MobileApp.jsx': 'export default function MobileApp() { return null; }',
     'AnnouncementBanner.jsx': 'export default function AnnouncementBanner() { return null; }',

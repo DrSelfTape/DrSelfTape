@@ -19,6 +19,7 @@ const navItems = [
   { label: 'Payments', to: '/admin/payments', icon: CreditCard },
   { label: 'Reports', to: '/admin/reports', icon: BarChart3 },
   { label: 'Messages', to: '/admin/messages', icon: MessageSquare },
+  { label: 'Communications', to: '/admin/communications', icon: MessageSquare },
   { label: 'Banned Users', to: '/admin/banned', icon: ShieldBan },
 ];
 
@@ -60,7 +61,7 @@ export default function AdminLayout() {
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <aside className="w-64 flex-shrink-0 flex flex-col" style={{ backgroundColor: '#0D0D0D' }}>
+      <aside className="w-64 flex-shrink-0 hidden md:flex flex-col" style={{ backgroundColor: '#0D0D0D' }}>
         {/* Logo */}
         <div className="px-6 py-6 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-[#D4A85F]/10 flex items-center justify-center">
@@ -117,14 +118,18 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
+        <nav className="md:hidden flex gap-3 overflow-x-auto shrink-0 p-3 bg-[#0D0D0D]" aria-label="Admin navigation">
+          {navItems.map(item => <NavLink key={item.to} to={item.to} className="shrink-0 text-sm text-[#D4A85F] py-3">{item.label}</NavLink>)}
+          <button onClick={handleLogout} className="shrink-0 text-white text-sm py-3">Sign out</button>
+        </nav>
         {/* Header Bar */}
         <header className="flex-shrink-0 h-16 bg-[#0D0D0D] border-b border-[#1E1E1E] flex items-center px-8">
           <h2 className="text-xl font-bold text-white">{pageTitle}</h2>
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-[#0D0D0D] p-8">
+        <main className="flex-1 overflow-auto bg-[#0D0D0D] p-3 md:p-8">
           <Suspense
             fallback={
               <div className="flex items-center justify-center h-64">

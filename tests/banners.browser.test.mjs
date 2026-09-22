@@ -8,9 +8,10 @@ let browser, bundle, css;
 before(async () => {
   const mocks = {
     'react-redux': 'export const useSelector = f => f(window.state);',
+    'react-router-dom': 'export const useNavigate = () => path => {window.route=path;};',
     '@capacitor/core': 'export const Capacitor = { isNativePlatform: () => window.platform !== "web", getPlatform: () => window.platform };',
     '@capacitor/app': 'export const App = { getInfo: async () => { if(window.versionError) throw Error("missing"); return {version: window.installed}; }, addListener: async (name, cb) => { window.resume=cb; return {remove(){}}; } };',
-    'http': 'export default {get: async url => ({data: url.includes("latest-version") ? {ios:window.latest,android:window.latest} : {announcement:window.announcement}})};',
+    'http': 'export default {post: async () => ({data:{ok:true}}),get: async url => ({data: url.includes("latest-version") ? {ios:window.latest,android:window.latest} : {announcement:window.announcement}})};',
     'openExternal': 'export async function openExternal() { window.opens++; if(window.openFails) throw Error("blocked"); return true; }',
     'analytics': 'export function trackEvent(event, properties) { window.events.push({event,properties}); }',
   };
@@ -85,4 +86,9 @@ test('expired announcement disappears while app stays open',async()=>{
   const p=await mount('announcement',{announcement:{id:11,title:'Ending soon',body:'Limited time',ends_at:new Date(Date.now()+2500).toISOString()}});
   await p.waitForSelector('.dst-banner');
   await p.waitForFunction(()=>!document.querySelector('.dst-banner'),{timeout:6000});await p.close();
+});
+
+test('web announcement action reaches the real review page',async()=>{
+  const p=await mount('announcement',{platform:'web'});await p.waitForSelector('button');
+  await p.click('button');await p.waitForFunction(()=>window.route==='/dashboard/jericho?tab=tape');await p.close();
 });

@@ -1,12 +1,18 @@
 import { useEffect } from 'react'
 import { Capacitor } from '@capacitor/core'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import MobileApp from '../Mobile/MobileApp.jsx'
 import ConsoleFrame from './ConsoleFrame.jsx'
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { trackCampaignArrival } from '../../utils/communications';
+import { clearCampaignNavigation, takeCampaignNavigation, CAMPAIGN_ROUTES } from '../../utils/communications';
+import { useSelector } from 'react-redux';
 
 export default function DashboardLayout() {
   const isMobile = useIsMobile();
+  const userId = useSelector(s => s.auth?.user?.id);
+  const { search } = useLocation();
+  useEffect(() => { trackCampaignArrival(search); }, [search]);
 
   useEffect(() => {
     if (isMobile || !Capacitor.isNativePlatform()) return;
@@ -33,18 +39,21 @@ export default function DashboardLayout() {
         membership: '/dashboard/membership', 'dash-profile': '/dashboard/profile', referral: '/dashboard/referral',
         marketplace: '/dashboard/marketplace', 'reader-profile': '/dashboard/readers',
       };
-      return PANELS[panel] || null;
+      return PANELS[panel] || CAMPAIGN_ROUTES[tab] || null;
     };
     const onNavigate = (event) => {
-      const path = routeFor(event.detail);
+      const path = (event.detail?.campaign_id && CAMPAIGN_ROUTES[event.detail.tab]) || routeFor(event.detail);
       if (!path) return;
+      if (event.detail?.campaign_id) clearCampaignNavigation();
       const previous = window.history.state || {};
       window.history.pushState({ ...previous, idx: (previous.idx || 0) + 1 }, '', path);
       window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
     };
     window.addEventListener('drst-navigate', onNavigate);
+    const pendingCampaign = takeCampaignNavigation(userId);
+    if (pendingCampaign) onNavigate({ detail: pendingCampaign });
     return () => window.removeEventListener('drst-navigate', onNavigate);
-  }, [isMobile]);
+  }, [isMobile, userId]);
 
   if (isMobile) {
     return <MobileApp />;

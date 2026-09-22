@@ -88,6 +88,7 @@ const AdminPayments = lazy(() => import('../panels/Admin/AdminPayments'));
 const AdminMessages = lazy(() => import('../panels/Admin/AdminMessages'));
 const AdminBannedUsers = lazy(() => import('../panels/Admin/AdminBannedUsers'));
 const AdminReports = lazy(() => import('../panels/Admin/AdminReports'));
+const AdminCommunications = lazy(() => import('../panels/Admin/AdminCommunications'));
 
 export const commonRoutes = [
   {
@@ -169,6 +170,7 @@ export const commonRoutes = [
       { path: 'messages', moduleName: 'AdminMessages', element: <AdminMessages /> },
       { path: 'banned', moduleName: 'AdminBannedUsers', element: <AdminBannedUsers /> },
       { path: 'reports', moduleName: 'AdminReports', element: <AdminReports /> },
+      { path: 'communications', moduleName: 'AdminCommunications', element: <AdminCommunications /> },
     ],
   },
 ];
@@ -297,6 +299,7 @@ export const adminRoutes = [
       { path: 'messages', moduleName: 'AdminMessages', element: <AdminMessages /> },
       { path: 'banned', moduleName: 'AdminBannedUsers', element: <AdminBannedUsers /> },
       { path: 'reports', moduleName: 'AdminReports', element: <AdminReports /> },
+      { path: 'communications', moduleName: 'AdminCommunications', element: <AdminCommunications /> },
     ],
   },
 ];

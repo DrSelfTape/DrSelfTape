@@ -22,6 +22,7 @@ import {
   getIdFromNotification 
 } from '../routes/notificationConfig';
 import { useSnackbar } from './useSnackbar';
+import { openCampaign, campaignReceipt } from '../utils/communications';
 
 export const useNotificationActions = () => {
   const dispatch = useDispatch();
@@ -84,6 +85,15 @@ export const useNotificationActions = () => {
     // serialize `type`. Reading only one meant every special-case below
     // silently never fired for the /notifications page + header popover.
     const type = notification.notification_type || notification.type;
+    if (type === 'campaign') {
+      if (!notification.is_read) await markAsRead(notification.id);
+      void campaignReceipt(notification.data?.campaign_id, 'opened');
+      try {
+        await openCampaign(notification.data, 'inbox', navigate);
+        onBeforeNavigate?.();
+      } catch { toast.error('Could not open this link. Please try again.'); }
+      return;
+    }
 
     // Live scene request → JOIN the partner's existing Daily room. The
     // room_url rides in the notification payload (BE StartRehearsalView),

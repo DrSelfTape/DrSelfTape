@@ -5,9 +5,9 @@ import endPoints from '../../constant';
 
 export const getNotifications = createAsyncThunk(
   'notifications/getNotifications',
-  async (_, { rejectWithValue }) => {
+  async (options, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(endPoints.myNotifications);
+      const response = await axiosInstance.get(endPoints.myNotifications, { params: options?.before ? { before: options.before } : {} });
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -37,6 +37,7 @@ const notificationSlice = createSlice({
   name: 'notifications',
   initialState: {
     notifications: [],
+    nextBefore: null,
     loading: false,
     error: null,
   },
@@ -49,7 +50,11 @@ const notificationSlice = createSlice({
       })
       .addCase(getNotifications.fulfilled, (state, action) => {
         state.loading = false;
-        state.notifications = action.payload.data;
+        const received = action.payload.data || [];
+        state.notifications = action.meta.arg?.before
+          ? [...new Map([...state.notifications, ...received].map(n => [n.id, n])).values()]
+          : received;
+        state.nextBefore = action.payload.next_before || null;
       })
       .addCase(getNotifications.rejected, (state, action) => {
         state.loading = false;

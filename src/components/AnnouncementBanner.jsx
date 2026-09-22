@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { X } from 'lucide-react';
@@ -8,9 +9,11 @@ import { openExternal } from '../utils/openExternal';
 import { trackEvent } from '../utils/analytics';
 import { readStored, storeValue, rememberBannerAction } from '../utils/bannerState';
 import './banners.css';
+import { campaignReceipt, CAMPAIGN_ROUTES } from '../utils/communications';
 
 const INTERNAL_TABS = new Set(['home', 'auditions', 'scenes', 'connect', 'tape-review', 'profile', 'more', 'live']);
 export default function AnnouncementBanner() {
+  const navigate = useNavigate();
   const userId = useSelector(s => s.auth?.user?.id) || 'anonymous';
   const reviewed = useSelector(s => !!s.userSettings?.data?.tutorial_progress?.first_review);
   const key = `dst_announcement_dismissed:${userId}`;
@@ -27,8 +30,9 @@ export default function AnnouncementBanner() {
       if (fetching || document.visibilityState === 'hidden') return;
       fetching = true;
       try {
+        const storedDismissals = readStored(key);
         const { data } = await axiosInstance.get('/v1/notifications/system/announcement/', {
-          timeout: 8000, params: { platform: Capacitor.getPlatform() },
+          timeout: 8000, params: { platform: Capacitor.getPlatform(), dismissed: Array.isArray(storedDismissals) ? storedDismissals.slice(-100).join(',') : '' },
         });
         const a = data?.announcement || data?.data?.announcement || null;
         if (cancelled) return;
@@ -61,6 +65,7 @@ export default function AnnouncementBanner() {
       if (entries.some(e => e.isIntersecting) && !seen.current.has(identity)) {
         seen.current.add(identity);
         trackEvent('announcement_banner_viewed', { announcement_id: ann.id });
+        if (ann.campaign_id) void campaignReceipt(ann.campaign_id, 'opened', 'banner');
       }
     });
     observer.observe(element.current);
@@ -71,6 +76,8 @@ export default function AnnouncementBanner() {
     const old = readStored(key);
     storeValue(key, [...new Set([...(Array.isArray(old) ? old : []), String(ann.id)])].slice(-100));
     trackEvent('announcement_banner_dismissed', { announcement_id: ann.id, reason });
+    if (ann.campaign_id) void campaignReceipt(ann.campaign_id, 'dismissed', 'banner');
+    else if (userId !== 'anonymous') axiosInstance.post(`/v1/notifications/system/announcement/${ann.id}/dismiss/`).catch(() => {});
     setResult(null);
   };
   const url = (ann.cta_url || '').trim();
@@ -85,9 +92,11 @@ export default function AnnouncementBanner() {
         if (await openExternal(url) === false) throw new Error('Could not open link');
       } else {
         rememberBannerAction(ann.id, url, userId);
-        window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: url } }));
+        if (Capacitor.isNativePlatform()) window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: url, campaign_id: ann.campaign_id } }));
+        else navigate(CAMPAIGN_ROUTES[url]);
       }
       dismiss('action');
+      if (ann.campaign_id) void campaignReceipt(ann.campaign_id, 'clicked', 'banner');
     } catch {
       setError('Could not open that link. Please try again.');
       trackEvent('announcement_banner_open_failed', { announcement_id: ann.id });

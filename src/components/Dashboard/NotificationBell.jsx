@@ -9,6 +9,8 @@ import useNotificationActions from '../../hooks/useNotificationActions';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { openExternal } from '../../utils/openExternal';
 import { queueAuditionNotification } from '../../utils/auditionNotification';
+import CommunicationPreferences from '../CommunicationPreferences';
+import { campaignReceipt, openCampaign } from '../../utils/communications';
 
 // App-update broadcasts ("Tap to update") send the user to the store listing.
 const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
@@ -33,6 +35,7 @@ const NOTIF_COLORS = {
 
 // Map the app's real notification types → Aurora filter "kinds".
 const KIND_OF = {
+  campaign: 'update',
   scene_partner_like: 'match',
   scene_partner_match: 'match',
   rehearsal_started: 'match',
@@ -85,15 +88,23 @@ function shade(hex, pct) {
 export default function NotificationBell({ onNavigate }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { notifications = [], loading } = useSelector((s) => s.notifications);
+  const { notifications = [], loading, nextBefore } = useSelector((s) => s.notifications);
   const [open, setOpen] = useState(false);
+  const [preferencesOpen, setPreferencesOpen] = useState(false);
+  const [campaignError, setCampaignError] = useState('');
   const [markingAll, setMarkingAll] = useState(false);
   const [filter, setFilter] = useState('all'); // mobile sheet filter chip
   const panelRef = useRef(null);
   const isMobile = useIsMobile();
   const { markAllAsRead } = useNotificationActions();
 
-  useEffect(() => { dispatch(getNotifications()); }, [dispatch]);
+  useEffect(() => {
+    const refresh = () => { if (document.visibilityState !== 'hidden') dispatch(getNotifications()); };
+    refresh();
+    const timer = setInterval(refresh, 60000);
+    document.addEventListener('visibilitychange', refresh);
+    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', refresh); };
+  }, [dispatch]);
 
   // Build 23 APNs window events — re-fetch on incoming push so the bell
   // badge updates in real time while the app is foregrounded; pop the
@@ -122,6 +133,13 @@ export default function NotificationBell({ onNavigate }) {
   const unread = sorted.filter((n) => !n.is_read);
 
   const handleClick = (notif) => {
+    if (notif.type === 'campaign') {
+      if (!notif.is_read) dispatch(markNotificationRead(notif.id));
+      void campaignReceipt(notif.data?.campaign_id, 'opened');
+      setCampaignError('');
+      openCampaign(notif.data, 'inbox', isMobile ? undefined : navigate).then(opened => { if (opened) setOpen(false); }).catch(() => setCampaignError('Could not open this link. Please try again.'));
+      return;
+    }
     if (!notif.is_read) dispatch(markNotificationRead(notif.id));
     setTimeout(() => {
       setOpen(false);
@@ -207,6 +225,9 @@ export default function NotificationBell({ onNavigate }) {
 
   const panelContent = (
     <>
+      <button type="button" onClick={() => setPreferencesOpen(v => !v)} style={{ padding: 14, color: '#72531c' }}>{preferencesOpen ? 'Back to inbox' : 'Notification preferences'}</button>
+      {preferencesOpen && <CommunicationPreferences />}
+      {campaignError && <p role="alert">{campaignError}</p>}
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: '1px solid var(--aurora-line)' }}>
         <div className="flex items-center gap-2">
@@ -275,12 +296,14 @@ export default function NotificationBell({ onNavigate }) {
                   </p>
                   <span className="aurora-mono shrink-0" style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: '0.1px' }}>{timeAgo(notif.created_at)}</span>
                 </div>
-                {notif.message && <p className="line-clamp-2 leading-relaxed" style={{ fontSize: 11.5, marginTop: 3, color: 'var(--text-muted)' }}>{notif.message}</p>}
+                {notif.message && <p className={notif.type === 'campaign' ? 'leading-relaxed' : 'line-clamp-2 leading-relaxed'} style={{ fontSize: 11.5, marginTop: 3, color: 'var(--text-muted)' }}>{notif.message}</p>}
+                {notif.data?.cta_label && <span style={{ color: '#72531c', fontSize: 12 }}>{notif.data.cta_label} →</span>}
               </div>
               {isUnread && <span className="shrink-0" style={{ width: 7, height: 7, marginTop: 6, borderRadius: 100, background: '#D4A85F', boxShadow: '0 0 6px #D4A85F' }} />}
             </div>
           );
         })}
+        {nextBefore && <button type="button" disabled={loading} onClick={() => dispatch(getNotifications({ before: nextBefore }))} style={{ minHeight: 44, padding: 14 }}>Load older messages</button>}
         {isMobile && <div style={{ height: 'calc(80px + env(safe-area-inset-bottom, 0px))' }} />}
       </div>
 
@@ -383,6 +406,9 @@ export default function NotificationBell({ onNavigate }) {
 
             {/* Feed */}
             <div className="flex-1 overflow-y-auto overscroll-contain" style={{ position: 'relative', zIndex: 1, padding: '2px 22px calc(40px + env(safe-area-inset-bottom, 0px))', WebkitOverflowScrolling: 'touch' }}>
+              <button type="button" onClick={() => setPreferencesOpen(v => !v)} style={{ minHeight: 44, color: '#72531c' }}>{preferencesOpen ? 'Close preferences' : 'Notification preferences'}</button>
+              {preferencesOpen && <CommunicationPreferences />}
+              {campaignError && <p role="alert">{campaignError}</p>}
               {loading && <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-[#D4A85F]/30 border-t-[#FF8280] rounded-full animate-spin" /></div>}
               {!loading && groups.length === 0 && (
                 <div style={{ textAlign: 'center', paddingTop: 90 }}>
@@ -438,7 +464,8 @@ export default function NotificationBell({ onNavigate }) {
                                   {isUnread && <span className="notif-dot" />}
                                 </div>
                               </div>
-                              {notif.message && <div className="line-clamp-2" style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.45 }}>{notif.message}</div>}
+                              {notif.message && <div className={notif.type === 'campaign' ? '' : 'line-clamp-2'} style={{ fontSize: 11.5, color: 'var(--text-muted)', marginTop: 4, lineHeight: 1.45 }}>{notif.message}</div>}
+                              {notif.data?.cta_label && <span style={{ color: '#72531c', fontSize: 12 }}>{notif.data.cta_label} →</span>}
                             </div>
                           </div>
                         </div>
@@ -447,6 +474,7 @@ export default function NotificationBell({ onNavigate }) {
                   </div>
                 </div>
               ))}
+              {nextBefore && <button type="button" disabled={loading} onClick={() => dispatch(getNotifications({ before: nextBefore }))} style={{ minHeight: 44, padding: 14 }}>Load older messages</button>}
             </div>
 
             <style>{`

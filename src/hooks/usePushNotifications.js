@@ -4,6 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { queueAuditionNotification } from '../utils/auditionNotification';
 import axiosInstance from '../redux/http';
 import { openExternal } from '../utils/openExternal';
+import { openCampaign, campaignReceipt } from '../utils/communications';
 
 // App-update broadcasts ("Tap to update") send the user to the store listing.
 const APP_STORE_URL = 'itms-apps://itunes.apple.com/app/id6770320460';
@@ -144,6 +145,15 @@ function handlePushTap(notif) {
   } catch { /* analytics must never block the deep link */ }
   try {
     const data = pushData(notif);
+    if (data.type === 'campaign') {
+      void campaignReceipt(data.campaign_id, 'opened', Capacitor.getPlatform());
+      openCampaign(data, Capacitor.getPlatform()).then(opened => {
+        if (!opened) window.dispatchEvent(new CustomEvent('drst-push-tap', { detail: notif }));
+      }).catch(() => {
+        window.dispatchEvent(new CustomEvent('drst-push-tap', { detail: notif }));
+      });
+      return;
+    }
     // App-update broadcast tapped from a closed app → open the store listing.
     if (data.type === 'admin_broadcast' || data.type === 'app_update') {
       openExternal(storeUrl());

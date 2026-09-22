@@ -3,15 +3,13 @@ import { useSelector } from 'react-redux';
 import { Users, Send, Bell, Activity, Search, Ban, Shield, MessageSquare, TrendingUp } from 'lucide-react';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
+import AdminCommunications from '../../Admin/AdminCommunications';
 
 export default function AdminDashboard() {
-  useSelector((s) => s.auth?.user);
+  const user = useSelector((s) => s.auth?.user);
+  const [communicationsOpen, setCommunicationsOpen] = useState(false);
   const [metrics, setMetrics] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [broadcastTitle, setBroadcastTitle] = useState('');
-  const [broadcastMessage, setBroadcastMessage] = useState('');
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
@@ -21,24 +19,8 @@ export default function AdminDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleBroadcast = async (e) => {
-    e.preventDefault();
-    if (!broadcastTitle.trim() || !broadcastMessage.trim()) return;
-    setSending(true);
-    try {
-      await axios.post(`${baseURL}/v1/notifications/broadcast/`, {
-        title: broadcastTitle.trim(),
-        message: broadcastMessage.trim(),
-      });
-      setSent(true);
-      setBroadcastTitle('');
-      setBroadcastMessage('');
-      setTimeout(() => setSent(false), 3000);
-    } catch (err) {
-      alert(err?.response?.data?.message || 'Failed to send broadcast');
-    }
-    setSending(false);
-  };
+  if (!user?.is_staff && !user?.is_superuser) return <p>Admin access required.</p>;
+  if (communicationsOpen) return <div><button type="button" onClick={() => setCommunicationsOpen(false)} style={{ minHeight: 44 }}>← Back to dashboard</button><AdminCommunications /></div>;
 
   if (loading) {
     return (
@@ -113,42 +95,12 @@ export default function AdminDashboard() {
               <Bell className="w-5 h-5" style={{ color: 'var(--aurora-accent-deep)' }} />
             </div>
             <div>
-              <h2 className="text-lg font-bold" style={{ color: 'var(--aurora-text)' }}>Send Broadcast</h2>
-              <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>Push to all users: bell, toast, and web push</p>
+              <h2 className="text-lg font-bold" style={{ color: 'var(--aurora-text)' }}>Communications Center</h2>
+              <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>Compose, preview your audience, and schedule a campaign</p>
             </div>
           </div>
 
-          <form onSubmit={handleBroadcast} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 aurora-eyebrow">Title</label>
-              <input
-                value={broadcastTitle}
-                onChange={(e) => setBroadcastTitle(e.target.value)}
-                placeholder="e.g. New Feature Alert!"
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                style={{ background: 'var(--aurora-glass-strong)', border: '1px solid var(--aurora-line)', color: 'var(--aurora-text)' }}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold mb-1.5 aurora-eyebrow">Message</label>
-              <textarea
-                value={broadcastMessage}
-                onChange={(e) => setBroadcastMessage(e.target.value)}
-                placeholder="e.g. We just launched the Reader Marketplace! Set your rates and start earning."
-                rows={3}
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
-                style={{ background: 'var(--aurora-glass-strong)', border: '1px solid var(--aurora-line)', color: 'var(--aurora-text)' }}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={sending || !broadcastTitle.trim() || !broadcastMessage.trim()}
-              className="w-full py-3 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-40"
-              style={{ background: sent ? 'var(--aurora-mint)' : 'var(--aurora-heritage-gold)', color: sent ? 'var(--aurora-text)' : '#fff' }}
-            >
-              {sent ? '✓ Sent to all users!' : sending ? 'Sending...' : 'Send to All Users'}
-            </button>
-          </form>
+          <button type="button" onClick={() => setCommunicationsOpen(true)} className="w-full py-3 rounded-xl text-white font-bold text-sm" style={{ background: 'var(--aurora-heritage-gold)' }}>Open Communications Center</button>
         </div>
 
         {/* Recent Activity */}
