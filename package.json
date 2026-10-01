@@ -8,7 +8,12 @@
     "build": "vite build",
     "lint": "eslint .",
     "test": "node --test --test-concurrency=1 --test-timeout=150000 tests/*.test.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:a11y": "node --test --test-concurrency=1 --test-timeout=150000 tests/accessibility.browser.test.mjs",
+    "qa:build": "node scripts/build-qa-harness.mjs",
+    "qa:ios": "python3 scripts/build-qa-ios.py",
+    "test:maestro": "sh scripts/test-maestro.sh",
+    "test:ai": "yarn --cwd qa/ai test && yarn --cwd qa/ai eval && node qa/ai/check-negative-control.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
@@ -78,6 +83,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
+    "axe-core": "4.13.0",
     "eslint": "^9.29.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

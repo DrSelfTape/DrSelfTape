@@ -1,0 +1,26 @@
+appId: com.drselftape.qa
+name: Offline notification preference persistence
+---
+- launchApp:
+    clearState: true
+- assertVisible: DST QA
+- waitForAnimationToEnd
+- tapOn:
+    text: Notification preferences
+    retryTapIfNoChange: true
+- assertVisible: Your time. Your preferences.
+- tapOn: I want app news and offers by email
+- scrollUntilVisible:
+    element: Save preferences
+    direction: DOWN
+- tapOn: Save preferences
+- assertVisible: Your preferences are saved.
+- tapOn: QA home
+- tapOn:
+    text: Notification preferences
+    retryTapIfNoChange: true
+- assertVisible: Your time. Your preferences.
+- assertVisible:
+    text: I want app news and offers by email
+    checked: true
+- takeScreenshot: notification-preferences

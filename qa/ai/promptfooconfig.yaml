@@ -1,0 +1,18 @@
+description: DST Tape Review - offline replay checks (not a live model quality evaluation)
+prompts:
+  - 'Check saved review {{caseId}} against its recorded context.'
+providers:
+  - file://replay-provider.mjs
+defaultTest:
+  assert:
+    - type: javascript
+      value: file://review-checks.mjs
+tests:
+  - description: Fictional editorial sample - supported dimensions only
+    vars:
+      caseId: editorial-sample
+      mode: summary
+      hasHistory: false
+      durationSeconds: 30
+      # Scalar avoids Promptfoo expanding an array into a test matrix.
+      unsupportedDimensions: cold_read,physicality
