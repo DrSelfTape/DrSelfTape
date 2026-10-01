@@ -45,6 +45,16 @@ try {
 } catch { stage = 'report_unreadable'; }
 if (status === 'CRASH') error = one(`exit ${code}: ${(run.stderr || '').slice(-120)} ${(run.stdout || '').slice(-120)}`);
 log(`status=${status} stage=${stage} code=${code}`);
+// The alert only carries 200 characters. Keep the full child output on disk or a
+// crash is undiagnosable after the fact -- especially under launchd, whose
+// session context differs from an interactive shell.
+if (status !== 'PASS') {
+  try {
+    appendFileSync(path.join(OUT, 'crash.log'),
+      `\n===== ${new Date().toISOString()} status=${status} stage=${stage} code=${code}\n` +
+      `--- stderr ---\n${run.stderr || '(empty)'}\n--- stdout ---\n${run.stdout || '(empty)'}\n`);
+  } catch {}
+}
 if (status === 'PASS') process.exit(0);
 
 const token = process.env.DST_OPS_ALERT_TOKEN;
