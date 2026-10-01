@@ -16,6 +16,9 @@ export function config(env=process.env) {
   }
   return {web:web.origin,api:api.href.replace(/\/$/,''),
     output:path.resolve(env.DST_SYNTHETIC_OUTPUT || 'output/synthetic-signup'),
+    // Shared secret that authenticates this run to the BE so it stamps the
+    // server-side heartbeat. Same token the runner uses for ops-alert.
+    token:env.DST_OPS_ALERT_TOKEN || '',
     chrome:env.DST_SYNTHETIC_CHROME || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'};
 }
 
@@ -98,7 +101,14 @@ export async function run(cfg,{preflight=false,cleanupOnly=false}={}) {
         if(preflight || registrationCount>1)return req.abort();
         let body;try {body=JSON.parse(req.postData());}catch{return req.abort();}
         if(body.email!==journal?.email)return req.abort();
-        submitted=true;return req.continue();
+        // Prove to the BE that THIS registration is the monitor, so the
+        // server-side heartbeat is stamped. Registration is public and the
+        // reserved domain is advertised, so without this anyone could keep a
+        // dead canary looking alive. Header must stay in CORS_ALLOW_HEADERS.
+        submitted=true;
+        return req.continue(cfg.token
+          ? {headers:{...req.headers(),'x-monitor-token':cfg.token}}
+          : undefined);
       }
       // Avoid third-party telemetry, provider calls, and any unrelated mutation.
       const own=url.origin===cfg.web || url.origin===new URL(cfg.api).origin;
