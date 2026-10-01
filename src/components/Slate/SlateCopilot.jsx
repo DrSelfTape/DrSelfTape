@@ -375,10 +375,12 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
       else if (sc >= 500) text = "My brain is offline right now, not your message. This is on us — try again in a bit.";
       else text = 'I lost that one for a second. Say it again?';
       setMsgs((s) => [...s, { from: 'ai', text }]);
-      // Surface it so a total AI outage is visible in Sentry instead of looking
-      // like users mumbling at the copilot.
+      // A DISTINCT event. SLATE_MESSAGE already fired before the request, so
+      // reusing it here counted every failure twice — a full AI outage would have
+      // read as double the engagement. (It also does not reach Sentry; trackEvent
+      // never did. An earlier comment here claimed otherwise.)
       try { import('../../utils/analytics').then(({ trackEvent, Events }) =>
-        trackEvent(Events.SLATE_MESSAGE, { error: true, status: sc || 'network' })).catch(() => {}); } catch { /* noop */ }
+        trackEvent(Events.SLATE_MESSAGE_FAILED, { status: sc || 'network' })).catch(() => {}); } catch { /* noop */ }
     } finally {
       setTyping(false);
       inFlightRef.current = false;

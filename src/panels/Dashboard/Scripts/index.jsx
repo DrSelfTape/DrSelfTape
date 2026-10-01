@@ -162,11 +162,20 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
         let text = await extractPdfText(file);
         // Actors Access / scanned PDFs have no text layer → pdfjs returns ~0
         // characters. Read the rendered pages with vision instead.
+        // Vision output is already formatted "CHARACTER: dialogue" and we PAID a
+        // provider call for it, so it must not be re-judged by the same gate that
+        // sent us here — a review pointed out that a non-Latin or terse
+        // transcription would be rejected after being bought. Only sanity-check
+        // that something came back.
+        let fromVision = false;
         if (isEmptyScript(text)) {
           const visionText = await pdfVisionFallback(file).catch(() => '');
-          if (visionText) text = visionText;
+          if (visionText && visionText.trim()) { text = visionText; fromVision = true; }
         }
-        if (isEmptyScript(text)) {
+        const unusable = fromVision
+          ? text.replace(/\s+/g, '').length < 40
+          : isEmptyScript(text);
+        if (unusable) {
           setFileError("Couldn't read text from this PDF. Paste the script below, or use the “Upload your audition sides” tile in Scene Study.");
           setFileName('');
         } else {

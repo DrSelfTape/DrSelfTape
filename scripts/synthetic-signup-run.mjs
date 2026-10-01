@@ -6,7 +6,7 @@
 // Node, not bash, on purpose: a launchd-spawned /bin/bash is denied access to
 // ~/Downloads by macOS privacy protection (exit 126), Homebrew's node is not.
 import {spawnSync} from 'node:child_process';
-import {appendFileSync, mkdirSync, readFileSync, statSync} from 'node:fs';
+import {appendFileSync, mkdirSync, readFileSync, statSync, writeFileSync} from 'node:fs';
 import {hostname} from 'node:os';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
@@ -50,6 +50,15 @@ log(`status=${status} stage=${stage} code=${code}`);
 // session context differs from an interactive shell.
 if (status !== 'PASS') {
   try {
+    // Bounded: a monitor that fails every day for a year must not fill the disk
+    // with the same stack trace. Keep the most recent ~256KB.
+    const crashPath = path.join(OUT, 'crash.log');
+    try {
+      if (statSync(crashPath).size > 256 * 1024) {
+        const kept = readFileSync(crashPath, 'utf8').slice(-128 * 1024);
+        writeFileSync(crashPath, `(truncated)\n${kept}`, {mode: 0o600});
+      }
+    } catch { /* no log yet, or unreadable — appending below will create it */ }
     appendFileSync(path.join(OUT, 'crash.log'),
       `\n===== ${new Date().toISOString()} status=${status} stage=${stage} code=${code}\n` +
       `--- stderr ---\n${run.stderr || '(empty)'}\n--- stdout ---\n${run.stdout || '(empty)'}\n`);

@@ -215,6 +215,10 @@ export const Events = {
   SIDES_UPLOADED: 'sides_uploaded',
   SLATE_OPENED: 'slate_opened',
   SLATE_MESSAGE: 'slate_message',
+  // Distinct from SLATE_MESSAGE on purpose: SLATE_MESSAGE is already fired
+  // before the request, so reusing it on failure counted every outage twice
+  // and made a dead AI provider look like an engagement spike.
+  SLATE_MESSAGE_FAILED: 'slate_message_failed',
   PURCHASE: 'purchase',
   // Free-first-review onboarding funnel (Day-0 activation → paywall).
   FIRST_REVIEW_OFFER_SHOWN: 'first_review_offer_shown',

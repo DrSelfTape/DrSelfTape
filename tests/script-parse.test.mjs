@@ -172,19 +172,57 @@ test('watermark-only extraction is treated as empty so vision runs', async () =>
   assert.equal(isEmptyScript(null), true);
 });
 
-test('a real script is NOT sent to vision — no needless AI spend', async () => {
+test('a SHORT real scene is not sent to vision — the review counterexample', async () => {
+  const {isEmptyScript, parseScript, extractCharacters} = await import('../src/utils/scriptParse.js');
+  // This exact scene broke my first two attempts at the gate. It has only two
+  // distinct 4+ letter words ("alice", "love"), so a vocabulary-richness
+  // threshold called it empty — while it parses into both speakers perfectly.
+  // Every false positive here spends a PAID vision call on an upload that
+  // needed nothing.
+  const scene = 'ALICE\nI love you.\n\nBOB\nI love you too.\n\nALICE\nDo you?\n\nBOB\nYes. I do.';
+  assert.deepEqual(extractCharacters(parseScript(scene)), ['ALICE', 'BOB']);
+  assert.equal(isEmptyScript(scene), false, 'a readable short scene must never be sent to vision');
+});
+
+test('a monologue keeps its real speaker — inline inference must not override it', async () => {
+  const {parseScript, extractCharacters} = await import('../src/utils/scriptParse.js');
+  // The fallback used to run whenever fewer than two speakers were found, so a
+  // one-hander with recurring shouted words lost its actual role: this returned
+  // ["PLEASE","NEVER"] and dropped ALICE entirely. One-hander sides are common.
+  const mono = 'ALICE\nPlease say PLEASE to me. Say PLEASE again. You said NEVER yesterday. You said NEVER again.';
+  assert.deepEqual(extractCharacters(parseScript(mono)), ['ALICE']);
+});
+
+test('flattened sides still recover their cast after the fallback was narrowed', async () => {
+  const {parseScript, extractCharacters} = await import('../src/utils/scriptParse.js');
+  const flat = 'GLORIA Hey you are late again. REUBEN Told you the bridge was closed. '
+    + 'GLORIA Oh the bridge. REUBEN It was actually closed.';
+  const cast = extractCharacters(parseScript(flat));
+  assert.ok(cast.includes('GLORIA') && cast.includes('REUBEN'),
+    `narrowing the fallback must not break flattened sides: ${JSON.stringify(cast)}`);
+});
+
+test('accented non-English sides are not forced to vision', async () => {
   const {isEmptyScript} = await import('../src/utils/scriptParse.js');
-  // A deliberately SHORT side: the gate must not push genuine text to vision,
-  // because every false positive costs an AI call per upload.
-  const side = [
-    'INT. DINER - NIGHT', '',
-    'ARNOLD', 'You order the same thing every single time we come here.', '',
-    'MIDGE', 'Because it is the only thing worth ordering, Arnold.', '',
-    'ARNOLD', 'That is not an answer, that is a position.', '',
-    'MIDGE', 'Then consider it my position. Sit down and eat something.',
-  ].join('\n');
-  // 23 distinct 4+ letter words — the smallest thing we consider parseable, and
-  // the upper bound on MIN_DISTINCT_WORDS. If someone raises that constant past
-  // this, real sides start costing a vision call each.
-  assert.equal(isEmptyScript(side), false, 'a genuine short side must not be sent to vision');
+  // Production already contains a Hungarian sides PDF. Accents split words under
+  // a Latin-only word test, which is why the ratio is measured over token SHAPE
+  // rather than distinct vocabulary.
+  const hu = 'ANNA\nKérlek, gyere közelebb hozzám most.\n\nPÉTER\nNem akarok közelebb menni hozzád.';
+  assert.equal(isEmptyScript(hu), false, 'an accented-language side must not cost a vision call');
+});
+
+test('KNOWN LIMITATION: wholly non-Latin text routes to vision', async () => {
+  const {isEmptyScript} = await import('../src/utils/scriptParse.js');
+  // Accepted, not a bug: cue detection is built on Latin capitals and could not
+  // parse these anyway, so vision is the right destination. What MUST hold is
+  // that callers never re-apply this gate to vision output — otherwise a paid
+  // transcription is thrown away. Scripts/index.jsx was doing exactly that.
+  const ko = '민준\n너 늦었어 또. 어제도 늦었잖아 그렇지.\n\n지우\n다리가 막혔다고 말했잖아 분명히.';
+  assert.equal(isEmptyScript(ko), true);
+});
+
+test('spokenText strips directions the reader must not say aloud', async () => {
+  const {spokenText} = await import('../src/utils/scriptParse.js');
+  assert.equal(spokenText("(cutting her off) I said I'd call him back."), "I said I'd call him back.");
+  assert.equal(spokenText('[beat] Fine.'), 'Fine.');
 });

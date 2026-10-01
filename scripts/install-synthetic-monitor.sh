@@ -27,6 +27,30 @@ echo "==> deploying to $DEST"
 mkdir -p "$DEST/output" "$DEST/scripts"
 chmod 700 "$DEST/output"
 
+# A pending-account journal means a previous run created a synthetic account on
+# PRODUCTION and failed to delete it. The monitor refuses to register again while
+# one exists, which is the guard that stops orphaned accounts piling up. Moving
+# the output directory without carrying that journal across would silently defeat
+# it: the relocated monitor sees a clean slate, makes a second account, and
+# reports PASS while the first is still live. Migrate it, never overwrite it.
+OLD_JOURNAL="$REPO/output/synthetic-signup/pending-account.json"
+NEW_JOURNAL="$DEST/output/pending-account.json"
+if [ -f "$OLD_JOURNAL" ]; then
+  if [ -f "$NEW_JOURNAL" ]; then
+    echo "FATAL: pending-account journals exist in BOTH locations."
+    echo "  old: $OLD_JOURNAL"
+    echo "  new: $NEW_JOURNAL"
+    echo "Two un-cleaned synthetic accounts may exist. Resolve by hand:"
+    echo "  node $DEST/scripts/synthetic-signup.mjs --cleanup"
+    exit 1
+  fi
+  echo "==> migrating pending-account journal (an account still needs cleanup)"
+  cp -p "$OLD_JOURNAL" "$NEW_JOURNAL"
+  chmod 600 "$NEW_JOURNAL"
+  mv "$OLD_JOURNAL" "$OLD_JOURNAL.migrated"
+  echo "    run a --cleanup pass before trusting the next PASS"
+fi
+
 # Runtime needs its own puppeteer-core: it cannot load node_modules from the
 # repo, because the repo is the protected path we are escaping.
 if [ ! -f "$DEST/package.json" ]; then

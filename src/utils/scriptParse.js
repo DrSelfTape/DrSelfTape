@@ -122,7 +122,18 @@ export function parseScript(text, knownCast) {
   // Fallback: flattened screenplay sides lose their line breaks, so the cues
   // end up INLINE ("GLORIA ... REUBEN ...") and the line-based pass above finds
   // no characters. Detect the recurring ALL-CAPS names and split on them.
-  if (new Set(lines.map((l) => l.character)).size < 2) {
+  //
+  // Only when the line pass found NOTHING USABLE. It used to run whenever there
+  // were fewer than two speakers, which silently destroyed monologues — a review
+  // reproduced this exact side:
+  //     ALICE
+  //     Please say PLEASE to me. Say PLEASE again. You said NEVER yesterday.
+  // The line pass correctly returns ALICE; the fallback then overwrote it with
+  // ["PLEASE","NEVER"] because those recur in caps. One-hander sides are common,
+  // so this cost the actor their own role in the picker.
+  const lineSpeakers = new Set(lines.map((l) => l.character).filter(Boolean));
+  const lineDialogue = lines.reduce((n, l) => n + (l.dialogue || '').length, 0);
+  if (lineSpeakers.size === 0 || lineDialogue < 20) {
     const inline = parseInlineCharacters(text, knownCast);
     if (new Set(inline.map((l) => l.character)).size >= 2) return inline;
   }
@@ -247,28 +258,43 @@ export function extractCharacters(parsedLinesOrText, knownCast) {
  * Length alone is NOT enough, and assuming it was is what broke ARNOLD_9.29.pdf
  * (prod scripts 111 and 112, cast stored as []). An Actors Access PDF is a
  * SCANNED IMAGE with a diagonal watermark stamped over it — and that watermark
- * is real, extractable text. pdfjs dutifully returns ~1,100 characters of
+ * is real, extractable text. pdfjs returns ~1,100 characters of
  * "PM 43 3: ep -S Se 30 ,2 02 6" fragments, which sailed past a `length < 40`
  * check, skipped the vision fallback, and got stored as the script.
  *
- * So we also require evidence of actual prose. Measured on real files:
- *                                      distinct words of 4+ letters
- *   ARNOLD_9.29 (watermark only)                     5
- *   a deliberately TINY 4-line side                 23
- *   a genuine one-page script                      463
+ * My first fix required >= 25 then >= 12 DISTINCT words of 4+ letters. An
+ * adversarial review killed it with one example:
+ *     ALICE / I love you.   BOB / I love you too.   ALICE / Do you?
+ * That parses into both speakers perfectly and has two distinct long words, so
+ * the gate called it empty and would have spent a vision call on every upload of
+ * a short scene. Vocabulary RICHNESS is not the signal; a short script is still
+ * a script. Non-Latin scripts scored zero outright.
  *
- * 12 sits between the watermark and the smallest side worth parsing: ~2.4x
- * above the garbage, ~1.9x below the smallest real text. The upper bound
- * matters as much as the lower one — every false positive spends an AI vision
- * call on a PDF that did not need one, so this must not creep upward without
- * re-measuring against a short side.
+ * The real difference is token SHAPE. Watermark debris is a cloud of 1-2
+ * character fragments; prose is made of words. So: what fraction of whitespace
+ * tokens are words of 3+ letters? Measured on real extractions —
+ *
+ *   ARNOLD_9.29 watermark (pdftotext, both modes)   0.03
+ *   a Hungarian two-line side                       0.36
+ *   a four-line English side                        0.44
+ *   a genuine one-page script                       0.64
+ *
+ * 0.15 sits in a 12x gap. Short scripts pass, which the distinct-word version
+ * got wrong.
+ *
+ * KNOWN AND ACCEPTED: text wholly in a non-Latin script (CJK, Cyrillic, Hebrew,
+ * Arabic) scores ~0 and is routed to vision. That is the right destination — the
+ * cue detection here is built on Latin capitals and cannot parse those anyway —
+ * but it means callers MUST NOT re-apply this gate to vision output, or a paid
+ * transcription gets thrown away. See the comment at the vision call sites.
  */
-const MIN_DISTINCT_WORDS = 12;
+const MIN_WORDISH_RATIO = 0.15;
+const WORDISH = /^[A-Za-z][A-Za-z'’-]{2,}/;
 
 export function isEmptyScript(text) {
   if (!text || text.replace(/\s+/g, '').length < 40) return true;
-  const distinct = new Set(
-    (String(text).match(/[A-Za-z][A-Za-z'’-]{3,}/g) || []).map((w) => w.toLowerCase()),
-  );
-  return distinct.size < MIN_DISTINCT_WORDS;
+  const tokens = String(text).split(/\s+/).filter(Boolean);
+  if (!tokens.length) return true;
+  const wordish = tokens.filter((t) => WORDISH.test(t)).length;
+  return wordish / tokens.length < MIN_WORDISH_RATIO;
 }
