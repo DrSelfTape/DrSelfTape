@@ -1014,7 +1014,7 @@ function Offer({ firstName, personalization, onTry, onSkip }) {
           style={{
             display: 'block', margin: '16px auto 0', padding: 8,
             background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: 'inherit', fontSize: 13, color: 'var(--aurora-sub)',
+            fontFamily: 'inherit', fontSize: 13, color: 'var(--aurora-sub)', opacity: 0.65,
           }}
         >Not now</button>
       </div>
