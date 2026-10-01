@@ -353,8 +353,32 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
       const d = data?.data ?? data ?? {}; // tolerate the house envelope OR a flat body
       setMsgs((s) => [...s, { from: 'ai', text: d.reply || "I'm here. What's up?", card: d.card || null }]);
       setChips(Array.isArray(d.chips) ? d.chips : []);
-    } catch {
-      setMsgs((s) => [...s, { from: 'ai', text: 'I lost that one for a second. Say it again?' }]);
+    } catch (err) {
+      // A bare `catch` used to answer every failure with "I lost that one for a
+      // second. Say it again?" — so out-of-tokens, AI-consent-off, rate-limited,
+      // provider down and offline all looked identical, and saying it again could
+      // never work. On 2026-09-30 the AI provider was out of credits for hours
+      // and this line was the only thing the user ever saw.
+      //
+      // The server already sends a usable sentence (e.g. "Slate is taking a
+      // beat. Try again.") and we were throwing it away. Prefer it, fall back to
+      // status-specific copy, and mirror the 402/403/429 handling the sides
+      // upload in this same file already does.
+      const sc = err?.response?.status;
+      const serverMsg = err?.response?.data?.message;
+      let text;
+      if (sc === 402) text = "You're out of AI tokens. Top up and I'll pick right back up.";
+      else if (sc === 403) text = 'Turn on AI features in Settings and I can answer that.';
+      else if (sc === 429) text = "We've hit today's AI limit. Try me again in a little while.";
+      else if (typeof serverMsg === 'string' && serverMsg.trim() && serverMsg.length <= 200) text = serverMsg.trim();
+      else if (!sc) text = "I can't reach the server — check your connection and try again.";
+      else if (sc >= 500) text = "My brain is offline right now, not your message. This is on us — try again in a bit.";
+      else text = 'I lost that one for a second. Say it again?';
+      setMsgs((s) => [...s, { from: 'ai', text }]);
+      // Surface it so a total AI outage is visible in Sentry instead of looking
+      // like users mumbling at the copilot.
+      try { import('../../utils/analytics').then(({ trackEvent, Events }) =>
+        trackEvent(Events.SLATE_MESSAGE, { error: true, status: sc || 'network' })).catch(() => {}); } catch { /* noop */ }
     } finally {
       setTyping(false);
       inFlightRef.current = false;
