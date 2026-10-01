@@ -42,7 +42,7 @@ import { needsCameraPresell, markCameraPresellSeen } from "../../components/Shar
 import { logo } from "../../assets/images";
 import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
-import { extractCharacters } from "../../utils/scriptParser";
+import { extractCharacters, parseScript } from "../../utils/scriptParse";
 import { aiIdempotencyHeaders } from '../../utils/aiIdempotency';
 
 // pdfjs (~326KB) + its worker (~1.3MB) are dynamically imported on FIRST PDF use
@@ -2851,7 +2851,11 @@ function ScenesScreen({ setTab }) {
       // Parse the cast once at upload time so the BE can store it. The
       // backend echoes the same array back on subsequent fetches, which
       // lets the SceneStudy panel skip the parse step entirely.
-      const characters = extractCharacters(content);
+      // scriptParse (NOT the old scriptParser) — the phone is where sides are
+      // actually uploaded, and the old module had none of the slug/transition
+      // guards or the flattened-sides fallback, so 22 of 51 production scripts
+      // stored an empty cast and others stored "INT. GRAND HIGHLANDER - DAY".
+      const characters = extractCharacters(parseScript(content));
       dispatch(createScriptThunk({ title, content: content.trim(), characters }));
     }
   };

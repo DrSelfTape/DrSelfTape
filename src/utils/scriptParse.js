@@ -221,13 +221,21 @@ export function spokenText(dialogue) {
     .trim();
 }
 
-export function extractCharacters(lines) {
+export function extractCharacters(parsedLinesOrText, knownCast) {
+  // Accepts EITHER parsed lines or raw script text. The deleted
+  // utils/scriptParser.js accepted both, and MobileApp relied on passing raw
+  // text — so a strict array-only signature here is what kept the two files
+  // forked, with every parser fix landing on desktop and never on the phone.
+  const lines = typeof parsedLinesOrText === 'string'
+    ? parseScript(parsedLinesOrText, knownCast)
+    : (Array.isArray(parsedLinesOrText) ? parsedLinesOrText : []);
   const seen = new Set();
-  return lines
-    .map((l) => l.character)
-    .filter((c) => {
-      if (seen.has(c)) return false;
-      seen.add(c);
-      return true;
-    });
+  const order = [];
+  for (const l of lines) {
+    const name = l?.character;
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    order.push(name);
+  }
+  return order;
 }
