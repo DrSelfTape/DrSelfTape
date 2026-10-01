@@ -239,3 +239,36 @@ export function extractCharacters(parsedLinesOrText, knownCast) {
   }
   return order;
 }
+
+/**
+ * True when extracted PDF text cannot be used as a script — so the caller
+ * should fall back to reading the rendered pages with vision.
+ *
+ * Length alone is NOT enough, and assuming it was is what broke ARNOLD_9.29.pdf
+ * (prod scripts 111 and 112, cast stored as []). An Actors Access PDF is a
+ * SCANNED IMAGE with a diagonal watermark stamped over it — and that watermark
+ * is real, extractable text. pdfjs dutifully returns ~1,100 characters of
+ * "PM 43 3: ep -S Se 30 ,2 02 6" fragments, which sailed past a `length < 40`
+ * check, skipped the vision fallback, and got stored as the script.
+ *
+ * So we also require evidence of actual prose. Measured on real files:
+ *                                      distinct words of 4+ letters
+ *   ARNOLD_9.29 (watermark only)                     5
+ *   a deliberately TINY 4-line side                 23
+ *   a genuine one-page script                      463
+ *
+ * 12 sits between the watermark and the smallest side worth parsing: ~2.4x
+ * above the garbage, ~1.9x below the smallest real text. The upper bound
+ * matters as much as the lower one — every false positive spends an AI vision
+ * call on a PDF that did not need one, so this must not creep upward without
+ * re-measuring against a short side.
+ */
+const MIN_DISTINCT_WORDS = 12;
+
+export function isEmptyScript(text) {
+  if (!text || text.replace(/\s+/g, '').length < 40) return true;
+  const distinct = new Set(
+    (String(text).match(/[A-Za-z][A-Za-z'’-]{3,}/g) || []).map((w) => w.toLowerCase()),
+  );
+  return distinct.size < MIN_DISTINCT_WORDS;
+}

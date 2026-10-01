@@ -150,3 +150,41 @@ test('spokenText strips directions the reader must not say aloud', () => {
   assert.equal(spokenText("(cutting her off) I said I'd call him back."), "I said I'd call him back.");
   assert.equal(spokenText('[beat] Fine.'), 'Fine.');
 });
+
+/**
+ * Watermark-only PDFs. ARNOLD_9.29.pdf (prod scripts 111 and 112, both stored
+ * characters: []) is a SCANNED IMAGE with an Actors Access watermark stamped
+ * diagonally across it. pdffonts shows only non-embedded Helvetica-Bold — the
+ * watermark — while the script itself is a 1275x1650 JPEG plus CCITT stencils.
+ * pdfjs therefore returns ~1,100 characters of watermark fragments, which beat
+ * the old `length < 40` gate, skipped the vision fallback, and got stored.
+ */
+test('watermark-only extraction is treated as empty so vision runs', async () => {
+  const {isEmptyScript} = await import('../src/utils/scriptParse.js');
+
+  // Real shape of the ARNOLD_9.29 extraction: short repeated timestamp pieces.
+  const watermark = Array.from({length: 120},
+    () => 'PM 43 3: ep -S Se 30 ,2 02 6 -7 56 90 B9 T-').join(' ');
+  assert.ok(watermark.replace(/\s+/g, '').length > 1000, 'fixture must exceed the old 40-char gate');
+  assert.equal(isEmptyScript(watermark), true, 'watermark fragments must trigger the vision fallback');
+
+  assert.equal(isEmptyScript(''), true);
+  assert.equal(isEmptyScript(null), true);
+});
+
+test('a real script is NOT sent to vision — no needless AI spend', async () => {
+  const {isEmptyScript} = await import('../src/utils/scriptParse.js');
+  // A deliberately SHORT side: the gate must not push genuine text to vision,
+  // because every false positive costs an AI call per upload.
+  const side = [
+    'INT. DINER - NIGHT', '',
+    'ARNOLD', 'You order the same thing every single time we come here.', '',
+    'MIDGE', 'Because it is the only thing worth ordering, Arnold.', '',
+    'ARNOLD', 'That is not an answer, that is a position.', '',
+    'MIDGE', 'Then consider it my position. Sit down and eat something.',
+  ].join('\n');
+  // 23 distinct 4+ letter words — the smallest thing we consider parseable, and
+  // the upper bound on MIN_DISTINCT_WORDS. If someone raises that constant past
+  // this, real sides start costing a vision call each.
+  assert.equal(isEmptyScript(side), false, 'a genuine short side must not be sent to vision');
+});

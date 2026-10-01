@@ -2,14 +2,10 @@ import axiosInstance from '../redux/http';
 import endPoints from '../redux/constant';
 import { aiIdempotencyHeaders } from './aiIdempotency';
 
-/**
- * True when extracted PDF text is essentially empty — i.e. the PDF has no text
- * layer (common for Actors Access / Breakdown Services sides, which flatten
- * their fonts). pdfjs returns ~0 characters for these.
- */
-export function isEmptyScript(text) {
-  return !text || text.replace(/\s+/g, '').length < 40;
-}
+// isEmptyScript lives in scriptParse.js (no axios dependency, so it is unit
+// testable). Re-exported here because callers already import it from this module.
+export { isEmptyScript } from './scriptParse';
+
 
 /**
  * Vision fallback: read the rendered PDF pages with the /parse-sides/ endpoint
