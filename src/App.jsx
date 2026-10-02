@@ -37,6 +37,7 @@ function App() {
     let removeListener;
     import('@capacitor/app').then(({ App: CapApp }) => {
       CapApp.addListener('backButton', ({ canGoBack }) => {
+        if (!window.dispatchEvent(new CustomEvent('drst-back', { cancelable: true }))) return;
         if (canGoBack || window.history.length > 1) {
           window.history.back();
         } else {

@@ -495,3 +495,34 @@ test('ordinary uploads still use presign/PUT then the original endpoint', async 
   assert.equal(requests[1].url, '/v1/ai/jericho/tape-review/');
   assert.equal(requests[1].body.get('r2_key'), 'tmp/tape-review/1/random.mp4');
 });
+
+test('a polling ceiling preserves the paid attempt and recovering notes never resubmits it', async t => {
+  t.mock.timers.enable({apis: ['setTimeout']});
+  let now = 1000;
+  t.mock.method(Date, 'now', () => now);
+  const saved = new Map();
+  globalThis.localStorage = {getItem: k => saved.get(k) || null, setItem: (k,v) => saved.set(k,v), removeItem: k => saved.delete(k)};
+  let posts = 0;
+  globalThis.__reviewHttp.post = async () => { posts++; return {data: {data: {job_id: 12, status: 'pending'}}}; };
+  globalThis.__reviewHttp.get = async () => ({data: {data: {status: 'pending'}}});
+  store.dispatch(selectReviewRecording(recording));
+  const attempt = store.dispatch(reviewTape({recordingId: 42, idempotencyKey: 'preserve-paid-attempt'}));
+  await tick();
+  now += 600001;
+  t.mock.timers.tick(15000);
+  await tick();
+  const result = await attempt;
+  assert.equal(result.payload.stillWorking, true);
+  assert.equal(result.payload.reuseKey, true);
+  assert.equal(store.getState().jericho.tapeReviewError, null);
+  assert.match(store.getState().jericho.tapeReviewPending, /Still working/);
+  const slot = JSON.parse(saved.get('dst_pending_analysis'));
+  assert.equal(slot.idempotencyKey, 'preserve-paid-attempt');
+  globalThis.__reviewHttp.get = async () => ({data: {data: {status: 'done', result: notes}}});
+  const resumed = store.dispatch(resumeAnalysisJob(slot));
+  await tick(); t.mock.timers.tick(15000); await tick();
+  assert.ok(resumeAnalysisJob.fulfilled.match(await resumed));
+  assert.equal(posts, 1);
+  assert.equal(store.getState().jericho.tapeReviewPending, null);
+  assert.equal(store.getState().jericho.tapeReviewResult.verdict, notes.verdict);
+});

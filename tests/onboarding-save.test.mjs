@@ -285,3 +285,34 @@ test('the shared writer serializes a newer in-memory snapshot behind the pending
   assert.equal(h.storage.getItem(h.pendingKey(42)), null);
   assert.deepEqual(h.store.getState().profile.profile.onboarding_personalization, JSON.parse(newer));
 });
+
+test('consent recovery opens only for the exact server code and never replays the request', async t => {
+  const h = harness(t);
+  const events = [];
+  window.dispatchEvent = event => { events.push({type: event.type, force: event.detail?.force}); return true; };
+  let attempts=0;
+  h.http.defaults.adapter = async config => {
+    attempts++;
+    throw new AxiosError('consent', 'ERR_BAD_RESPONSE', config, null, {status:403, data:{code:'ai_consent_required'},config});
+  };
+  await assert.rejects(h.http.post('/v1/ai/test/',{}));
+  assert.equal(attempts,1);
+  assert.deepEqual(events,[{type:'drst-open-ai-consent',force:true}]);
+});
+
+test('unrelated and old-account 403s never open a consent modal', async t => {
+  const h = harness(t);
+  const events=[];
+  window.dispatchEvent = e => {events.push(e);return true;};
+  h.http.defaults.adapter = async config => {
+    throw new AxiosError('denied','ERR_BAD_RESPONSE',config,null,{status:403,data:{code:'permission_denied'},config});
+  };
+  await assert.rejects(h.http.post('/v1/ai/test/',{}));
+  let reject;
+  h.http.defaults.adapter = config => new Promise((_,fail)=>{reject=()=>fail(new AxiosError('consent','ERR_BAD_RESPONSE',config,null,{status:403,data:{code:'ai_consent_required'},config}));});
+  const request=h.http.post('/v1/ai/test/',{});
+  await new Promise(resolve=>setImmediate(resolve));
+  switchActor(h);reject();
+  await assert.rejects(request,e=>e.code===h.STALE_AUTH_REQUEST);
+  assert.deepEqual(events,[]);
+});

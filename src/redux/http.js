@@ -4,6 +4,8 @@ import axios from 'axios';
 // Local Imports
 import { baseURL } from './constant';
 import { getDeviceId } from '../utils/deviceId';
+import { requestAiConsent } from '../components/AIConsent/consentRequest';
+import { isAiConsentError } from '../components/AIConsent/consentError';
 // NOTE: do NOT import authSlice here — it imports this file (circular dependency)
 
 const axiosInstance = axios.create({
@@ -175,14 +177,12 @@ axiosInstance.interceptors.response.use(
     // an AI request hits the BE without consent, the user gets a 403
     // with detail='ai_consent_required'. Open the consent modal so the
     // user can accept and retry, rather than dumping a raw HTTP error.
-    if (
-      error?.response?.status === 403 &&
-      (error?.response?.data?.detail === 'ai_consent_required' ||
-       error?.response?.data?.code === 'ai_consent_required' ||
-       (typeof error?.response?.data?.message === 'string' &&
-        error.response.data.message.toLowerCase().includes('ai features require')))
-    ) {
-      try { window.dispatchEvent(new CustomEvent('drst-open-ai-consent')); } catch { /* swallow */ }
+    if (isAiConsentError(error)) {
+      const { store } = await import('./store');
+      assertRequestUser(error.config, store);
+      // The server is authoritative even if this device cached an old grant.
+      // Do not automatically replay an upload or a charged AI request.
+      void requestAiConsent({ force: true });
     }
 
     if (error?.response?.status === 401) {
