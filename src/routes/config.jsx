@@ -63,7 +63,6 @@ const Scripts = lazy(() => import('../panels/Dashboard/Scripts'));
 const Reports = lazy(() => import('../panels/Dashboard/Reports'));
 const Submissions = lazy(() => import('../panels/Dashboard/Submissions'));
 const AuditionGenerator = lazy(() => import('../panels/Dashboard/AuditionGenerator'));
-const CastingDirectorAI = lazy(() => import('../panels/Dashboard/CastingDirectorAI'));
 const Referral = lazy(() => import('../panels/Dashboard/Referral'));
 const SelfTapes = lazy(() => import('../panels/Dashboard/SelfTapes'));
 const MyStudio = lazy(() => import('../panels/Dashboard/MyStudio'));
@@ -137,7 +136,6 @@ export const commonRoutes = [
       { path: 'jericho', moduleName: 'Jericho', element: <Jericho /> },
       { path: 'craft-journey', moduleName: 'CraftJourney', element: <CraftJourney /> },
       { path: 'leaderboard', moduleName: 'Leaderboard', element: <Leaderboard /> },
-      { path: 'casting-director-ai', moduleName: 'CastingDirectorAI', element: <CastingDirectorAI /> },
       // Find a Reader
       // P1-05: the three supply routes collapsed into /dashboard/readers; old
       // paths redirect with the right filter so links and bookmarks survive.
