@@ -1014,7 +1014,11 @@ function Offer({ firstName, personalization, onTry, onSkip }) {
           style={{
             display: 'block', margin: '16px auto 0', padding: 8,
             background: 'none', border: 'none', cursor: 'pointer',
-            fontFamily: 'inherit', fontSize: 13, color: 'var(--aurora-sub)', opacity: 0.65,
+            // No opacity dimming here: at 0.65 this renders ~2.72:1 against
+            // the ivory plate and fails WCAG AA (tests/accessibility.browser).
+            // The skip stays de-emphasised by being plain text next to a gold
+            // button — it does not need to be unreadable to be quiet.
+            fontFamily: 'inherit', fontSize: 13, color: 'var(--aurora-sub)',
           }}
         >Not now</button>
       </div>

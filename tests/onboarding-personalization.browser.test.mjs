@@ -322,6 +322,22 @@ btest('flag-off markup, draft, writes, and event payloads match the pre-ticket m
       return {snapshots, state: await tab.evaluate(() => ({writes: window.__profileWrites, events: window.__events, keys: Object.keys(localStorage)}))};
     } finally { await tab.close(); }
   }
-  try { assert.deepEqual(await capture(current.url), await capture(baseline.url)); }
-  finally { await baseline.close(); await current.close(); }
+  // The baseline is a frozen git blob, so any DELIBERATE visual change to the
+  // shared offer screen would fail this test forever. One such change exists:
+  // the "Not now" skip used to carry opacity:0.65, which renders ~2.72:1 on the
+  // ivory plate and fails WCAG AA (tests/accessibility.browser.test.mjs). It was
+  // removed on purpose. Normalise that one declaration out of both sides so this
+  // test keeps guarding BEHAVIOUR (draft, writes, event payloads) without
+  // re-asserting an inaccessible style. Add to this list only with a reason.
+  const normalise = (cap) => ({
+    ...cap,
+    snapshots: cap.snapshots.map((html) =>
+      html.replace(/opacity: 0\.65;?\s*/g, '').replace(/;\s+"/g, ';"')),
+  });
+  try {
+    assert.deepEqual(
+      normalise(await capture(current.url)),
+      normalise(await capture(baseline.url)),
+    );
+  } finally { await baseline.close(); await current.close(); }
 });
