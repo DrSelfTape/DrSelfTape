@@ -1,0 +1,15 @@
+description: Negative control - MUST fail the invalid timestamp assertion
+prompts:
+  - 'Check saved review {{caseId}}.'
+providers:
+  - file://replay-provider.mjs
+defaultTest:
+  assert:
+    - type: javascript
+      value: file://review-checks.mjs
+tests:
+  - vars:
+      caseId: invalid-timestamp-control
+      mode: summary
+      hasHistory: false
+      durationSeconds: 30

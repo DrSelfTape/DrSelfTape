@@ -6,6 +6,7 @@ import { Capacitor } from '@capacitor/core';
 import { isNativeIOS, isNativeStore, storePlatform, purchase as iapPurchase, restorePurchases, manageSubscriptions, getIntroOfferFor, getStorePriceFor } from '../../../utils/purchases';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { consumeUpgradeIntent } from '../../../utils/goUpgrade';
+import '../../../styles/studio-panels.css';
 
 // Human-readable line for the surface an upgrade intent came from — shown as a
 // focused header so the actor sees exactly what they're unlocking.
@@ -23,6 +24,21 @@ const UPGRADE_SOURCE_COPY = {
 // stay invisible until you flip the flag at build time.
 const WEEKLY_ENABLED = import.meta.env.VITE_WEEKLY_ENABLED === 'true';
 
+/* Yearly prices are 99.99 / 149.99 / 249.99 and MATCH the live App Store
+ * products — verified against appStoreConnect /subscriptions/<id>/prices
+ * filtered to territory USA on 2026-10-01. They were briefly "corrected" to
+ * 39.99 / 59.99 / 99.99 during that same pass; that was my error, reading a
+ * non-USD territory's price point out of an unfiltered list and taking the
+ * lower number for USD. If you ever re-check these, filter by territory.
+ *
+ * A year costs ten months of the monthly price (9.99 x 12 = 119.88 vs 99.99),
+ * so "2 months free" is the accurate line, not a percentage.
+ *
+ * `summary` is what the tier actually gets you, in one line, and it leads with
+ * the read — the thing nobody else will give an actor honestly. The allowance
+ * is secondary (`meta`), because nobody buys a token count. */
+const YEARLY_SAVING = '2 months free';
+
 const PLANS = [
   {
     id: 'basic',
@@ -31,7 +47,9 @@ const PLANS = [
     weekly: 4.99,
     monthly: 9.99,
     yearly: 99.99,
-    yearlySaving: '2 months free',
+    yearlySaving: YEARLY_SAVING,
+    summary: 'The full casting read on every tape you submit, plus per-take notes in Compare Takes.',
+    meta: '10 AI tokens a month · no rollover',
     features: [
       'The full casting read on every tape',
       'Compare Takes · full per-take notes',
@@ -48,14 +66,16 @@ const PLANS = [
     weekly: 6.99,
     monthly: 14.99,
     yearly: 149.99,
-    yearlySaving: '2 months free',
+    yearlySaving: YEARLY_SAVING,
     popular: true,
+    summary: 'Everything in Basic, at twice the volume — and what you don’t use rolls over.',
+    meta: '20 AI tokens a month · rollover',
     features: [
-      '20 AI tokens / month',
-      'Rollover unused tokens',
-      'Everything in Basic',
-      'Priority support',
+      'Twice the monthly reads of Basic',
+      'Unused tokens roll over',
       'Green Room access',
+      'Priority support',
+      'Everything in Basic',
     ],
     rollover: true,
   },
@@ -67,9 +87,11 @@ const PLANS = [
     weekly: 9.99,
     monthly: 24.99,
     yearly: 249.99,
-    yearlySaving: '2 months free',
+    yearlySaving: YEARLY_SAVING,
+    summary: 'Read every take you shoot, and Performance DNA reads the pattern across all of them.',
+    meta: 'Unlimited AI · fair-use cap of 150 actions a day',
     features: [
-      'Unlimited AI · no token limits',
+      'Unlimited AI · fair-use cap of 150 actions a day',
       'The full casting read + Performance DNA',
       'Compare Takes · full per-take notes',
       'Everything in Plus',
@@ -88,83 +110,45 @@ function introOfferLabel(intro) {
   return `${intro.priceString} for first ${intro.value} ${plural}`;
 }
 
-/* Mini progress ring used inside each comparison card. */
-function MiniRing({ pct, color, track, label }) {
-  const r = 30;
-  const c = 2 * Math.PI * r;
-  return (
-    <svg width="74" height="74" viewBox="0 0 74 74" style={{ display: 'block', margin: '0 auto' }}>
-      <circle cx="37" cy="37" r={r} stroke={track} strokeWidth="7" fill="none" />
-      <circle cx="37" cy="37" r={r} stroke={color} strokeWidth="7" fill="none"
-        strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)} transform="rotate(-90 37 37)" />
-      <text x="37" y="42" textAnchor="middle" style={{
-        fontFamily: "'JetBrains Mono', monospace", fontSize: 17, fontWeight: 500, fill: color,
-      }}>{label}</text>
-    </svg>
-  );
-}
+/* What a subscription actually buys, in three plain rows.
+ *
+ * This replaces the old before/after ring-and-bar graphic, which charted
+ * numbers we never measured and then carried a footnote admitting it. Three
+ * specific sentences do the same job honestly and leave room for the tiers. */
+const PROMISE = [
+  {
+    title: 'A casting-grade read on your own tape',
+    body: 'What landed, what read as indicated, and the one fix worth making before you send it.',
+  },
+  {
+    title: 'Compare takes before you submit',
+    body: 'Put two to four takes side by side and get the ranked winner with the reason.',
+  },
+  {
+    title: 'An AI reader that waits for your beat',
+    body: 'Run the scene at your pace — it listens for your line, not a stopwatch.',
+  },
+];
 
-/* One side of the before/after comparison — Aurora-native (no stock art):
-   eyebrow → mini ring → 7-day "week bars" (reps per day, illustrative) → a
-   one-line verdict. The ring shows what Pro actually changes — AI notes on
-   your takes — not invented callback rates. */
-function CompareCard({ kind }) {
-  const before = kind === 'before';
-  const bars = before ? [4, 2, 5, 1, 3, 0, 2] : [12, 18, 14, 22, 17, 20, 24];
-  const max = before ? 5 : 24;
+function PromiseList() {
   return (
-    <div style={{
-      borderRadius: 20, padding: '16px 16px 18px', position: 'relative', overflow: 'hidden', minHeight: 230,
-      background: before ? 'rgba(255,255,255,0.5)' : 'linear-gradient(160deg, var(--aurora-heritage-gold), #F0D097)',
-      border: `1px solid ${before ? 'var(--aurora-line)' : 'rgba(255,255,255,0.5)'}`,
-      boxShadow: before ? 'none' : '0 14px 34px rgba(212,168,95,0.27)',
-      filter: before ? 'grayscale(0.5)' : 'none',
-    }}>
-      <div className="aurora-mono" style={{ fontSize: 9, letterSpacing: '0.18em', color: before ? 'var(--aurora-dim)' : 'rgba(26,20,8,0.7)' }}>
-        {before ? 'WITHOUT PRO' : 'WITH PRO'}
-      </div>
-      <div style={{ margin: '14px 0' }}>
-        <MiniRing
-          pct={before ? 0.06 : 0.92}
-          color={before ? 'rgba(10,10,10,0.35)' : '#1A1408'}
-          track={before ? 'rgba(10,10,10,0.08)' : 'rgba(255,255,255,0.4)'}
-          label={before ? 'DIY' : 'AI'}
-        />
-      </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 4, height: 38 }}>
-        {bars.map((v, i) => (
-          <div key={i} style={{
-            width: 7, height: `${Math.max(8, (v / max) * 38)}px`, borderRadius: 3,
-            background: before ? 'rgba(10,10,10,0.2)' : '#1A1408', opacity: before ? 0.6 : 0.9,
-          }} />
-        ))}
-      </div>
-      <div style={{
-        fontSize: 12, fontWeight: 600, letterSpacing: '-0.2px', marginTop: 14, lineHeight: 1.35,
-        color: before ? 'var(--aurora-sub)' : '#1A1408',
-      }}>
-        {before ? "You're the only eyes on your takes. Guesswork compounds." : 'Casting-grade notes on every take. Compare before you submit.'}
-      </div>
+    <div className="studio-promise">
+      {PROMISE.map((row) => (
+        <div key={row.title} className="studio-promise-row">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M5 12l5 5 9-11" />
+          </svg>
+          <div>
+            <strong>{row.title}</strong>
+            <span>{row.body}</span>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
 
-/* Before/After comparison — self-review vs AI notes on every take. */
-function ComparisonRings() {
-  return (
-    <>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 8 }}>
-        <CompareCard kind="before" />
-        <CompareCard kind="after" />
-      </div>
-      {/* Honest framing: the rings/bars illustrate what Pro changes (a second set
-          of eyes on every take), NOT a measured booking or callback rate. */}
-      <p style={{ fontSize: 10, color: 'var(--aurora-dim)', textAlign: 'center', marginBottom: 18, letterSpacing: '0.02em', lineHeight: 1.4 }}>
-        Illustrative of what Pro changes: casting-grade eyes on every take, not a measured booking or callback rate.
-      </p>
-    </>
-  );
-}
 export default function Membership({ onClose }) {
   // Membership is full-screen with its own X close button; the persistent
   // MobileApp top bar (Aurora wordmark + bell + avatar) overlaps the
@@ -564,108 +548,75 @@ export default function Membership({ onClose }) {
   const ctaStorePrice = storePrices[`${selectedPlan}_${billing}`];
   const ctaPriceDisplay = ctaStorePrice || `$${ctaPrice}`;
 
+
   return (
-    <div className="aurora-orbs aurora-orbs-live" style={{
-      position: 'relative', minHeight: '100%',
-      padding: 'calc(env(safe-area-inset-top, 0px) + 12px) 0 calc(env(safe-area-inset-bottom, 0px) + 24px)',
-    }}>
+    <div className="dst-studio-panel dst-membership">
       {/* X close button only — small floating affordance at top-left. The
           RESTORE link lives at the bottom next to Terms · Privacy Policy
           (per Joseph's 2026-06-06 ask — top bar felt floaty, RESTORE
           belongs in the legal footer where iOS apps usually park it). */}
       {onClose && (
-        <button onClick={onClose} aria-label="Close" style={{
-          position: 'fixed', top: 'calc(env(safe-area-inset-top, 0px) + 12px)', left: 16,
-          zIndex: 10,
-          // Apple HIG accessibility: minimum 44×44 tap target.
-          width: 44, height: 44, borderRadius: 100, border: 'none',
-          background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(20px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', boxShadow: '0 4px 12px rgba(10,10,10,0.06)',
-        }}>
+        <button type="button" onClick={onClose} aria-label="Close" className="studio-close">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
       )}
 
-      <div style={{ padding: '0 22px' }}>
+      <div className="dst-membership-inner">
         {/* Serif headline — focused on the unlock when arriving from a lock CTA */}
-        <div style={{ marginTop: 8, marginBottom: 18 }}>
-          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 8, color: 'var(--aurora-accent-deep)' }}>
+        <header style={{ marginTop: 8, marginBottom: 18 }}>
+          <span className="studio-eyebrow" style={{ marginBottom: 8 }}>
             {upgradeIntent ? "YOU'RE ONE STEP AWAY" : 'UNLOCK YOUR STUDIO'}
           </span>
-          <h1 className="aurora-display" style={{
-            fontSize: 32, color: 'var(--aurora-text)', margin: 0,
-            letterSpacing: '-0.7px', lineHeight: 1.05,
-          }}>
+          <h1 className="studio-title" style={{ fontSize: 32, letterSpacing: '-1px' }}>
             {upgradeIntent
               ? (UPGRADE_SOURCE_COPY[upgradeIntent.source] || 'Unlock your full read')
-              : <>Book more roles.<br />Go Pro.</>}
+              : <>An honest read<br />on your own tape.</>}
           </h1>
-          <p style={{
-            fontSize: 14, color: 'var(--aurora-sub)', marginTop: 10, lineHeight: 1.5,
-          }}>
+          <p className="studio-sub">
             {upgradeIntent
-              ? <>Any plan unlocks it. <strong style={{ color: 'var(--aurora-text)' }}>Basic is $9.99/mo.</strong> Everything below is included too.</>
-              : <>Casting-grade notes on every take, an AI reader that waits for your beat, <strong style={{ color: 'var(--aurora-text)' }}> and Compare Takes before you submit.</strong></>}
+              ? <>Any plan unlocks it. <strong style={{ color: 'var(--dst-ink)' }}>Basic is $9.99/mo.</strong> Everything below is included too.</>
+              : <>Nobody else will tell an actor the truth about their own take. That is the
+                 whole product — and every plan includes it.</>}
           </p>
-        </div>
+        </header>
 
-        {/* Before / After comparison */}
-        <ComparisonRings />
+        {/* What the money buys — three plain rows, no invented metrics. */}
+        <PromiseList />
 
         {/* Token balance pill */}
         {!loading && (
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 14,
-            padding: '6px 14px', borderRadius: 100,
-            background: 'rgba(255,255,255,0.7)',
-            border: '1px solid rgba(159,230,180,0.4)',
-            backdropFilter: 'blur(20px)',
-          }}>
-            <span style={{ fontSize: 14 }}>🎟️</span>
+          <div className="studio-balance">
             {isUnlimited ? (
-              <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>Unlimited AI</span>
+              <b>Unlimited AI</b>
             ) : (
               <>
-                <span className="aurora-mono" style={{ fontSize: 13, color: 'var(--aurora-mint)' }}>{tokenBalance}</span>
-                <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>tokens remaining</span>
+                <b>{tokenBalance}</b>
+                <span>tokens remaining</span>
               </>
             )}
           </div>
         )}
 
         {/* Billing toggle — Weekly (flagged) / Monthly / Yearly */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 6, padding: 4, marginBottom: 16,
-          background: 'rgba(10,10,10,0.05)', borderRadius: 100,
-        }}>
+        <div className="studio-billing">
           {[...(WEEKLY_ENABLED ? ['weekly'] : []), 'monthly', 'yearly'].map((b) => {
             const on = billing === b;
-            const label = { weekly: 'Weekly', monthly: 'Monthly', yearly: 'Yearly · Save 2mo' }[b];
+            const label = { weekly: 'Weekly', monthly: 'Monthly', yearly: `Yearly · ${YEARLY_SAVING}` }[b];
             return (
-              <button key={b} onClick={() => setBilling(b)}
+              <button key={b} type="button" onClick={() => setBilling(b)}
                 onTouchEnd={(e) => { e.preventDefault(); setBilling(b); }}
-                aria-pressed={on}
-                style={{
-                flex: 1, padding: '10px 14px', minHeight: 44, borderRadius: 100, border: 'none',
-                cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
-                fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 600,
-                background: on ? '#fff' : 'transparent',
-                color: on ? 'var(--aurora-text)' : 'var(--aurora-sub)',
-                boxShadow: on ? '0 2px 6px rgba(10,10,10,0.08)' : 'none',
-                transition: 'all 0.2s',
-              }}>
+                aria-pressed={on}>
                 {label}
               </button>
             );
           })}
         </div>
 
-        {/* Plan cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+        {/* Plan cards — a ladder. Each tier states what it gets you before
+            you select it, so Basic vs Plus vs Premium reads in one screen. */}
+        <div className="studio-plans">
           {PLANS.map((plan) => {
             // Prefer the real localized store price (already currency-symboled,
             // do NOT prepend '$'); fall back to the hardcoded web/Stripe number.
@@ -681,89 +632,41 @@ export default function Membership({ onClose }) {
             return (
               <button
                 key={plan.id}
+                type="button"
+                className="studio-plan"
+                aria-pressed={selected}
                 onClick={() => setSelectedPlan(plan.id)}
-                style={{
-                  width: '100%', textAlign: 'left', cursor: 'pointer',
-                  padding: '16px 18px', borderRadius: 22, position: 'relative',
-                  background: selected
-                    ? 'linear-gradient(160deg, #FFFFFF, #FBF6E9)'
-                    : 'rgba(255,255,255,0.7)',
-                  border: selected
-                    ? '2px solid var(--aurora-heritage-gold)'
-                    : '1.5px solid var(--aurora-line)',
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: selected
-                    ? '0 12px 30px rgba(212,168,95,0.20), inset 0 1px 0 rgba(255,255,255,0.7)'
-                    : 'none',
-                  transition: 'all 0.2s',
-                }}
               >
-                {plan.popular && (
-                  <div style={{
-                    position: 'absolute', top: -10, right: 14,
-                    padding: '3px 10px', borderRadius: 100,
-                    background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-accent-deep))',
-                    color: '#fff', fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
-                  }}>POPULAR</div>
-                )}
-                {planIsCurrent && (
-                  <div style={{
-                    position: 'absolute', top: -10, left: 14,
-                    padding: '3px 10px', borderRadius: 100,
-                    background: 'var(--aurora-mint)', color: '#0E0D0A',
-                    fontFamily: "'JetBrains Mono', monospace",
-                    fontSize: 9, fontWeight: 700, letterSpacing: '0.12em',
-                  }}>CURRENT</div>
+                {plan.popular && <span className="studio-plan-flag">POPULAR</span>}
+                {planIsCurrent && <span className="studio-plan-flag" data-kind="current">CURRENT</span>}
+
+                <span className="studio-plan-top">
+                  <span className="studio-plan-name">{plan.name}</span>
+                  {/* Apple 3.1.2(c): the bill amount must dominate. */}
+                  <span className="studio-plan-price">
+                    {priceDisplay}
+                    <span className="studio-plan-period">/{{ weekly: 'wk', monthly: 'mo', yearly: 'yr' }[billing]}</span>
+                  </span>
+                </span>
+
+                {/* Spans, not <p>/<ul>: this card is a <button>, whose content
+                    model is phrasing content. The classes carry the layout. */}
+                <span className="studio-plan-sum">{plan.summary}</span>
+                <span className="studio-plan-meta">{plan.meta}</span>
+
+                {planIntroLabel && !hasActivePlan && (
+                  <span className="studio-plan-trial">{planIntroLabel.toUpperCase()}</span>
                 )}
 
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                  {/* Radio dot */}
-                  <div style={{
-                    width: 22, height: 22, borderRadius: 100, flexShrink: 0,
-                    border: `2px solid ${selected ? 'var(--aurora-heritage-gold)' : 'var(--aurora-line)'}`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    marginTop: 2,
-                  }}>
-                    {selected && <div style={{
-                      width: 10, height: 10, borderRadius: 100, background: 'var(--aurora-heritage-gold)',
-                    }} />}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap', gap: 6 }}>
-                      <div className="aurora-display" style={{
-                        fontSize: 18, color: 'var(--aurora-text)',
-                      }}>{plan.name}</div>
-                      {/* Apple 3.1.2(c): bill amount must dominate. Bumped to
-                          22px / 700 so it visually outweighs the trial pill below. */}
-                      <div style={{ textAlign: 'right' }}>
-                        <span className="aurora-mono" style={{ fontSize: 22, color: 'var(--aurora-text)', fontWeight: 700, letterSpacing: '-0.4px' }}>{priceDisplay}</span>
-                        <span style={{ fontSize: 12, color: 'var(--aurora-sub)' }}>/{{ weekly: 'wk', monthly: 'mo', yearly: 'yr' }[billing]}</span>
-                      </div>
-                    </div>
-                    <div style={{
-                      fontSize: 12, color: 'var(--aurora-sub)', marginTop: 4, lineHeight: 1.4,
-                    }}>
-                      {plan.unlimited ? (
-                        <><span style={{ fontWeight: 600, color: 'var(--aurora-mint)' }}>Unlimited</span> AI · every feature included</>
-                      ) : (
-                        <><span style={{ fontWeight: 600, color: 'var(--aurora-mint)' }}>{plan.tokens}</span> AI tokens · {plan.rollover ? 'rollover' : 'no rollover'}</>
-                      )}
-                    </div>
-                    {planIntroLabel && !hasActivePlan && (
-                      <div style={{
-                        display: 'inline-block', marginTop: 8,
-                        padding: '4px 10px', borderRadius: 100,
-                        background: 'color-mix(in oklch, var(--aurora-heritage-gold) 22%, transparent)',
-                        color: 'var(--aurora-accent-deep)',
-                        fontFamily: "'JetBrains Mono', monospace",
-                        fontSize: 10, fontWeight: 600, letterSpacing: '0.05em',
-                      }}>
-                        {planIntroLabel.toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                {/* The full list opens on the tier you're actually deciding
+                    about, so the page never shows fifteen bullets at once. */}
+                {selected && (
+                  <span className="studio-plan-detail">
+                    {plan.features.map((feat) => (
+                      <span key={feat} className="studio-plan-detail-item">{feat}</span>
+                    ))}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -772,25 +675,17 @@ export default function Membership({ onClose }) {
         {/* Inline CTA — sits in the document flow, no position:fixed.
             The earlier floating button hit iOS WKWebView stacking-context
             bugs where the top bar / tab bar rendered above its tap area. */}
-        <div style={{ marginBottom: 22 }}>
+        <div className="studio-cta-block">
           {isCurrent ? (
             <button
               type="button"
+              className="studio-cta-ghost"
               onClick={handleManage}
               onTouchEnd={(e) => { e.preventDefault(); handleManage(); }}
-              style={{
-                width: '100%', padding: '18px', borderRadius: 100, cursor: 'pointer',
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
-                border: '2px solid var(--aurora-heritage-gold)',
-                background: 'transparent',
-                fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600,
-                color: 'var(--aurora-accent-deep)',
-              }}
             >
               Manage Plan
               {isNativeStore() && (
-                <span style={{ display: 'block', fontSize: 10, opacity: 0.7, marginTop: 4 }}>
+                <span className="studio-cta-note">
                   {isNativeIOS() ? 'Opens Apple Settings · Subscriptions' : 'Opens Google Play · Subscriptions'}
                 </span>
               )}
@@ -798,106 +693,65 @@ export default function Membership({ onClose }) {
           ) : (
             <button
               type="button"
+              className="studio-cta"
               onClick={() => !checkoutLoading && !finalizing && handleSubscribe(selectedPlan)}
               onTouchEnd={(e) => {
                 e.preventDefault();
                 if (!checkoutLoading && !finalizing) handleSubscribe(selectedPlan);
               }}
               disabled={!!checkoutLoading || !!finalizing || !selectedPlan}
-              style={{
-                width: '100%', padding: '18px 16px', borderRadius: 100, border: 'none',
-                cursor: (checkoutLoading || finalizing) ? 'wait' : 'pointer',
-                touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent',
-                position: 'relative', overflow: 'hidden',
-                background: 'linear-gradient(135deg, #0E0D0A 0%, #1F1B12 100%)',
-                color: '#FFFFFF',
-                fontFamily: "'Space Grotesk', sans-serif",
-                boxShadow: '0 12px 30px rgba(10,10,10,0.30), inset 0 1px 0 rgba(255,255,255,0.08)',
-                opacity: (checkoutLoading || finalizing) ? 0.7 : 1,
-              }}
             >
               {(checkoutLoading === selectedPlan || finalizing === selectedPlan) ? (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
-                  <span style={{
-                    width: 16, height: 16, borderRadius: '50%',
-                    border: '2px solid currentColor', borderTopColor: 'transparent',
-                    animation: 'drst-spin 0.7s linear infinite',
-                  }} />
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                  <span className="studio-spinner" />
                   Opening checkout…
                 </span>
               ) : (
-                <span style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'center', gap: 3, lineHeight: 1.15 }}>
+                <>
                   {selIntro?.isFreeTrial && !hasActivePlan && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 500, letterSpacing: '0.14em',
-                      textTransform: 'uppercase', opacity: 0.78,
-                      fontFamily: 'JetBrains Mono, monospace',
-                    }}>
-                      {selIntroLabel} then
-                    </span>
+                    <span className="studio-cta-note">{selIntroLabel} then</span>
                   )}
-                  <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.2px' }}>
-                    {hasActivePlan ? 'Switch' : 'Subscribe'} · {ctaPriceDisplay}/{ctaPeriod} →
-                  </span>
-                </span>
+                  <span>{hasActivePlan ? 'Switch' : 'Subscribe'} · {ctaPriceDisplay}/{ctaPeriod} &rarr;</span>
+                </>
               )}
             </button>
           )}
         </div>
 
-        {/* Feature ticks (Plus highlights) */}
-        <div style={{ marginBottom: 16 }}>
-          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 10 }}>
-            EVERY PLAN INCLUDES
-          </span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Feature ticks — what you get regardless of tier */}
+        <div className="studio-includes">
+          <span className="studio-eyebrow">EVERY PLAN INCLUDES</span>
+          <ul>
             {[
               'Unlimited audition tracking',
               'AI scene coaching feedback',
               'Find a Reader matching + Green Room chat',
               'Jericho weekly craft readout',
             ].map((feat) => (
-              <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{
-                  width: 22, height: 22, borderRadius: 100, flexShrink: 0,
-                  background: 'color-mix(in oklch, var(--aurora-mint) 22%, transparent)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: 'color-mix(in oklch, var(--aurora-mint) 80%, var(--aurora-text))',
-                }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12l5 5 9-11" />
-                  </svg>
-                </span>
-                <span style={{ fontSize: 14, color: 'var(--aurora-text)' }}>{feat}</span>
-              </div>
+              <li key={feat}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M5 12l5 5 9-11" />
+                </svg>
+                {feat}
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         {/* "No payment now" microcopy — gated on !hasActivePlan to match the
-            trial badge (675) and CTA prefix (753). An existing/upgrading
-            subscriber has already used the intro offer (the stores block a
-            re-used trial), so promising "no payment now / your trial ends" to
-            them is wrong. */}
+            trial badge and CTA prefix. An existing/upgrading subscriber has
+            already used the intro offer (the stores block a re-used trial), so
+            promising "no payment now / your trial ends" to them is wrong. */}
         {selIntro?.isFreeTrial && !hasActivePlan && (
-          <div style={{
-            textAlign: 'center', fontSize: 12, color: 'var(--aurora-sub)',
-            marginBottom: 14, lineHeight: 1.5,
-          }}>
-            <strong style={{ color: 'var(--aurora-accent-deep)' }}>No payment now.</strong>
-            {' '}You'll be reminded before your trial ends.
-          </div>
+          <p className="studio-trialnote">
+            <strong>No payment now.</strong> You&apos;ll be reminded before your trial ends.
+          </p>
         )}
 
         {/* Legal — full Apple-mandated disclosure block.
             Auto-renewal language + cancellation location + refund pointer
             are all required for App Store review under guideline 3.1.2. */}
-        <p style={{
-          textAlign: 'center', fontSize: 11, lineHeight: 1.55,
-          color: 'var(--aurora-sub)', marginBottom: 8, maxWidth: 460,
-          marginLeft: 'auto', marginRight: 'auto',
-        }}>
+        <p className="studio-legal">
           Subscriptions auto-renew at the price shown until cancelled in your
           Apple ID Subscription settings. You can cancel anytime; cancellation
           takes effect at the end of the current billing period. Payment is
@@ -914,10 +768,7 @@ export default function Membership({ onClose }) {
           </a>
           .
         </p>
-        <p style={{
-          textAlign: 'center', fontSize: 11, color: 'var(--aurora-sub)',
-          marginBottom: 14,
-        }}>
+        <p className="studio-legal">
           <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
              target="_blank" rel="noopener noreferrer"
              className="aurora-link" style={{ fontSize: 11 }}>
@@ -946,7 +797,6 @@ export default function Membership({ onClose }) {
           )}
         </p>
       </div>
-
     </div>
   );
 }

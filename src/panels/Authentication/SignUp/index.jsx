@@ -314,9 +314,13 @@ export const Signup = () => {
                 (no SiwA there). */}
             {Capacitor.getPlatform() !== 'android' && (
               <div style={{ marginBottom: 16 }}>
+                {/* Apple never returns a birthdate. If this form's DOB field
+                    is already filled, hand it over so the button can save it
+                    during the handoff instead of asking a second time. */}
                 <AppleSignInButton
                   onError={(msg) => toast.error(msg)}
                   onSuccess={() => applyStoredReferral(toast)}
+                  dateOfBirth={formData.dateOfBirth}
                 />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '14px 0 0' }}>
                   <div style={{ flex: 1, height: 1, background: 'rgba(10,10,10,0.08)' }} />

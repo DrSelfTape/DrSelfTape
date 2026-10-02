@@ -218,9 +218,17 @@ for (const scenario of [
     return null;
   };
   tree = mounted.render();
-  const show = find(tree, 'Explore my notes');
-  assert.ok(show, 'Full report action remains available');
-  show.props.onClick(); tree = mounted.render();
+  // The reveal is staged now (one beat per tap) instead of a single
+  // "Explore my notes" button, so drive it to the last beat. Asserting the
+  // button exists each time keeps this a real check that the full report is
+  // still reachable — it just takes the path the user actually takes.
+  const ADVANCE = ["Show me what's working", 'Show me the fix', 'Show my scores'];
+  for (const label of ADVANCE) {
+    const step = find(tree, label);
+    assert.ok(step, `Full report action remains available (${label})`);
+    step.props.onClick();
+    tree = mounted.render();
+  }
   const html = renderToStaticMarkup(tree);
   assert.ok(html.includes('New personal best'));
   assert.ok(html.includes('Overall 8.0'));

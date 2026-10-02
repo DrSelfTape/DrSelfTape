@@ -1,7 +1,7 @@
 // Library imports
 import { useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 // Shared components
 import { CustomButton } from '../../Shared';
@@ -10,6 +10,7 @@ import PerformanceProgress from '../ScriptAnalysis/PerformanceProgress';
 // Local imports
 import AudioValidationModal from './modals/AudioValidationModal';
 import EndSessionModal from './modals/EndSessionModal';
+import AskAFriendModal from '../AskAFriend/AskAFriendModal';
 import { useRecording } from './hooks/useRecording';
 import { formatDuration } from './utils/formatDuration';
 import AiScenePartnerTeleprompter from './AiScenePartnerTeleprompter';
@@ -46,6 +47,33 @@ const AiScenePartnerLayout = () => {
   
   // Read currentLineIndex directly from state to ensure it's always current
   const { currentLineIndex } = state;
+
+  // ── Ask a friend to read ──────────────────────────────────────────────
+  // An invite is minted per SCENE (that is what the friend's page renders),
+  // while this screen flattens every scene into one line list — so hand the
+  // modal the scenes and let it ask which one. Characters come from the
+  // scene when the payload carries them and are derived from its lines
+  // otherwise; both shapes exist depending on which endpoint filled the
+  // store.
+  const [askFriendOpen, setAskFriendOpen] = useState(false);
+  const askAFriendScenes = useMemo(() => (
+    (scriptAnalysis?.scenes || []).map((s, i) => {
+      const fromLines = (s?.lines || [])
+        .map((l) => (typeof l?.character === 'string' ? l.character : l?.character?.name))
+        .filter(Boolean);
+      const declared = (s?.characters || [])
+        .map((c) => (typeof c === 'string' ? c : c?.name))
+        .filter(Boolean);
+      return {
+        id: s.id,
+        title: s.title || `Scene ${s.scene_number || i + 1}`,
+        characters: [...new Set((declared.length ? declared : fromLines).map((c) => String(c).trim()))],
+      };
+    }).filter((s) => s.id && s.characters.length > 0)
+  ), [scriptAnalysis]);
+  const myCharacterName = useMemo(() => (
+    characterOptions.find((o) => o.value === state.selectedCharacter)?.label || ''
+  ), [characterOptions, state.selectedCharacter]);
 
   // Recording hook
   const recording = useRecording();
@@ -323,6 +351,18 @@ const AiScenePartnerLayout = () => {
             />
           
           <div className='flex flex-col min-h-0 mb-5 bg-white border border-gray-200 rounded-lg p-3 w-full max-w-[28rem] lg:max-w-[20rem]'>
+            {/* The acquisition loop. An AI partner is the fallback; a real
+                person reading the other part is the thing actors actually
+                want, and every link sent puts us in a non-user's hands. */}
+            {askAFriendScenes.length > 0 && (
+              <button
+                type='button'
+                onClick={() => setAskFriendOpen(true)}
+                className='mb-3 h-11 w-full rounded-full border border-[var(--dst-line)] bg-[var(--dst-surface)] text-sm font-semibold text-[var(--dst-ink)]'
+              >
+                Ask a friend to read
+              </button>
+            )}
             <div className='flex-1 border rounded-lg border-gray-200 max-h-[600px] overflow-auto'>
               <PerformanceProgress
                 pendingSession={state.pendingSession}
@@ -374,6 +414,13 @@ const AiScenePartnerLayout = () => {
           // Call the API to start session
           handlers.startRehearsalSessionAPI();
         }}
+      />
+
+      <AskAFriendModal
+        open={askFriendOpen}
+        onClose={() => setAskFriendOpen(false)}
+        scenes={askAFriendScenes}
+        myCharacter={myCharacterName}
       />
 
       <EndSessionModal

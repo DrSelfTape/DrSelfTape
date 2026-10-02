@@ -1,0 +1,20 @@
+appId: com.drselftape.qa
+name: Offline onboarding sample
+---
+- launchApp:
+    clearState: true
+- assertVisible: DST QA
+- waitForAnimationToEnd
+- tapOn:
+    text: Open onboarding
+    retryTapIfNoChange: true
+- assertVisible: Get my free review.*
+- scrollUntilVisible:
+    element: See what a review looks like
+    direction: DOWN
+- tapOn: See what a review looks like
+- assertVisible: Sample full review
+- assertVisible: .*fictional actor.*
+- tapOn: .*Back to the free review offer
+- assertVisible: Get my free review.*
+- takeScreenshot: onboarding-offer

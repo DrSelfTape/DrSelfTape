@@ -199,6 +199,10 @@ export const useScriptAudioPlayer = ({
   const errorHandledFlags = useRef({}); // Track if onerror was handled (prevent double-firing and loops)
   const modeRef = useRef(mode); // Current mode (for callbacks)
   const completedLinesRef = useRef(completedLines); // Completed lines set (for callbacks)
+  // Detached <audio> elements used only to pull the NEXT line's bytes into the
+  // HTTP cache while the current one plays. Kept out of audioRefs so nothing in
+  // the playback/cleanup path can mistake one for a live element.
+  const prefetchAudioRef = useRef({});
 
   // ==========================================================================
   // SYNC REFS WITH STATE
@@ -403,10 +407,41 @@ export const useScriptAudioPlayer = ({
     }, 50);
   }, [autoScroll]);
 
+  /**
+   * Warm the next playable line so its bytes are already in the HTTP cache when
+   * playback reaches it — otherwise every beat pays a cold fetch between lines.
+   * The browser dedupes to the same cache entry, so this adds no extra
+   * download; it just moves it off the critical path.
+   */
+  const prefetchNextLineAudio = useCallback((fromIndex) => {
+    const nextIndex = findNextPlayableLine(fromIndex, true);
+    if (nextIndex < 0) return;
+    const url = getAudioUrlForLine(nextIndex);
+    if (!url) return;
+
+    const registry = prefetchAudioRef.current;
+    if (registry[nextIndex]?.url === url) return;
+
+    const el = new Audio();
+    el.preload = 'auto';
+    el.src = url;
+    el.load();
+    registry[nextIndex] = { url, el };
+
+    // Keep only a short tail — these hold decoded buffers.
+    const keys = Object.keys(registry);
+    if (keys.length > 3) {
+      keys.slice(0, keys.length - 3).forEach((key) => {
+        registry[key]?.el?.removeAttribute('src');
+        delete registry[key];
+      });
+    }
+  }, [findNextPlayableLine, getAudioUrlForLine]);
+
   // ==========================================================================
   // AUDIO PLAYBACK CONTROL
   // ==========================================================================
-  
+
   /**
    * Stop all audio playback
    * Used by: Navigation functions, reset, cleanup
@@ -718,6 +753,9 @@ export const useScriptAudioPlayer = ({
     // Explicitly load the audio to start loading process
     // This is important for teleprompter mode where we wait for audio to load
     audio.load();
+
+    // Start pulling the NEXT line while this one plays.
+    prefetchNextLineAudio(lineIndex);
 
     // Update current line index and scroll
     setCurrentLineIndex(lineIndex);
@@ -1228,6 +1266,7 @@ export const useScriptAudioPlayer = ({
     getAudioUrlForLine,
     findNextCompletedLine,
     findNextPlayableLine,
+    prefetchNextLineAudio,
     scrollToLine,
     effectiveAutoAdvance,
     onLineComplete,
@@ -1539,12 +1578,17 @@ export const useScriptAudioPlayer = ({
   // ==========================================================================
   
   useEffect(() => {
-    // The registry is mutated in place as audio is created after mount.
+    // The registries are mutated in place as audio is created after mount.
     const audioRegistry = audioRefs.current;
+    const prefetchRegistry = prefetchAudioRef.current;
     return () => {
       stopAllPlayback();
       Object.keys(audioRegistry).forEach((key) => {
         cleanupAudio(parseInt(key));
+      });
+      Object.keys(prefetchRegistry).forEach((key) => {
+        prefetchRegistry[key]?.el?.removeAttribute('src');
+        delete prefetchRegistry[key];
       });
     };
   }, [stopAllPlayback, cleanupAudio]);

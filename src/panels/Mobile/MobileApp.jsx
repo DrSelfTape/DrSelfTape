@@ -45,6 +45,9 @@ import axiosInstance from "../../redux/http";
 import endPoints from "../../redux/constant";
 import { extractCharacters, parseScript } from "../../utils/scriptParse";
 import { aiIdempotencyHeaders } from '../../utils/aiIdempotency';
+// The ONE place reader supply is allowed to become a sentence. Never read
+// available_count / online_count at a call site — see the file's header.
+import { supplyLine } from '../../utils/supply';
 
 // pdfjs (~326KB) + its worker (~1.3MB) are dynamically imported on FIRST PDF use
 // instead of at module load — most sessions never upload a PDF, so this keeps
@@ -142,7 +145,10 @@ const LiveRehearsals = lazy(() => Promise.resolve({ default: () => null }));
 const Community = lazy(() => Promise.resolve({ default: () => null }));
 const Scripts = lazy(() => import("../Dashboard/Scripts"));
 const Submissions = lazy(() => import("../Dashboard/Submissions"));
-const Reports = lazy(() => import("../Dashboard/Reports"));
+// Reports (the recharts audition-funnel dashboard) used to be registered here
+// but appeared in no TABS / MORE_FEATURES / PANEL_LABELS entry, so nothing
+// could ever open it — it only cost the bundle a chunk. Its one home is now
+// the desktop sidebar (navGroups "My Work"), where the charts have the width.
 const Insights = lazy(() => Promise.resolve({ default: () => null }));
 const Membership = lazy(() => import("../Dashboard/Membership"));
 const BookSession = lazy(() => Promise.resolve({ default: () => null }));
@@ -154,10 +160,17 @@ const SceneStudy = lazy(() => import("../Dashboard/SceneStudy"));
 // Resurrected in-app recorder (Tier 2 item 4) — "Record a take" on the
 // Practice tab, script-less mode, with the record→review handoff inside.
 const SelfTapeRecorder = lazy(() => import("../Dashboard/SceneStudy/SelfTapeRecorder"));
-const MeetingRoom = lazy(() => import("../Meeting/MeetingRoom"));
+// MeetingRoom is react-router-only (useParams + location.state) and cannot be
+// mounted as a mobile panel with a room, so it is deliberately NOT registered
+// in PANEL_COMPONENTS — a 'meeting' destination is redirected in the
+// drst-navigate handler instead of rendering an empty room.
 const Referral = lazy(() => import("../Dashboard/Referral"));
-const Marketplace = lazy(() => import("../Dashboard/Marketplace"));
 const SelfTapesPanel = lazy(() => import("../Dashboard/SelfTapes"));
+// My Studio — the client's own PAID sessions at the studio and the footage
+// from each. It was reachable on desktop (navGroups "My Work") but referenced
+// nowhere in this shell, so iOS users — who are disproportionately the
+// studio's own clients — could not reach a thing they had already paid for.
+const MyStudio = lazy(() => import("../Dashboard/MyStudio"));
 
 /* ═══════════════════════════════════════════════════
    BRAND TOKENS — from Dr Self Tape Brand Guideline
@@ -976,25 +989,28 @@ const MORE_FEATURES = [
   { id: "generator", label: "Scene Generator", desc: "AI-written sides on demand", emoji: "✨", color: "#FF8280", section: "AI Studio" },
   { id: "scripts", label: "Scripts", desc: "Your personal script library", emoji: "📝", color: "#FFB49A", section: "Practice" },
   { id: "self-tapes", label: "Self-Tapes", desc: "Record and submit auditions", emoji: "📹", color: "#FFB49A", section: "Practice" },
-  // green-room is also the Connect tab's Chat section — this tile is the
-  // discovery door (it vanished from browse-space after the 5-tab merge;
-  // screenshot-tour QA 2026-07-02).
-  { id: "green-room", label: "Green Room", desc: "Chat with your matched scene partners", emoji: "💬", color: "#A7D6FF", section: "Connect" },
-  { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280", section: "Connect" },
-  { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072", section: "Connect" },
-  { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072", section: "Connect" },
+  // Green Room / Who Wants to Read / Favorites used to be duplicated here as
+  // a "Connect" section while the Connect TAB owned the same surfaces. Two
+  // doors to one room is how More grew to 19 tiles. They now live only in
+  // Connect's own section row (CONNECT_SECTIONS), which is both the discovery
+  // door and the destination.
   // auditions is a tab, not a panel — MoreScreen routes it via drst-navigate.
   { id: "auditions", label: "Audition Tracker", desc: "Log and track every audition", emoji: "🎯", color: "#A7D6FF", section: "My Work" },
+  { id: "my-studio", label: "My Studio", desc: "Your booked studio sessions & footage", emoji: "🎬", color: "#FCE072", section: "My Work" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8", section: "My Work" },
   { id: "leaderboard", label: "Ranks", desc: "See where you rank this season", emoji: "🏆", color: "#FCE072", section: "Community" },
   { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA", section: "Community" },
   { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA", section: "Account" },
-  { id: "membership", label: "Membership", desc: "Your plan & billing", emoji: "👑", color: "#FCE072", section: "Account" },
+  // "Your plan & billing" described the invoice, not the offer. Say what is
+  // behind the door: the full casting read.
+  { id: "membership", label: "Membership", desc: "Plans, billing & your full casting read", emoji: "👑", color: "#FCE072", section: "Account" },
   { id: "whats-new", label: "What's New", desc: "See the latest features and updates", emoji: "🆕", color: "#A7ECDA", section: "Account" },
   { id: "report-problem", label: "Report a Problem", desc: "Something not working? Tell us", emoji: "🐞", color: "#FF8280", section: "Account" },
 ];
 
-const MORE_SECTIONS = ["AI Studio", "Practice", "Connect", "My Work", "Community", "Account"];
+// "Connect" is gone from More — its three tiles were duplicates of the
+// Connect tab's own sections, which now carry them.
+const MORE_SECTIONS = ["AI Studio", "Practice", "My Work", "Community", "Account"];
 
 const PANEL_COMPONENTS = {
   "find-a-reader": FindAReader,
@@ -1005,15 +1021,13 @@ const PANEL_COMPONENTS = {
   "leaderboard": Leaderboard,
   "scripts": Scripts,
   "submissions": Submissions,
-  "reports": Reports,
+  "my-studio": MyStudio,
   "generator": AuditionGenerator,
   "membership": Membership,
   "dash-profile": DashProfile,
   "who-wants-to-read": WhoWantsToRead,
   "favorites": Favorites,
-  "meeting": MeetingRoom,
   "referral": Referral,
-  "marketplace": Marketplace,
   "self-tapes": SelfTapesPanel,
   // reader-profile mounts as a bare mobile panel (deep-linked from the Green
   // Room chat header's "View Profile"). It needs a readerId from the
@@ -1078,6 +1092,96 @@ function getMobileNextStep({ profile, stats, submissions, scripts, firstReviewPe
 // numbers are server-backed. Components kept intact on purpose.
 const SHOW_AURORA_GAME = false;
 
+/* ═══════════════════════════════════════════════════
+   THE OFFER
+   ───────────────────────────────────────────────────
+   One honest, visible home for the paid pitch.
+
+   WHY HERE. Paywall taps were 0 across 29 sessions. The shell's only passive
+   entry point was a token-count pill whose "Upgrade" chip appeared at ≤3
+   tokens remaining — i.e. at the moment the user is being punished — carried
+   no statement of what upgrading buys, and sat under a nav row labelled
+   "Your plan & billing". That is the weakest moment we have.
+
+   The strongest one is right after we've delivered: this card renders on Home
+   directly under the Tape Review hero, and ONLY once the user has actually
+   received a Tape Review (Home's `firstSession` is false exactly when
+   tutorial_progress.first_review is set). They have just read casting-grade
+   notes on their own tape — the one thing our competitors will not build —
+   so the pitch is "more of what you just got", not "you ran out".
+
+   RULES IT KEEPS. One tappable target. No countdown, no scarcity, no streak
+   bait. It is a card in a feed, not an interstitial, so there is nothing to
+   dismiss and nothing to nag. No "unlimited" claim anywhere: Premium is a
+   150-actions-a-day fair-use cap and Membership says exactly that. And it
+   disappears the moment the user is paid.
+   ═══════════════════════════════════════════════════ */
+function PremiumOfferCard({ onOpen }) {
+  useEffect(() => {
+    // The old chip fired nothing, which is half the reason "0 paywall taps"
+    // was unreadable — we could not tell refusal from invisibility.
+    (async () => {
+      try {
+        const { trackEvent } = await import('../../utils/analytics');
+        trackEvent('home_offer_shown', { source: 'home_post_review' });
+      } catch { /* analytics must never block a render */ }
+    })();
+  }, []);
+
+  const open = () => {
+    (async () => {
+      try {
+        const { trackEvent } = await import('../../utils/analytics');
+        trackEvent('home_offer_tap', { source: 'home_post_review' });
+      } catch { /* swallow */ }
+    })();
+    onOpen();
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={open}
+      onTouchEnd={(e) => { e.preventDefault(); open(); }}
+      className="aurora-card"
+      style={{
+        width: '100%', marginBottom: 14, padding: '18px 18px 16px',
+        cursor: 'pointer', textAlign: 'left', color: 'var(--aurora-text)',
+        border: '1px solid color-mix(in oklch, var(--aurora-heritage-gold) 42%, transparent)',
+        touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      <span className="aurora-eyebrow" style={{ display: 'block', color: 'var(--aurora-heritage-gold-deep)', marginBottom: 6 }}>
+        THE FULL CASTING READ
+      </span>
+      <p className="aurora-display" style={{
+        fontSize: 'var(--type-lg)', color: 'var(--aurora-text)', margin: 0,
+        letterSpacing: '-0.3px', lineHeight: 1.2,
+      }}>
+        An honest casting-grade read on your own tape
+      </p>
+      <p style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-sub)', margin: '8px 0 0', lineHeight: 1.45 }}>
+        You&apos;ve seen the headline on yours. Any plan unlocks the rest of it on
+        every tape you submit — the full craft breakdown, every adjustment, your
+        technical scorecard and your Performance DNA.
+      </p>
+      <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-dim)', margin: '8px 0 0' }}>
+        Premium adds up to 150 AI actions a day.
+      </p>
+      <span
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          marginTop: 14, width: '100%', padding: '12px 18px', borderRadius: 14,
+          background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-bg)',
+          fontSize: 'var(--type-base)', fontWeight: 700,
+        }}
+      >
+        See plans
+      </span>
+    </button>
+  );
+}
+
 // Slate's rotating daily craft notes — the mascot as a gentle guide.
 const SLATE_TIPS = [
   'One clean take beats ten rushed ones.',
@@ -1092,7 +1196,12 @@ const SLATE_TIPS = [
 function HomeScreen({ setTab, setCurrentPanel }) {
   const dispatch = useDispatch();
   usePushNotifications();
-  const { balance, unlimited: tokensUnlimited, refresh: refreshTokens } = useTokenBalance();
+  const {
+    balance, unlimited: tokensUnlimited, refresh: refreshTokens,
+    // Entitlement for the offer card. Fail CLOSED on unknown: a paying user
+    // must never be pitched because /status was slow or errored.
+    isPaid, loading: tokensLoading, error: tokensError,
+  } = useTokenBalance();
   const rawAuditions = useSelector((state) => state.auditions.data || []);
   const rawScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
   // Server-side scripts live in the scripts slice; sceneStudyScripts is the
@@ -1392,6 +1501,13 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {/* ── Full-Home blocks — hidden until the first review completes so
            the first session stays at 5 blocks with one obvious action. ── */}
       {!firstSession && (<>
+      {/* ── The offer — position 2, and only here. Reaching this branch means
+           the user's first Tape Review has landed, so the pitch follows the
+           value instead of the token wall. See PremiumOfferCard. ── */}
+      {!tokensLoading && !tokensError && balance !== null && !isPaid && (
+        <PremiumOfferCard onOpen={() => setCurrentPanel('membership')} />
+      )}
+
       {/* ── AI scene partner CTA — position 2. Routes to the actual live
            reader (Scenes tab → pick sides → Go Live), the same path the
            Smart Next Step 'live' action uses. It used to open cd-sim, which
@@ -1700,18 +1816,17 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         </span>
       </button>
 
-      {/* ── Match tease ── 3 stacked reader avatars + "X readers active this month".
-     NOT "near you" (PresenceStatus stores no location) and NOT "new"
-     (they are existing accounts). The count previously read 2019 because
-     is_available defaults to True on every provisioned account. ── */}
+      {/* ── Match tease ── 3 stacked reader avatars + the canonical supply
+     sentence. The number and its label come from utils/supply.js and
+     nowhere else: this call site used to read available_count directly and
+     hard-code "active this month", which is how Home once announced 2019
+     readers when the deck could deal 16. If supplyLine has nothing honest
+     to say it returns null and we say nothing. ── */}
       {(() => {
         const recent = Array.isArray(matchingStats?.recent_readers) ? matchingStats.recent_readers : [];
         const readers = recent.slice(0, 3);
-        // NEVER `likes || available` — those are different quantities, and the
-        // label below describes only one of them. A user with 3 pending likes
-        // was being told "3 readers active this month".
-        const count = Number(matchingStats?.available_count) || 0;
-        if (count === 0 && readers.length === 0) return null;
+        const line = supplyLine(matchingStats);
+        if (!line && readers.length === 0) return null;
         return (
           <button
             type="button"
@@ -1752,10 +1867,19 @@ function HomeScreen({ setTab, setCurrentPanel }) {
               <span className="aurora-eyebrow" style={{ display: 'block', color: 'var(--aurora-dim)', marginBottom: 2 }}>
                 FIND A READER
               </span>
-              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0 }}>
-                {count} reader{count !== 1 ? 's' : ''} active this month
-              </p>
-              <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)', margin: '2px 0 0' }}>
+              {line && (
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {/* Rule 2 of utils/supply.js: only `online` may pulse. */}
+                  {line.live && (
+                    <span style={{
+                      width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                      background: 'var(--aurora-mint)', boxShadow: '0 0 8px var(--aurora-mint)',
+                    }} />
+                  )}
+                  {line.text}
+                </p>
+              )}
+              <p style={{ fontSize: 'var(--type-sm)', color: 'var(--aurora-sub)', margin: line ? '2px 0 0' : 0 }}>
                 Swipe to run sides together
               </p>
             </div>
@@ -1989,9 +2113,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         )}
       </div>
 
-      {/* ── Token balance — tappable → membership panel (Home's only
-           proactive paywall entry; it used to be a dead <div>). Tap-belt
-           applied per the iOS WKWebView synthetic-click gotcha. ── */}
+      {/* ── Token balance — a status line, nothing more. It is no longer the
+           app's paywall entry: PremiumOfferCard above owns the offer, at the
+           moment value was delivered rather than the moment it ran out. Still
+           tappable through to Membership. Tap-belt applied per the iOS
+           WKWebView synthetic-click gotcha. ── */}
       {balance !== null && (
         <button
           type="button"
@@ -2007,7 +2133,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <span style={{ fontSize: 16 }}>🎟️</span>
           <div style={{ flex: 1 }}>
             {tokensUnlimited ? (
-              <span className="aurora-mono" style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-mint)' }}>Unlimited AI</span>
+              /* NOT "Unlimited AI" — Premium carries a 150-actions-a-day
+                 fair-use cap and Membership states it. Say the real thing. */
+              <span style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-mint)' }}>
+                Premium · up to <span className="aurora-mono">150</span> AI actions a day
+              </span>
             ) : (
               <>
                 <span className="aurora-mono" style={{ fontSize: 'var(--type-base)', color: 'var(--aurora-mint)' }}>{balance}</span>
@@ -2015,16 +2145,9 @@ function HomeScreen({ setTab, setCurrentPanel }) {
               </>
             )}
           </div>
-          {/* Upgrade chip from 3 tokens down — at 0 the wall already hit;
-              ≤3 is where the next AI action is at risk. */}
-          {!tokensUnlimited && balance <= 3 && (
-            <span style={{
-              fontSize: 'var(--type-sm)', fontWeight: 700, color: '#fff',
-              background: 'var(--aurora-accent)', padding: '4px 10px', borderRadius: 100,
-            }}>
-              Upgrade
-            </span>
-          )}
+          {/* The "Upgrade" chip that used to live here fired only at ≤3 tokens
+              and said nothing about what you'd get — pitching at the moment of
+              punishment. The offer moved to PremiumOfferCard. */}
         </button>
       )}
 
@@ -3379,9 +3502,15 @@ function ProfileScreen({ setCurrentPanel }) {
    screens, which render unchanged through PanelScreen
    (keeps the green-room chat sub-panel wiring intact).
    ═══════════════════════════════════════════════════ */
+// More used to carry a "Connect" section whose three tiles (Green Room, Who
+// Wants to Read, Favorites) opened the exact surfaces this tab already owns —
+// the duplication was even commented in MORE_FEATURES. They are sections here
+// now, so Connect is the single door to every reader surface.
 const CONNECT_SECTIONS = [
   { key: 'reader', label: 'Find a Reader', panelId: 'find-a-reader' },
   { key: 'chat', label: 'Chat', panelId: 'green-room' },
+  { key: 'wants', label: 'Wants to Read', panelId: 'who-wants-to-read' },
+  { key: 'favorites', label: 'Favorites', panelId: 'favorites' },
 ];
 
 function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
@@ -3392,8 +3521,17 @@ function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
   const subPanel = active.panelId === 'green-room' ? (pendingSubPanel || null) : null;
   return (
     <div style={{ minHeight: '100%' }}>
-      {/* Section row */}
-      <div style={{ display: "flex", gap: 6, padding: "14px 16px 0" }}>
+      {/* Section row — four pills no longer fit a 375pt screen, so the row
+          scrolls inside itself. The PAGE must never scroll sideways; this
+          container absorbs the overflow and the pills refuse to shrink. */}
+      <div
+        className="hidden-scrollbar"
+        style={{
+          display: "flex", gap: 6, padding: "14px 16px 0",
+          overflowX: "auto", overflowY: "hidden",
+          WebkitOverflowScrolling: "touch", scrollbarWidth: "none",
+        }}
+      >
         {CONNECT_SECTIONS.map(sec => (
           <button
             key={sec.key}
@@ -3403,6 +3541,7 @@ function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
             className="aurora-mono"
             style={{
               padding: "6px 16px", borderRadius: 100, border: "none", cursor: "pointer",
+              flexShrink: 0, whiteSpace: 'nowrap',
               fontSize: 'var(--type-sm)', letterSpacing: '0.1em', textTransform: 'uppercase',
               background: active.key === sec.key ? 'var(--aurora-text)' : "transparent",
               color: active.key === sec.key ? 'var(--aurora-bg)' : 'var(--aurora-dim)',
@@ -3509,7 +3648,9 @@ const DARK_PANELS = new Set(["find-a-reader", "green-room", "who-wants-to-read",
 // and should NOT be wrapped in PanelScreen's aurora-card with horizontal
 // margins — otherwise their sticky bars look like floating pills inside
 // the card instead of edge-to-edge ingrained chrome.
-const FULL_BLEED_PANELS = new Set(["membership"]);
+// my-studio owns its own px-4/pb-24 page padding and max-width — wrapping it
+// in the card would double the inset on every session row.
+const FULL_BLEED_PANELS = new Set(["membership", "my-studio"]);
 
 // Wrapper to inject matchId into GreenRoomChat without React Router params.
 // onBack lets the mobile sub-panel intercept the back action instead of the
@@ -3558,11 +3699,11 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
 }
 
 // These panels render their own headline inside the content (e.g. "My
-// Self-Tapes", "Reader Marketplace") — PanelScreen skips its header title for
+// Self-Tapes", "Submissions") — PanelScreen skips its header title for
 // them so the name doesn't appear twice stacked.
 const SELF_TITLED_PANELS = new Set([
-  'who-wants-to-read', 'favorites', 'submissions', 'marketplace',
-  'leaderboard', 'scripts', 'self-tapes',
+  'who-wants-to-read', 'favorites', 'submissions',
+  'leaderboard', 'scripts', 'self-tapes', 'my-studio',
 ]);
 
 function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
@@ -3955,6 +4096,20 @@ export default function DrSelfTapeApp() {
     const handler = (e) => {
       const { tab: targetTab, panel: targetPanel, subPanel: targetSubPanel, matchId, readerId } = e.detail || {};
       if (e.detail?.campaign_id) clearCampaignNavigation();
+      // MeetingRoom is react-router-only (useParams + location.state): mounted
+      // as a mobile panel it renders an empty room. It used to sit in
+      // PANEL_COMPONENTS with exactly one caller (NotificationBell) guarding
+      // against it, so every other live-session deep link rendered blank.
+      // The panel is gone; the destination is redirected here instead, for
+      // all callers, to where the scene is actually joined.
+      if (targetPanel === 'meeting') {
+        setPendingSubPanel(null);
+        setPendingReaderId(null);
+        setCurrentPanel(null);
+        setConnectSection('reader');
+        setTab('connect');
+        return;
+      }
       if (targetTab) {
         setCurrentPanel(null);
         // A subPanel riding a TAB payload (e.g. tab:'green-room' +

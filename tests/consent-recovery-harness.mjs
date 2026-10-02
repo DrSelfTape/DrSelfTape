@@ -14,8 +14,11 @@ export async function startConsentHarness(port = 0) {
       import {requestAiConsent} from './src/components/AIConsent/consentRequest.js';
       import {SessionCard} from './src/panels/Dashboard/MyStudio/index.jsx';
       import Notice from './src/components/Shared/AIServiceNotice.jsx';
+      import {MemoryRouter,Routes,Route} from 'react-router-dom';
+      import PublicRoutes from './src/routes/PublicRoutes.jsx';
+      import {holdAgeGate} from './src/components/AgeGate/ageGateHold.js';
       window.__calls=[]; window.__answers=[]; window.__fail=false; window.__hold=false;
-      const store=configureStore({reducer:{auth:(s={user:{id:42}},a)=>a.type==='consent'?{user:{...s.user,ai_consent_accepted_at:a.payload}}:a.type==='switch'?{user:a.payload}:s}});
+      const store=configureStore({reducer:{_persist:()=>({rehydrated:true}),auth:(s={user:{id:42}},a)=>a.type==='consent'?{user:{...s.user,ai_consent_accepted_at:a.payload}}:a.type==='switch'?{user:a.payload}:s}});
       window.__store=store;
       window.__open=(force=false)=>requestAiConsent({force}).then(a=>window.__answers.push(a));
       const booking={id:1,service_name:'Fictional studio session',session_date:'2026-10-03T12:00:00Z',tapes:[{id:1}],delivery_path:'/fictional-delivery'};
@@ -25,7 +28,15 @@ export async function startConsentHarness(port = 0) {
           <button onClick={()=>{window.__open();window.__open();}}>Open twice</button>
           <button onClick={()=>window.__open(true)}>Server requires consent</button>
           <button onClick={()=>store.dispatch({type:'switch',payload:{id:99}})}>Switch account</button>
-        </aside><Settings/><Modal/>
+        </aside>
+        {location.search.includes('apple-flow') ? <MemoryRouter initialEntries={['/login']}><Routes>
+          <Route element={<PublicRoutes/>}><Route path="/login" element={<section aria-label="Apple birthday capture">
+            <button onClick={()=>{window.__releaseAge=holdAgeGate();store.dispatch({type:'switch',payload:{id:42,role:'actor',token:'fictional-token'}});}}>Begin Apple birthday step</button>
+            <button onClick={()=>window.__releaseAge?.()}>Finish birthday step</button><Settings/>
+          </section>}/></Route>
+          <Route path="/dashboard" element={<section aria-label="Actor profile"><Settings/></section>}/>
+        </Routes></MemoryRouter> : <Settings/>}<Modal/>
+
         <section aria-label="Tape without notes"><SessionCard booking={booking}/></section>
         <section aria-label="Tape with notes"><SessionCard booking={{...booking,delivery_has_notes:true}}/></section>
         <Notice degraded={true}/>
@@ -33,10 +44,11 @@ export async function startConsentHarness(port = 0) {
     bundle: true, write: false, format: 'iife', platform: 'browser', jsx: 'automatic',
     loader: {'.css':'empty'}, define: {'import.meta.env': JSON.stringify({DEV:true})},
     plugins:[{name:'fictional-services',setup(b){
-      b.onResolve({filter:/\/(http|authSlice|openExternal)$/},({path})=>({path:path.split('/').at(-1),namespace:'fixture'}));
+      b.onResolve({filter:/\/(http|authSlice|openExternal|RoleSelectionModal)$/},({path})=>({path:path.split('/').at(-1),namespace:'fixture'}));
       b.onLoad({filter:/.*/,namespace:'fixture'},({path})=>({contents: path==='http' ? `
         async function call(method) { window.__calls.push(method); if(window.__hold) await new Promise(r=>window.__release=r); if(window.__fail) throw new Error('offline'); return {data:{data:{ai_consent_accepted_at:method==='DELETE'?null:'2026-10-02T00:00:00Z'}}}; }
-        export default {post:()=>call('POST'),delete:()=>call('DELETE')};`
+        export const setAuthToken=()=>{}; export default {post:()=>call('POST'),delete:()=>call('DELETE')};`
+        :path==='RoleSelectionModal'?`export const RoleSelectionModal=()=>null;`
         :path==='authSlice'?`export const setAiConsentAcceptedAt=payload=>({type:'consent',payload});`
         :`export const openExternal=()=>{};`}));
     }}],

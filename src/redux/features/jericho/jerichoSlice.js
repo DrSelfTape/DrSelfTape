@@ -25,7 +25,15 @@ function aiErrorMessage(err, fallback) {
   if (st === 403) return 'You do not have access to this action.';
   if (st === 413) return 'That file is too large. Try a shorter or smaller export.';
   if (st === 400) return msg || "Those files couldn't be read. Try exporting as mp4 or mov.";
+  if (st === 429) return msg || 'Jericho is busy right now. Try again in a minute.';
   if (st === 504) return msg || 'That took too long. Please try again.';
+  // Any other server fault is ours, not the actor's tape, so say that much.
+  // Do NOT assert the token came back: apps/ai/jobs._refund_job returns False
+  // when the money state did not settle, and its docstring is explicit that
+  // callers must not send refund-confirming copy on False (a codex review
+  // caught exactly this class of success-shown-on-failure in 2026-07-02).
+  // The client cannot see that flag, so it promises nothing it can't know.
+  if (st >= 500) return msg || 'Something went wrong on our end, not with your tape. Try again — and if a token looks missing, tell us and we\'ll put it back.';
   return msg || fallback;
 }
 
@@ -75,12 +83,26 @@ function clearPendingJob(jobId) {
 // POST returns {job_id, status:'pending'} instead of the result. Poll the job
 // until it's done/failed. Throws an axios-shaped error so aiErrorMessage handles
 // it identically to the synchronous path.
-async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, signal } = {}) {
+// The ceiling is a client-side give-up, NOT a deadline the BE honours: at 3
+// minutes it was calling a review "failed" that the worker may still have been
+// writing. Past the ceiling we stop polling and hand off to the push
+// notification rather than claiming a failure.
+//
+// Sizing it: the BE reaps a still-pending job at AI_JOB_STALE_SECONDS (150s)
+// on the next status read, and a cron sweeps every 5 minutes — so a genuinely
+// dead job reports `failed` long before any ceiling we set, and a ceiling of
+// 15 minutes at a flat 2.5s interval would be ~360 requests chasing a job the
+// server already buried. 10 minutes clears the reaper's worst case with room
+// to spare, and the interval now backs off so a long wait costs a handful of
+// requests instead of hundreds.
+async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 600000, signal } = {}) {
   const deadline = Date.now() + timeoutMs;
+  let wait = interval;
   while (Date.now() < deadline) {
     // Bail the moment the caller (e.g. the screen unmounting) aborts.
     if (signal?.aborted) throw { name: 'CanceledError', code: 'ERR_CANCELED', aborted: true };
-    await _sleep(interval);
+    await _sleep(wait);
+    wait = Math.min(wait * 1.25, 15000); // back off; the first minute stays snappy
     if (signal?.aborted) throw { name: 'CanceledError', code: 'ERR_CANCELED', aborted: true };
     let data;
     try {
@@ -100,7 +122,12 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 180000, sig
   // Poll TIMEOUT (not a BE failure): the job may still finish, so the outcome is
   // UNKNOWN. Flag it so the idempotency key is KEPT — a retry must dedup against
   // the possibly-still-running job rather than start a duplicate paid analysis.
-  throw { response: { status: 504, data: { message: 'Analysis took too long. Please try again.' } }, unknownOutcome: true };
+  // stillWorking keeps the UI honest: we stopped watching, the review did not fail.
+  throw {
+    stillWorking: true,
+    response: { status: 504, data: { message: "Still working on your notes. We'll notify you the moment they land." } },
+    unknownOutcome: true,
+  };
 }
 
 // A gateway/server error is not proof of settlement. Only an explicit failed
@@ -174,6 +201,7 @@ function applyCompareResult(state, result) {
 function applyRecoveredReview(state, result) {
   state.tapeReviewResult = result;
   state.tapeReviewCompletionId = null;
+  state.tapeReviewPending = null; // the notes we said were still coming arrived
   state.tapeReviewPlaybackUrl = state.reviewRecording?.playbackUrl || null;
   state.reviewRecording = null;
   state.notesReady = 'review';
@@ -426,7 +454,7 @@ export const reviewTape = createAsyncThunk(
       return result;
     } catch (err) {
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
-      return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: shouldReuseKey(err) });
+      return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: shouldReuseKey(err), stillWorking: !!err?.stillWorking });
     }
   })
 );
@@ -531,7 +559,7 @@ export const resumeAnalysisJob = createAsyncThunk(
       ) {
         return rejectWithValue({ kind, silent: true, reuseKey });
       }
-      return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed'), reuseKey });
+      return rejectWithValue({ kind, message: aiErrorMessage(err, 'Resume failed'), reuseKey, stillWorking: !!err?.stillWorking });
     }
   }),
   { condition: (slot, { getState }) => pendingJobMatchesRecording(slot, getState().jericho.reviewRecording) }
@@ -585,6 +613,9 @@ const initialState = {
     tapeReviewResult: null,
     tapeReviewCompletionId: null,
     tapeReviewError: null,
+    // Not an error: we stopped polling a job the worker may still be writing.
+    // Carries the "still working, we'll notify you" line for the submit screen.
+    tapeReviewPending: null,
     reviewRecording: null,
     tapeReviewPlaybackUrl: null,
     compareLoading: false,
@@ -632,6 +663,7 @@ const jerichoSlice = createSlice({
       state.tapeReviewCompletionId = null;
       state.tapeReviewPlaybackUrl = null;
       state.tapeReviewError = null;
+      state.tapeReviewPending = null;
       state.reviewRecording = null;
       state.revealPending = false;
     },
@@ -653,6 +685,7 @@ const jerichoSlice = createSlice({
       };
       state.tapeReviewResult = null;
       state.tapeReviewError = null;
+      state.tapeReviewPending = null;
       state.tapeReviewCompletionId = null;
       state.compareResult = null;
       state.compareError = null;
@@ -754,17 +787,26 @@ const jerichoSlice = createSlice({
       .addCase(reviewTape.pending, (state) => {
         state.tapeReviewLoading = true;
         state.tapeReviewError = null;
+        state.tapeReviewPending = null;
         state.uploadProgress = 0;
       })
       .addCase(reviewTape.fulfilled, (state, action) => {
         state.tapeReviewLoading = false;
+        state.tapeReviewPending = null;
         state.uploadProgress = 0;
         applyReviewResult(state, action.payload, action.meta);
       })
       .addCase(reviewTape.rejected, (state, action) => {
         if (action.payload?.stale) return; // completed for a user who is gone
         state.tapeReviewLoading = false;
-        state.tapeReviewError = action.payload?.message || action.payload || 'Tape review failed';
+        // We gave up watching, the worker did not give up writing — that is a
+        // notice, not a failure, and must never render as a red error.
+        if (action.payload?.stillWorking) {
+          state.tapeReviewPending = action.payload.message;
+          state.tapeReviewError = null;
+        } else {
+          state.tapeReviewError = action.payload?.message || action.payload || 'Tape review failed';
+        }
         state.uploadProgress = 0;
         if (action.payload?.reuseKey === false) state.reviewRecording = null;
       })
@@ -793,12 +835,14 @@ const jerichoSlice = createSlice({
         // stage so the UI enters at "Watching your performance".
         state.tapeReviewLoading = true;
         state.tapeReviewError = null;
+        state.tapeReviewPending = null;
         state.uploadProgress = 100;
       })
       .addCase(resumeAnalysisJob.fulfilled, (state, action) => {
         if (!pendingJobMatchesRecording(action.meta.arg, state.reviewRecording)) return;
         const { result, kind } = action.payload;
         state.tapeReviewLoading = false;
+        state.tapeReviewPending = null;
         state.uploadProgress = 0;
         if (kind === 'compare') {
           applyCompareResult(state, result);
@@ -827,10 +871,12 @@ const jerichoSlice = createSlice({
         if (!pendingJobMatchesRecording(action.meta.arg, state.reviewRecording)) return;
         state.tapeReviewLoading = false;
         state.uploadProgress = 0;
-        const { silent, message } = action.payload || {};
+        const { silent, message, stillWorking } = action.payload || {};
         if (action.payload?.reuseKey === false) state.reviewRecording = null;
         // silent = 404/expired or user canceled — clear the UI, no error banner
-        if (!silent) state.tapeReviewError = message || 'Resume failed';
+        if (silent) return;
+        if (stillWorking) state.tapeReviewPending = message;
+        else state.tapeReviewError = message || 'Resume failed';
       })
 
       // ── Recent Sessions ──

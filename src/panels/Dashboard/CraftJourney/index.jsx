@@ -21,17 +21,17 @@ const JOURNEY = [
   {
     section: 'FOUNDATIONS', color: '#9FE6B4', tint: '#E8F8EE',
     nodes: [
-      { id: 'f1', label: 'Cold Reads',      icon: 'doc',    state: 'done',    stars: 3 },
-      { id: 'f2', label: 'Objectives',      icon: 'target', state: 'done',    stars: 3 },
-      { id: 'f3', label: 'Beat Changes',    icon: 'flash',  state: 'done',    stars: 2 },
-      { id: 'f4', label: 'Listening',       icon: 'ear',    state: 'done',    stars: 3 },
+      { id: 'f1', label: 'Cold Reads',      icon: 'doc',    state: 'current',    stars: 0 },
+      { id: 'f2', label: 'Objectives',      icon: 'target', state: 'locked',    stars: 0 },
+      { id: 'f3', label: 'Beat Changes',    icon: 'flash',  state: 'locked',    stars: 0 },
+      { id: 'f4', label: 'Listening',       icon: 'ear',    state: 'locked',    stars: 0 },
     ],
   },
   {
     section: 'EMOTIONAL RANGE', color: '#A7D6FF', tint: '#E8F2FF',
     nodes: [
-      { id: 'e1', label: 'Vulnerability',   icon: 'heart',  state: 'done',    stars: 2 },
-      { id: 'e2', label: 'Anger Work',      icon: 'flame',  state: 'current', stars: 0 },
+      { id: 'e1', label: 'Vulnerability',   icon: 'heart',  state: 'locked',    stars: 0 },
+      { id: 'e2', label: 'Anger Work',      icon: 'flame',  state: 'locked', stars: 0 },
       { id: 'e3', label: 'Grief',           icon: 'drop',   state: 'locked',  stars: 0 },
       { id: 'e4', label: 'Joy & Lightness', icon: 'sun',    state: 'locked',  stars: 0 },
     ],
@@ -290,10 +290,16 @@ export default function CraftJourney() {
         navigate(route, { state: { craft_skill: node.label, scriptContent: sceneText } });
       }
     } catch (err) {
-      const msg = err?.response?.status === 402
-        ? 'Out of AI tokens. Upgrade to keep practicing.'
-        : (err?.response?.data?.message || 'Couldn\'t generate that scene. Try again.');
-      dispatch(showSnackbar({ message: msg, variant: 'error' }));
+      // The interceptor already raises the paywall modal on a token gate;
+      // our own snackbar would double-speak and has nothing to tap.
+      const isTokenGate = err?.response?.status === 402
+        && err?.response?.data?.code === 'insufficient_tokens';
+      if (!isTokenGate) {
+        dispatch(showSnackbar({
+          message: err?.response?.data?.message || 'Couldn\'t generate that scene. Try again.',
+          variant: 'error',
+        }));
+      }
     } finally {
       setGenerating(null);
     }
@@ -817,7 +823,7 @@ function Celebration({ node, stars, xpAwarded, onClose }) {
           {node.label}
         </div>
         <div style={{ fontSize: 13, color: 'var(--aurora-sub)', marginTop: 8, lineHeight: 1.45 }}>
-          {stars === 3 ? 'Flawless run. The next skill is unlocked.' : 'Nicely done. Run it again for a 3-star.'}
+          {'Nicely done. The next skill is unlocked.'}
         </div>
 
         <div

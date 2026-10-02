@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { Filter, Loader2, Users, Camera, WifiOff } from 'lucide-react';
 import SwipeCard from './components/SwipeCard';
 import SwipeActions from './components/SwipeActions';
@@ -18,8 +19,9 @@ import { fetchProfileThunk } from '../../../redux/features/profile/profileSlice'
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import { tapPrimary, cheer } from '../../../utils/haptics';
-import { supplyLine } from '../../../utils/supply';
+import { supplyCounts, supplyLine } from '../../../utils/supply';
 import VisibilityPrompt from '../../../components/Shared/VisibilityPrompt';
+import '../studioScreens.css';
 
 // Backend serializes a null last_name as the Python string "None"; strip it
 // before we put a name in front of the user.
@@ -35,6 +37,11 @@ const FindAReader = ({ embedded = false }) => {
   );
   const pendingLikes = matchingStats?.pending_likes_count || 0;
   const supply = supplyLine(matchingStats);
+  // Supply is read from the ONE normalizer, never counted here. We only ask
+  // it a yes/no question ("is there anybody at all?") — no new number is
+  // rendered from this.
+  const { available: availableSupply } = supplyCounts(matchingStats);
+  const statsLoaded = !!matchingStats;
   const profile = useSelector((state) => state.profile?.profile);
   // Visibility is a SERVER decision — `needs_visual` is computed from the same
   // rule the deck uses. Checking headshot/user_image here instead meant someone
@@ -60,7 +67,10 @@ const FindAReader = ({ embedded = false }) => {
   // the "Who Wants to Read" list.
   const goToLikes = useCallback(() => {
     tapPrimary();
-    if (window.innerWidth < 768) {
+    // Branch on the SHELL, not the viewport: a native iPad is >= 768px and
+    // used to fall through to navigate(), which does nothing in Capacitor,
+    // so the button was simply dead on tablets.
+    if (Capacitor.isNativePlatform() || window.innerWidth < 768) {
       window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'who-wants-to-read' } }));
     } else {
       navigate('/dashboard/who-wants-to-read');
@@ -179,8 +189,8 @@ const FindAReader = ({ embedded = false }) => {
     // — advancing again here would skip the reader behind it.
     setLastSwipe(null);
     if (!id) return;
-    const isMob = window.innerWidth < 768;
-    if (isMob) {
+    // Same fix as above — a match on a native iPad went nowhere.
+    if (Capacitor.isNativePlatform() || window.innerWidth < 768) {
       window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
     } else {
       navigate(`/dashboard/its-a-scene/${id}`);
@@ -205,59 +215,45 @@ const FindAReader = ({ embedded = false }) => {
   const currentActor = readers[currentIndex];
   const nextActor = readers[currentIndex + 1];
   const noMore = !readersLoading && currentIndex >= readers.length;
+  // "You're caught up" is a claim that you finished something. On a cold
+  // start with zero matchable supply the user has never swiped a card, so
+  // that copy told them they'd completed a deck that never existed. Only
+  // say it when there IS supply and this particular deck has run dry.
+  const noSupplyAtAll = statsLoaded && availableSupply === 0;
 
   return (
     <div
-      className="aurora-orbs aurora-orbs-live flex min-h-screen flex-col items-center px-4 pt-6 pb-[calc(96px+env(safe-area-inset-bottom,0px))]"
-      style={{ background: 'var(--aurora-bg)' }}
+      className="sx sx-page flex min-h-screen flex-col items-center px-4 pt-6"
+      style={{ paddingBottom: 'calc(96px + env(safe-area-inset-bottom, 0px))' }}
     >
       {/* Nav bar — hidden on mobile because the SwipeCard takes over the
        * full viewport. The bottom tab bar's active state already indicates
        * which screen we're on. */}
-      <div className={`${embedded ? 'hidden' : 'hidden md:flex'} w-full max-w-sm items-end justify-between mb-4 px-1`}>
+      <div className={`${embedded ? 'hidden' : 'hidden md:flex'} sx-head w-full max-w-sm mb-4 px-1`}>
         <div>
-          <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 4 }}>FIND A READER</span>
-          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
-            Match
-          </h1>
+          <span className="sx-eyebrow">FIND A READER</span>
+          <h1 className="sx-title">Match</h1>
         </div>
-        <button
-          onClick={() => setShowFilters(true)}
-          className="aurora-mono flex items-center gap-1.5 rounded-full px-3.5 py-1.5"
-          style={{
-            background: 'var(--aurora-glass)',
-            border: '1px solid var(--aurora-glass-border)',
-            color: 'var(--aurora-text)',
-            fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-            backdropFilter: 'blur(12px)',
-          }}
-        >
-          <Filter size={12} />
+        <button type="button" onClick={() => setShowFilters(true)} className="sx-chip">
+          <Filter size={12} aria-hidden="true" />
           Filters
         </button>
       </div>
 
       {/* Floating filter button — mobile only, top-right corner above card */}
       <button
+        type="button"
         onClick={() => setShowFilters(true)}
-        className="md:hidden aurora-mono"
+        className="md:hidden sx-chip"
         style={{
           position: 'fixed',
           top: 'calc(50px + env(safe-area-inset-top, 0px) + 12px)',
           right: 12,
           zIndex: 41,
-          background: 'rgba(255,255,255,0.85)',
-          border: '1px solid var(--aurora-glass-border)',
-          backdropFilter: 'blur(20px) saturate(1.4)',
-          WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
-          color: '#0A0A0A',
-          padding: '6px 12px', borderRadius: 100,
-          fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-          display: 'flex', alignItems: 'center', gap: 6,
-          boxShadow: '0 4px 14px rgba(10,10,10,0.10)',
+          boxShadow: '0 4px 14px color-mix(in srgb, var(--sx-ink) 10%, transparent)',
         }}
       >
-        <Filter size={11} />
+        <Filter size={11} aria-hidden="true" />
         Filters
       </button>
 
@@ -269,21 +265,15 @@ const FindAReader = ({ embedded = false }) => {
         </div>
       )}
 
-      {/* Online count badge */}
+      {/* Supply line */}
       {hasPhoto && !readersLoading && readers.length > 0 && (
-        <div className="aurora-mono flex items-center gap-1.5 mb-5 px-3 py-1.5 rounded-full" style={{
-          background: 'color-mix(in oklch, var(--aurora-mint) 18%, transparent)',
-          border: '1px solid color-mix(in oklch, var(--aurora-mint) 35%, transparent)',
-          color: 'color-mix(in oklch, var(--aurora-mint) 80%, var(--aurora-text))',
-          fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-          backdropFilter: 'blur(12px)',
-        }}>
-          <Users size={11} />
+        <div className="sx-badge mb-5" data-tone={supply?.live ? 'ok' : 'quiet'}>
+          <Users size={11} aria-hidden="true" />
           {/* "Nearby" was a lie: there is no geography anywhere in the deck
               query. Supply phrasing is owned by utils/supply so a label can
               never drift from the number it describes. */}
           {supply ? supply.text : `${Math.max(0, readers.length - currentIndex)} in your deck`}
-          <span style={{ opacity: 0.5 }}>·</span>
+          <span style={{ opacity: 0.45 }}>·</span>
           {/* Cards left in THIS deck — a page position, not a supply figure. */}
           {Math.max(0, readers.length - currentIndex)} left to swipe
         </div>
@@ -292,8 +282,8 @@ const FindAReader = ({ embedded = false }) => {
       {/* Card stack area */}
       {hasPhoto && <div className="relative flex w-full max-w-[340px] items-start justify-center" style={{ minHeight: 520 }}>
         {readersLoading && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Loader2 size={36} color="#FF8280" className="animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center" aria-busy="true">
+            <Loader2 size={30} style={{ color: 'var(--sx-gold)' }} className="animate-spin" aria-hidden="true" />
           </div>
         )}
 
@@ -312,59 +302,55 @@ const FindAReader = ({ embedded = false }) => {
         {/* Load FAILED — a network error must not masquerade as an empty deck
             ("you're caught up"). Offer a real retry. */}
         {!readersLoading && readersError && readers.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-              style={{
-                background: 'var(--aurora-glass)',
-                border: '1px solid var(--aurora-glass-border)',
-                backdropFilter: 'blur(12px)',
-              }}
-            >
-              <WifiOff size={26} color="var(--aurora-sub)" />
-            </div>
-            <p className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>Couldn&apos;t load readers</p>
-            <p className="text-sm mb-5" style={{ color: 'var(--aurora-sub)' }}>
-              Check your connection and try again.
-            </p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center sx-empty">
+            <WifiOff size={24} style={{ color: 'var(--sx-faint)', marginBottom: 12 }} aria-hidden="true" />
+            <h2>Couldn&apos;t load readers</h2>
+            <p>Check your connection and try again.</p>
             <button
+              type="button"
               onClick={() => { setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
-              className="aurora-mono px-6 py-2.5 rounded-full text-white transition-transform active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
-                fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-                boxShadow: 'var(--aurora-shadow-coral)',
-              }}
+              className="sx-btn"
             >
               Try again
             </button>
           </div>
         )}
 
-        {!readersLoading && !readersError && noMore && sessionSwipes.length === 0 && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-            <div
-              className="w-20 h-20 rounded-full flex items-center justify-center mb-4"
-              style={{
-                background: 'var(--aurora-glass)',
-                border: '1px solid var(--aurora-glass-border)',
-                backdropFilter: 'blur(12px)',
-              }}
-            >
-              <Users size={28} color="var(--aurora-sub)" />
-            </div>
-            <p className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)' }}>You're caught up</p>
-            <p className="text-sm mb-5" style={{ color: 'var(--aurora-sub)' }}>
-              Check back later or adjust your filters.
+        {/* No matchable supply at all — they have not finished anything, so
+            saying "caught up" would be a lie about their own progress. */}
+        {!readersLoading && !readersError && noMore && sessionSwipes.length === 0 && noSupplyAtAll && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center sx-empty">
+            <Users size={24} style={{ color: 'var(--sx-faint)', marginBottom: 12 }} aria-hidden="true" />
+            <h2>No readers available right now</h2>
+            <p>
+              Nobody matches what you&apos;re looking for yet. Widening your filters
+              usually turns a few up, and new readers join most weeks.
             </p>
+            <div className="flex flex-col items-stretch gap-2 w-full" style={{ maxWidth: 240 }}>
+              <button type="button" onClick={() => setShowFilters(true)} className="sx-btn">
+                Adjust filters
+              </button>
+              <button
+                type="button"
+                onClick={() => { setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
+                className="sx-btn sx-btn--quiet"
+              >
+                Check again
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Deck drained, but there IS supply — this one really is "caught up". */}
+        {!readersLoading && !readersError && noMore && sessionSwipes.length === 0 && !noSupplyAtAll && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center sx-empty">
+            <Users size={24} style={{ color: 'var(--sx-faint)', marginBottom: 12 }} aria-hidden="true" />
+            <h2>You&apos;re caught up</h2>
+            <p>You&apos;ve seen everyone in this deck. Check back later or adjust your filters.</p>
             <button
+              type="button"
               onClick={() => { setCurrentIndex(0); dispatch(fetchAvailableReaders()); }}
-              className="aurora-mono px-6 py-2.5 rounded-full text-white transition-transform active:scale-95"
-              style={{
-                background: 'linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))',
-                fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-                boxShadow: 'var(--aurora-shadow-coral)',
-              }}
+              className="sx-btn"
             >
               Refresh
             </button>
@@ -435,17 +421,16 @@ const FindAReader = ({ embedded = false }) => {
             top: 'calc(54px + env(safe-area-inset-top, 0px) + 16px)',
             zIndex: 45,
             display: 'flex', alignItems: 'center', gap: 7,
-            padding: '8px 14px 8px 11px', borderRadius: 100, border: 'none', cursor: 'pointer',
-            background: 'linear-gradient(120deg, #D4A85F, #7A5A18)',
-            color: '#0E0D0A', fontSize: 12.5, fontWeight: 800, letterSpacing: '-0.01em',
-            boxShadow: '0 8px 24px rgba(122,90,24,0.42)',
-            animation: 'drst-likes-pulse 2.6s ease-in-out infinite',
+            padding: '9px 15px', borderRadius: 100, cursor: 'pointer',
+            background: 'var(--sx-gold-wash)',
+            border: '1px solid var(--sx-gold-edge)',
+            color: 'var(--sx-gold-ink)', fontSize: 12.5, fontWeight: 600, letterSpacing: '-0.01em',
+            boxShadow: '0 8px 24px color-mix(in srgb, var(--sx-ink) 14%, transparent)',
             whiteSpace: 'nowrap',
           }}
         >
-          <span style={{ fontSize: 15 }}>🎬</span>
           {pendingLikes} reader{pendingLikes !== 1 ? 's' : ''} want to read with you
-          <span style={{ opacity: 0.65 }}>→</span>
+          <span aria-hidden="true" style={{ opacity: 0.65 }}>→</span>
         </button>
       )}
 
@@ -459,11 +444,10 @@ const FindAReader = ({ embedded = false }) => {
             position: 'fixed', left: 18,
             bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))',
             zIndex: 45, width: 46, height: 46, borderRadius: '50%',
-            background: 'rgba(20,18,14,0.82)', border: '1px solid rgba(252,224,114,0.35)',
-            color: '#FCE072', fontSize: 20, cursor: 'pointer',
+            background: 'var(--sx-surface)', border: '1px solid var(--sx-line)',
+            color: 'var(--sx-ink)', fontSize: 19, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
-            boxShadow: '0 6px 18px rgba(10,10,10,0.32)',
+            boxShadow: '0 6px 18px color-mix(in srgb, var(--sx-ink) 16%, transparent)',
           }}
         >↩</button>
       )}
@@ -475,18 +459,18 @@ const FindAReader = ({ embedded = false }) => {
           bottom: 'calc(104px + env(safe-area-inset-bottom, 0px))',
           zIndex: 60, pointerEvents: 'none',
           padding: '9px 16px', borderRadius: 100,
-          background: swipeToast.gold ? 'rgba(212,168,95,0.97)' : 'rgba(20,18,14,0.9)',
-          color: swipeToast.gold ? '#0E0D0A' : '#fff',
-          fontSize: 13, fontWeight: 700, letterSpacing: '-0.01em',
-          boxShadow: '0 8px 26px rgba(10,10,10,0.3)',
-          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          background: swipeToast.gold ? 'var(--sx-gold-wash)' : 'var(--sx-surface)',
+          border: `1px solid ${swipeToast.gold ? 'var(--sx-gold-edge)' : 'var(--sx-line)'}`,
+          color: swipeToast.gold ? 'var(--sx-gold-ink)' : 'var(--sx-ink)',
+          fontSize: 13, fontWeight: 600, letterSpacing: '-0.01em',
+          boxShadow: '0 8px 26px color-mix(in srgb, var(--sx-ink) 16%, transparent)',
           display: 'flex', alignItems: 'center', gap: 6,
           animation: 'drst-swipe-toast 0.24s cubic-bezier(0.34,1.56,0.64,1)',
         }}>
-          {swipeToast.gold && <span>🎬</span>}{swipeToast.text}
+          {swipeToast.text}
         </div>
       )}
-      <style>{`@keyframes drst-swipe-toast { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.92); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } } @keyframes drst-likes-pulse { 0%, 100% { transform: translateX(-50%) scale(1); } 50% { transform: translateX(-50%) scale(1.045); } }`}</style>
+      <style>{`@keyframes drst-swipe-toast { from { opacity: 0; transform: translateX(-50%) translateY(10px) scale(0.92); } to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); } }`}</style>
     </div>
   );
 };

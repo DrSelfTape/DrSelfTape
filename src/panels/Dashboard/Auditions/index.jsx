@@ -1,7 +1,7 @@
 /**
- * Auditions Kanban — Aurora v1.2 reskin.
+ * Auditions Kanban — Studio reskin (warm paper, ink, restrained brass).
  * Drag/drop, type filters, detail side panel, new audition modal (manual/paste/PDF/screenshot).
- * Visual layer rewritten to Aurora tokens; logic preserved.
+ * Visual layer only; logic preserved.
  */
 
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
@@ -41,16 +41,20 @@ import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
 import useAuditionNotification from '../../../hooks/useAuditionNotification';
 import { clearAuditionNotification, findNotifiedAudition } from '../../../utils/auditionNotification';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
+import { NoDataFound } from '../../../components/Shared/NoDataFound';
+import '../studioScreens.css';
 
 /* ─── constants ─────────────────────────────────────────────────── */
 
+/* Studio runs one accent. The column marker is an ink ramp, with brass
+   reserved for the two columns that mean something good happened. */
 const COLUMNS = [
-  { id: 'submitted',  label: 'Submitted',  color: 'var(--aurora-sub)' },
-  { id: 'in_review',  label: 'In Review',  color: 'var(--aurora-sky)' },
-  { id: 'audition',   label: 'Audition',   color: 'var(--aurora-coral, #FF8280)' },
-  { id: 'callback',   label: 'Callback',   color: 'var(--aurora-heritage-gold)' },
-  { id: 'booked',     label: 'Booked',     color: 'var(--aurora-mint)' },
-  { id: 'passed',     label: 'Passed',     color: 'var(--aurora-dim)' },
+  { id: 'submitted',  label: 'Submitted',  color: 'var(--sx-faint)' },
+  { id: 'in_review',  label: 'In Review',  color: 'var(--sx-muted)' },
+  { id: 'audition',   label: 'Audition',   color: 'var(--sx-ink)' },
+  { id: 'callback',   label: 'Callback',   color: 'var(--sx-gold)' },
+  { id: 'booked',     label: 'Booked',     color: 'var(--sx-ok)' },
+  { id: 'passed',     label: 'Passed',     color: 'var(--sx-line)' },
 ];
 
 const STATUS_ORDER = ['submitted', 'in_review', 'audition', 'callback', 'booked'];
@@ -74,13 +78,15 @@ const TYPE_FILTERS = [
   { key: 'industrial', label: 'Industrial',   icon: Building2 },
 ];
 
-const TYPE_BADGES = {
-  film:       { dot: 'var(--aurora-peach)',   tint: 'rgba(255,201,163,0.18)', ink: '#8A4A1A' },
-  commercial: { dot: 'var(--aurora-sky)',     tint: 'rgba(167,214,255,0.22)', ink: '#1E5A8A' },
-  theatrical: { dot: 'var(--aurora-purple)',  tint: 'rgba(216,197,242,0.22)', ink: '#5A3A8A' },
-  industrial: { dot: 'var(--aurora-dim)',     tint: 'rgba(10,10,10,0.06)',    ink: 'var(--aurora-sub)' },
-  theater:    { dot: 'var(--aurora-mint)',    tint: 'rgba(159,230,180,0.22)', ink: '#1A6A38' },
-  voiceover:  { dot: 'var(--aurora-gold)',    tint: 'rgba(252,224,114,0.22)', ink: 'var(--aurora-gold-deep)' },
+/* Project type is a label, not a status — it reads as a quiet ink chip so
+   the brass stays meaningful. */
+const TYPE_LABELS = {
+  film: 'Film/TV',
+  commercial: 'Commercial',
+  theatrical: 'Theatrical',
+  industrial: 'Industrial',
+  theater: 'Theater',
+  voiceover: 'Voice Over',
 };
 
 /* ─── helpers ───────────────────────────────────────────────────── */
@@ -127,7 +133,6 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
   };
 
   const cb = callbackLabel(audition.callback_date);
-  const badge = TYPE_BADGES[audition.project_type] || TYPE_BADGES.film;
   const canAdvance = nextStatus(audition._column) !== null;
 
   return (
@@ -135,27 +140,20 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
       ref={setNodeRef}
       style={{
         ...dragStyle,
-        background: 'var(--aurora-surface-solid)',
-        borderRadius: 14,
-        border: '1px solid var(--aurora-line)',
-        boxShadow: isDragging
-          ? '0 16px 40px rgba(10,10,10,0.18)'
-          : '0 1px 2px rgba(10,10,10,0.04), 0 6px 16px rgba(10,10,10,0.04)',
         cursor: 'pointer',
         position: 'relative',
+        padding: 0,
         transform: isDragging ? 'rotate(1deg) scale(1.03)' : dragStyle.transform,
         opacity: isDragging ? 0.92 : 1,
-        outline: cb?.urgent ? '2px solid var(--aurora-coral, #FF8280)' : 'none',
-        outlineOffset: cb?.urgent ? -1 : 0,
       }}
-      className="group transition-shadow"
+      className={`group sx-card${cb?.urgent ? ' sx-card--flagged' : ''}`}
       onClick={() => onClick(audition)}
     >
       <div
         {...attributes}
         {...listeners}
-        className="absolute top-2.5 left-1.5 cursor-grab active:cursor-grabbing"
-        style={{ color: 'var(--aurora-dim)' }}
+        className="absolute top-3 left-1.5 cursor-grab active:cursor-grabbing"
+        style={{ color: 'var(--sx-faint)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <GripVertical size={14} />
@@ -166,26 +164,30 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
           <h4
             className="text-sm font-semibold leading-tight line-clamp-1"
             title={audition.project_title}
-            style={{ color: 'var(--aurora-text)' }}
+            style={{ color: 'var(--sx-ink)' }}
           >
             {audition.project_title}
           </h4>
-          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity shrink-0">
             {canAdvance && (
               <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); onAdvance(audition); }}
-                className="p-1 rounded-lg transition-colors"
-                style={{ color: 'var(--aurora-mint, #2A9F58)' }}
+                className="p-1 rounded-lg"
+                style={{ color: 'var(--sx-ok)' }}
                 title="Advance status"
+                aria-label="Advance status"
               >
                 <CheckCircle2 size={15} />
               </button>
             )}
             <button
+              type="button"
               onClick={(e) => { e.stopPropagation(); onPass(audition); }}
-              className="p-1 rounded-lg transition-colors"
-              style={{ color: 'var(--aurora-coral, #FF8280)' }}
+              className="p-1 rounded-lg"
+              style={{ color: 'var(--sx-alert)' }}
               title="Move to passed"
+              aria-label="Move to passed"
             >
               <XCircle size={15} />
             </button>
@@ -193,8 +195,8 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
         </div>
 
         {audition.character && (
-          <p className="text-xs mt-0.5 line-clamp-1" title={audition.character} style={{ color: 'var(--aurora-sub)' }}>
-            as <span className="font-medium" style={{ color: 'var(--aurora-text)' }}>{
+          <p className="sx-meta mt-1 line-clamp-1" title={audition.character}>
+            as <span className="font-medium" style={{ color: 'var(--sx-ink)' }}>{
               String(audition.character).length > 40
                 ? String(audition.character).split(/[:;,]/)[0].trim()
                 : audition.character
@@ -202,28 +204,18 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
           </p>
         )}
         {audition.casting_director && (
-          <p className="text-xs mt-0.5 line-clamp-1" style={{ color: 'var(--aurora-dim)' }}>
+          <p className="sx-meta sx-meta--faint mt-0.5 line-clamp-1">
             CD: {audition.casting_director}
           </p>
         )}
 
         <div className="flex items-center justify-between mt-2.5 gap-2">
-          <span
-            className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
-            style={{ background: badge.tint, color: badge.ink }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full" style={{ background: badge.dot }} />
-            {audition.project_type}
+          <span className="sx-badge" data-tone="quiet">
+            {TYPE_LABELS[audition.project_type] || audition.project_type}
           </span>
           {cb && (
-            <span
-              className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
-              style={cb.urgent
-                ? { background: 'rgba(255,130,128,0.14)', color: 'var(--aurora-coral-deep, #C05957)' }
-                : { background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }
-              }
-            >
-              <Clock size={10} />
+            <span className="sx-badge" data-tone={cb.urgent ? 'brass' : 'quiet'}>
+              <Clock size={10} aria-hidden="true" />
               {cb.text}
             </span>
           )}
@@ -236,34 +228,27 @@ function SortableCard({ audition, onClick, onAdvance, onPass }) {
 /* ─── static card (drag overlay) ────────────────────────────────── */
 
 function StaticCard({ audition }) {
-  const badge = TYPE_BADGES[audition.project_type] || TYPE_BADGES.film;
   return (
     <div
+      className="sx sx-card"
       style={{
-        background: 'var(--aurora-surface-solid)',
-        borderRadius: 14,
-        border: '1px solid var(--aurora-line)',
-        boxShadow: '0 16px 40px rgba(10,10,10,0.22)',
         width: 256,
+        padding: 0,
         transform: 'rotate(1deg) scale(1.03)',
         opacity: 0.94,
       }}
     >
       <div className="px-4 py-3">
-        <h4 className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{audition.project_title}</h4>
+        <h4 className="text-sm font-semibold" style={{ color: 'var(--sx-ink)' }}>{audition.project_title}</h4>
         {audition.character && (
-          <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-sub)' }}>as {
+          <p className="sx-meta mt-1">as {
             String(audition.character).length > 40
               ? String(audition.character).split(/[:;,]/)[0].trim()
               : audition.character
           }</p>
         )}
-        <span
-          className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full mt-2"
-          style={{ background: badge.tint, color: badge.ink }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full" style={{ background: badge.dot }} />
-          {audition.project_type}
+        <span className="sx-badge mt-2" data-tone="quiet">
+          {TYPE_LABELS[audition.project_type] || audition.project_type}
         </span>
       </div>
     </div>
@@ -277,29 +262,14 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
   const ids = useMemo(() => items.map((a) => String(a.id)), [items]);
 
   return (
-    <div className="flex flex-col min-w-[260px] w-[260px] shrink-0">
-      <div className="flex items-center gap-2 mb-3 px-1">
-        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: column.color }} />
-        <h3 className="aurora-eyebrow" style={{ color: 'var(--aurora-sub)' }}>{column.label}</h3>
-        <span
-          className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full ml-auto"
-          style={{ background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }}
-        >
-          {items.length}
-        </span>
+    <div className="sx-col">
+      <div className="sx-col-head">
+        <span className="sx-dot" style={{ background: column.color }} />
+        <h3 className="sx-eyebrow">{column.label}</h3>
+        <span className="sx-badge ml-auto" data-tone="quiet">{items.length}</span>
       </div>
 
-      <div
-        ref={setNodeRef}
-        className="flex-1 flex flex-col gap-2 p-2 rounded-2xl min-h-[200px] transition-colors duration-200"
-        style={{
-          background: isOver
-            ? 'linear-gradient(180deg, rgba(212,168,95,0.10), rgba(212,168,95,0.04))'
-            : 'rgba(10,10,10,0.025)',
-          outline: isOver ? '2px dashed var(--aurora-heritage-gold)' : 'none',
-          outlineOffset: -2,
-        }}
-      >
+      <div ref={setNodeRef} className="sx-col-well" data-over={isOver ? 'true' : 'false'}>
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {items.map((audition) => (
             <SortableCard
@@ -312,11 +282,7 @@ function KanbanColumn({ column, items, onCardClick, onAdvance, onPass }) {
           ))}
         </SortableContext>
 
-        {items.length === 0 && (
-          <div className="flex items-center justify-center h-24 text-xs" style={{ color: 'var(--aurora-dim)' }}>
-            Drop here
-          </div>
-        )}
+        {items.length === 0 && <div className="sx-col-hint">Drop here</div>}
       </div>
     </div>
   );
@@ -365,23 +331,16 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
     }
   };
 
-  const inputStyle = {
-    background: 'var(--aurora-surface-solid)',
-    color: 'var(--aurora-text)',
-    border: '1px solid var(--aurora-line)',
-    borderRadius: 10,
-  };
-
   const Field = ({ label, field, type = 'text', options }) => (
-    <div className="space-y-1">
-      <label className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)' }}>{label}</label>
+    <div>
+      <span className="sx-label">{label}</span>
       {editing ? (
         type === 'select' ? (
           <select
+            aria-label={label}
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm px-3 py-2 outline-none transition-all focus:border-[color:var(--aurora-heritage-gold)]"
-            style={inputStyle}
+            className="sx-input"
           >
             {options.map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
@@ -389,23 +348,23 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
           </select>
         ) : type === 'textarea' ? (
           <textarea
+            aria-label={label}
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
             rows={3}
-            className="w-full text-sm px-3 py-2 outline-none transition-all resize-none focus:border-[color:var(--aurora-heritage-gold)]"
-            style={inputStyle}
+            className="sx-input"
           />
         ) : (
           <input
+            aria-label={label}
             type={type}
             value={form[field] || ''}
             onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-            className="w-full text-sm px-3 py-2 outline-none transition-all focus:border-[color:var(--aurora-heritage-gold)]"
-            style={inputStyle}
+            className="sx-input"
           />
         )
       ) : (
-        <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>{form[field] || '·'}</p>
+        <p className="text-sm" style={{ color: 'var(--sx-ink)' }}>{form[field] || '—'}</p>
       )}
     </div>
   );
@@ -414,78 +373,67 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
 
   const panel = (
     <>
-      <div className="fixed inset-0 z-[110]" style={{ background: 'rgba(10,10,10,0.25)' }} />
+      <div className="sx sx-backdrop" />
       <div
         ref={panelRef}
-        className="fixed top-0 right-0 h-full w-96 z-[120] overflow-y-auto"
+        className="sx fixed top-0 right-0 h-full w-full max-w-sm z-[120] overflow-y-auto"
         style={{
-          background: 'var(--aurora-page)',
-          borderLeft: '1px solid var(--aurora-line)',
-          boxShadow: 'var(--aurora-shadow-modal, 0 24px 60px rgba(10,10,10,0.18))',
+          background: 'var(--sx-paper)',
+          borderLeft: '1px solid var(--sx-line)',
+          paddingBottom: 'calc(24px + env(safe-area-inset-bottom, 0px))',
           animation: 'aurora-slide-in 0.25s cubic-bezier(.2,.7,.3,1)',
         }}
       >
         <div
-          className="sticky top-0 px-5 py-4 flex items-center justify-between z-10"
-          style={{ background: 'var(--aurora-page)', borderBottom: '1px solid var(--aurora-line)' }}
+          className="sticky top-0 z-10 flex items-start justify-between gap-3 px-5 py-4"
+          style={{
+            background: 'var(--sx-paper)',
+            borderBottom: '1px solid var(--sx-line)',
+            paddingTop: 'calc(16px + env(safe-area-inset-top, 0px))',
+          }}
         >
-          <h2 className="aurora-display text-base line-clamp-1 pr-4" style={{ color: 'var(--aurora-text)' }}>
-            {audition.project_title}
-          </h2>
-          <div className="flex items-center gap-1">
+          <div className="min-w-0">
+            <span className="sx-eyebrow">AUDITION</span>
+            <h2 className="sx-title sx-title--sm line-clamp-2">{audition.project_title}</h2>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
             {editing ? (
               <button
+                type="button"
                 onClick={handleSave}
                 disabled={saving}
-                className="p-2 rounded-lg transition-colors disabled:opacity-50"
-                style={{ background: 'var(--aurora-heritage-gold)', color: '#FFF' }}
+                aria-label="Save changes"
+                className="sx-icon-btn"
+                style={{ color: 'var(--sx-gold-ink)' }}
               >
-                {saving ? (
-                  <span className="block w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                ) : (
-                  <Save size={16} />
-                )}
+                {saving ? <span className="sx-skel block w-4 h-4 rounded-full" /> : <Save size={17} />}
               </button>
             ) : (
-              <button
-                onClick={() => setEditing(true)}
-                className="p-2 rounded-lg transition-colors"
-                style={{ color: 'var(--aurora-sub)' }}
-              >
-                <Edit3 size={16} />
+              <button type="button" onClick={() => setEditing(true)} aria-label="Edit audition" className="sx-icon-btn">
+                <Edit3 size={17} />
               </button>
             )}
-            <button
-              onClick={onClose}
-              className="p-2 rounded-lg transition-colors"
-              style={{ color: 'var(--aurora-sub)' }}
-            >
-              <X size={16} />
+            <button type="button" onClick={onClose} aria-label="Close" className="sx-icon-btn">
+              <X size={17} />
             </button>
           </div>
         </div>
 
         <div className="p-5 space-y-5">
           {cb && (
-            <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium"
-              style={cb.urgent
-                ? { background: 'rgba(255,130,128,0.14)', color: 'var(--aurora-coral-deep, #C05957)' }
-                : { background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }
-              }
-            >
-              <Calendar size={14} />
+            <div className="sx-badge w-full justify-start" data-tone={cb.urgent ? 'brass' : 'quiet'} style={{ padding: '9px 12px' }}>
+              <Calendar size={13} aria-hidden="true" />
               Callback {cb.text}
             </div>
           )}
 
-          <div className="space-y-1">
-            <label className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)' }}>Status</label>
+          <div>
+            <label className="sx-label" htmlFor="aud-status">Status</label>
             <select
+              id="aud-status"
               value={audition._column}
               onChange={(e) => onStatusChange(audition.id, e.target.value)}
-              className="w-full text-sm font-medium px-3 py-2 outline-none"
-              style={inputStyle}
+              className="sx-input"
             >
               {COLUMNS.map((col) => (
                 <option key={col.id} value={col.id}>{col.label}</option>
@@ -513,34 +461,31 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
           <Field label="Callback Date" field="callback_date" type="datetime-local" />
           <Field label="Notes" field="notes" type="textarea" />
 
-          <div className="pt-4" style={{ borderTop: '1px solid var(--aurora-line)' }}>
+          <div className="sx-divider">
             {confirmDelete ? (
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-sm" style={{ color: 'var(--sx-alert)' }}>
                   Delete this audition?
                 </span>
                 <button
+                  type="button"
                   onClick={() => onDelete(audition.id)}
-                  className="px-3 py-1.5 text-sm font-semibold rounded-lg transition-colors"
-                  style={{ background: 'var(--aurora-coral, #FF8280)', color: '#FFF' }}
+                  className="sx-btn sx-btn--sm"
+                  style={{ background: 'var(--sx-alert)', borderColor: 'var(--sx-alert)' }}
                 >
                   Confirm
                 </button>
-                <button
-                  onClick={() => setConfirmDelete(false)}
-                  className="px-3 py-1.5 text-sm font-medium rounded-lg transition-colors"
-                  style={{ background: 'rgba(10,10,10,0.05)', color: 'var(--aurora-sub)' }}
-                >
+                <button type="button" onClick={() => setConfirmDelete(false)} className="sx-btn sx-btn--sm sx-btn--quiet">
                   Cancel
                 </button>
               </div>
             ) : (
               <button
+                type="button"
                 onClick={() => setConfirmDelete(true)}
-                className="flex items-center gap-2 text-sm transition-colors"
-                style={{ color: 'var(--aurora-coral-deep, #C05957)' }}
+                className="sx-textbtn sx-textbtn--alert inline-flex items-center gap-2"
               >
-                <Trash2 size={14} />
+                <Trash2 size={13} aria-hidden="true" />
                 Delete audition
               </button>
             )}
@@ -568,24 +513,15 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // Tell MobileApp to slide its persistent top bar out of the way for
-  // the lifetime of this modal — otherwise the bell + avatar overlap
-  // the modal's title row and the X close button is hard to reach.
-  useEffect(() => {
-    if (!open) return;
-    window.dispatchEvent(new CustomEvent('drst-modal-open'));
-    return () => window.dispatchEvent(new CustomEvent('drst-modal-closed'));
-  }, [open]);
+  // Slide MobileApp's persistent top bar out of the way for the lifetime of
+  // this modal — otherwise the bell + avatar overlap the title row and the X
+  // close button is hard to reach. Called before the early return so hook
+  // order stays stable.
+  useHideMobileHeader(open);
 
   if (!open) return null;
 
-  const inputStyle = {
-    background: 'var(--aurora-surface-solid)',
-    color: 'var(--aurora-text)',
-    border: '1px solid var(--aurora-line)',
-    borderRadius: 10,
-  };
-  const inputCls = 'w-full text-sm px-3 py-2.5 outline-none transition-all focus:border-[color:var(--aurora-heritage-gold)]';
+  const inputCls = 'sx-input';
 
   const resetForm = () => {
     setForm({ project_title: '', character: '', casting_director: '', agency: '', project_type: 'film', callback_date: '', notes: '' });
@@ -697,99 +633,78 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
   };
 
   const dropzoneStyle = {
-    border: '2px dashed var(--aurora-line)',
-    borderRadius: 14,
+    border: '1px dashed var(--sx-line)',
+    borderRadius: 12,
+    background: 'var(--sx-well)',
   };
 
   const modal = (
     <>
-      <div
-        className="fixed inset-0 z-[110]"
-        style={{ background: 'rgba(10,10,10,0.45)' }}
-        onClick={onClose}
-      />
-      <div className="fixed inset-0 flex items-start justify-center z-[120] p-4 pt-8 overflow-y-auto">
+      <div className="sx sx-backdrop" onClick={onClose} />
+      <div className="sx sx-modal">
         <div
-          className="w-full max-w-lg max-h-[calc(100dvh-64px)] overflow-y-auto"
-          style={{
-            background: 'var(--aurora-surface-solid)',
-            borderRadius: 20,
-            border: '1px solid var(--aurora-line)',
-            boxShadow: 'var(--aurora-shadow-modal, 0 24px 60px rgba(10,10,10,0.18))',
-            animation: 'aurora-scale-in 0.2s cubic-bezier(.2,.7,.3,1)',
-          }}
+          className="sx-sheet"
+          style={{ animation: 'aurora-scale-in 0.2s cubic-bezier(.2,.7,.3,1)' }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div
-            className="flex items-center justify-between px-6 pt-6 pb-4"
-            style={{ borderBottom: '1px solid var(--aurora-line)' }}
-          >
+          <div className="sx-sheet-head">
             <div>
-              <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>NEW AUDITION</span>
-              <h2 className="aurora-display text-xl" style={{ color: 'var(--aurora-text)' }}>Track an opportunity</h2>
+              <span className="sx-eyebrow">NEW AUDITION</span>
+              <h2 className="sx-title sx-title--sm">Track an opportunity</h2>
             </div>
             <button
               type="button"
               onClick={() => { resetForm(); onClose(); }}
-              className="p-1 rounded-lg"
-              style={{ color: 'var(--aurora-sub)' }}
+              aria-label="Close"
+              className="sx-icon-btn"
             >
               <X size={18} />
             </button>
           </div>
 
-          <div className="flex gap-1 px-6 pt-4 pb-2 flex-wrap">
+          <div className="flex gap-2 px-5 pt-4 pb-1 flex-wrap">
             {[
               { id: 'manual', label: 'Manual' },
               { id: 'screenshot', label: 'Screenshot' },
               { id: 'paste', label: 'Paste' },
               { id: 'pdf', label: 'PDF' },
-            ].map((tab) => {
-              const active = mode === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => { setMode(tab.id); setParseError(''); }}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
-                  style={active
-                    ? { background: 'var(--aurora-heritage-gold)', color: '#FFF' }
-                    : { background: 'rgba(10,10,10,0.04)', color: 'var(--aurora-sub)' }
-                  }
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                aria-pressed={mode === tab.id}
+                onClick={() => { setMode(tab.id); setParseError(''); }}
+                className="sx-chip"
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          <div className="px-6 pb-6 pt-2">
+          <div className="px-5 pb-6 pt-3">
             {mode === 'paste' && (
               <div className="space-y-3">
-                <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
-                  Paste the full casting breakdown. The AI will extract project, role, CD, and notes automatically.
+                <p className="sx-meta">
+                  Paste the full casting breakdown. We&apos;ll pull out the project, role, CD and notes.
                 </p>
                 <textarea
+                  aria-label="Casting breakdown text"
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
-                  placeholder="Paste breakdown here..."
+                  placeholder="Paste breakdown here…"
                   rows={10}
-                  className="w-full text-sm px-4 py-3 outline-none resize-none focus:border-[color:var(--aurora-heritage-gold)]"
-                  style={inputStyle}
+                  className="sx-input"
                 />
-                {parseError && <p className="text-xs" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{parseError}</p>}
+                {parseError && <p className="sx-meta" style={{ color: 'var(--sx-alert)' }}>{parseError}</p>}
                 <button
+                  type="button"
                   onClick={() => parseWithAI(pasteText)}
                   disabled={parsing || !pasteText.trim()}
-                  className="w-full font-semibold py-2.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-40"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
-                    color: '#FFF',
-                    boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
-                  }}
+                  className="sx-btn w-full"
                 >
                   {parsing
-                    ? <><span className="w-4 h-4 rounded-full animate-spin" style={{ border: '2px solid rgba(255,255,255,0.35)', borderTopColor: '#FFF' }}/><span>Extracting...</span></>
-                    : <><Sparkles size={16} /> Extract with AI</>
+                    ? 'Extracting…'
+                    : <><Sparkles size={16} aria-hidden="true" /> Extract with AI</>
                   }
                 </button>
               </div>
@@ -797,86 +712,68 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
 
             {mode === 'screenshot' && (
               <div className="space-y-3">
-                <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
-                  Upload a screenshot of your audition breakdown. The AI will read it and fill in the details.
+                <p className="sx-meta">
+                  Upload a screenshot of your breakdown and we&apos;ll read it into the fields.
                 </p>
-                <label
-                  className="block p-8 text-center cursor-pointer transition-colors hover:border-[color:var(--aurora-heritage-gold)]"
-                  style={dropzoneStyle}
-                >
+                <label className="block p-8 text-center cursor-pointer" style={dropzoneStyle}>
                   {parsing ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }} />
-                      <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>Scanning screenshot with AI...</p>
-                    </div>
+                    <p className="text-sm" style={{ color: 'var(--sx-ink)' }}>Reading your screenshot…</p>
                   ) : (
                     <>
-                      <p className="text-2xl mb-2">📸</p>
-                      <p className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>Tap to upload screenshot</p>
-                      <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>JPG, PNG, WEBP</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--sx-ink)' }}>Tap to upload a screenshot</p>
+                      <p className="sx-meta sx-meta--faint mt-1">JPG, PNG, WEBP</p>
                     </>
                   )}
                   <input
                     ref={screenshotInputRef}
                     type="file"
                     accept="image/*"
+                    aria-label="Upload breakdown screenshot"
                     style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
                     onChange={(e) => handleScreenshot(e.target.files?.[0])}
                   />
                 </label>
-                {parseError && <p className="text-xs" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{parseError}</p>}
+                {parseError && <p className="sx-meta" style={{ color: 'var(--sx-alert)' }}>{parseError}</p>}
               </div>
             )}
 
             {mode === 'pdf' && (
               <div className="space-y-3">
-                <p className="text-xs" style={{ color: 'var(--aurora-sub)' }}>
-                  Upload the breakdown PDF. The AI will pull out the key details.
-                </p>
-                <label
-                  className="block p-8 text-center cursor-pointer transition-colors hover:border-[color:var(--aurora-heritage-gold)]"
-                  style={dropzoneStyle}
-                >
+                <p className="sx-meta">Upload the breakdown PDF and we&apos;ll pull out the key details.</p>
+                <label className="block p-8 text-center cursor-pointer" style={dropzoneStyle}>
                   {parsing ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <span className="w-8 h-8 rounded-full animate-spin" style={{ border: '2px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }} />
-                      <p className="text-sm" style={{ color: 'var(--aurora-text)' }}>Reading PDF...</p>
-                    </div>
+                    <p className="text-sm" style={{ color: 'var(--sx-ink)' }}>Reading the PDF…</p>
                   ) : (
                     <>
-                      <p className="text-2xl mb-2">📄</p>
-                      <p className="text-sm font-medium" style={{ color: 'var(--aurora-text)' }}>Tap to upload breakdown PDF</p>
-                      <p className="text-xs mt-1" style={{ color: 'var(--aurora-dim)' }}>PDF files only</p>
+                      <p className="text-sm font-medium" style={{ color: 'var(--sx-ink)' }}>Tap to upload a breakdown PDF</p>
+                      <p className="sx-meta sx-meta--faint mt-1">PDF files only</p>
                     </>
                   )}
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept=".pdf"
+                    aria-label="Upload breakdown PDF"
                     style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
                     onChange={(e) => handlePDFFile(e.target.files?.[0])}
                   />
                 </label>
-                {parseError && <p className="text-xs" style={{ color: 'var(--aurora-coral-deep, #C05957)' }}>{parseError}</p>}
+                {parseError && <p className="sx-meta" style={{ color: 'var(--sx-alert)' }}>{parseError}</p>}
               </div>
             )}
 
             {mode === 'manual' && (
-              <form onSubmit={handleSubmit} className="space-y-3 mt-2">
+              <form onSubmit={handleSubmit} className="space-y-3 mt-1">
                 {(form.project_title || form.character) && (
-                  <div
-                    className="rounded-lg px-3 py-2 flex items-center gap-2"
-                    style={{ background: 'rgba(159,230,180,0.15)', border: '1px solid rgba(159,230,180,0.35)' }}
-                  >
-                    <span className="text-sm" style={{ color: '#1A6A38' }}>✓</span>
-                    <p className="text-xs" style={{ color: '#1A6A38' }}>Fields populated from breakdown. Review and edit below</p>
-                  </div>
+                  <p className="sx-badge w-full justify-start" data-tone="ok" style={{ padding: '8px 12px' }}>
+                    Filled in from the breakdown — check it over
+                  </p>
                 )}
-                <input placeholder="Project name *" value={form.project_title} onChange={(e) => setForm({ ...form, project_title: e.target.value })} className={inputCls} style={inputStyle} required />
-                <input placeholder="Role / Character" value={form.character} onChange={(e) => setForm({ ...form, character: e.target.value })} className={inputCls} style={inputStyle} />
-                <input placeholder="Casting Director" value={form.casting_director} onChange={(e) => setForm({ ...form, casting_director: e.target.value })} className={inputCls} style={inputStyle} />
-                <input placeholder="Agency / Production Company" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} className={inputCls} style={inputStyle} />
-                <select value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} className={inputCls} style={inputStyle}>
+                <input aria-label="Project name" placeholder="Project name *" value={form.project_title} onChange={(e) => setForm({ ...form, project_title: e.target.value })} className={inputCls} required />
+                <input aria-label="Role or character" placeholder="Role / Character" value={form.character} onChange={(e) => setForm({ ...form, character: e.target.value })} className={inputCls} />
+                <input aria-label="Casting director" placeholder="Casting Director" value={form.casting_director} onChange={(e) => setForm({ ...form, casting_director: e.target.value })} className={inputCls} />
+                <input aria-label="Agency or production company" placeholder="Agency / Production Company" value={form.agency} onChange={(e) => setForm({ ...form, agency: e.target.value })} className={inputCls} />
+                <select aria-label="Project type" value={form.project_type} onChange={(e) => setForm({ ...form, project_type: e.target.value })} className={inputCls}>
                   <option value="film">Film/TV</option>
                   <option value="commercial">Commercial</option>
                   <option value="theatrical">Theatrical</option>
@@ -885,20 +782,12 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
                   <option value="voiceover">Voice Over</option>
                 </select>
                 <div>
-                  <label className="aurora-eyebrow block mb-1" style={{ color: 'var(--aurora-dim)' }}>Callback Date</label>
-                  <input type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} style={inputStyle} />
+                  <label className="sx-label" htmlFor="new-aud-callback">Callback date</label>
+                  <input id="new-aud-callback" type="datetime-local" value={form.callback_date} onChange={(e) => setForm({ ...form, callback_date: e.target.value })} className={inputCls} />
                 </div>
-                <textarea placeholder="Notes (character description, rate, union status, shoot dates...)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className={`${inputCls} resize-none`} style={inputStyle} />
-                <button
-                  type="submit"
-                  className="w-full font-semibold py-2.5 rounded-xl transition-all"
-                  style={{
-                    background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
-                    color: '#FFF',
-                    boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
-                  }}
-                >
-                  Add Audition
+                <textarea aria-label="Notes" placeholder="Notes (character description, rate, union status, shoot dates…)" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} className={inputCls} />
+                <button type="submit" disabled={submitting} className="sx-btn w-full">
+                  {submitting ? 'Adding…' : 'Add audition'}
                 </button>
               </form>
             )}
@@ -1102,93 +991,93 @@ export default function DashboardAuditions() {
     [dispatch]
   );
 
+  // Skeleton board rather than a bare spinner: the columns the tracker is
+  // about are on screen before the data lands.
   if (loading && allAuditions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div
-          className="w-8 h-8 rounded-full animate-spin"
-          style={{ border: '3px solid var(--aurora-line)', borderTopColor: 'var(--aurora-heritage-gold)' }}
-        />
+      <div className="sx sx-page space-y-4" aria-busy="true">
+        <div className="sx-skel h-8 w-52" />
+        <div className="flex gap-2 flex-wrap">
+          {[0, 1, 2, 3].map((i) => <div key={i} className="sx-skel h-9 w-24 rounded-full" />)}
+        </div>
+        <div className="sx-board sx-scroll-x -mx-2 px-2">
+          {COLUMNS.map((col) => (
+            <div key={col.id} className="sx-col">
+              <div className="sx-col-head"><div className="sx-skel h-3 w-20" /></div>
+              <div className="sx-col-well">
+                <div className="sx-skel h-20 rounded-xl" />
+                <div className="sx-skel h-20 rounded-xl" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 aurora-page-in">
+    <div className="sx sx-page space-y-4">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="sx-head">
         <div>
-          <span className="aurora-eyebrow block" style={{ color: 'var(--aurora-dim)', marginBottom: 4 }}>YOUR WORK</span>
-          <h1 className="aurora-display text-2xl" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.6px' }}>
-            Audition Tracker
-          </h1>
+          <span className="sx-eyebrow">YOUR WORK</span>
+          <h1 className="sx-title">Audition Tracker</h1>
         </div>
-        <button
-          onClick={() => setShowNewForm(true)}
-          className="flex items-center gap-2 font-semibold px-4 py-2.5 rounded-xl transition-all text-sm"
-          style={{
-            background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
-            color: '#FFF',
-            boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
-          }}
-        >
-          <Plus size={16} />
-          New Audition
+        <button type="button" onClick={() => setShowNewForm(true)} className="sx-btn sx-btn--sm">
+          <Plus size={16} aria-hidden="true" />
+          New audition
         </button>
       </div>
 
       {/* Filter Pills */}
       <div className="flex flex-wrap gap-2">
-        {TYPE_FILTERS.map((f) => {
-          const count = typeCounts[f.key] || 0;
-          const active = activeFilter === f.key;
-          return (
-            <button
-              key={f.key}
-              onClick={() => setActiveFilter(f.key)}
-              className="flex items-center gap-1.5 text-sm font-medium px-3.5 py-1.5 rounded-full transition-all duration-150"
-              style={active
-                ? { background: 'var(--aurora-heritage-gold)', color: '#FFF', boxShadow: '0 4px 12px rgba(212,168,95,0.22)' }
-                : { background: 'var(--aurora-surface-solid)', color: 'var(--aurora-sub)', border: '1px solid var(--aurora-line)' }
-              }
-            >
-              {f.icon && <f.icon size={13} />}
-              {f.label}
-              <span
-                className="text-xs font-semibold"
-                style={{ color: active ? 'rgba(255,255,255,0.75)' : 'var(--aurora-dim)' }}
-              >
-                {count}
-              </span>
-            </button>
-          );
-        })}
+        {TYPE_FILTERS.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            aria-pressed={activeFilter === f.key}
+            onClick={() => setActiveFilter(f.key)}
+            className="sx-chip"
+          >
+            {f.icon && <f.icon size={13} aria-hidden="true" />}
+            {f.label}
+            <b>{typeCounts[f.key] || 0}</b>
+          </button>
+        ))}
       </div>
 
-      {/* Kanban Board */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-      >
-        <div className="flex gap-4 overflow-x-auto pb-4 -mx-2 px-2">
-          {COLUMNS.map((col) => (
-            <KanbanColumn
-              key={col.id}
-              column={col}
-              items={columns[col.id]}
-              onCardClick={setSelectedAudition}
-              onAdvance={handleAdvance}
-              onPass={handlePass}
-            />
-          ))}
-        </div>
+      {/* Kanban Board — empty tracker gets copy that says what fills it */}
+      {allAuditions.length === 0 ? (
+        <NoDataFound
+          title="No auditions tracked yet"
+          message="Every audition you're up for lives on this board — submitted, in review, callback, booked. Add the one you're working on and drag it across as it moves."
+          action={{ label: 'Add your first audition', onClick: () => setShowNewForm(true) }}
+        />
+      ) : (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={onDragStart}
+          onDragEnd={onDragEnd}
+        >
+          <div className="sx-board sx-scroll-x -mx-2 px-2">
+            {COLUMNS.map((col) => (
+              <KanbanColumn
+                key={col.id}
+                column={col}
+                items={columns[col.id]}
+                onCardClick={setSelectedAudition}
+                onAdvance={handleAdvance}
+                onPass={handlePass}
+              />
+            ))}
+          </div>
 
-        <DragOverlay>
-          {activeCard ? <StaticCard audition={activeCard} /> : null}
-        </DragOverlay>
-      </DndContext>
+          <DragOverlay>
+            {activeCard ? <StaticCard audition={activeCard} /> : null}
+          </DragOverlay>
+        </DndContext>
+      )}
 
       <DetailPanel
         audition={selectedAudition}

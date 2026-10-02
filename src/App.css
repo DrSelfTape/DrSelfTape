@@ -1,185 +1,41 @@
 /* Fonts load from the single consolidated <link> in index.html (Ring 0). */
 @import 'tailwindcss';
+@import './tokens.css';
 @import './studio.css';
 
 /* ── Theme Variables ─────────────────────────────────────────────────
- * Layered design:
- *   1. LEGACY tokens (--bg-deep, --text-primary, etc.) — existing panels
- *      depend on these. Aurora-aware values below.
- *   2. AURORA tokens (--aurora-*) — new tokens for Aurora reskins.
- *
- * Brand reconciliation (per Dr Self Tape Brand Guideline):
- *   - PRIMARY CTA = coral #FF8280 (not Aurora's antique gold)
- *   - Bright gold #FCE072 = secondary accent
- *   - Antique gold #D4A85F exposed only as --aurora-heritage-gold
+ * The scale lives in ./tokens.css — one --dst-* ramp, with every legacy
+ * (--bg-*, --text-*), Aurora (--aurora-*) and Studio (--studio-*) name
+ * declared there as an alias. Do not redefine a colour here; add or move
+ * a rung in tokens.css and the aliases follow it onto every surface.
  * ─────────────────────────────────────────────────────────────────── */
-
-/* :root defaults are the LIGHT values — the app is light-only (theme.jsx
- * pins data-theme="light" on mount) and the pre-hydration frame must paint
- * light too, or every cold start flashes dark. The dark block below is dead
- * code kept for a possible future dark mode. */
-:root,
-[data-theme="light"] {
-  /* Legacy tokens — Aurora-light values */
-  --bg-deepest: #FAFAF7;
-  --bg-deep: #FAFAF7;
-  --bg-card: #FFFFFF;
-  --bg-elevated: #F4F4EE;
-  --bg-surface: #FFFFFF;
-  --bg-input: #FFFFFF;
-  --border-default: rgba(10,10,10,0.08);
-  --border-active: rgba(10,10,10,0.14);
-  --text-primary: #0A0A0A;
-  --text-secondary: rgba(10,10,10,0.62);
-  --text-muted: rgba(10,10,10,0.40);
-  --text-dim: rgba(10,10,10,0.28);
-  --sidebar-bg: #FFFFFF;
-  --topbar-bg: #FFFFFFee;
-  --card-shadow: rgba(10,10,10,0.06);
-
-  /* Aurora — light variant */
-  --aurora-bg: #FAFAF7;
-  --aurora-page: #FAFAF7;
-  --aurora-surface-solid: #FFFFFF;
-  --aurora-glass: rgba(255,255,255,0.62);
-  --aurora-glass-strong: rgba(255,255,255,0.78);
-  --aurora-glass-border: rgba(255,255,255,0.55);
-  --aurora-text: #0A0A0A;
-  --aurora-sub: rgba(10,10,10,0.62);
-  --aurora-dim: rgba(10,10,10,0.40);
-  --aurora-line: rgba(10,10,10,0.06);
-  --aurora-line-soft: rgba(10,10,10,0.04);
-
-  /* Primary accent — antique gold per Aurora design reference.
-   * Coral is preserved as --aurora-coral for explicit brand-mark usage
-   * (logo, wordmark, special branded moments). */
-  --aurora-accent: #D4A85F;
-  --aurora-accent-deep: #7A5A18;
-  --aurora-accent-light: #F0D097;
-
-  --aurora-coral: #FF8280;
-  --aurora-coral-deep: #C05957;
-  --aurora-coral-light: #FFB49A;
-
-  --aurora-gold: #FCE072;
-  --aurora-gold-deep: #8A6D14;
-  --aurora-gold-light: #FFF0B2;
-
-  /* Heritage gold = same as accent in light mode (single warm accent).
-   * Kept as separate token so dark mode can have a different heritage tone. */
-  --aurora-heritage-gold: #D4A85F;
-  --aurora-heritage-gold-deep: #7A5A18;
-  --aurora-heritage-gold-light: #F0D097;
-
-  --aurora-mint:   #9FE6B4;
-  --aurora-sky:    #A7D6FF;
-  --aurora-peach:  #FFC9A3;
-  --aurora-rose:   #FFB3C1;
-  --aurora-purple: #D8C5F2;
-
-  --aurora-shadow-card:  0 4px 20px rgba(10,10,10,0.04), inset 0 1px 0 rgba(255,255,255,0.70);
-  --aurora-shadow-modal: 0 24px 60px rgba(10,10,10,0.18);
-  --aurora-shadow-dock:  0 10px 30px rgba(10,10,10,0.06);
-  --aurora-shadow-coral: 0 12px 30px rgba(212,168,95,0.30);
-  --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.30);
-}
 
 /* ── AURORA NOIR — the web console surface (Ring 0) ──────────────────────
  * Stamped as data-surface="console" on <html> by theme.jsx on DESKTOP WEB
  * ONLY, behind VITE_CONSOLE_THEME (or localStorage dst_console_preview=1
  * for prod previewing before the flip). Native + mobile web keep the light
- * aurora surface untouched. Same gold, lights down.
+ * aurora surface untouched. Same gold, lights down. Its token values are
+ * in tokens.css; what stays here is the desktop type scale it adds and
+ * the paint on <html> itself.
  * Spec: docs/web-platform-direction-aurora-noir-2026-07-28.md */
 [data-surface="console"] {
-  /* Legacy tokens — noir values */
-  --bg-deepest: #0B0A08;
-  --bg-deep: #0B0A08;
-  --bg-card: #141210;
-  --bg-elevated: #1B1815;
-  --bg-surface: #141210;
-  --bg-input: #1B1815;
-  --border-default: rgba(245,237,220,0.08);
-  --border-active: rgba(245,237,220,0.16);
-  --text-primary: #F5EDDC;
-  --text-secondary: #A69C89;
-  --text-muted: rgba(245,237,220,0.45);
-  --text-dim: rgba(245,237,220,0.30);
-  --sidebar-bg: #141210;
-  --topbar-bg: rgba(11,10,8,0.88);
-  --card-shadow: rgba(0,0,0,0.5);
-
-  /* Aurora — noir values. Gold accent tokens intentionally NOT overridden:
-   * same accent both surfaces, the one-light law does the differentiation. */
-  --aurora-bg: #0B0A08;
-  --aurora-page: #0B0A08;
-  --aurora-surface-solid: #141210;
-  --aurora-glass: rgba(20,18,16,0.72);
-  --aurora-glass-strong: rgba(20,18,16,0.85);
-  --aurora-glass-border: rgba(245,237,220,0.10);
-  --aurora-text: #F5EDDC;
-  --aurora-sub: #A69C89;
-  --aurora-dim: rgba(245,237,220,0.40);
-  --aurora-line: rgba(245,237,220,0.08);
-  --aurora-line-soft: rgba(245,237,220,0.05);
-  --aurora-shadow-card: 0 1px 2px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.35);
-  --aurora-shadow-modal: 0 24px 60px rgba(0,0,0,0.6);
-  --aurora-shadow-dock: 0 10px 30px rgba(0,0,0,0.4);
-
-  /* Console-only tokens: desktop type scale + motion signature */
+  /* Console-only tokens: desktop type scale. The five-step --dst-text-*
+   * scale is tuned for a phone; a 27" display gets these instead. */
   --console-type-body: 14px;
   --console-type-label: 12px;
   --console-type-h3: 20px;
   --console-type-h1: 32px;
   --console-type-display: 56px;
-  --console-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --console-dur-press: 120ms;
-  --console-dur-enter: 200ms;
-  --console-dur-exit: 140ms;
 
-  background: #0B0A08;
-  color-scheme: dark;
+  background: var(--dst-paper);
 }
 
 /* The paper island (Ring 2): shared feature panels hardcode dark-on-light
  * colors, so inside the console they render on a light "script page" floating
- * over the noir stage instead of breaking on dark tokens. This block resets
- * the token surface back to the light values for everything inside a
- * .console-paper container. Values mirror the :root light block above —
- * update BOTH if the light palette ever changes. */
-[data-surface="console"] .console-paper {
-  --bg-deepest: #FAFAF7;
-  --bg-deep: #FAFAF7;
-  --bg-card: #FFFFFF;
-  --bg-elevated: #F4F4EE;
-  --bg-surface: #FFFFFF;
-  --bg-input: #FFFFFF;
-  --border-default: rgba(10,10,10,0.08);
-  --border-active: rgba(10,10,10,0.14);
-  --text-primary: #0A0A0A;
-  --text-secondary: rgba(10,10,10,0.62);
-  --text-muted: rgba(10,10,10,0.40);
-  --text-dim: rgba(10,10,10,0.28);
-  --card-shadow: rgba(10,10,10,0.06);
-  --aurora-bg: #FAFAF7;
-  --aurora-page: #FAFAF7;
-  --aurora-surface-solid: #FFFFFF;
-  --aurora-glass: rgba(255,255,255,0.62);
-  --aurora-glass-strong: rgba(255,255,255,0.78);
-  --aurora-glass-border: rgba(255,255,255,0.55);
-  --aurora-text: #0A0A0A;
-  --aurora-sub: rgba(10,10,10,0.62);
-  --aurora-dim: rgba(10,10,10,0.40);
-  --aurora-line: rgba(10,10,10,0.06);
-  --aurora-line-soft: rgba(10,10,10,0.04);
-  --aurora-shadow-card: 0 4px 20px rgba(10,10,10,0.04), inset 0 1px 0 rgba(255,255,255,0.70);
-  --aurora-shadow-modal: 0 24px 60px rgba(10,10,10,0.18);
-  --aurora-shadow-dock: 0 10px 30px rgba(10,10,10,0.06);
-  color-scheme: light;
-}
+ * over the noir stage instead of breaking on dark tokens. The token reset
+ * itself is in tokens.css, on the same selector as the light scale — one
+ * light palette, declared once, reachable from inside the noir surface. */
 
-/* Reduced motion on the console: transitions collapse to quick fades and no
- * animation loops (the analyzing pulse goes static). Scoped to the console
- * surface only — mobile/native keep their own reduced-motion handling. */
 @media (prefers-reduced-motion: reduce) {
   [data-surface="console"] *,
   [data-surface="console"] *::before,
@@ -189,61 +45,6 @@
   }
 }
 
-[data-theme="dark"] {
-  /* Legacy tokens */
-  --bg-deepest: #080a0f;
-  --bg-deep: #0D0D0D;
-  --bg-card: #13151d;
-  --bg-elevated: #1A1A2E;
-  --bg-surface: #1E1E1E;
-  --bg-input: #111318;
-  --border-default: #2A2A2A;
-  --border-active: #3A3A3A;
-  --text-primary: #f2f0ed;
-  --text-secondary: #999999;
-  --text-muted: #666666;
-  --text-dim: #444444;
-  --sidebar-bg: #0D0D0D;
-  --topbar-bg: #0D0D0Dee;
-  --card-shadow: rgba(0,0,0,0.3);
-
-  /* Aurora — dark variant */
-  --aurora-bg: #0c0e14;
-  --aurora-page: #080a0f;
-  --aurora-surface-solid: #13151d;
-  --aurora-glass: rgba(255,255,255,0.04);
-  --aurora-glass-strong: rgba(255,255,255,0.07);
-  --aurora-glass-border: rgba(255,255,255,0.08);
-  --aurora-text: #f2f0ed;
-  --aurora-sub: rgba(242,240,237,0.62);
-  --aurora-dim: rgba(242,240,237,0.40);
-  --aurora-line: rgba(255,255,255,0.06);
-  --aurora-line-soft: rgba(255,255,255,0.04);
-
-  --aurora-accent: #FF8280;
-  --aurora-accent-deep: #C05957;
-  --aurora-accent-light: #FFB49A;
-
-  --aurora-gold: #FCE072;
-  --aurora-gold-deep: #B89A2E;
-  --aurora-gold-light: #FFF0B2;
-
-  --aurora-heritage-gold: #D4A85F;
-  --aurora-heritage-gold-deep: #7A5A18;
-  --aurora-heritage-gold-light: #F0D097;
-
-  --aurora-mint:   #9FE6B4;
-  --aurora-sky:    #A7D6FF;
-  --aurora-peach:  #FFC9A3;
-  --aurora-rose:   #FFB3C1;
-  --aurora-purple: #D8C5F2;
-
-  --aurora-shadow-card:  0 4px 20px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.04);
-  --aurora-shadow-modal: 0 24px 60px rgba(0,0,0,0.50);
-  --aurora-shadow-dock:  0 10px 30px rgba(0,0,0,0.40);
-  --aurora-shadow-coral: 0 12px 30px rgba(255,130,128,0.30);
-  --aurora-shadow-gold:  0 12px 30px rgba(252,224,114,0.25);
-}
 
 /* ── Aurora utility classes ─────────────────────────────────────────── */
 
@@ -253,7 +54,7 @@
   backdrop-filter: blur(24px) saturate(1.4);
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
   box-shadow: var(--aurora-shadow-card);
-  border-radius: 24px;
+  border-radius: var(--dst-radius-2xl);
 }
 .aurora-glass-strong {
   background: var(--aurora-glass-strong);
@@ -268,18 +69,8 @@
 .aurora-card {
   background: var(--aurora-surface-solid);
   border: 1px solid var(--aurora-line);
-  border-radius: 24px;
-  box-shadow:
-    0 1px 2px rgba(10,10,10,0.04),
-    0 8px 24px rgba(10,10,10,0.05),
-    inset 0 1px 0 rgba(255,255,255,0.6);
-}
-[data-theme="dark"] .aurora-card {
-  background: var(--aurora-surface-solid);
-  box-shadow:
-    0 1px 2px rgba(0,0,0,0.4),
-    0 8px 24px rgba(0,0,0,0.35),
-    inset 0 1px 0 rgba(255,255,255,0.04);
+  border-radius: var(--dst-radius-2xl);
+  box-shadow: var(--dst-shadow-raised);
 }
 
 /* Aurora orb background — apply to a full-page wrapper; uses fixed
@@ -287,6 +78,13 @@
 .aurora-orbs {
   position: relative;
   isolation: isolate;
+  /* Declared on the element, not the pseudo: ::before and ::after are
+   * siblings and do not inherit from each other. */
+  --orb-strength: 50%;
+}
+[data-theme="dark"] .aurora-orbs,
+[data-surface="console"] .aurora-orbs {
+  --orb-strength: 11%;
 }
 .aurora-orbs::before {
   content: '';
@@ -294,44 +92,39 @@
   inset: 0;
   z-index: -1;
   pointer-events: none;
+  /* Four palette hues, thinned. --orb-strength drops on a dark ground so
+   * the orbs stay a suggestion rather than a glow. */
   background:
-    radial-gradient(70% 50% at 85% 8%, rgba(212,168,95,0.40) 0%, transparent 55%),
-    radial-gradient(60% 45% at -5% 30%, rgba(167,214,255,0.55) 0%, transparent 55%),
-    radial-gradient(55% 40% at 50% 92%, rgba(159,230,180,0.55) 0%, transparent 55%),
-    radial-gradient(40% 30% at 105% 78%, rgba(255,179,193,0.55) 0%, transparent 55%);
-}
-[data-theme="dark"] .aurora-orbs::before {
-  background:
-    radial-gradient(70% 50% at 85% 10%, rgba(255,130,128,0.12) 0%, transparent 55%),
-    radial-gradient(60% 45% at -5% 32%, rgba(167,214,255,0.10) 0%, transparent 55%),
-    radial-gradient(55% 40% at 50% 92%, rgba(159,230,180,0.10) 0%, transparent 55%),
-    radial-gradient(40% 30% at 105% 78%, rgba(255,179,193,0.10) 0%, transparent 55%);
+    radial-gradient(70% 50% at 85% 8%, color-mix(in srgb, var(--dst-brass-light) var(--orb-strength), transparent) 0%, transparent 55%),
+    radial-gradient(60% 45% at -5% 30%, color-mix(in srgb, var(--dst-sky) var(--orb-strength), transparent) 0%, transparent 55%),
+    radial-gradient(55% 40% at 50% 92%, color-mix(in srgb, var(--dst-mint) var(--orb-strength), transparent) 0%, transparent 55%),
+    radial-gradient(40% 30% at 105% 78%, color-mix(in srgb, var(--dst-rose) var(--orb-strength), transparent) 0%, transparent 55%);
 }
 
 /* Mono / typography helpers */
 .aurora-eyebrow {
-  font-family: "JetBrains Mono", monospace;
-  font-size: var(--type-xs, 10px);
+  font-family: var(--dst-font-mono);
+  font-size: var(--dst-text-xs);
   font-weight: 500;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--aurora-dim);
+  color: var(--dst-ink-3);
 }
 .aurora-micro {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--dst-font-mono);
   font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.15em;
 }
 .aurora-mono {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--dst-font-mono);
   font-weight: 500;
   letter-spacing: -0.02em;
 }
 .aurora-display {
-  font-family: "Space Grotesk", sans-serif;
+  font-family: var(--dst-font-display);
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: var(--dst-tracking-display);
 }
 
 /* Tactile press feedback for the floating tab pill buttons */
@@ -341,7 +134,7 @@
 
 /* Tactile press feedback for gradient CTAs — extends the aurora-tab-btn pattern. */
 .dst-press {
-  transition: transform 160ms cubic-bezier(.2,.7,.3,1);
+  transition: transform 160ms var(--dst-ease-out);
 }
 .dst-press:active {
   transform: scale(0.97);
@@ -351,9 +144,9 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--bg-deep);
-  color: var(--text-primary);
-  font-family: -apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif;
+  background: var(--dst-paper);
+  color: var(--dst-ink);
+  font-family: var(--dst-font-sans);
   transition: background 0.3s, color 0.3s;
 }
 
@@ -392,25 +185,41 @@ button, a, [role="button"] {
   touch-action: manipulation;
 }
 
+/* ── Tailwind's theme ─────────────────────────────────────────────────
+ * Tailwind owns these names: they are what text-danger, bg-primary and
+ * friends compile against. The VALUES come from tokens.css so there is
+ * still one scale — add a rung there, point a name at it here.
+ * ─────────────────────────────────────────────────────────────────── */
 @theme {
 /* Base Colors */
 --color-black: #000000;
 --color-white: #ffffff;
 
-/* Primary Theme (Purple) */
---color-primary: #FF8280;
+/* Primary — the coral brand mark. The warm accent is brass; see the
+ * --dst-brass-* ramp in tokens.css before reaching for gold here.
+ * LITERALS ON PURPOSE: Tailwind computes bg-primary/80 and friends at
+ * build time and cannot read an alpha out of a var(), so a var() here
+ * silently drops the opacity modifier. These mirror --dst-coral /
+ * --dst-brass-deep — move both together. */
+--color-primary: #FF8280;        /* = --dst-coral */
 --color-primary-light: rgba(255, 130, 128,0.1);
---color-primary-dark: #7A5A18; /* was #A040C8 — purple remnant retired (Ring 0) */
+--color-primary-dark: #7A5A18;   /* = --dst-brass-deep */
 
-/* Secondary (Dark Neutrals) */
+/* Secondary (Dark Neutrals) — LEGACY PAIR, do not untangle one half.
+ * bg-secondary-light (#1A1A1A) is a dark card and text-secondary-dark
+ * (#FFFFFF) is the text on it; 60 call sites assume both. Whoever next
+ * owns those UserPanel screens should retire the pair together. */
 --color-secondary: #6B7280;
 --color-secondary-light: #1A1A1A;
 --color-secondary-dark: #FFFFFF;
 
 
-  /* Utility */
-  --color-danger: #ef4444;
-  --color-success: #22c55e;
+  /* Utility. Literals, same reason as above.
+   * danger was #ef4444 — 3.8:1 as text on white and 3.8:1 under white on
+   * a filled button, under AA either way. This is --dst-danger. */
+  --color-danger: #C62828;         /* = --dst-danger */
+  --color-success: #22c55e;        /* fills and dots only — for green TEXT
+                                    * use --dst-success (5.1:1) */
 
   /* Input Colors */
   --color-input: #d1d5db;
@@ -442,21 +251,20 @@ button, a, [role="button"] {
   --font-input-font: 'Inter', sans-serif;
   --text-input-size: 14px;
   --text-input-title-size: 12px;
-  --font-jetbrains: "JetBrains Mono", monospace;
-  --font-sans: "Space Grotesk", sans-serif;
+  --font-jetbrains: var(--dst-font-mono);
+  --font-sans: var(--dst-font-display);
 
-  /* Type scale — 5 steps (layout gameplan Tier 3 sweep). Values match the
-   * dominant sizes already shipped, so adopting a step is consolidation,
-   * not redesign. New mobile type should pick a step; off-scale strays
-   * migrate to the nearest step opportunistically.
+  /* Type scale — the five steps, under the name the app already uses.
+   * Values live in tokens.css as --dst-text-*; these are the Tailwind-side
+   * mirror so existing var(--type-base) call sites keep resolving.
    * NOTE: deliberately namespaced --type-* (NOT --text-*) — Tailwind v4's
    * theme owns --text-xs/sm/base/lg for its text-* utilities and overriding
    * those in :root would reshrink every Tailwind text class app-wide. */
-  --type-xs: 10px;      /* eyebrows, badges, tab-bar labels */
-  --type-sm: 11px;      /* card meta, secondary labels */
-  --type-base: 13px;    /* body copy, buttons, list titles */
-  --type-lg: 18px;      /* section titles, emphasized rows */
-  --type-display: 22px; /* screen titles, hero lines */
+  --type-xs: var(--dst-text-xs);           /* eyebrows, badges, tab-bar labels */
+  --type-sm: var(--dst-text-sm);           /* card meta, secondary labels */
+  --type-base: var(--dst-text-base);       /* body copy, buttons, list titles */
+  --type-lg: var(--dst-text-lg);           /* section titles, emphasised rows */
+  --type-display: var(--dst-text-display); /* screen titles, hero lines */
 }
 
 /* Hide scrollbar  */
@@ -471,7 +279,7 @@ input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
   -webkit-box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
   box-shadow: 0 0 0px 1000px var(--bg-input) inset !important;
-  -webkit-text-fill-color: #fff !important;
+  -webkit-text-fill-color: var(--dst-ink) !important;
 }
 
 /* Hides spinner for Chrome, Safari, Edge */
@@ -497,12 +305,12 @@ input:-webkit-autofill:active {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #999;
-  border-radius: 8px;
+  background-color: var(--dst-ink-faint);
+  border-radius: var(--dst-radius-sm);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #666;
+  background-color: var(--dst-ink-3);
 }
 
 /* Hide scrollbar completely */
@@ -523,7 +331,7 @@ input:-webkit-autofill:active {
 /* V-02: legacy UserPanel pages now sit on the console paper; the border
    follows the token instead of a hard-coded MUI-era grey. */
 .border-style {
-  border-color: var(--aurora-line, #3A3A3A);
+  border-color: var(--dst-line-soft);
 }
 
 .center {
@@ -531,11 +339,13 @@ input:-webkit-autofill:active {
 }
 
 .card-section {
-  @apply bg-[#1A1A1A] rounded-xl shadow-sm p-6 border border-[#2A2A2A];
+  @apply rounded-xl shadow-sm p-6 border;
+  background: var(--dst-surface);
+  border-color: var(--dst-line-soft);
 }
 
 .topbar-style {
-  @apply border-b border-[var(--border-default)] min-h-[55px] flex items-center justify-between px-4 bg-[var(--bg-deep)] overflow-auto;
+  @apply border-b border-[var(--dst-line-soft)] min-h-[55px] flex items-center justify-between px-4 bg-[var(--dst-paper)] overflow-auto;
 }
 
 .edit-booking-style {
@@ -582,21 +392,21 @@ input:-webkit-autofill:active {
 /* Notification highlight animation for invite cards */
 @keyframes notification-pulse {
   0%, 100% {
-    background-color: #1A1A1A;
+    background-color: var(--dst-surface);
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(255, 130, 128, 0.4);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--dst-coral) 40%, transparent);
   }
   50% {
-    background-color: rgba(255, 130, 128, 0.15);
+    background-color: color-mix(in srgb, var(--dst-coral) 15%, transparent);
     transform: scale(1.02);
-    box-shadow: 0 0 20px 5px rgba(255, 130, 128, 0.3);
+    box-shadow: 0 0 20px 5px color-mix(in srgb, var(--dst-coral) 30%, transparent);
   }
 }
 
 .animate-notification-pulse {
   animation: notification-pulse 0.8s ease-in-out 3 !important;
-  border-color: #FF8280 !important;
-  box-shadow: 0 4px 20px rgba(255, 130, 128, 0.25) !important;
+  border-color: var(--dst-coral) !important;
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--dst-coral) 25%, transparent) !important;
 }
 
 /* Find a Reader – swipe card entrance */
@@ -626,18 +436,16 @@ input:-webkit-autofill:active {
 @media (hover: hover) and (pointer: fine) {
   .aurora-card {
     transition:
-      transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1),
+      transform 220ms var(--dst-ease-spring),
       box-shadow 220ms ease,
       border-color 220ms ease;
   }
   .aurora-card:hover {
     transform: translateY(-2px);
-    border-color: color-mix(in oklch, var(--aurora-accent) 35%, transparent);
+    border-color: color-mix(in oklch, var(--dst-brass-light) 35%, transparent);
     box-shadow:
-      0 1px 2px rgba(10,10,10,0.04),
-      0 20px 40px color-mix(in oklch, var(--aurora-accent) 20%, transparent),
-      0 8px 16px rgba(10,10,10,0.05),
-      inset 0 1px 0 rgba(255,255,255,0.6);
+      var(--dst-shadow-raised),
+      0 20px 40px color-mix(in oklch, var(--dst-brass-light) 20%, transparent);
   }
 }
 
@@ -653,7 +461,9 @@ button:not(:disabled):active,
 .aurora-link {
   position: relative;
   text-decoration: none;
-  color: var(--aurora-accent-deep);
+  /* brass-deep: 6.1:1 on paper. A link is text, so it never takes a
+   * lighter rung of the ramp. */
+  color: var(--dst-brass-deep);
   font-weight: 600;
   display: inline-block;
   padding-bottom: 2px;
@@ -665,11 +475,11 @@ button:not(:disabled):active,
   bottom: 0;
   width: 0;
   height: 1.5px;
-  background: linear-gradient(90deg, var(--aurora-accent), var(--aurora-accent-deep));
+  background: linear-gradient(90deg, var(--dst-brass), var(--dst-brass-deep));
   border-radius: 2px;
   transition:
-    width 280ms cubic-bezier(0.34, 1.56, 0.64, 1),
-    left 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    width 280ms var(--dst-ease-spring),
+    left 280ms var(--dst-ease-spring);
 }
 @media (hover: hover) and (pointer: fine) {
   .aurora-link:hover::after {
@@ -682,14 +492,14 @@ button:not(:disabled):active,
 .aurora-glow {
   transition:
     box-shadow 280ms ease,
-    transform 220ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform 220ms var(--dst-ease-spring);
 }
 @media (hover: hover) and (pointer: fine) {
   .aurora-glow:hover {
     transform: translateY(-1px);
     box-shadow:
-      0 14px 36px color-mix(in oklch, var(--aurora-accent) 45%, transparent),
-      0 6px 16px color-mix(in oklch, var(--aurora-accent) 28%, transparent);
+      0 14px 36px color-mix(in oklch, var(--dst-brass-light) 45%, transparent),
+      0 6px 16px color-mix(in oklch, var(--dst-brass-light) 28%, transparent);
   }
 }
 
@@ -701,25 +511,26 @@ button:not(:disabled):active,
 .aurora-skeleton {
   background: linear-gradient(
     90deg,
-    var(--aurora-line) 0%,
-    color-mix(in oklch, var(--aurora-accent) 22%, transparent) 50%,
-    var(--aurora-line) 100%
+    var(--dst-surface-sunken) 0%,
+    color-mix(in oklch, var(--dst-brass-light) 22%, transparent) 50%,
+    var(--dst-surface-sunken) 100%
   );
   background-size: 200% 100%;
   animation: drst-shimmer 1.6s ease-in-out infinite;
-  border-radius: 6px;
+  border-radius: var(--dst-radius-xs);
   color: transparent;
   user-select: none;
 }
 
 /* Focused inputs get a gentle breathing ring in the brand accent. */
 @keyframes drst-focus-breathe {
-  0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklch, var(--aurora-accent) 22%, transparent); }
-  50%      { box-shadow: 0 0 0 5px color-mix(in oklch, var(--aurora-accent) 32%, transparent); }
+  0%, 100% { box-shadow: 0 0 0 3px color-mix(in oklch, var(--dst-brass-ui) 22%, transparent); }
+  50%      { box-shadow: 0 0 0 5px color-mix(in oklch, var(--dst-brass-ui) 32%, transparent); }
 }
 .aurora-input:focus-visible {
   outline: none;
-  border-color: var(--aurora-accent);
+  /* brass-ui, not brass: a focus ring is a UI boundary and owes 3:1. */
+  border-color: var(--dst-brass-ui);
   animation: drst-focus-breathe 1.8s ease-in-out infinite;
 }
 
@@ -761,14 +572,9 @@ button:not(:disabled):active,
   pointer-events: none;
   mix-blend-mode: screen;
   background:
-    radial-gradient(50% 36% at 70% 18%, rgba(255,201,163,0.45) 0%, transparent 60%),
-    radial-gradient(45% 32% at 12% 70%, rgba(216,197,242,0.42) 0%, transparent 60%);
+    radial-gradient(50% 36% at 70% 18%, color-mix(in srgb, var(--dst-peach) var(--orb-strength), transparent) 0%, transparent 60%),
+    radial-gradient(45% 32% at 12% 70%, color-mix(in srgb, var(--dst-purple) var(--orb-strength), transparent) 0%, transparent 60%);
   animation: aurora-breathe 14s ease-in-out infinite alternate;
-}
-[data-theme="dark"] .aurora-orbs.aurora-orbs-live::after {
-  background:
-    radial-gradient(50% 36% at 70% 18%, rgba(255,201,163,0.10) 0%, transparent 60%),
-    radial-gradient(45% 32% at 12% 70%, rgba(216,197,242,0.10) 0%, transparent 60%);
 }
 @media (prefers-reduced-motion: reduce) {
   .aurora-orbs.aurora-orbs-live::before,
@@ -798,7 +604,7 @@ button:not(:disabled):active,
   100% { opacity: 1; transform: translateY(0); }
 }
 .aurora-page-in {
-  animation: aurora-page-in 320ms cubic-bezier(.2,.7,.3,1);
+  animation: aurora-page-in 320ms var(--dst-ease-out);
 }
 /* Do not create a transformed containing block around full-screen rehearsals. */
 .aurora-page-in:has(.dst-rehearsal) { animation: none; }
@@ -815,7 +621,7 @@ button:not(:disabled):active,
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 .tr-reveal {
-  animation: tr-reveal 380ms cubic-bezier(.2,.7,.3,1) both;
+  animation: tr-reveal 380ms var(--dst-ease-out) both;
   animation-delay: calc(var(--tr-i, 0) * 60ms);
 }
 @media (prefers-reduced-motion: reduce) {
@@ -830,46 +636,86 @@ button:not(:disabled):active,
   100% { opacity: 1; transform: translateY(0); }
 }
 .dst-banner-in {
-  animation: dst-banner-in 200ms cubic-bezier(.2,.7,.3,1) both;
+  animation: dst-banner-in var(--dst-dur-enter) var(--dst-ease-out) both;
 }
 @media (prefers-reduced-motion: reduce) {
   .dst-banner-in {
     animation: none !important;
   }
 }
-/* ── V-02 RecapStoryCard — the 9:16 reveal over a fresh desktop result ── */
+/* ── V-02 RecapStoryCard — the 9:16 reveal over a fresh desktop result ──
+ * A deliberately dark card on any surface, so it carries its own ink
+ * rather than following the page. --recap-ink / --recap-line are local
+ * to the card and inherited by everything inside it. */
 .dst-recap-backdrop { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; background: rgba(6,5,3,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); animation: dst-recap-fade 260ms ease-out both; }
-.dst-recap-card { position: relative; height: min(86vh, 720px); aspect-ratio: 9 / 16; border-radius: 28px; overflow: hidden; color: #F5EDDC; background: linear-gradient(135deg, #1A1305 0%, #3A2A0E 46%, #7A5A18 100%); box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px var(--aurora-line-soft, rgba(245,237,220,0.08)); padding: 28px 26px 24px; display: flex; flex-direction: column; outline: none; animation: dst-recap-in 260ms cubic-bezier(0.2,0.8,0.2,1) both; }
+.dst-recap-card { --recap-ink: #F5EDDC; --recap-ink-2: rgba(245,237,220,0.70); --recap-ink-3: rgba(245,237,220,0.62); --recap-line: rgba(245,237,220,0.22); position: relative; height: min(86vh, 720px); aspect-ratio: 9 / 16; border-radius: 28px; overflow: hidden; color: var(--recap-ink); background: linear-gradient(135deg, #1A1305 0%, #3A2A0E 46%, var(--dst-brass-deep) 100%); box-shadow: 0 30px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(245,237,220,0.08); padding: 28px 26px 24px; display: flex; flex-direction: column; outline: none; animation: dst-recap-in 260ms cubic-bezier(0.2,0.8,0.2,1) both; }
 .dst-recap-progress { display: flex; gap: 6px; margin-bottom: 22px; }
-.dst-recap-progress span { flex: 1; height: 3px; border-radius: 2px; background: rgba(245,237,220,0.18); }
-.dst-recap-progress span.is-on { background: var(--recap-accent, var(--aurora-gold)); }
-.dst-recap-close { position: absolute; top: 14px; right: 14px; z-index: 3; width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(245,237,220,0.18); background: rgba(0,0,0,0.25); color: #F5EDDC; font-size: var(--type-display, 22px); line-height: 1; cursor: pointer; }
+.dst-recap-progress span { flex: 1; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--recap-ink) 18%, transparent); }
+.dst-recap-progress span.is-on { background: var(--recap-accent, var(--dst-gold)); }
+.dst-recap-close { position: absolute; top: 14px; right: 14px; z-index: 3; width: var(--dst-tap-dense); height: var(--dst-tap-dense); border-radius: 50%; border: 1px solid var(--recap-line); background: rgba(0,0,0,0.25); color: var(--recap-ink); font-size: var(--dst-text-display); line-height: 1; cursor: pointer; }
 .dst-recap-page { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; animation: dst-recap-fade 180ms ease-out both; }
-.dst-recap-kicker { font-size: var(--type-xs, 12px); letter-spacing: 0.14em; text-transform: uppercase; color: rgba(245,237,220,0.62); margin: 0; }
-.dst-recap-title { font-size: calc(var(--type-display, 22px) * 2); line-height: 1.02; letter-spacing: -0.02em; font-weight: 800; margin: 0; color: var(--recap-accent, var(--aurora-gold)); }
-.dst-recap-score { font-size: var(--type-sm, 14px); color: rgba(245,237,220,0.7); margin: 0; }
-.dst-recap-score span { font-size: calc(var(--type-display, 22px) * 2); font-weight: 800; color: #F5EDDC; }
-.dst-recap-body { font-size: var(--type-lg, 18px); line-height: 1.35; margin: 0; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
-.dst-recap-list { margin: 0; padding-left: 1.1em; font-size: var(--type-base, 16px); line-height: 1.4; display: grid; gap: 10px; }
-.dst-recap-thumb { width: 84px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: 12px; border: 1px solid rgba(245,237,220,0.22); background: rgba(0,0,0,0.3); }
+.dst-recap-kicker { font-size: var(--dst-text-xs); letter-spacing: var(--dst-tracking-eyebrow); text-transform: uppercase; color: var(--recap-ink-3); margin: 0; }
+.dst-recap-title { font-size: calc(var(--dst-text-display) * 2); line-height: 1.02; letter-spacing: var(--dst-tracking-display); font-weight: 800; margin: 0; color: var(--recap-accent, var(--dst-gold)); }
+.dst-recap-score { font-size: var(--dst-text-sm); color: var(--recap-ink-2); margin: 0; }
+.dst-recap-score span { font-size: calc(var(--dst-text-display) * 2); font-weight: 800; color: var(--recap-ink); }
+.dst-recap-body { font-size: var(--dst-text-lg); line-height: 1.35; margin: 0; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; }
+.dst-recap-list { margin: 0; padding-left: 1.1em; font-size: var(--dst-text-base); line-height: 1.4; display: grid; gap: 10px; }
+.dst-recap-thumb { width: 84px; aspect-ratio: 9 / 16; object-fit: cover; border-radius: var(--dst-radius-lg); border: 1px solid var(--recap-line); background: rgba(0,0,0,0.3); }
 .dst-recap-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-.dst-recap-tags span { font-size: var(--type-xs, 12px); padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(245,237,220,0.22); }
+.dst-recap-tags span { font-size: var(--dst-text-xs); padding: 6px 10px; border-radius: var(--dst-radius-pill); border: 1px solid var(--recap-line); }
 .dst-recap-zone { position: absolute; top: 14%; bottom: 26%; width: 38%; background: transparent; border: 0; padding: 0; cursor: pointer; z-index: 2; }
 .dst-recap-zone:disabled { cursor: default; }
 .dst-recap-zone-prev { left: 0; }
 .dst-recap-zone-next { right: 0; }
 .dst-recap-foot { position: relative; z-index: 3; display: flex; flex-direction: column; gap: 14px; }
 .dst-recap-dots { display: flex; justify-content: center; gap: 8px; }
-.dst-recap-dots button { width: 8px; height: 8px; border-radius: 50%; border: 0; padding: 0; background: rgba(245,237,220,0.28); cursor: pointer; transition: transform 160ms, background 160ms; }
-.dst-recap-dots button.is-on { background: var(--recap-accent, var(--aurora-gold)); transform: scale(1.35); }
+.dst-recap-dots button { width: 8px; height: 8px; border-radius: 50%; border: 0; padding: 0; background: color-mix(in srgb, var(--recap-ink) 28%, transparent); cursor: pointer; transition: transform 160ms, background 160ms; }
+.dst-recap-dots button.is-on { background: var(--recap-accent, var(--dst-gold)); transform: scale(1.35); }
 .dst-recap-actions { display: flex; gap: 10px; }
-.dst-recap-actions button { flex: 1; height: 46px; border-radius: 14px; font-weight: 700; font-size: var(--type-base, 16px); cursor: pointer; }
-.dst-recap-share { background: transparent; color: #F5EDDC; border: 1px solid rgba(245,237,220,0.28); }
+.dst-recap-actions button { flex: 1; min-height: var(--dst-tap-min); height: 46px; border-radius: 14px; font-weight: 700; font-size: var(--dst-text-base); cursor: pointer; }
+.dst-recap-share { background: transparent; color: var(--recap-ink); border: 1px solid color-mix(in srgb, var(--recap-ink) 28%, transparent); }
 .dst-recap-share:disabled { opacity: 0.6; cursor: default; }
-.dst-recap-primary { background: var(--recap-accent, var(--aurora-gold)); color: #1A1305; border: 0; }
+.dst-recap-primary { background: var(--recap-accent, var(--dst-gold)); color: #1A1305; border: 0; }
 @keyframes dst-recap-in { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
 @keyframes dst-recap-fade { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
   .dst-recap-backdrop, .dst-recap-card, .dst-recap-page { animation: none !important; }
   .dst-recap-dots button { transition: none !important; }
+}
+
+/* ── Touch targets ────────────────────────────────────────────────────
+ * Apple's floor is 44px and a finger does not care how dense the design
+ * is. When a control has to LOOK smaller than 44px — a toolbar icon, a
+ * table-row action — keep the box small and stretch the hit area with
+ * this helper. It paints nothing and changes no layout.
+ * ─────────────────────────────────────────────────────────────────── */
+.dst-hit-44 {
+  position: relative;
+}
+.dst-hit-44::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: max(100%, var(--dst-tap-min));
+  height: max(100%, var(--dst-tap-min));
+}
+
+/* ── Loading ──────────────────────────────────────────────────────────
+ * The three-dot "thinking" beat shared by CreateLoader and the CDSim
+ * analysing rows. Pair it with .aurora-skeleton for the body copy.
+ * ─────────────────────────────────────────────────────────────────── */
+@keyframes dst-typedot {
+  0%, 80%, 100% { opacity: 0.25; }
+  40%           { opacity: 1; }
+}
+.dst-typedot {
+  animation: dst-typedot 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dst-typedot {
+    animation: none !important;
+    opacity: 0.7;
+  }
 }

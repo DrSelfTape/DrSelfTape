@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useSelector, useDispatch } from 'react-redux'
 import { performLogout } from '../redux/features/auth/authSlice'
@@ -238,7 +239,20 @@ export default function Sidebar() {
       {/* User footer */}
       <div className="p-4 border-t" style={{ borderColor: 'var(--aurora-line)' }}>
         <button
-          onClick={() => navigate('/dashboard/profile')}
+          onClick={() => {
+            // react-router's navigate() is a no-op inside the Capacitor
+            // WKWebView shell — on iPad native this footer button did
+            // nothing. DashboardLayout bridges drst-navigate to history
+            // there; on plain web that listener isn't mounted, so keep
+            // navigate() as the web path.
+            if (Capacitor.isNativePlatform()) {
+              try {
+                window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'dash-profile' } }))
+                return
+              } catch { /* fall through to navigate() */ }
+            }
+            navigate('/dashboard/profile')
+          }}
           className="w-full flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-[var(--aurora-glass)] transition-colors group"
         >
           {/* Avatar */}

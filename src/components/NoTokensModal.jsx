@@ -1,13 +1,30 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import useHideMobileHeader from './Shared/useHideMobileHeader';
 import { trackEvent } from '../utils/analytics';
+import axiosInstance from '../redux/http';
 
+// The same 402 reaches a free user, a paying Basic/Plus user who spent their
+// monthly allowance, and a Premium user who hit the daily fair-use ceiling.
+// Telling all three "Premium removes the ceiling" tells two of them to buy
+// something they already own, so the plan decides the copy.
 export default function NoTokensModal({ onClose, onUpgrade }) {
   useHideMobileHeader(true);
+  const [plan, setPlan] = useState(undefined); // undefined = still loading
 
   useEffect(() => {
     trackEvent('no_tokens_modal_shown', {});
+    let alive = true;
+    axiosInstance
+      .get('/v1/subscriptions/status/', { timeout: 8000 })
+      .then((res) => { if (alive) setPlan(res.data?.data || null); })
+      .catch(() => { if (alive) setPlan(null); }); // fall back to the upgrade pitch
+    return () => { alive = false; };
   }, []);
+
+  const isUnlimited = !!plan?.unlimited;
+  const isPaid = !!plan?.plan && !isUnlimited;
+  // Premium at the fair-use ceiling has nothing to buy — don't offer them one.
+  const showUpgrade = !isUnlimited;
 
   const handleUpgrade = () => {
     trackEvent('no_tokens_upgrade_tapped', {});
@@ -34,12 +51,17 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
       >
         <div className="text-5xl mb-4">🎬</div>
         <h2 className="aurora-display text-xl mb-2" style={{ color: 'var(--aurora-text)', letterSpacing: '-0.3px' }}>
-          You've used your included AI actions
+          {isUnlimited ? "That's today's fair-use limit" : "You've used your included AI actions"}
         </h2>
         <p className="text-sm mb-4 leading-relaxed" style={{ color: 'var(--aurora-sub)' }}>
-          You're out of included AI actions for now. Premium removes the ceiling.
+          {isUnlimited
+            ? 'Premium includes 150 AI actions a day. Yours reset tomorrow — nothing to buy.'
+            : isPaid
+              ? 'Your plan\'s included actions are spent for this cycle. A bigger plan raises the monthly allowance.'
+              : "You're out of included AI actions for now. A plan gets you the full casting read on every tape."}
         </p>
         {/* Concrete, honest comparison — no "tokens" jargon, no fake trial */}
+        {showUpgrade && (
         <div className="text-left mb-5 rounded-2xl p-4" style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold, #D4A85F) 8%, transparent)', border: '1px solid var(--aurora-line)' }}>
           {[
             ['Tape Reviews', 'Unlimited, with the full deep read'],
@@ -54,6 +76,8 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
             </div>
           ))}
         </div>
+        )}
+        {showUpgrade && (<>
         <button
           onClick={handleUpgrade}
           className="aurora-mono w-full py-3.5 rounded-full text-white text-sm mb-1"
@@ -69,12 +93,13 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
         <p className="text-[11px] mb-2" style={{ color: 'var(--aurora-dim, var(--aurora-sub))' }}>
           Cancel anytime in the App Store.
         </p>
+        </>)}
         <button
           onClick={handleClose}
           className="w-full py-3 rounded-full text-sm font-semibold"
           style={{ color: 'var(--aurora-sub)' }}
         >
-          Maybe Later
+          {isUnlimited ? 'Got it' : 'Maybe Later'}
         </button>
       </div>
     </div>

@@ -65,7 +65,14 @@ test('Studio design preserves mobile review actions and rehearsal controls acros
     await page.waitForSelector('.studio-review-actions .studio-primary');
     assert.equal(await page.$eval('.studio-score-value', n => n.textContent), '5.0/10');
     await page.screenshot({ path: '/private/tmp/dst-studio-review.png' });
-    await page.click('.studio-review-actions .studio-primary');
+    // The reveal is staged — one beat per tap — so keep tapping the primary
+    // until the action row retires itself. Bounded so a stuck reveal fails
+    // here rather than spinning. The assertion is unchanged in intent: once
+    // the report is fully revealed, the CTA row is gone.
+    for (let beat = 0; beat < 4 && await page.$('.studio-review-actions .studio-primary'); beat += 1) {
+      await page.click('.studio-review-actions .studio-primary');
+      await new Promise(r => setTimeout(r, 50));
+    }
     await page.waitForFunction(() => document.body.textContent.includes('The silence changes your response.'));
     assert.equal(await page.$('.studio-review-actions'), null);
     for (const [width, height] of [[320, 568], [393, 852], [844, 390]]) {

@@ -1,0 +1,474 @@
+/* ══════════════════════════════════════════════════════════════════════
+ * /r/<token> — the friend's page.
+ *
+ * This is the first and often ONLY thing a non-user ever sees of Dr Self
+ * Tape, and they see it on a phone, in a hurry, because someone they like
+ * asked them for a favour. So:
+ *
+ *   • every colour is a --dst-* token (tokens.css), never a literal, so
+ *     the page follows the one ramp;
+ *   • the page carries its OWN theme attribute (set in index.jsx from
+ *     prefers-color-scheme) because the app shell pins light on <html>;
+ *     a stranger's phone at 11pm should not get a white flash;
+ *   • nothing is allowed to scroll sideways — every long string wraps and
+ *     the root clips the x axis;
+ *   • every control clears --dst-tap-min.
+ * ══════════════════════════════════════════════════════════════════════ */
+
+.rdr {
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  background: var(--dst-paper);
+  color: var(--dst-ink);
+  font-family: var(--dst-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.rdr__wrap {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding:
+    calc(var(--dst-space-2xl) + var(--dst-safe-top))
+    var(--dst-space-xl)
+    calc(7rem + var(--dst-safe-bottom));
+}
+
+.rdr__wrap--centered {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100dvh;
+  padding-bottom: calc(var(--dst-space-4xl) + var(--dst-safe-bottom));
+  text-align: left;
+}
+
+/* ── Masthead ───────────────────────────────────────────────────────── */
+
+.rdr__eyebrow {
+  font-size: var(--dst-text-xs);
+  letter-spacing: var(--dst-tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--dst-ink-3);
+  margin: 0 0 var(--dst-space-md);
+}
+
+.rdr__title {
+  font-family: var(--dst-font-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 7vw, 34px);
+  line-height: var(--dst-leading-tight);
+  letter-spacing: var(--dst-tracking-display);
+  margin: 0;
+  overflow-wrap: break-word;
+}
+
+.rdr__title em {
+  font-style: normal;
+  color: var(--dst-brass-ink);
+}
+
+/* The single best friction-killer on the page: what this will cost them.
+ * It sits directly under the headline for exactly that reason. */
+.rdr__cost {
+  display: inline-block;
+  margin: var(--dst-space-md) 0 0;
+  padding: 6px 12px;
+  border: 1px solid var(--dst-brass-tint-line);
+  background: var(--dst-brass-tint);
+  border-radius: var(--dst-radius-pill);
+  color: var(--dst-brass-ink);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.rdr__scene {
+  margin: var(--dst-space-md) 0 0;
+  color: var(--dst-ink-3);
+  font-size: 13px;
+}
+
+/* ── The actor's note ───────────────────────────────────────────────── */
+
+.rdr__note {
+  margin: var(--dst-space-2xl) 0 0;
+  padding: var(--dst-space-md) 0 var(--dst-space-md) var(--dst-space-lg);
+  border-left: 2px solid var(--dst-brass-light);
+}
+
+.rdr__note p {
+  margin: 0;
+  font-family: var(--dst-font-serif);
+  font-size: 17px;
+  line-height: var(--dst-leading);
+  overflow-wrap: break-word;
+}
+
+.rdr__note cite {
+  display: block;
+  margin-top: var(--dst-space-sm);
+  font-style: normal;
+  font-size: 12px;
+  color: var(--dst-ink-3);
+}
+
+/* ── Four words that teach the format ───────────────────────────────── */
+
+.rdr__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dst-space-sm);
+  margin: var(--dst-space-2xl) 0 0;
+}
+
+.rdr__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: var(--dst-radius-pill);
+  font-size: 12px;
+  line-height: 1.3;
+  border: 1px solid var(--dst-line);
+  background: var(--dst-surface-sunken);
+  color: var(--dst-ink-2);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.rdr__chip--mine {
+  border-color: var(--dst-brass-tint-line);
+  background: var(--dst-brass-tint);
+  color: var(--dst-brass-ink);
+  font-weight: 600;
+}
+
+.rdr__chip i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+/* ── The script ─────────────────────────────────────────────────────── */
+
+.rdr__lines {
+  margin: var(--dst-space-2xl) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--dst-space-md);
+}
+
+/* Stage directions are on the page so the reader knows where they are.
+ * They are never recordable, so they never look like a control. */
+.rdr__direction {
+  font-family: var(--dst-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: var(--dst-leading);
+  color: var(--dst-ink-3);
+  padding: 0 var(--dst-space-sm);
+  overflow-wrap: break-word;
+}
+
+.rdr__card {
+  border: 1px solid var(--dst-line);
+  border-radius: var(--dst-radius-lg);
+  background: var(--dst-paper-raised);
+  padding: var(--dst-space-lg);
+  box-shadow: var(--dst-shadow-hairline);
+}
+
+.rdr__card--done {
+  border-color: var(--dst-brass-tint-line);
+  background: var(--dst-brass-tint);
+}
+
+/* The cue. Without the line before it a reader has no idea what they are
+ * answering, and the take comes back unusable. */
+.rdr__cue {
+  margin: 0 0 var(--dst-space-md);
+  font-family: var(--dst-font-serif);
+  font-style: italic;
+  font-size: 14px;
+  line-height: var(--dst-leading);
+  color: var(--dst-ink-3);
+  overflow-wrap: break-word;
+}
+
+.rdr__cue b {
+  font-style: normal;
+  font-weight: 600;
+}
+
+.rdr__speaker {
+  display: block;
+  font-size: var(--dst-text-xs);
+  letter-spacing: var(--dst-tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--dst-brass-ink);
+  margin-bottom: 6px;
+  overflow-wrap: anywhere;
+}
+
+.rdr__text {
+  margin: 0;
+  font-family: var(--dst-font-serif);
+  font-size: 19px;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}
+
+.rdr__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dst-space-sm);
+  margin-top: var(--dst-space-md);
+  font-size: var(--dst-text-xs);
+  letter-spacing: var(--dst-tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--dst-ink-3);
+}
+
+.rdr__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--dst-space-sm);
+  margin-top: var(--dst-space-md);
+  flex-wrap: wrap;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+
+.rdr__btn {
+  appearance: none;
+  border: 1px solid var(--dst-line-strong);
+  background: var(--dst-surface);
+  color: var(--dst-ink);
+  border-radius: var(--dst-radius-pill);
+  min-height: var(--dst-tap-min);
+  padding: 0 var(--dst-space-lg);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--dst-space-sm);
+  transition: transform var(--dst-dur-press) var(--dst-ease-out),
+              background-color var(--dst-dur-press) var(--dst-ease-out);
+}
+
+.rdr__btn:active { transform: scale(0.98); }
+
+.rdr__btn:disabled {
+  background: var(--dst-fill-disabled);
+  color: var(--dst-on-fill-disabled);
+  border-color: transparent;
+  cursor: default;
+}
+
+.rdr__btn--record {
+  background: var(--dst-fill-ink);
+  color: var(--dst-on-fill-ink);
+  border-color: transparent;
+  flex: 1 1 auto;
+}
+
+.rdr__btn--stop {
+  background: var(--dst-danger);
+  color: var(--dst-on-fill-ink);
+  border-color: transparent;
+  flex: 1 1 auto;
+}
+
+.rdr__btn--ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--dst-ink-3);
+  font-weight: 500;
+  padding: 0 var(--dst-space-md);
+}
+
+.rdr__btn--send {
+  background: var(--dst-fill-ink);
+  color: var(--dst-on-fill-ink);
+  border-color: transparent;
+  flex: 1 1 auto;
+}
+
+/* Filled ink, not brass. Brass on white is ~3.6:1 — fine for a rule or an
+ * eyebrow, under AA for 15px button text, and this is the one button on
+ * the page that has to be unmissable to someone who has never seen us. */
+.rdr__btn--cta {
+  background: var(--dst-fill-ink);
+  color: var(--dst-on-fill-ink);
+  border-color: transparent;
+  width: 100%;
+  text-decoration: none;
+}
+
+.rdr__dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
+
+.rdr__dot--live { animation: rdr-pulse 1.1s ease-in-out infinite; }
+
+@keyframes rdr-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.rdr__timer {
+  font-family: var(--dst-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 14px;
+}
+
+.rdr__player {
+  width: 100%;
+  margin-top: var(--dst-space-md);
+  height: 36px;
+}
+
+/* ── Sticky footer ──────────────────────────────────────────────────── */
+
+.rdr__footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  background: var(--dst-surface-veil);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--dst-line);
+  padding:
+    var(--dst-space-md)
+    max(var(--dst-space-xl), var(--dst-safe-left))
+    calc(var(--dst-space-md) + var(--dst-safe-bottom))
+    max(var(--dst-space-xl), var(--dst-safe-right));
+}
+
+.rdr__footer-inner {
+  max-width: 34rem;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--dst-space-md);
+}
+
+.rdr__progress {
+  font-size: 13px;
+  color: var(--dst-ink-2);
+  white-space: nowrap;
+  flex: none;
+}
+
+.rdr__progress b {
+  color: var(--dst-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Notices: mic denied, upload failed, partial send ───────────────── */
+
+.rdr__notice {
+  margin-top: var(--dst-space-md);
+  padding: var(--dst-space-md);
+  border-radius: var(--dst-radius-md);
+  border: 1px solid var(--dst-line);
+  background: var(--dst-surface-sunken);
+  color: var(--dst-ink-2);
+  font-size: 13px;
+  line-height: var(--dst-leading);
+}
+
+.rdr__notice--warn {
+  border-color: var(--dst-danger);
+  background: var(--dst-danger-tint);
+  color: var(--dst-ink);
+}
+
+.rdr__notice p { margin: 0 0 var(--dst-space-sm); }
+.rdr__notice p:last-child { margin-bottom: 0; }
+
+/* ── Thank-you + the one offer ──────────────────────────────────────── */
+
+.rdr__thanks-title {
+  font-family: var(--dst-font-serif);
+  font-weight: 400;
+  font-size: clamp(26px, 7vw, 32px);
+  line-height: var(--dst-leading-tight);
+  letter-spacing: var(--dst-tracking-display);
+  margin: 0 0 var(--dst-space-md);
+}
+
+.rdr__body {
+  margin: 0;
+  font-size: 15px;
+  line-height: var(--dst-leading-loose);
+  color: var(--dst-ink-2);
+  overflow-wrap: break-word;
+}
+
+/* The favour comes first. This card sits BELOW the confirmation, with a
+ * rule between them, and it never covers or gates it. */
+.rdr__offer {
+  margin-top: var(--dst-space-3xl);
+  padding-top: var(--dst-space-2xl);
+  border-top: 1px solid var(--dst-line);
+}
+
+.rdr__offer h2 {
+  font-family: var(--dst-font-serif);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: var(--dst-leading-tight);
+  margin: 0 0 var(--dst-space-sm);
+}
+
+.rdr__offer p {
+  margin: 0 0 var(--dst-space-lg);
+  font-size: 15px;
+  line-height: var(--dst-leading-loose);
+  color: var(--dst-ink-2);
+}
+
+.rdr__fineprint {
+  margin: var(--dst-space-md) 0 0;
+  font-size: 12px;
+  color: var(--dst-ink-3);
+  text-align: center;
+}
+
+/* ── Loading ────────────────────────────────────────────────────────── */
+
+.rdr__spinner {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--dst-line-strong);
+  border-top-color: var(--dst-brass);
+  animation: rdr-spin 0.8s linear infinite;
+  margin: 0 auto var(--dst-space-lg);
+}
+
+@keyframes rdr-spin { to { transform: rotate(360deg); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .rdr *,
+  .rdr *::before,
+  .rdr *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .rdr__dot--live { opacity: 1; }
+}

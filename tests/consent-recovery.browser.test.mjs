@@ -54,3 +54,19 @@ test('failed revoke retains granted state; delivery labels and degraded notice a
   assert.equal(await page.$eval('[aria-label="Tape with notes"] button',e=>e.textContent.trim()),'Watch your tape & notes');
   assert.match(await page.$eval('[role="status"]',e=>e.textContent),/backup AI/);
 });
+
+// Simulated Apple authentication; real PublicRoutes/age hold and consent UI.
+// No Apple network call, real account, or native sign-in is involved.
+test('Apple birthday routing hold survives consent cancellation and releases into the actor profile',async()=>{
+  await page.goto(h.url+'?apple-flow');await click('Begin Apple birthday step');
+  await page.waitForSelector('[aria-label="Apple birthday capture"]');
+  assert.equal(await page.$('[aria-label="Actor profile"]'),null);
+  await click('Review AI consent');await page.waitForSelector('[role="dialog"]');
+  await click('Decline');await closed();
+  assert.ok(await page.$('[aria-label="Apple birthday capture"]'));
+  assert.deepEqual(await page.evaluate(()=>window.__calls),[]);
+  await click('Finish birthday step');await page.waitForSelector('[aria-label="Actor profile"]');
+  await click('Review AI consent');await click('I Agree & Continue');await closed();
+  await click('Turn off AI consent');await page.waitForFunction(()=>document.body.textContent.includes('AI consent is off.'));
+  assert.deepEqual(await page.evaluate(()=>window.__calls),['POST','DELETE']);
+});

@@ -1,0 +1,12 @@
+{
+  "name": "dst-review-evaluations",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test *.test.mjs",
+    "eval": "PROMPTFOO_DISABLE_TELEMETRY=1 PROMPTFOO_DISABLE_UPDATE=1 promptfoo eval -c promptfooconfig.yaml --no-cache --output ../../output/qa/ai/results.json"
+  },
+  "devDependencies": {
+    "promptfoo": "0.123.1"
+  }
+}

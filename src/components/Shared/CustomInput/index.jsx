@@ -41,14 +41,18 @@ export const CustomInput = ({
     }
   };
 
-  const bgClass   = dark ? 'bg-[#111318]' : (disabled ? 'bg-input-disabled cursor-not-allowed text-input-placeholder' : 'bg-white');
-  const textClass = dark ? 'text-white placeholder-[#555]' : 'text-[#0A0A0A] placeholder-[rgba(10,10,10,0.40)]';
+  // `dark` is the auth-page surface: deliberately dark whatever the app
+  // theme is, so it carries its own ink. Everything else runs on tokens.
+  // Placeholder and focus border moved up a rung — the old values measured
+  // 3.0:1 and 2.1:1 on paper, under the floor for text and for a boundary.
+  const bgClass   = dark ? 'bg-[#111318]' : (disabled ? 'bg-input-disabled cursor-not-allowed text-[var(--dst-ink-3)]' : 'bg-[var(--dst-surface)]');
+  const textClass = dark ? 'text-white placeholder-[#8B8B96]' : 'text-[var(--dst-ink)] placeholder-[var(--dst-ink-3)]';
   const borderBase = dark
-    ? 'border-[#2a2d35] hover:border-[#D4A85F]/60 focus:border-[#D4A85F]'
-    : 'border-[rgba(10,10,10,0.08)] hover:border-[rgba(10,10,10,0.20)] focus:border-[#D4A85F]';
+    ? 'border-[#2a2d35] hover:border-[var(--dst-brass-light)]/60 focus:border-[var(--dst-brass-light)]'
+    : 'border-[var(--dst-line-soft)] hover:border-[var(--dst-line-strong)] focus:border-[var(--dst-brass-ui)]';
   const borderErr = 'border-danger focus:border-danger';
-  const labelBg   = dark ? 'bg-[#111318]' : 'bg-white';
-  const labelColor = dark ? (error ? 'text-danger' : 'text-[#888]') : (error ? 'text-danger' : 'text-[rgba(10,10,10,0.62)]');
+  const labelBg   = dark ? 'bg-[#111318]' : 'bg-[var(--dst-surface)]';
+  const labelColor = dark ? (error ? 'text-danger' : 'text-[#B5B5BE]') : (error ? 'text-danger' : 'text-[var(--dst-ink-2)]');
 
   return (
     <div className="relative w-full">
@@ -64,10 +68,10 @@ export const CustomInput = ({
       )}
       {(icon || title) && (
         <div className="flex gap-0.5 items-center mb-1">
-          <div className="flex items-center gap-1 text-sm font-medium text-secondary-dark">
+          <div className="flex items-center gap-1 text-sm font-medium text-[var(--dst-ink-2)]">
             {icon}
           </div>
-          <p className={`text-[14px] text-nowrap px-1 transition-all duration-200 ${error ? 'text-danger' : 'text-secondary-dark'}`}>
+          <p className={`text-[14px] text-nowrap px-1 transition-all duration-200 ${error ? 'text-danger' : 'text-[var(--dst-ink)]'}`}>
             {title}
           </p>
         </div>
@@ -88,7 +92,7 @@ export const CustomInput = ({
             ${bgClass} ${textClass}
             ${error ? borderErr : borderBase}
             ${type === 'number' ? 'no-spinner' : ''}
-            focus:outline-none pr-10
+            focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--dst-brass-ui)] pr-10
             ${className}
           `}
           placeholder={!value ? placeholder : ''}
@@ -96,7 +100,7 @@ export const CustomInput = ({
 
         {type === 'password' && !disabled && !isSearch && (
           <span
-            className={`absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer ${dark ? 'text-[#888]' : 'text-input-placeholder'}`}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 grid place-items-center size-11 -mr-3 cursor-pointer ${dark ? 'text-[#B5B5BE]' : 'text-[var(--dst-ink-3)]'}`}
             onClick={() => setShowPassword((prev) => !prev)}
           >
             {showPassword ? <CloseEyeIcon className="size-5" /> : <OpenEyeIcon className="size-5" />}

@@ -60,5 +60,10 @@ android/app/google-services.json
 # Synthetic check artifacts can contain temporary account recovery credentials.
 output/synthetic-signup/
 
-# Generated browser QA bundles and reports
+# Local QA artifacts and replay inputs are not product assets.
 output/qa/
+qa/ai/local/
+
+# Agent worktree scratch and the unsigned simulator build tree (1.3 GB).
+.claude/worktrees/
+ios/App/simbuild/
