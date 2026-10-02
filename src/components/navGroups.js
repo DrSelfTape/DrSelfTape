@@ -1,7 +1,7 @@
 import {
   Monitor, BookOpen, Target, Send, LayoutDashboard, Users2, MessageSquare,
   UserCircle, Clapperboard, Sparkles, Video, Crown, Film,
-  Brain, FileText, Trophy, Gift, Settings, Bell,
+  Brain, FileText, Trophy, Gift, Settings, Bell, BarChart3,
 } from 'lucide-react';
 
 /* ── Grouped desktop navigation ──
@@ -12,18 +12,23 @@ export const NAV_GROUPS = [
     key: 'home',
     items: [
       { label: 'Home', path: '/dashboard', icon: LayoutDashboard, end: true },
+      // Tape Review is the moat — the one thing we do that nobody else will.
+      // It used to live inside the collapsed "AI Studio" accordion, so on
+      // desktop the flagship feature was two taps behind a closed drawer
+      // (mobile gives it a whole tab). Flat group = always visible, no
+      // accordion, directly under Home.
+      { label: 'Tape Review', path: '/dashboard/jericho?tab=tape', icon: Film },
     ],
   },
   {
-    // The AI suite — flagship. These were already routed but never surfaced in
+    // The rest of the AI suite. These were already routed but never surfaced in
     // the desktop sidebar (they live in the mobile shell), so desktop/iPad web
-    // users couldn't reach Tape Review, Compare Takes, or Jericho. Tape Review
-    // deep-links to the Jericho hub's Tape tab.
+    // users couldn't reach Compare Takes or Jericho. Tape Review graduated out
+    // of this accordion — see the home group above.
     key: 'studio',
     label: 'AI Studio',
     icon: Sparkles,
     items: [
-      { label: 'Tape Review', path: '/dashboard/jericho?tab=tape', icon: Film },
       { label: 'My Growth', path: '/dashboard/jericho', icon: Brain },
       { label: 'Scene Generator', path: '/dashboard/generator', icon: Clapperboard },
     ],
@@ -61,6 +66,10 @@ export const NAV_GROUPS = [
       { label: 'My Studio', path: '/dashboard/my-studio', icon: Clapperboard },
       { label: 'Audition Tracker', path: '/dashboard/auditions', icon: Target },
       { label: 'Submissions', path: '/dashboard/submissions', icon: Send },
+      // /dashboard/reports was routed but listed nowhere — reachable only by
+      // typing the URL. The charts want width, so this is its one home:
+      // desktop nav. The mobile shell no longer registers the panel.
+      { label: 'Reports', path: '/dashboard/reports', icon: BarChart3 },
     ],
   },
   {

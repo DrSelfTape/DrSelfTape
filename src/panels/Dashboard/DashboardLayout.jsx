@@ -38,6 +38,10 @@ export default function DashboardLayout() {
         leaderboard: '/dashboard/leaderboard', scripts: '/dashboard/scripts', generator: '/dashboard/generator',
         membership: '/dashboard/membership', 'dash-profile': '/dashboard/profile', referral: '/dashboard/referral',
         marketplace: '/dashboard/marketplace', 'reader-profile': '/dashboard/readers',
+        // My Studio is the paid-sessions surface. It was reachable on desktop
+        // only; now that the mobile shell links it, the iPad bridge needs the
+        // route too or the tap drops.
+        'my-studio': '/dashboard/my-studio',
       };
       return PANELS[panel] || CAMPAIGN_ROUTES[tab] || null;
     };
