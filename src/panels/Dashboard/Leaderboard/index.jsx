@@ -6,16 +6,18 @@ import { fetchLeaderboard } from '../../../redux/features/leaderboard/leaderboar
 import { openReaderProfile } from '../../../utils/openReaderProfile';
 
 /* ──────────────────────────────────────────────────────────────────
-   Community Leaderboard — handoff §14.11 (screens/v1-leaderboard.jsx).
-   v1 ships with mock community seed data + the real signed-in user
-   pinned in the sticky bar. Production target: GET /api/v1/leaderboard/
-   with ?metric=xp|callbacks|streak&scope=all|friends — to be added on
-   the backend. Craft XP ties to the Jericho skill_progress model
-   (also pending backend).
+   Community Leaderboard — live off GET /api/v1/leaderboard/
+   (?metric=xp|callbacks|streak&scope=all|friends). The mock community
+   seed data this screen shipped with in v1 is gone; every row is real.
+
+   The xp metric is UserStreak.total_xp, awarded by the Daily Challenge
+   button — including non-craft tasks like "Update your profile". It is
+   NOT craft practice, so it is labelled "Challenge XP". Re-point it at
+   PracticeDay (_current_practice_streak_days) before calling it craft.
    ────────────────────────────────────────────────────────────────── */
 
 const META = {
-  xp:        { tab: 'Craft XP',  unit: 'XP',  sub: 'Total craft points earned this season', fmt: (v) => v.toLocaleString() },
+  xp:        { tab: 'Challenge XP', unit: 'XP', sub: 'Points from daily challenges this season', fmt: (v) => v.toLocaleString() },
   callbacks: { tab: 'Callbacks', unit: 'CB',  sub: 'Callbacks logged this season',           fmt: (v) => String(v) },
   streak:    { tab: 'Streak',    unit: 'DAY', sub: 'Longest active practice streak',          fmt: (v) => `${v}d` },
 };
