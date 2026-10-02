@@ -59,3 +59,6 @@ android/app/google-services.json
 
 # Synthetic check artifacts can contain temporary account recovery credentials.
 output/synthetic-signup/
+
+# Generated browser QA bundles and reports
+output/qa/

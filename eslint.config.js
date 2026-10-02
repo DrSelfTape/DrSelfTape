@@ -6,7 +6,7 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
   globalIgnores([
-    'dist', '.vercel/output/**',
+    'dist', '.vercel/output/**', 'output/qa/**',
     'ios/App/App/public/**', 'ios/App/build/**', 'ios/App/build-archive/**', 'ios/App/simbuild/**',
     'android/app/build/**', 'android/build/**', 'android/app/src/main/assets/public/**',
   ]),
