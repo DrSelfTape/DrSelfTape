@@ -69,7 +69,7 @@ const PLANS = [
     yearly: 249.99,
     yearlySaving: '2 months free',
     features: [
-      'Unlimited AI · no token limits',
+      'Unlimited AI · fair-use cap of 150 actions a day',
       'The full casting read + Performance DNA',
       'Compare Takes · full per-take notes',
       'Everything in Plus',

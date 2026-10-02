@@ -303,7 +303,8 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
       setShowSidesPicker(false);
     } catch (err) {
       const sc = err?.response?.status;
-      if (sc === 402) setSidesUploadErr("You're out of AI tokens. Top up to read new sides.");
+      // 402 raises the paywall modal via the interceptor — don't double-speak.
+      if (sc === 402) setSidesUploadErr('');
       else if (sc === 403) setSidesUploadErr('Turn on AI features to read sides, then try again.');
       else if (sc === 429) setSidesUploadErr("You've hit today's AI limit. Try again in a few hours.");
       else setSidesUploadErr("Couldn't read that PDF. Make sure it's your sides and try again.");

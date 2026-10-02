@@ -90,7 +90,8 @@ export default function SidesUpload({ onReady }) {
     } catch (err) {
       const sc = err?.response?.status;
       const beMsg = err?.response?.data?.message;
-      if (sc === 402) setError("You're out of AI tokens. Top up to read your sides.");
+      // 402 raises the paywall modal via the interceptor — don't double-speak.
+      if (sc === 402) setError('');
       else if (sc === 403) {
         // Open the consent modal inline instead of dead-ending.
         requestAiConsent();
