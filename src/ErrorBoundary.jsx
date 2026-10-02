@@ -55,12 +55,15 @@ export class ErrorBoundary extends Component {
     if (this.state.error) {
       const isChunkError = (this.state.error?.message || '').includes('dynamically imported module');
       return (
-        <div style={{ padding: 40, fontFamily: '-apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif', background: '#FAFAF7', color: '#0A0A0A', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+        // Every value here is a token with a literal fallback: this screen
+        // has to render correctly even when the crash is the stylesheet
+        // failing to load.
+        <div style={{ padding: 40, fontFamily: 'var(--dst-font-sans, -apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif)', background: 'var(--dst-paper, #FAFAF7)', color: 'var(--dst-ink, #20221F)', minHeight: '100dvh', boxSizing: 'border-box', paddingTop: 'calc(40px + env(safe-area-inset-top, 0px))', paddingBottom: 'calc(40px + env(safe-area-inset-bottom, 0px))', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎬</div>
           <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, letterSpacing: '-0.4px' }}>
             {isChunkError ? 'New version available' : 'Something went wrong'}
           </h1>
-          <p style={{ fontSize: 14, color: 'rgba(10,10,10,0.62)', marginBottom: 24, maxWidth: 360, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 14, color: 'var(--dst-ink-2, #575960)', marginBottom: 24, maxWidth: 360, lineHeight: 1.5 }}>
             {isChunkError
               ? 'Dr Self Tape just got an update. Tap below to load the latest version. Your work is safe.'
               : (
@@ -81,10 +84,14 @@ export class ErrorBoundary extends Component {
               window.location.replace(u.toString());
             }}
             style={{
-              background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', color: '#fff', border: 'none', padding: '14px 32px',
+              // The brass gradient put white on #D4A85F — 2.1:1, and this
+              // is the only button on a screen the user is stuck behind.
+              // Ink fill, brass shadow: same warmth, 15:1.
+              background: 'var(--dst-fill-ink, #242722)', color: 'var(--dst-on-fill-ink, #FFFEFB)',
+              border: 'none', padding: '14px 32px', minHeight: 'var(--dst-tap-min, 44px)',
               borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-              letterSpacing: '0.12em', textTransform: 'uppercase',
-              boxShadow: '0 8px 22px rgba(212,168,95,0.30)',
+              letterSpacing: '0.12em', textTransform: 'uppercase', touchAction: 'manipulation',
+              boxShadow: 'var(--dst-shadow-brass, 0 8px 22px rgba(212,168,95,0.30))',
             }}
           >
             Refresh App

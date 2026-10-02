@@ -1,0 +1,401 @@
+/* ══════════════════════════════════════════════════════════════════════
+ * Dr Self Tape — the one token scale.
+ *
+ * Three systems used to live here at once: the LEGACY panel tokens
+ * (--bg-*, --text-*), the AURORA reskin tokens (--aurora-*), and the
+ * Studio refresh (--studio-*, defined on three selectors in studio.css).
+ * They are now one ramp. Everything below is a --dst-* token; every old
+ * name still works and is declared ONCE as an alias at the bottom of the
+ * light block, so a surface flip (dark, console noir) only has to move
+ * the --dst-* values and the aliases follow.
+ *
+ * THE DIRECTION IS STUDIO: warm paper, warm ink, restrained brass.
+ * When you need a colour, reach for a --dst-* token. Reach for an old
+ * name only inside a file that already uses it.
+ *
+ * ── HOW TO PICK ──────────────────────────────────────────────────────
+ *  surface   --dst-paper · --dst-paper-raised · --dst-surface ·
+ *            --dst-surface-sunken
+ *  hairline  --dst-line (warm, the default) · --dst-line-soft ·
+ *            --dst-line-faint · --dst-line-strong
+ *  text      --dst-ink (body) · --dst-ink-2 (secondary) ·
+ *            --dst-ink-3 (the smallest legible step — the floor for
+ *            anything a reader must read) · --dst-ink-faint (NEVER text)
+ *  brass     see the ramp below — each rung has one job and the job is
+ *            decided by contrast, not by taste. --dst-brass is DECOR;
+ *            brass that is text is --dst-brass-ink (--studio-gold-ink).
+ *  type      --dst-text-xs/sm/base/lg/display  (mirrors --type-*)
+ *  space     --dst-space-2xs…4xl   radius --dst-radius-xs…pill
+ *  touch     --dst-tap-min (44px, Apple's floor) · --dst-tap-dense
+ *  motion    --dst-ease-out/-spring · --dst-dur-press/-enter/-exit
+ *  inset     --dst-safe-top/-bottom/-left/-right
+ * ══════════════════════════════════════════════════════════════════════ */
+
+/* The light (paper) scale. Also restored inside .console-paper, the light
+ * island that legacy panels render on when the noir console is on. */
+:root,
+[data-surface="console"] .console-paper,
+[data-theme="dark"] .console-paper {
+  color-scheme: light;
+
+  /* ── Surfaces ─────────────────────────────────────────────────────── */
+  --dst-paper: #FAFAF7;          /* the page */
+  --dst-paper-raised: #FFFEFB;   /* warm card sitting on the page */
+  --dst-surface: #FFFFFF;        /* plain card, inputs, sheets */
+  --dst-surface-sunken: #F4F4EE; /* inset rows, filled wells */
+  --dst-surface-veil: rgba(255,255,255,0.93); /* sticky bars over content */
+  --dst-overlay: rgba(32,34,31,0.56);         /* modal scrim */
+  --dst-glass: rgba(255,255,255,0.62);
+  --dst-glass-strong: rgba(255,255,255,0.78);
+  --dst-glass-border: rgba(255,255,255,0.55);
+
+  /* ── Hairlines ────────────────────────────────────────────────────── */
+  --dst-line: #E8E6E0;                  /* warm rule — the default divider */
+  --dst-line-soft: rgba(10,10,10,0.06);
+  --dst-line-faint: rgba(10,10,10,0.04);
+  --dst-line-strong: rgba(10,10,10,0.14);
+
+  /* ── Ink ──────────────────────────────────────────────────────────────
+   * Contrast on --dst-paper, so you can pick without measuring:
+   *   ink 15.3:1 · ink-2 6.7:1 · ink-3 5.7:1 · ink-faint ~3:1 (NOT text)
+   * ink-3 is the floor. Anything a reader reads stops there. */
+  --dst-ink: #20221F;
+  --dst-ink-2: #575960;
+  --dst-ink-3: #62646A;
+  --dst-ink-faint: rgba(32,34,31,0.34);
+
+  /* ── Brass ────────────────────────────────────────────────────────────
+   * One ramp, five rungs, and the rung is chosen by what the brass is
+   * DOING — not by how it looks. Measured on --dst-paper:
+   *   brass-light 2.1:1  decoration only: gradients, glows, orbs
+   *   brass       3.0:1  the brand brass. Fills and rules. Never text.
+   *   brass-ui    4.1:1  focus rings, bars, active marks, type ≥24px
+   *   brass-ink   5.0:1  brass that is TEXT at a normal size
+   *   brass-deep  6.1:1  links, emphasis, brass sitting on brass-tint
+   * If brass carries meaning a reader has to read, it is brass-ink. */
+  --dst-brass-tint: #F8F3E8;
+  --dst-brass-tint-line: #E9DFC9;
+  --dst-brass-pale: #F0D097;
+  --dst-brass-light: #D4A85F;
+  --dst-brass: #B68B32;
+  --dst-brass-ui: #9B731F;
+  --dst-brass-ink: #8A6618;
+  --dst-brass-deep: #7A5A18;
+
+  /* ── Brand marks + status ─────────────────────────────────────────── */
+  --dst-coral: #FF8280;
+  --dst-coral-deep: #C05957;
+  --dst-coral-light: #FFB49A;
+  --dst-gold: #FCE072;
+  --dst-gold-deep: #8A6D14;
+  --dst-gold-light: #FFF0B2;
+  --dst-success: #1F7A3C;        /* 5.1:1 — safe as text */
+  --dst-success-mark: #249B4B;   /* dots, fills, checks */
+  --dst-danger: #C62828;         /* 5.6:1 either way against white */
+  --dst-danger-deep: #A32020;
+  --dst-danger-tint: rgba(198,40,40,0.10);
+  --dst-mint: #9FE6B4;
+  --dst-sky: #A7D6FF;
+  --dst-peach: #FFC9A3;
+  --dst-rose: #FFB3C1;
+  --dst-purple: #D8C5F2;
+
+  /* ── Solid fills + what reads on top of them ──────────────────────── */
+  --dst-fill-ink: #242722;
+  --dst-fill-ink-press: #3C4036;
+  --dst-on-fill-ink: #FFFEFB;
+  --dst-fill-disabled: #E8E9E3;
+  --dst-on-fill-disabled: #6B6F66;
+
+  /* ── Elevation ────────────────────────────────────────────────────── */
+  --dst-shadow-color: rgba(10,10,10,0.06);
+  --dst-shadow-hairline: 0 2px 5px rgba(32,34,31,0.04);
+  --dst-shadow-card: 0 4px 20px rgba(10,10,10,0.04), inset 0 1px 0 rgba(255,255,255,0.70);
+  --dst-shadow-raised: 0 1px 2px rgba(10,10,10,0.04), 0 8px 24px rgba(10,10,10,0.05), inset 0 1px 0 rgba(255,255,255,0.6);
+  --dst-shadow-modal: 0 24px 60px rgba(10,10,10,0.18);
+  --dst-shadow-dock: 0 10px 30px rgba(10,10,10,0.06);
+  --dst-shadow-brass: 0 12px 30px rgba(212,168,95,0.30);
+  --dst-shadow-gold: 0 12px 30px rgba(252,224,114,0.30);
+
+  /* ══ LEGACY ALIASES — declared once, follow the surface ══════════════
+   * Existing files keep working. New work uses the --dst-* name. */
+  --bg-deepest: var(--dst-paper);
+  --bg-deep: var(--dst-paper);
+  --bg-card: var(--dst-surface);
+  --bg-elevated: var(--dst-surface-sunken);
+  --bg-surface: var(--dst-surface);
+  --bg-input: var(--dst-surface);
+  --border-default: var(--dst-line-soft);
+  --border-active: var(--dst-line-strong);
+  --text-primary: var(--dst-ink);
+  --text-secondary: var(--dst-ink-2);
+  --text-muted: var(--dst-ink-3);
+  --text-dim: var(--dst-ink-faint);
+  --sidebar-bg: var(--dst-surface);
+  --topbar-bg: var(--dst-surface-veil);
+  --card-shadow: var(--dst-shadow-color);
+
+  /* ══ AURORA ALIASES ═════════════════════════════════════════════════ */
+  --aurora-bg: var(--dst-paper);
+  --aurora-page: var(--dst-paper);
+  --aurora-surface-solid: var(--dst-surface);
+  --aurora-glass: var(--dst-glass);
+  --aurora-glass-strong: var(--dst-glass-strong);
+  --aurora-glass-border: var(--dst-glass-border);
+  --aurora-text: var(--dst-ink);
+  --aurora-sub: var(--dst-ink-2);
+  /* --aurora-dim used to be rgba(10,10,10,0.40) — 3.0:1, below AA on every
+   * eyebrow and meta line that used it. It now resolves to the ink floor. */
+  --aurora-dim: var(--dst-ink-3);
+  --aurora-line: var(--dst-line-soft);
+  --aurora-line-soft: var(--dst-line-faint);
+  --aurora-accent: var(--dst-brass-light);
+  --aurora-accent-deep: var(--dst-brass-deep);
+  --aurora-accent-light: var(--dst-brass-pale);
+  --aurora-coral: var(--dst-coral);
+  --aurora-coral-deep: var(--dst-coral-deep);
+  --aurora-coral-light: var(--dst-coral-light);
+  --aurora-gold: var(--dst-gold);
+  --aurora-gold-deep: var(--dst-gold-deep);
+  --aurora-gold-light: var(--dst-gold-light);
+  --aurora-heritage-gold: var(--dst-brass-light);
+  --aurora-heritage-gold-deep: var(--dst-brass-deep);
+  --aurora-heritage-gold-light: var(--dst-brass-pale);
+  --aurora-mint: var(--dst-mint);
+  --aurora-sky: var(--dst-sky);
+  --aurora-peach: var(--dst-peach);
+  --aurora-rose: var(--dst-rose);
+  --aurora-purple: var(--dst-purple);
+  --aurora-shadow-card: var(--dst-shadow-card);
+  --aurora-shadow-modal: var(--dst-shadow-modal);
+  --aurora-shadow-dock: var(--dst-shadow-dock);
+  --aurora-shadow-coral: var(--dst-shadow-brass);
+  --aurora-shadow-gold: var(--dst-shadow-gold);
+
+  /* ══ STUDIO ALIASES ═════════════════════════════════════════════════
+   * These used to be scoped to three selectors in studio.css. They are
+   * global now, so a Studio surface can be opened anywhere — and because
+   * they point at --dst-* rather than at hexes, they follow the surface:
+   * on [data-theme="dark"] and on the noir console they resolve to the
+   * dark ramp on their own. There is no separate Studio dark palette to
+   * write and nothing to fall back to by hand.
+   *
+   * THE GOLD SPLIT — the one thing to get right:
+   *   --studio-gold      #B68B32, 3.0:1 on paper. DECORATIVE ONLY:
+   *                      hairlines, washes, large graphic marks. It
+   *                      cannot carry text and it cannot be the only
+   *                      thing indicating a state.
+   *   --studio-gold-ui   #9B731F, 4.1:1. Focus rings, progress fills,
+   *                      active marks, display type ≥24px.
+   *   --studio-gold-ink  #8A6618, 5.0:1. Brass that is TEXT at a normal
+   *                      size. If a reader has to read it, it is this.
+   *   --studio-gold-deep #7A5A18, 6.1:1. Links, emphasis, and brass
+   *                      sitting on --studio-tint rather than on paper. */
+  --studio-paper: var(--dst-paper);
+  --studio-paper-raised: var(--dst-paper-raised);
+  --studio-surface: var(--dst-surface);
+  --studio-ink: var(--dst-ink);
+  --studio-ink-2: var(--dst-ink-2);
+  --studio-muted: var(--dst-ink-3);
+  --studio-gold: var(--dst-brass);
+  --studio-gold-ui: var(--dst-brass-ui);
+  --studio-gold-ink: var(--dst-brass-ink);
+  --studio-gold-deep: var(--dst-brass-deep);
+  --studio-tint: var(--dst-brass-tint);
+  --studio-tint-line: var(--dst-brass-tint-line);
+  --studio-line: var(--dst-line);
+  --studio-line-strong: var(--dst-line-strong);
+  --studio-fill: var(--dst-fill-ink);
+  --studio-on-fill: var(--dst-on-fill-ink);
+  --studio-danger: var(--dst-danger);
+  --studio-serif: var(--dst-font-serif);
+}
+
+/* ── Dark: the legacy [data-theme="dark"] surface ──────────────────────
+ * theme.jsx pins light today, so this is a standing-ready surface rather
+ * than a shipped one — but it has to be correct, because the moment it is
+ * switched on every alias above resolves through it. The brass ramp
+ * INVERTS on a dark ground: deeper brass is less readable, not more. */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --dst-paper: #0C0E14;
+  --dst-paper-raised: #13151D;
+  --dst-surface: #13151D;
+  --dst-surface-sunken: #1A1A2E;
+  --dst-surface-veil: rgba(13,13,13,0.93);
+  --dst-overlay: rgba(0,0,0,0.66);
+  --dst-glass: rgba(255,255,255,0.04);
+  --dst-glass-strong: rgba(255,255,255,0.07);
+  --dst-glass-border: rgba(255,255,255,0.08);
+
+  --dst-line: rgba(242,240,237,0.10);
+  --dst-line-soft: rgba(255,255,255,0.06);
+  --dst-line-faint: rgba(255,255,255,0.04);
+  --dst-line-strong: rgba(255,255,255,0.16);
+
+  --dst-ink: #F2F0ED;
+  --dst-ink-2: #BDB9B2;
+  --dst-ink-3: #A49F97;
+  --dst-ink-faint: rgba(242,240,237,0.34);
+
+  --dst-brass-tint: rgba(212,168,95,0.10);
+  --dst-brass-tint-line: rgba(212,168,95,0.22);
+  --dst-brass-pale: #F6E3BE;
+  --dst-brass-light: #D4A85F;
+  --dst-brass: #D4A85F;
+  --dst-brass-ui: #D4A85F;
+  --dst-brass-ink: #E0BC7E;
+  --dst-brass-deep: #F0D097;
+
+  --dst-success: #74D79A;
+  --dst-success-mark: #44C97A;
+  --dst-danger: #FF8A85;
+  --dst-danger-deep: #FFB3AF;
+  --dst-danger-tint: rgba(255,138,133,0.14);
+
+  --dst-fill-ink: #F2F0ED;
+  --dst-fill-ink-press: #D9D6D0;
+  --dst-on-fill-ink: #13151D;
+  --dst-fill-disabled: #24242F;
+  --dst-on-fill-disabled: #8B8B96;
+
+  --dst-shadow-color: rgba(0,0,0,0.30);
+  --dst-shadow-hairline: 0 2px 5px rgba(0,0,0,0.35);
+  --dst-shadow-card: 0 4px 20px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.04);
+  --dst-shadow-raised: 0 1px 2px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.04);
+  --dst-shadow-modal: 0 24px 60px rgba(0,0,0,0.50);
+  --dst-shadow-dock: 0 10px 30px rgba(0,0,0,0.40);
+  --dst-shadow-brass: 0 12px 30px rgba(212,168,95,0.25);
+  --dst-shadow-gold: 0 12px 30px rgba(252,224,114,0.25);
+}
+
+/* ── AURORA NOIR — the desktop web console (Ring 0) ────────────────────
+ * Stamped as data-surface="console" on <html> by theme.jsx on DESKTOP WEB
+ * ONLY, behind VITE_CONSOLE_THEME (or localStorage dst_console_preview=1).
+ * Native + mobile web keep the paper surface. Same brass, lights down.
+ * Spec: docs/web-platform-direction-aurora-noir-2026-07-28.md */
+[data-surface="console"] {
+  color-scheme: dark;
+
+  --dst-paper: #0B0A08;
+  --dst-paper-raised: #141210;
+  --dst-surface: #141210;
+  --dst-surface-sunken: #1B1815;
+  --dst-surface-veil: rgba(11,10,8,0.88);
+  --dst-overlay: rgba(6,5,3,0.72);
+  --dst-glass: rgba(20,18,16,0.72);
+  --dst-glass-strong: rgba(20,18,16,0.85);
+  --dst-glass-border: rgba(245,237,220,0.10);
+
+  --dst-line: rgba(245,237,220,0.12);
+  --dst-line-soft: rgba(245,237,220,0.08);
+  --dst-line-faint: rgba(245,237,220,0.05);
+  --dst-line-strong: rgba(245,237,220,0.16);
+
+  --dst-ink: #F5EDDC;
+  --dst-ink-2: #C3B8A2;
+  --dst-ink-3: #A69C89;
+  --dst-ink-faint: rgba(245,237,220,0.30);
+
+  --dst-brass-tint: rgba(212,168,95,0.10);
+  --dst-brass-tint-line: rgba(212,168,95,0.22);
+  --dst-brass-pale: #F6E3BE;
+  --dst-brass-light: #D4A85F;
+  --dst-brass: #D4A85F;
+  --dst-brass-ui: #D4A85F;
+  --dst-brass-ink: #E0BC7E;
+  --dst-brass-deep: #F0D097;
+
+  --dst-success: #74D79A;
+  --dst-success-mark: #44C97A;
+  --dst-danger: #FF8A85;
+  --dst-danger-deep: #FFB3AF;
+  --dst-danger-tint: rgba(255,138,133,0.14);
+
+  --dst-fill-ink: #F5EDDC;
+  --dst-fill-ink-press: #DED5C2;
+  --dst-on-fill-ink: #141210;
+  --dst-fill-disabled: #22201C;
+  --dst-on-fill-disabled: #8E8676;
+
+  --dst-shadow-color: rgba(0,0,0,0.5);
+  --dst-shadow-hairline: 0 2px 5px rgba(0,0,0,0.45);
+  --dst-shadow-card: 0 1px 2px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.35);
+  --dst-shadow-raised: 0 1px 2px rgba(0,0,0,0.5), 0 8px 24px rgba(0,0,0,0.35);
+  --dst-shadow-modal: 0 24px 60px rgba(0,0,0,0.6);
+  --dst-shadow-dock: 0 10px 30px rgba(0,0,0,0.4);
+  --dst-shadow-brass: 0 12px 30px rgba(212,168,95,0.25);
+  --dst-shadow-gold: 0 12px 30px rgba(252,224,114,0.25);
+}
+
+/* ── Non-colour scale ──────────────────────────────────────────────────
+ * Surface-independent, so it is declared once and never overridden. */
+:root {
+  /* Type. Five steps — the same five already shipped, so adopting one is
+   * consolidation, not redesign. --type-* in App.css mirrors these for
+   * Tailwind's theme; both resolve to the same number. */
+  --dst-text-xs: 10px;      /* eyebrows, badges, tab-bar labels */
+  --dst-text-sm: 11px;      /* card meta, secondary labels */
+  --dst-text-base: 13px;    /* body copy, buttons, list titles */
+  --dst-text-lg: 18px;      /* section titles, emphasised rows */
+  --dst-text-display: 22px; /* screen titles, hero lines */
+  --dst-leading-tight: 1.2;
+  --dst-leading: 1.5;
+  --dst-leading-loose: 1.6;
+  --dst-tracking-eyebrow: 0.14em;
+  --dst-tracking-display: -0.02em;
+
+  /* Families. The serif is the Studio voice; the sans is everything else. */
+  --dst-font-sans: -apple-system, BlinkMacSystemFont, "Space Grotesk", "Poppins", sans-serif;
+  --dst-font-display: "Space Grotesk", sans-serif;
+  --dst-font-serif: 'Times New Roman', Times, serif;
+  --dst-font-mono: "JetBrains Mono", monospace;
+
+  /* Space — a 4px grid with the two half-steps the app actually uses. */
+  --dst-space-2xs: 2px;
+  --dst-space-xs: 4px;
+  --dst-space-sm: 8px;
+  --dst-space-md: 12px;
+  --dst-space-lg: 16px;
+  --dst-space-xl: 20px;
+  --dst-space-2xl: 24px;
+  --dst-space-3xl: 32px;
+  --dst-space-4xl: 48px;
+
+  /* Radius */
+  --dst-radius-xs: 4px;
+  --dst-radius-sm: 8px;
+  --dst-radius-md: 10px;
+  --dst-radius-lg: 12px;
+  --dst-radius-xl: 16px;
+  --dst-radius-2xl: 24px;
+  --dst-radius-pill: 999px;
+
+  /* Touch. 44px is Apple's floor and it is not negotiable for anything a
+   * finger lands on. --dst-tap-dense is for toolbars and table rows: the
+   * BOX may be 36px, the HIT AREA still has to reach 44 (see the
+   * .dst-hit-44 helper in App.css). */
+  --dst-tap-min: 44px;
+  --dst-tap-dense: 36px;
+
+  /* Motion */
+  --dst-ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --dst-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dst-dur-press: 120ms;
+  --dst-dur-enter: 200ms;
+  --dst-dur-exit: 140ms;
+
+  /* Safe area. The app runs in a WKWebView — read insets from these
+   * rather than retyping env() with a different fallback each time. */
+  --dst-safe-top: env(safe-area-inset-top, 0px);
+  --dst-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --dst-safe-left: env(safe-area-inset-left, 0px);
+  --dst-safe-right: env(safe-area-inset-right, 0px);
+
+  /* Console motion aliases — same curves, old names. */
+  --console-ease-out: var(--dst-ease-out);
+  --console-dur-press: var(--dst-dur-press);
+  --console-dur-enter: var(--dst-dur-enter);
+  --console-dur-exit: var(--dst-dur-exit);
+}
