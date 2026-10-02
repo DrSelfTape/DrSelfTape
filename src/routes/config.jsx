@@ -21,6 +21,11 @@ const AppleCallback = lazy(() => import('../panels/Auth/AppleCallback'));
 const TermsOfService = lazy(() => import('../panels/Legal/TermsOfService'));
 const PrivacyPolicy = lazy(() => import('../panels/Legal/PrivacyPolicy'));
 
+// The friend's page for "ask a friend to read the other character's lines".
+// Lazy like every other non-login route: a stranger on a phone should not
+// pay for the dashboard bundle, and nobody signed in pays for this one.
+const PublicRecord = lazy(() => import('../panels/PublicRecord'));
+
 // Lazy-loaded UserPanel imports
 const Dashboard = lazy(() => import('../panels/UserPanel/Dashboard'));
 const CastingDirectorAuditions = lazy(() =>
@@ -88,6 +93,35 @@ const AdminMessages = lazy(() => import('../panels/Admin/AdminMessages'));
 const AdminBannedUsers = lazy(() => import('../panels/Admin/AdminBannedUsers'));
 const AdminReports = lazy(() => import('../panels/Admin/AdminReports'));
 const AdminCommunications = lazy(() => import('../panels/Admin/AdminCommunications'));
+
+/* ══════════════════════════════════════════════════════════════════════
+ * OPEN ROUTES — rendered by routes/index.jsx OUTSIDE both route guards.
+ *
+ * Read this before you add anything to the array below.
+ *
+ * Every other route in this file sits inside one of two wrappers:
+ *   • PrivateRoutes — redirects to /login without a token;
+ *   • PublicRoutes  — redirects a signed-in user AWAY, to their dashboard.
+ *
+ * Neither is right for a link an actor texts to a friend. PrivateRoutes
+ * would demand the account the whole feature exists to avoid; PublicRoutes
+ * would bounce a signed-in actor who tapped a friend's link straight to
+ * their own dashboard. So these routes are mounted bare.
+ *
+ * The scope of that decision is exactly this array, and the array holds
+ * exactly one path. A route in here is reachable by anyone on the internet
+ * with the URL, which is only acceptable because the token IS the
+ * credential (32 bytes of entropy, 14-day expiry, revocable) and the page
+ * renders nothing but the one scene that token buys. Nothing that reads
+ * account state, Redux auth, or any other user's data belongs here.
+ * ══════════════════════════════════════════════════════════════════════ */
+export const openRoutes = [
+  {
+    path: '/r/:token',
+    moduleName: 'ReaderInvite',
+    element: <PublicRecord />,
+  },
+];
 
 export const commonRoutes = [
   {

@@ -13,6 +13,7 @@ import {
   castingDirectorRoutes,
   adminRoutes,
   coachRoutes,
+  openRoutes,
 } from './config';
 
 
@@ -41,6 +42,16 @@ export const Router = () => {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" /></div>}>
       <Routes>
+
+        {/* Open routes: no PrivateRoutes (which would demand a login) and no
+            PublicRoutes (which would bounce a signed-in user to their
+            dashboard). Deliberately flat and deliberately tiny — see the
+            openRoutes comment in ./config for what may go in it. React
+            Router ranks these concrete paths above authRoutes' '*' catch-all,
+            so nothing else about access changes. */}
+        {openRoutes.map((route) => (
+          <Route path={route.path} element={route.element} key={route.path} />
+        ))}
 
         <Route element={<PrivateRoutes />}>
           {dynamicDashboardRoute?.map((route, index) => {
