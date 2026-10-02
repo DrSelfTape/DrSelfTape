@@ -1,11 +1,11 @@
-import { useEffect, useState, lazy, Suspense } from 'react';
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { useDispatch, useSelector } from 'react-redux';
 import { Sparkles, Mic, BookOpen, Users2, Target, ChevronDown, ChevronUp, Radio, MessageSquare, Gift, ShoppingBag, Camera } from 'lucide-react';
 // recharts (~325KB) loads only when the actor expands the collapsed Analytics.
 const HomeAnalytics = lazy(() => import('./HomeAnalytics'));
-import StatsCard from '../../../components/StatsCard.jsx';
-import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card.jsx';
+import '../../../styles/studio-panels.css';
 import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/auditionsSlice';
 import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
 import { fetchSubmissionsThunk } from '../../../redux/features/submissions/submissionsSlice';
@@ -53,13 +53,27 @@ const FUNNEL_LABELS = { submitted: 'Submitted', reviewed: 'In Review', callback:
  * stale but also doesn't change on every render.
  */
 
-// Soft cream-to-warm-white gradients so the banner reads on the Aurora
-// light page. Each step uses a different gold-tinted accent for visual
-// variety without going dark.
-const GRADIENT_WELCOME = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-heritage-gold)_14%,transparent)]';
-const GRADIENT_PRACTICE = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-rose)_16%,transparent)]';
-const GRADIENT_CONNECT = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-mint)_18%,transparent)]';
-const GRADIENT_TRACK = 'from-[var(--aurora-surface-solid)] via-[var(--aurora-bg)] to-[color-mix(in_oklch,var(--aurora-sky)_18%,transparent)]';
+/* Native navigation. react-router's navigate() is unreliable inside the
+ * Capacitor WebView (iPad mounts this console Outlet, not MobileApp), so every
+ * destination on this screen goes through the drst-navigate event that
+ * DashboardLayout listens for. Keys are the same paths the step objects carry,
+ * values are the panel/tab detail DashboardLayout's routeFor() understands. */
+const NAV_DETAIL = {
+  '/dashboard/jericho?tab=tape': { tab: 'tape-review' },
+  '/dashboard/profile': { panel: 'dash-profile' },
+  '/dashboard/generator': { panel: 'generator' },
+  '/dashboard/scene-study': { tab: 'scenes' },
+  '/dashboard/find-a-reader': { panel: 'find-a-reader' },
+  '/dashboard/green-room': { panel: 'green-room' },
+  '/dashboard/auditions': { tab: 'auditions' },
+  '/dashboard/cd-sim': { panel: 'cd-sim' },
+  '/dashboard/marketplace': { panel: 'marketplace' },
+  '/dashboard/referral': { panel: 'referral' },
+  '/dashboard/self-tapes': { panel: 'self-tapes' },
+  '/dashboard/submissions': { panel: 'submissions' },
+};
+
+const TAPE_REVIEW_PATH = '/dashboard/jericho?tab=tape';
 
 // Ordered onboarding sequence — first incomplete step wins. Most map to
 // keys in tutorial_progress; "headshot" is mirrored there as well by
@@ -75,7 +89,6 @@ const ONBOARDING_STEPS = [
     cta: 'Get My Notes',
     path: '/dashboard/jericho?tab=tape',
     icon: Sparkles,
-    gradient: GRADIENT_WELCOME,
   },
   {
     key: 'headshot',
@@ -84,7 +97,6 @@ const ONBOARDING_STEPS = [
     cta: 'Add Headshot',
     path: '/dashboard/profile',
     icon: Users2,
-    gradient: GRADIENT_WELCOME,
   },
   {
     key: 'generate_scene',
@@ -93,7 +105,6 @@ const ONBOARDING_STEPS = [
     cta: 'Generate a Scene',
     path: '/dashboard/generator',
     icon: Sparkles,
-    gradient: GRADIENT_PRACTICE,
   },
   {
     key: 'practice_ai',
@@ -102,7 +113,6 @@ const ONBOARDING_STEPS = [
     cta: 'Start Practicing',
     path: '/dashboard/scene-study',
     icon: Mic,
-    gradient: GRADIENT_PRACTICE,
   },
   {
     key: 'find_reader',
@@ -111,7 +121,6 @@ const ONBOARDING_STEPS = [
     cta: 'Find a Reader',
     path: '/dashboard/find-a-reader',
     icon: Users2,
-    gradient: GRADIENT_CONNECT,
   },
   {
     key: 'go_available',
@@ -120,7 +129,6 @@ const ONBOARDING_STEPS = [
     cta: 'Go Available',
     path: '/dashboard/find-a-reader',
     icon: Radio,
-    gradient: GRADIENT_CONNECT,
   },
   {
     key: 'green_room',
@@ -129,7 +137,6 @@ const ONBOARDING_STEPS = [
     cta: 'Open Green Room',
     path: '/dashboard/green-room',
     icon: MessageSquare,
-    gradient: GRADIENT_CONNECT,
   },
   {
     key: 'track_audition',
@@ -138,7 +145,6 @@ const ONBOARDING_STEPS = [
     cta: 'Log Audition',
     path: '/dashboard/auditions',
     icon: Target,
-    gradient: GRADIENT_TRACK,
   },
 ];
 
@@ -151,7 +157,6 @@ const ENGAGEMENT_ROTATION = [
     cta: 'Try Acting Coach',
     path: '/dashboard/cd-sim',
     icon: BookOpen,
-    gradient: GRADIENT_PRACTICE,
   },
   {
     title: 'Book a paid reader',
@@ -159,7 +164,6 @@ const ENGAGEMENT_ROTATION = [
     cta: 'Open Marketplace',
     path: '/dashboard/marketplace',
     icon: ShoppingBag,
-    gradient: GRADIENT_CONNECT,
   },
   {
     title: 'Invite a friend',
@@ -167,7 +171,6 @@ const ENGAGEMENT_ROTATION = [
     cta: 'Invite Friends',
     path: '/dashboard/referral',
     icon: Gift,
-    gradient: GRADIENT_WELCOME,
   },
   {
     title: 'Upload a self-tape',
@@ -175,7 +178,6 @@ const ENGAGEMENT_ROTATION = [
     cta: 'Open Self-Tapes',
     path: '/dashboard/self-tapes',
     icon: Camera,
-    gradient: GRADIENT_TRACK,
   },
 ];
 
@@ -216,6 +218,20 @@ export default function DashboardHome() {
 
   const nextStep = useNextStep({ profile, stats, submissions });
 
+  // One navigation door for the whole screen. Inside Capacitor, navigate() is
+  // a no-op, so hand the destination to DashboardLayout's drst-navigate
+  // listener instead; on web it stays a plain router push.
+  const go = useCallback((path) => {
+    if (Capacitor.isNativePlatform()) {
+      const detail = NAV_DETAIL[path];
+      if (detail) {
+        window.dispatchEvent(new CustomEvent('drst-navigate', { detail }));
+        return;
+      }
+    }
+    navigate(path);
+  }, [navigate]);
+
   // Listen for tutorial completion
   useEffect(() => {
     const handler = () => setShowTutorialAchievement(true);
@@ -242,12 +258,12 @@ export default function DashboardHome() {
     // Marked seen server-side so neither surface fires twice.
     if (!firstReviewDone) {
       dispatch(patchUserSettings({ reader_onboarding_seen: true }));
-      navigate('/dashboard/jericho?tab=tape');
+      go(TAPE_REVIEW_PATH);
       return;
     }
     const timer = setTimeout(() => setShowOnboarding(true), 2000);
     return () => clearTimeout(timer);
-  }, [settingsLoaded, onboardingSeen, firstReviewDone, dispatch, navigate]);
+  }, [settingsLoaded, onboardingSeen, firstReviewDone, dispatch, go]);
 
   const recentSubs = Array.isArray(submissions) ? submissions.slice(0, 4) : [];
 
@@ -265,11 +281,14 @@ export default function DashboardHome() {
     : p.use_fraction
       ? `${p.reached_booked} of ${p.total} submissions`
       : `${p.booked_rate}% of ${p.total} submissions`;
+  // Values stay numeric; the loading skeleton is rendered by the tile, not
+  // smuggled in as a '...' string, so the number never pops in at a
+  // different width than the placeholder it replaces.
   const statCards = [
-    { title: 'Total Submissions', value: isLoading ? '...' : String(s.total || 0), change: '', positive: true },
-    { title: 'This Month', value: isLoading ? '...' : String(s.this_month || 0), change: '', positive: true },
-    { title: 'Callbacks', value: isLoading ? '...' : String(p?.reached_callback ?? s.by_status?.callback ?? 0), change: '', positive: true },
-    { title: 'Booked', value: isLoading ? '...' : String(p?.reached_booked ?? s.by_status?.booked ?? 0), change: bookedChange, positive: true },
+    { title: 'Submissions', value: s.total || 0, note: '' },
+    { title: 'This month', value: s.this_month || 0, note: '' },
+    { title: 'Callbacks', value: p?.reached_callback ?? s.by_status?.callback ?? 0, note: '' },
+    { title: 'Booked', value: p?.reached_booked ?? s.by_status?.booked ?? 0, note: bookedChange },
   ];
 
   // Type breakdown chart data
@@ -289,21 +308,19 @@ export default function DashboardHome() {
   const firstName = (profile?.first_name || 'there').trim();
   const greeting = hour < 12 ? `Good morning, ${firstName}` : hour < 17 ? `Hey ${firstName}` : `Working late, ${firstName}?`;
 
+  // The hero already IS the first-review prompt, so don't also show it as the
+  // "next step" — one ask, not two for the same action.
+  const showNextStep = nextStep.key !== 'first_review';
+
   return (
-    <div className="aurora-orbs space-y-4 sm:space-y-6" style={{ color: 'var(--aurora-text)', fontFamily: "'Space Grotesk', sans-serif" }}>
+    <div className="dst-studio-panel dst-home">
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="aurora-display text-3xl" style={{ color: 'var(--aurora-text)' }}>{greeting}</h1>
-        </div>
-        <div className="flex items-center gap-3">
-          {/* AvailabilityToggle lives in the sidebar — one control per
-              route (P1-04 #4); the header copy was a duplicate. */}
-          <NotificationBell />
-        </div>
+      <div className="dst-home-head">
+        <h1 className="studio-title">{greeting}</h1>
+        <NotificationBell />
       </div>
 
       {/* Studio clients — desktop only, on purpose. The studio hub is a
@@ -317,46 +334,52 @@ export default function DashboardHome() {
       {/* ── Profile completeness — auto-hides when 100% ── */}
       <ProfileCompleteness />
 
-      {/* ── Smart Next Step — ONE primary CTA ── */}
-      <div
-        onClick={() => navigate(nextStep.path)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') navigate(nextStep.path); }}
-        className={`aurora-card bg-gradient-to-r ${nextStep.gradient} p-6 cursor-pointer transition-all duration-300 group relative overflow-hidden hover:-translate-y-0.5`}
-      >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_color-mix(in_oklch,var(--aurora-heritage-gold)_16%,transparent),_transparent_60%)]" />
-        <div className="relative flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0" style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold) 18%, transparent)', color: 'var(--aurora-accent-deep)' }}>
-            <nextStep.icon className="w-7 h-7" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="aurora-display text-xl" style={{ color: 'var(--aurora-text)' }}>{nextStep.title}</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--aurora-sub)' }}>{nextStep.description}</p>
-          </div>
-          <button className="aurora-mono px-5 py-2.5 rounded-full transition-all duration-200 whitespace-nowrap cursor-pointer text-sm shrink-0" style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', boxShadow: 'var(--aurora-shadow-coral)' }}>
-            {nextStep.cta} &rarr;
-          </button>
-        </div>
-      </div>
+      {/* ── Tape Review — the thing this company sells. Permanent and
+             primary, not a rotating peer of "invite a friend". ── */}
+      <section className="studio-hero">
+        <span className="studio-hero-mark" aria-hidden="true"><Sparkles className="w-5 h-5" /></span>
+        <span className="studio-eyebrow">Tape Review</span>
+        <h2 className="studio-hero-title">An honest read on your own tape</h2>
+        <p className="studio-hero-copy">
+          Upload a take and get casting-grade notes in minutes — what landed, what read
+          as indicated, and the one fix worth making before you send it.
+        </p>
+        <button type="button" className="studio-cta" onClick={() => go(TAPE_REVIEW_PATH)}>
+          {firstReviewDone ? 'Review a new tape' : 'Get my first notes'}
+          <span aria-hidden="true">&rarr;</span>
+        </button>
+      </section>
 
-      {/* ── Quick Access Grid — 3 icons ── */}
-      <div className="grid grid-cols-3 gap-3">
+      {/* ── Next step — one quiet nudge under the hero ── */}
+      {showNextStep && (
+        <button type="button" className="studio-nextstep" onClick={() => go(nextStep.path)}>
+          <span className="studio-nextstep-icon" aria-hidden="true"><nextStep.icon className="w-4 h-4" /></span>
+          <span className="studio-nextstep-body">
+            <strong>{nextStep.title}</strong>
+            <span>{nextStep.description}</span>
+          </span>
+          <span className="studio-nextstep-go">{nextStep.cta} &rarr;</span>
+        </button>
+      )}
+
+      {/* ── Everything else, at the weight it deserves ── */}
+      <div className="studio-shortcuts">
         {[
-          { label: 'Acting Coach', icon: '🎭', path: '/dashboard/cd-sim', desc: 'Get AI feedback' },
-          { label: 'Scene Study', icon: '📖', path: '/dashboard/scene-study', desc: 'Practice lines' },
-          { label: 'Find a Reader', icon: '🤝', path: '/dashboard/find-a-reader', desc: 'Match & connect' },
-        ].map((item) => (
-          <button
-            key={item.path}
-            onClick={() => navigate(item.path)}
-            className="aurora-card p-4 text-center transition-all cursor-pointer group hover:-translate-y-0.5 hover:border-[color:var(--aurora-heritage-gold)]"
-          >
-            <span className="text-2xl block mb-2">{item.icon}</span>
-            <p className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{item.label}</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--aurora-dim)' }}>{item.desc}</p>
-          </button>
-        ))}
+          { label: 'Acting Coach', desc: 'Notes on a scene', path: '/dashboard/cd-sim', Icon: BookOpen },
+          { label: 'Scene Study', desc: 'Run lines with AI', path: '/dashboard/scene-study', Icon: Mic },
+          { label: 'Find a Reader', desc: 'Match with actors', path: '/dashboard/find-a-reader', Icon: Users2 },
+        ].map((item) => {
+          const Icon = item.Icon;
+          return (
+            <button key={item.path} type="button" className="studio-shortcut" onClick={() => go(item.path)}>
+              <Icon className="w-4 h-4" aria-hidden="true" />
+              <span className="studio-shortcut-label">
+                {item.label}
+                <em>{item.desc}</em>
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* ── Progress Section ── */}
@@ -366,76 +389,74 @@ export default function DashboardHome() {
             the Match tab they aren't visiting. `needs_visual` is computed from
             the same rule the deck uses, so this can't nag someone already
             visible. */}
-        {profile?.needs_visual && (
-          <div className="mb-6">
-            <VisibilityPrompt userId={profile?.id} name={profile?.first_name} />
-          </div>
-        )}
+        {profile?.needs_visual && <VisibilityPrompt userId={profile?.id} name={profile?.first_name} />}
         <TutorialChecklist />
       </div>
 
       {/* ── Stats — Only show when user has data ── */}
       {hasStats ? (
         <>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {statCards.map((stat) => <StatsCard key={stat.title} {...stat} />)}
+          <div className="studio-stat-grid">
+            {statCards.map((stat) => (
+              <div key={stat.title} className="studio-stat">
+                <p className="studio-stat-label">{stat.title}</p>
+                {/* Fixed-width numeric slot: tabular figures + a 3ch floor mean
+                    the skeleton and the loaded number occupy the same box, so
+                    nothing jumps when the request lands. */}
+                <span className="studio-stat-value" aria-busy={isLoading || undefined}>
+                  {isLoading
+                    ? <span className="studio-stat-skeleton aurora-skeleton">000</span>
+                    : stat.value}
+                </span>
+                <span className="studio-stat-note">{isLoading ? '' : stat.note}</span>
+              </div>
+            ))}
           </div>
 
           {/* Collapsible analytics */}
           <button
+            type="button"
             onClick={() => setShowAnalytics(!showAnalytics)}
-            className="aurora-eyebrow flex items-center gap-2 cursor-pointer transition-colors hover:text-[color:var(--aurora-accent-deep)]"
-            style={{ color: 'var(--aurora-dim)' }}
+            className="studio-disclosure"
+            aria-expanded={showAnalytics}
           >
             Analytics
             {showAnalytics ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
           {showAnalytics && (
-            <Suspense fallback={<div className="h-[240px] flex items-center justify-center text-sm" style={{ color: 'var(--aurora-dim)' }}>Loading charts…</div>}>
+            <Suspense fallback={<div className="studio-stat-note" style={{ minHeight: 240 }}>Loading charts…</div>}>
               <HomeAnalytics typeData={typeData} funnelData={funnelData} />
             </Suspense>
           )}
         </>
-      ) : null /* Empty state removed — Smart Next Step banner + Get
-                   Started checklist already prompt this same action.
-                   Three CTAs for "log your first audition" was noisy. */}
+      ) : null /* Empty state removed — the Tape Review hero + Get Started
+                   checklist already prompt this same action. */}
 
       {/* Recent Submissions — only when data exists */}
       {recentSubs.length > 0 && (
-        <Card className="aurora-card" style={{ background: 'var(--aurora-surface-solid)', borderColor: 'var(--aurora-line)' }}>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="aurora-display text-base" style={{ color: 'var(--aurora-text)' }}>Recent Submissions</CardTitle>
-              <button onClick={() => navigate('/dashboard/submissions')} className="aurora-mono text-xs hover:underline" style={{ color: 'var(--aurora-accent-deep)' }}>View all &rarr;</button>
+        <section className="studio-sheet" style={{ padding: '18px 20px' }}>
+          <div className="dst-home-head" style={{ alignItems: 'center', marginBottom: 6 }}>
+            <h2 className="studio-title" style={{ fontSize: 20 }}>Recent submissions</h2>
+            <button type="button" className="studio-linkish" onClick={() => go('/dashboard/submissions')}>
+              View all &rarr;
+            </button>
+          </div>
+          {recentSubs.map((sub) => (
+            <div key={sub.id} className="studio-list-row">
+              <div className="studio-list-main">
+                <p className="studio-list-title">{sub.project_name}</p>
+                <p className="studio-list-meta">{sub.role}{sub.casting_director ? ` · ${sub.casting_director}` : ''}</p>
+              </div>
+              <span className="studio-list-meta" style={{ flex: '0 0 auto' }}>
+                {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
+              </span>
+              <span className="studio-tag" data-tone={sub.status === 'booked' || sub.status === 'callback' ? 'won' : undefined}>
+                {sub.status === 'sent' ? 'Submitted' : sub.status}
+              </span>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="divide-y divide-[color:var(--aurora-line)]">
-              {recentSubs.map((sub) => (
-                <div key={sub.id} className="flex items-center justify-between py-2.5">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--aurora-text)' }}>{sub.project_name}</p>
-                    <p className="text-xs truncate" style={{ color: 'var(--aurora-sub)' }}>{sub.role} {sub.casting_director ? `· ${sub.casting_director}` : ''}</p>
-                  </div>
-                  <div className="flex items-center gap-3 ml-4 shrink-0">
-                    <span className="aurora-mono text-xs" style={{ color: 'var(--aurora-dim)' }}>
-                      {sub.submitted_at ? new Date(sub.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
-                    </span>
-                    <span className={`aurora-mono text-xs px-2 py-0.5 rounded-full ${
-                      sub.status === 'callback' ? 'bg-[color-mix(in_oklch,var(--aurora-peach)_24%,transparent)] text-[color:var(--aurora-accent-deep)]' :
-                      sub.status === 'booked' ? 'bg-[color-mix(in_oklch,var(--aurora-mint)_30%,transparent)] text-[color:var(--aurora-accent-deep)]' :
-                      sub.status === 'viewed' ? 'bg-[color-mix(in_oklch,var(--aurora-rose)_26%,transparent)] text-[color:var(--aurora-accent-deep)]' :
-                      'bg-[color-mix(in_oklch,var(--aurora-sky)_28%,transparent)] text-[color:var(--aurora-accent-deep)]'
-                    }`}>
-                      {sub.status === 'sent' ? 'Submitted' : sub.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+          ))}
+        </section>
       )}
 
       {/* Upcoming Callbacks */}

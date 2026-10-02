@@ -55,6 +55,10 @@ before(async () => {
       window.mountReminder = data => { panel = queueAuditionNotification(data).panel; window.renderPanel(); };
     ` },
     bundle: true, write: false, platform: 'browser', format: 'iife', jsx: 'automatic',
+    // Panels import their own stylesheet; this harness renders markup, not
+    // styles, so drop CSS rather than demanding an output path for it.
+    // Same treatment the desktop harnesses already use.
+    loader: { '.css': 'empty' },
     define: { 'import.meta.env': '{"DEV":true}' },
     plugins: [{ name: 'audition-services', setup(builder) {
       builder.onResolve({ filter: /.*/ }, ({ path }) => {
