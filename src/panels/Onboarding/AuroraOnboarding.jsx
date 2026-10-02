@@ -17,10 +17,15 @@ import { PLATE_OPTIONS, TAPED_OPTIONS, normalizePersonalization, getOfferCopy, p
  * genres) is collected post-first-review via the ProfileCompleteness
  * card on Home instead (interests/goals/level never had BE fields; the
  * old flow appended them to the profile PATCH and the serializer dropped
- * them). The step components stay below for that post-value reuse.
+ * them).
  *
  * Mounts as a full-screen overlay above MobileApp content. Replaces the
- * old ReaderOnboardingModal trigger. Persists progress to localStorage so
+ * old ReaderOnboardingModal trigger. Those cut step components have now been
+ * deleted outright — neither STEPS array reached them in either flag state,
+ * so they were ~500 unreachable lines. Home's ProfileCompleteness card is the
+ * post-first-review collection surface; rebuild from it, not from here.
+ *
+ * Persists progress to localStorage so
  * the user can resume if they close mid-flow. Final step PATCHes the
  * profile + sets userSettings.reader_onboarding_seen = true.
  * ─────────────────────────────────────────────────────────────────── */
@@ -54,27 +59,6 @@ function track(event, props, isCurrent = () => true) {
   }).catch(() => { /* analytics unavailable */ });
 }
 
-const ROLES = [
-  { id: 'film', label: 'Film / TV', sub: 'SCRIPTED · STUDIO' },
-  { id: 'commercial', label: 'Commercial', sub: 'BRAND · HERO' },
-  { id: 'theatre', label: 'Theatre', sub: 'STAGE · LIVE' },
-  { id: 'voiceover', label: 'Voice Over', sub: 'VO · ANIMATION' },
-  { id: 'hosting', label: 'Hosting', sub: 'ON-CAMERA · PRESENT' },
-  { id: 'student', label: 'Student / Short', sub: 'INDIE · GRAD FILM' },
-];
-const GOALS = [
-  { id: 'roles', label: 'Land more roles', sub: 'TRACK & CONVERT', tint: 'var(--aurora-heritage-gold)' },
-  { id: 'habit', label: 'Build a rehearsal habit', sub: 'DAILY REPS', tint: 'var(--aurora-peach)' },
-  { id: 'partners', label: 'Find scene partners', sub: 'READERS NEAR ME', tint: 'var(--aurora-sky)' },
-  { id: 'coaching', label: 'Get AI coaching', sub: 'NOTES ON EVERY TAKE', tint: 'var(--aurora-mint)' },
-];
-const LEVELS = [
-  { id: 'new', label: 'Just starting out', sub: 'NEW TO AUDITIONING' },
-  { id: 'working', label: 'Working actor', sub: 'BOOKING REGULARLY' },
-  { id: 'established', label: 'Established', sub: 'CREDITS & REP' },
-  { id: 'pro', label: 'Full-time pro', sub: 'THIS IS THE CAREER' },
-];
-const TYPES = ['Leading', 'Character', 'Comedic', 'Ingénue', 'Best Friend', 'Villain', 'Parent'];
 const PRONOUNS = ['she/her', 'he/him', 'they/them', 'other'];
 const UNIONS = ['SAG-AFTRA', 'Eligible', 'Non-union'];
 
@@ -237,48 +221,14 @@ function ChipRow({ options, value, onPick }) {
   );
 }
 
-function SelectRow({ label, sub, on, onClick, tint }) {
-  const color = tint || 'var(--aurora-heritage-gold)';
-  return (
-    <button onClick={onClick} style={{
-      width: '100%', display: 'flex', alignItems: 'center', gap: 14,
-      padding: '15px 16px', marginBottom: 10, borderRadius: 16,
-      cursor: 'pointer', textAlign: 'left',
-      background: on ? `color-mix(in oklch, ${color} 22%, transparent)` : 'rgba(255,255,255,0.6)',
-      border: `1.5px solid ${on ? color : 'var(--aurora-line)'}`,
-      backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-      transition: 'background 0.15s, border-color 0.15s',
-    }}>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{
-          fontSize: 16, fontWeight: 600, letterSpacing: '-0.2px',
-          color: on ? 'var(--aurora-accent-deep)' : 'var(--aurora-text)',
-        }}>{label}</div>
-        {sub && <div style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-          color: 'var(--aurora-dim)', marginTop: 3, letterSpacing: '0.05em',
-        }}>{sub}</div>}
-      </div>
-      <span style={{
-        flexShrink: 0, width: 24, height: 24, borderRadius: 100,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: on ? color : 'transparent',
-        border: on ? 'none' : '1.5px solid var(--aurora-line)',
-      }}>
-        {on && (
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1A1408" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12l5 5 9-11" />
-          </svg>
-        )}
-      </span>
-    </button>
-  );
-}
-
 /* ───── STEP COMPONENTS ───── */
 
 function Identity({ data, set, onNext, onSkipQuestions, nameLocked, saving }) {
-  const valid = (data.first_name || '').trim() && (data.last_name || '').trim();
+  // First name only. Last name has no bearing on getting a Tape Review, and
+  // email signup never asked for one — gating Continue on it stranded every
+  // email user on an empty required field. Profile collects it later, the
+  // same way it collects the headshot and bio.
+  const valid = (data.first_name || '').trim();
   // When the name arrived from Sign in with Apple (or a prior signup), we
   // lock the inputs read-only so Apple's Authentication Services framework
   // remains the only source of name truth (Apple HIG: never re-ask for data
@@ -294,14 +244,14 @@ function Identity({ data, set, onNext, onSkipQuestions, nameLocked, saving }) {
         <Field label="FIRST NAME" value={data.first_name} onChange={(v) => set({ first_name: v })} placeholder="Maya" disabled={nameLocked} hint={nameHint} />
       </div>
       <div style={{ marginTop: 16 }}>
-        <Field label="LAST NAME" value={data.last_name} onChange={(v) => set({ last_name: v })} placeholder="Okonkwo" disabled={nameLocked} />
+        <Field label="LAST NAME · OPTIONAL" value={data.last_name} onChange={(v) => set({ last_name: v })} placeholder="Okonkwo" disabled={nameLocked} />
       </div>
       <div style={{ marginTop: 16 }}>
-        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>UNION STATUS</label>
+        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>UNION STATUS · OPTIONAL</label>
         <ChipRow options={UNIONS} value={data.union_status} onPick={(v) => set({ union_status: v })} />
       </div>
       <div style={{ marginTop: 16 }}>
-        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>PRONOUNS</label>
+        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>PRONOUNS · OPTIONAL</label>
         <ChipRow options={PRONOUNS} value={data.pronouns} onPick={(v) => set({ pronouns: v })} />
       </div>
       {FIRST_REVIEW_FLOW && <>
@@ -334,276 +284,6 @@ function Identity({ data, set, onNext, onSkipQuestions, nameLocked, saving }) {
       </>}
       <GoldBtn onClick={onNext} disabled={!valid || saving} style={{ marginTop: 26 }}>{saving ? 'Saving…' : 'Continue'}</GoldBtn>
       {FIRST_REVIEW_FLOW && <GhostBtn onClick={onSkipQuestions}>Skip these questions</GhostBtn>}
-    </div>
-  );
-}
-
-function ProfileStep({ data, set, onNext }) {
-  const fileRef = useRef(null);
-  const [uploading, setUploading] = useState(false);
-  const [cropImg, setCropImg] = useState(null);
-  const valid = (data.city || '').trim();
-  const fullName = `${(data.first_name || 'Your').trim()} ${(data.last_name || 'Name').trim()}`.trim();
-
-  const onFile = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (!f.type || !f.type.startsWith('image/')) {
-      e.target.value = '';
-      return;
-    }
-    if (f.size > 12 * 1024 * 1024) {
-      e.target.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setCropImg(reader.result);
-    reader.readAsDataURL(f);
-  };
-
-  const acceptCrop = () => {
-    set({ headshotDataUrl: cropImg });
-    setCropImg(null);
-    setUploading(false);
-  };
-
-  return (
-    <div style={{ padding: '12px 26px 30px' }}>
-      <h1 style={{
-        fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 700,
-        letterSpacing: '-0.6px', lineHeight: 1.02, margin: 0,
-      }}>Build your<br />actor profile.</h1>
-      <p style={{ fontSize: 13.5, color: 'var(--aurora-sub)', marginTop: 12, lineHeight: 1.5 }}>
-        This is what casting and scene partners see. You can polish it anytime.
-      </p>
-
-      <button onClick={() => setUploading(true)} style={{
-        width: '100%', height: 220, marginTop: 20, borderRadius: 22, cursor: 'pointer',
-        position: 'relative', overflow: 'hidden',
-        border: data.headshotDataUrl ? 'none' : '2px dashed var(--aurora-line)',
-        background: data.headshotDataUrl
-          ? `#0E0D0A url(${data.headshotDataUrl}) center/cover`
-          : 'rgba(255,255,255,0.55)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        {data.headshotDataUrl ? (
-          <div style={{
-            position: 'absolute', bottom: 12, right: 12,
-            background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)',
-            borderRadius: 100, padding: '7px 12px',
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-            letterSpacing: '0.1em', color: 'var(--aurora-accent-deep)',
-          }}>REPLACE</div>
-        ) : (
-          <div style={{ textAlign: 'center', color: 'var(--aurora-dim)' }}>
-            <div style={{
-              width: 56, height: 56, borderRadius: 16,
-              background: 'color-mix(in oklch, var(--aurora-heritage-gold) 22%, transparent)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto', color: 'var(--aurora-accent-deep)',
-            }}>
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-                <rect x="3" y="6" width="18" height="14" rx="2" />
-                <circle cx="12" cy="13" r="3.5" />
-                <path d="M8 6l1.5-2h5L16 6" />
-              </svg>
-            </div>
-            <div style={{
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 600,
-              color: 'var(--aurora-text)', marginTop: 12,
-            }}>Add your headshot</div>
-            <div style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 9,
-              letterSpacing: '0.1em', marginTop: 4,
-            }}>TAP TO UPLOAD · JPG OR PNG</div>
-          </div>
-        )}
-      </button>
-
-      <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />
-
-      {uploading && !cropImg && (
-        <div onClick={() => setUploading(false)} style={{
-          position: 'fixed', inset: 0, zIndex: 95,
-          display: 'flex', alignItems: 'flex-end',
-          background: 'rgba(20,18,14,0.45)', backdropFilter: 'blur(4px)',
-        }}>
-          <div onClick={(e) => e.stopPropagation()} style={{
-            width: '100%', borderRadius: '26px 26px 0 0',
-            padding: '20px 22px calc(env(safe-area-inset-bottom, 0px) + 32px)',
-            background: 'rgba(255,255,255,0.96)',
-            backdropFilter: 'blur(28px) saturate(1.5)',
-            boxShadow: '0 -10px 40px rgba(10,10,10,0.2)',
-          }}>
-            <div style={{
-              width: 40, height: 4, background: 'var(--aurora-line)',
-              borderRadius: 100, margin: '0 auto 18px',
-            }} />
-            <div style={{ fontSize: 19, fontWeight: 700, letterSpacing: '-0.4px', marginBottom: 4 }}>Add your headshot</div>
-            <div style={{ fontSize: 13, color: 'var(--aurora-sub)', lineHeight: 1.45, marginBottom: 18 }}>
-              Use a clean, current headshot. Shoulders up with a neutral background reads best.
-            </div>
-            <button onClick={() => fileRef.current && fileRef.current.click()} style={{
-              width: '100%', padding: 14, borderRadius: 16, cursor: 'pointer',
-              background: 'var(--aurora-text)', color: '#fff', border: 'none',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 600,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-            }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-                <rect x="3" y="6" width="18" height="14" rx="2" />
-                <circle cx="12" cy="13" r="3.5" />
-                <path d="M8 6l1.5-2h5L16 6" />
-              </svg>
-              Upload photo
-            </button>
-          </div>
-        </div>
-      )}
-
-      {cropImg && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 96, background: '#0E0D0A',
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <div style={{
-              width: 280, height: 280, borderRadius: '50%', overflow: 'hidden',
-              boxShadow: '0 0 0 2000px rgba(14,13,10,0.78)',
-              background: `#222 url(${cropImg}) center/cover`,
-            }} />
-            <div style={{
-              position: 'absolute', bottom: 60, left: 0, right: 0, textAlign: 'center',
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-              letterSpacing: '0.15em', color: 'rgba(255,255,255,0.6)',
-            }}>THIS WILL BE YOUR HEADSHOT</div>
-          </div>
-          {/* zIndex sits the actions above the circle's 2000px vignette shadow
-              so they read at full contrast instead of washed-out on black. */}
-          <div style={{
-            position: 'relative', zIndex: 2,
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '14px 26px calc(env(safe-area-inset-bottom, 0px) + 32px)',
-          }}>
-            <button onClick={() => setCropImg(null)} style={{
-              flex: '0 0 auto',
-              background: 'rgba(255,255,255,0.14)',
-              border: '1.5px solid rgba(255,255,255,0.4)', color: '#fff',
-              borderRadius: 100, padding: '13px 22px',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 15, fontWeight: 600, cursor: 'pointer',
-            }}>Retake</button>
-            <button onClick={acceptCrop} style={{
-              flex: 1,
-              background: 'linear-gradient(135deg,#C99A4E 0%,var(--aurora-heritage-gold) 45%,var(--aurora-heritage-gold-light) 100%)',
-              border: 'none', color: '#1A1408', borderRadius: 100, padding: '15px 28px',
-              fontFamily: "'Space Grotesk', sans-serif", fontSize: 16, fontWeight: 700, cursor: 'pointer',
-              boxShadow: '0 2px 4px rgba(122,90,24,0.25), 0 14px 30px rgba(212,168,95,0.45), inset 0 1px 0 rgba(255,255,255,0.6)',
-            }}>Use this photo</button>
-          </div>
-        </div>
-      )}
-
-      <div style={{ marginTop: 14, display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px', color: 'var(--aurora-text)' }}>{fullName}</div>
-        {data.union_status && (
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.1em',
-            color: 'var(--aurora-accent-deep)',
-            background: 'color-mix(in oklch, var(--aurora-heritage-gold) 28%, transparent)',
-            padding: '3px 7px', borderRadius: 100,
-          }}>{data.union_status.toUpperCase()}</div>
-        )}
-      </div>
-
-      <div style={{ marginTop: 16 }}>
-        <Field label="BASED IN" value={data.city} onChange={(v) => set({ city: v })} placeholder="Brooklyn, NY" />
-      </div>
-      <div style={{ marginTop: 14 }}>
-        <Field label="REPRESENTATION · OPTIONAL" value={data.representation} onChange={(v) => set({ representation: v })} placeholder="Agency or “Seeking rep”" />
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        <label style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.15em', color: 'var(--aurora-dim)' }}>
-          YOUR TYPE <span style={{ opacity: 0.6 }}>· PICK A FEW</span>
-        </label>
-        <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-          {TYPES.map((t) => {
-            const sel = (data.types || []).includes(t);
-            return (
-              <button
-                key={t}
-                onClick={() => set({
-                  types: sel
-                    ? (data.types || []).filter((x) => x !== t)
-                    : [...(data.types || []), t],
-                })}
-                style={{
-                  padding: '8px 13px', borderRadius: 100, cursor: 'pointer',
-                  fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 500,
-                  background: sel
-                    ? 'color-mix(in oklch, var(--aurora-heritage-gold) 28%, transparent)'
-                    : 'rgba(255,255,255,0.6)',
-                  color: sel ? 'var(--aurora-accent-deep)' : 'var(--aurora-text)',
-                  border: `1.5px solid ${sel ? 'var(--aurora-heritage-gold)' : 'var(--aurora-line)'}`,
-                }}
-              >{t}</button>
-            );
-          })}
-        </div>
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        <Field label="SHORT BIO · OPTIONAL" value={data.bio} onChange={(v) => set({ bio: v })} placeholder="A line or two on your training, range, and what you're after." multiline />
-      </div>
-
-      <GoldBtn onClick={onNext} disabled={!valid} style={{ marginTop: 22 }}>
-        {valid ? 'Continue' : 'Add your city to continue'}
-      </GoldBtn>
-      <GhostBtn onClick={onNext} style={{ marginTop: 6 }}>I'll finish this later</GhostBtn>
-    </div>
-  );
-}
-
-function MultiPicker({ title, subtitle, items, selected, onToggle, onNext, min = 1, useItemTint }) {
-  return (
-    <div style={{ padding: '12px 26px 30px' }}>
-      <h1 style={{
-        fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 700,
-        letterSpacing: '-0.6px', lineHeight: 1.02, margin: 0, whiteSpace: 'pre-line',
-      }}>{title}</h1>
-      <p style={{ fontSize: 13.5, color: 'var(--aurora-sub)', marginTop: 12, lineHeight: 1.5 }}>{subtitle}</p>
-      <div style={{ marginTop: 22 }}>
-        {items.map((it) => (
-          <SelectRow
-            key={it.id}
-            label={it.label}
-            sub={it.sub}
-            on={selected.includes(it.id)}
-            onClick={() => onToggle(it.id)}
-            tint={useItemTint ? it.tint : undefined}
-          />
-        ))}
-      </div>
-      <GoldBtn onClick={onNext} disabled={selected.length < min} style={{ marginTop: 12 }}>
-        {selected.length < min ? 'Pick at least one' : `Continue${selected.length ? ` · ${selected.length}` : ''}`}
-      </GoldBtn>
-    </div>
-  );
-}
-
-function SinglePicker({ title, subtitle, items, value, onPick, onNext }) {
-  return (
-    <div style={{ padding: '12px 26px 30px' }}>
-      <h1 style={{
-        fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 700,
-        letterSpacing: '-0.6px', lineHeight: 1.02, margin: 0, whiteSpace: 'pre-line',
-      }}>{title}</h1>
-      <p style={{ fontSize: 13.5, color: 'var(--aurora-sub)', marginTop: 12, lineHeight: 1.5 }}>{subtitle}</p>
-      <div style={{ marginTop: 22 }}>
-        {items.map((it) => (
-          <SelectRow key={it.id} label={it.label} sub={it.sub} on={value === it.id} onClick={() => onPick(it.id)} />
-        ))}
-      </div>
-      <GoldBtn onClick={onNext} disabled={!value} style={{ marginTop: 12 }}>Continue</GoldBtn>
     </div>
   );
 }
@@ -678,190 +358,6 @@ function Notif({ onAllow, onSkip }) {
           </>
         )}
       </div>
-    </div>
-  );
-}
-
-function Follow({ onNext }) {
-  return (
-    <div style={{ padding: '12px 26px 30px' }}>
-      <h1 style={{
-        fontFamily: "'Space Grotesk', sans-serif", fontSize: 32, fontWeight: 700,
-        letterSpacing: '-0.6px', lineHeight: 1.02, margin: 0,
-      }}>It's not always<br />a solo craft.</h1>
-      <p style={{ fontSize: 13.5, color: 'var(--aurora-sub)', marginTop: 12, lineHeight: 1.5 }}>
-        After onboarding, swipe through verified readers and coaches in the Find a Reader tab. Build your Green Room of scene partners.
-      </p>
-      <div style={{ marginTop: 22 }}>
-        {[
-          { e: '🎬', text: 'Match with readers in your zip' },
-          { e: '💬', text: 'Chat + run sides live in the Green Room' },
-          { e: '✦', text: 'Find a coach or rehearsal partner before your next callback' },
-        ].map((row) => (
-          <div key={row.e} className="aurora-card" style={{
-            display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', marginBottom: 10,
-          }}>
-            <span style={{ fontSize: 22 }}>{row.e}</span>
-            <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--aurora-text)' }}>{row.text}</span>
-          </div>
-        ))}
-      </div>
-      <GoldBtn onClick={onNext} style={{ marginTop: 22 }}>Continue</GoldBtn>
-    </div>
-  );
-}
-
-function Building({ onDone }) {
-  const tasks = [
-    'Setting up your tracker',
-    'Tuning your AI scene partner',
-    'Finding readers in your area',
-    'Building your Craft Journey',
-  ];
-  const [done, setDone] = useState(0);
-  useEffect(() => {
-    const timers = tasks.map((_, k) => setTimeout(() => setDone(k + 1), 600 + k * 600));
-    const fin = setTimeout(onDone, 600 + tasks.length * 600 + 500);
-    return () => { timers.forEach(clearTimeout); clearTimeout(fin); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  const pct = done / tasks.length;
-  const r = 54;
-  const c = 2 * Math.PI * r;
-  return (
-    <div className="aurora-orbs aurora-orbs-live" style={{
-      position: 'absolute', inset: 0, overflow: 'hidden',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      padding: 'calc(env(safe-area-inset-top, 0px) + 54px) 30px calc(env(safe-area-inset-bottom, 0px) + 40px)',
-    }}>
-      <div style={{ position: 'relative', zIndex: 5, textAlign: 'center', width: '100%' }}>
-        <svg width="140" height="140" viewBox="0 0 140 140" style={{ margin: '0 auto' }}>
-          <circle cx="70" cy="70" r={r} stroke="rgba(10,10,10,0.07)" strokeWidth="10" fill="none" />
-          <circle
-            cx="70" cy="70" r={r}
-            stroke="var(--aurora-heritage-gold)" strokeWidth="10" fill="none"
-            strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - pct)}
-            transform="rotate(-90 70 70)"
-            style={{
-              transition: 'stroke-dashoffset 0.5s cubic-bezier(.5,.1,.2,1)',
-              filter: 'drop-shadow(0 0 8px rgba(212,168,95,0.55))',
-            }}
-          />
-          <text x="70" y="78" textAnchor="middle" fontFamily="'JetBrains Mono'" fontSize="30" fontWeight="500" fill="var(--aurora-text)">{Math.round(pct * 100)}%</text>
-        </svg>
-        <div style={{
-          fontFamily: "'Space Grotesk', sans-serif", fontSize: 28, fontWeight: 700,
-          letterSpacing: '-0.4px', marginTop: 22,
-        }}>Personalizing your studio…</div>
-        <div style={{ marginTop: 22, textAlign: 'left', maxWidth: 300, margin: '22px auto 0' }}>
-          {tasks.map((t, k) => {
-            const isDone = k < done;
-            const active = k === done;
-            return (
-              <div key={t} style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0',
-                opacity: k > done ? 0.4 : 1, transition: 'opacity 0.3s',
-              }}>
-                <span style={{
-                  width: 26, height: 26, borderRadius: 100, flexShrink: 0,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: isDone ? 'var(--aurora-mint)'
-                    : active ? 'var(--aurora-heritage-gold)'
-                    : 'rgba(10,10,10,0.06)',
-                  transition: 'background 0.3s',
-                }}>
-                  {isDone && (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#1A1408" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 12l5 5 9-11" />
-                    </svg>
-                  )}
-                  {active && (
-                    <span style={{
-                      width: 10, height: 10,
-                      border: '2px solid #1A1408', borderTopColor: 'transparent',
-                      borderRadius: 100, animation: 'aurora-spin 0.7s linear infinite',
-                    }} />
-                  )}
-                </span>
-                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--aurora-text)' }}>{t}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <style>{`@keyframes aurora-spin{to{transform:rotate(360deg);}}`}</style>
-    </div>
-  );
-}
-
-function Welcome({ data, onDone }) {
-  const name = (data.first_name || 'there').trim();
-  const COLS = ['var(--aurora-heritage-gold)', 'var(--aurora-mint)', 'var(--aurora-sky)', 'var(--aurora-rose)', 'var(--aurora-peach)'];
-  return (
-    <div className="aurora-orbs aurora-orbs-live" style={{
-      position: 'absolute', inset: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column',
-    }}>
-      <div style={{ position: 'absolute', inset: 0, zIndex: 4, pointerEvents: 'none' }}>
-        {Array.from({ length: 22 }).map((_, k) => {
-          const ang = (k / 22) * Math.PI * 2;
-          const dist = 120 + (k % 4) * 40;
-          return (
-            <div key={k} style={{
-              position: 'absolute', left: '50%', top: '34%',
-              width: k % 2 ? 6 : 8, height: k % 2 ? 6 : 8,
-              borderRadius: k % 3 ? '50%' : 2,
-              background: COLS[k % 5],
-              transform: `translate(${Math.cos(ang) * dist}px, ${Math.sin(ang) * dist}px)`,
-              animation: `aurora-pop 0.7s cubic-bezier(.2,1.4,.4,1) ${0.2 + (k % 6) * 0.05}s both`,
-            }} />
-          );
-        })}
-      </div>
-      <div style={{
-        position: 'relative', zIndex: 5, flex: 1, display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', padding: '0 30px', textAlign: 'center',
-      }}>
-        <div style={{
-          width: 100, height: 100, borderRadius: 30,
-          background: 'linear-gradient(135deg,#C99A4E,var(--aurora-heritage-gold) 45%,var(--aurora-heritage-gold-light))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 16px 40px rgba(212,168,95,0.55), inset 0 1px 0 rgba(255,255,255,0.6)',
-          border: '2px solid rgba(255,255,255,0.6)',
-        }}>
-          <span style={{ fontSize: 52 }}>✦</span>
-        </div>
-        <div style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.2em',
-          color: 'var(--aurora-accent-deep)', marginTop: 24,
-        }}>YOU'RE ALL SET</div>
-        <h1 style={{
-          fontFamily: "'Space Grotesk', sans-serif", fontSize: 40, fontWeight: 700,
-          letterSpacing: '-0.6px', lineHeight: 1.0, marginTop: 8,
-        }}>Welcome,<br />{name}.</h1>
-        <p style={{ fontSize: 14, color: 'var(--aurora-sub)', marginTop: 14, lineHeight: 1.5, maxWidth: 300 }}>
-          Your studio is ready. Log an audition, run a take, or find a reader. Your callback rate starts climbing today.
-        </p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 20 }}>
-          {[
-            { text: `${(data.interests || []).length || 3} role types`, bg: 'color-mix(in oklch, var(--aurora-heritage-gold) 33%, transparent)' },
-            { text: `${(data.goals || []).length || 2} goals set`, bg: 'color-mix(in oklch, var(--aurora-mint) 44%, transparent)' },
-            { text: `${(data.types || []).length || 0} types picked`, bg: 'color-mix(in oklch, var(--aurora-sky) 44%, transparent)' },
-          ].map((c, k) => (
-            <div key={k} style={{
-              fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-              padding: '7px 12px', borderRadius: 100, letterSpacing: '0.05em',
-              background: c.bg, color: '#1A1408', border: '1px solid rgba(255,255,255,0.5)',
-            }}>{c.text.toUpperCase()}</div>
-          ))}
-        </div>
-      </div>
-      <div style={{
-        position: 'relative', zIndex: 5,
-        padding: '0 26px calc(env(safe-area-inset-bottom, 0px) + 38px)',
-      }}>
-        <GoldBtn onClick={onDone}>Enter your studio →</GoldBtn>
-      </div>
-      <style>{`@keyframes aurora-pop {0%{transform:translate(0,0) scale(0) rotate(-30deg);opacity:0;}60%{transform:scale(1.25);}100%{opacity:1;}}`}</style>
     </div>
   );
 }
@@ -1142,7 +638,7 @@ export default function AuroraOnboarding({ onClose }) {
   const next = () => go(i + 1);
   const back = () => {
     // 'offer' is a forward-only interstitial — Back should step over it
-    // (e.g. profile → identity, not profile → offer) so there's no offer↔profile loop.
+    // (e.g. notif → identity, not notif → offer) so there's no offer↔notif loop.
     let t = i - 1;
     if (STEPS[t] === 'offer') t -= 1;
     go(Math.max(0, t));
@@ -1168,11 +664,6 @@ export default function AuroraOnboarding({ onClose }) {
       try { window.localStorage.setItem(pendingKey(authUser.id), JSON.stringify(answerPatch(nd))); } catch { /* storage unavailable */ }
     }
   };
-  const toggle = (key, id) => {
-    const cur = data[key] || [];
-    set({ [key]: cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id] });
-  };
-
   const persistPersonalization = useCallback(() => {
     if (personalizationSave.current) return personalizationSave.current;
     const scope = session.current;
@@ -1375,8 +866,8 @@ export default function AuroraOnboarding({ onClose }) {
   };
 
   // Offer now comes early (right after the name step). Skipping CONTINUES the
-  // rest of onboarding (profile → interests → … → notif) instead of ending it,
-  // so non-takers still complete their profile. (Plain fn: needs current `i`.)
+  // rest of onboarding (→ notif) instead of ending it, so non-takers still
+  // land on the notification ask. (Plain fn: needs current `i`.)
   const skipFirstReview = (reason) => {
     track(reason === 'consent' ? 'FIRST_REVIEW_CONSENT_DECLINED' : 'FIRST_REVIEW_SKIPPED');
     // Advance into the rest of onboarding — but finish() if 'offer' is the LAST
@@ -1419,40 +910,6 @@ export default function AuroraOnboarding({ onClose }) {
             scrollPaddingBottom: '120px',
           }}>
             {step === 'identity' && <Identity data={data} set={set} onNext={FIRST_REVIEW_FLOW ? () => continueIdentity() : next} onSkipQuestions={() => continueIdentity(true)} nameLocked={nameLocked} saving={saving} />}
-            {step === 'profile' && <ProfileStep data={data} set={set} onNext={next} />}
-            {step === 'interests' && (
-              <MultiPicker
-                title={"Which roles\nare you chasing?"}
-                subtitle="We'll tailor your sides, readers, and coaching to where you audition. Pick all that apply."
-                items={ROLES}
-                selected={data.interests || []}
-                onToggle={(id) => toggle('interests', id)}
-                onNext={next}
-                min={1}
-              />
-            )}
-            {step === 'goals' && (
-              <MultiPicker
-                title={"What should we\nhelp you do?"}
-                subtitle="Your home screen leads with whatever matters most to you."
-                items={GOALS}
-                selected={data.goals || []}
-                onToggle={(id) => toggle('goals', id)}
-                onNext={next}
-                min={1}
-                useItemTint
-              />
-            )}
-            {step === 'level' && (
-              <SinglePicker
-                title={"Where are you\nin your career?"}
-                subtitle="So we set the right pace for your Craft Journey."
-                items={LEVELS}
-                value={data.level}
-                onPick={(id) => set({ level: id })}
-                onNext={next}
-              />
-            )}
             {/* notif is the LAST step when the free-review flow is on — advance
                 via finish() there, since next() would clamp and trap the user. */}
             {step === 'notif' && (
@@ -1461,14 +918,9 @@ export default function AuroraOnboarding({ onClose }) {
                 onSkip={() => (i + 1 >= STEPS.length ? finish() : next())}
               />
             )}
-            {step === 'follow' && <Follow onNext={next} />}
           </div>
         </div>
       )}
-      {step === 'building' && <Building onDone={next} />}
-      {/* When the free-review flow is on, the welcome CTA advances to the offer
-          step instead of finishing; otherwise it closes onboarding as before. */}
-      {step === 'welcome' && <Welcome data={data} onDone={finish} />}
       {step === 'offer' && <Offer firstName={data.first_name} personalization={data.onboarding_personalization} onTry={launchFirstReview} onSkip={skipFirstReview} />}
     </div>
   );

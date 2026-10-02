@@ -329,10 +329,17 @@ btest('flag-off markup, draft, writes, and event payloads match the pre-ticket m
   // removed on purpose. Normalise that one declaration out of both sides so this
   // test keeps guarding BEHAVIOUR (draft, writes, event payloads) without
   // re-asserting an inaccessible style. Add to this list only with a reason.
+  //
+  // Second: the identity screen's LAST NAME, UNION STATUS and PRONOUNS labels
+  // gained a "· OPTIONAL" suffix. All three ARE optional — last name no longer
+  // gates Continue, and the chips never did — but the baseline labels them as
+  // if they were required, which is the thing that was fixed. Strip the suffix
+  // from both sides so this test still compares structure, not stale labels.
   const normalise = (cap) => ({
     ...cap,
     snapshots: cap.snapshots.map((html) =>
-      html.replace(/opacity: 0\.65;?\s*/g, '').replace(/;\s+"/g, ';"')),
+      html.replace(/opacity: 0\.65;?\s*/g, '').replace(/;\s+"/g, ';"')
+        .replace(/ · OPTIONAL/g, '')),
   });
   try {
     assert.deepEqual(

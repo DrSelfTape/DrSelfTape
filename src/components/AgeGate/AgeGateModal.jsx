@@ -2,10 +2,15 @@
  * AgeGateModal — Terms §1 / COPPA age verification.
  *
  * Mounted once at app root. Opens automatically for any authenticated
- * user whose `date_of_birth` is NULL — i.e. Sign-in-with-Apple accounts
- * (Apple never supplies a birthdate) and accounts created before the DOB
- * field shipped. Email signups collect DOB on the form, so they never
- * see this.
+ * user whose `date_of_birth` is NULL — accounts created before the DOB
+ * field shipped, and any Sign-in-with-Apple account where the in-line
+ * capture in AppleSignInButton didn't land. Email signups collect DOB on
+ * the form and Apple sign-in collects it during the handoff, so this is
+ * the backstop, not the greeting: a new user should never meet it first.
+ *
+ * It stays closed while another surface holds the gate (see ageGateHold)
+ * — that surface is collecting the same birthdate and would otherwise be
+ * covered by this modal mid-capture.
  *
  * Real enforcement is server-side (apps/users/age.py + the
  * /v1/users/date-of-birth/ endpoint, which rejects under-MIN_SIGNUP_AGE
@@ -13,13 +18,14 @@
  * capture surface. There is intentionally no "skip" — a user must supply
  * a qualifying birthdate or log out.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 import axiosInstance from '../../redux/http';
 import { logoutUser, setDateOfBirth } from '../../redux/features/auth/authSlice';
 import { MIN_SIGNUP_AGE, calculateAge, meetsMinAge } from '../../utils/age';
+import { isAgeGateHeld, subscribeAgeGateHold } from './ageGateHold';
 
 const PRIMARY_GOLD = '#D4A85F';
 const DEEP_GOLD = '#7A5A18';
@@ -33,8 +39,11 @@ export default function AgeGateModal() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  // Open whenever we have an authenticated user with no birthdate on file.
-  const needsGate = !!(isAuthenticated && user?.id && !user?.date_of_birth);
+  const held = useSyncExternalStore(subscribeAgeGateHold, isAgeGateHeld, isAgeGateHeld);
+
+  // Open whenever we have an authenticated user with no birthdate on file
+  // and nothing else is mid-capture.
+  const needsGate = !!(isAuthenticated && user?.id && !user?.date_of_birth) && !held;
 
   useEffect(() => {
     if (!needsGate) {
