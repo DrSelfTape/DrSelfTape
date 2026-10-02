@@ -1,5 +1,45 @@
 // Library imports
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+
+// Local imports
+import PermissionsModal from '../../../PermissionsModal';
+import useHideMobileHeader from '../../../Shared/useHideMobileHeader';
+
+/**
+ * Mic-denial prompt.
+ *
+ * This is a hook, so it has no render tree of its own to portal into — and the
+ * blocking `alert()` this replaces froze the whole page and looked nothing like
+ * the app. So the hook owns one host root and renders the real PermissionsModal
+ * into it. The root is created once and reused; hiding renders null rather than
+ * unmounting, which keeps us out of React's "unmount while rendering" path.
+ */
+let micPromptRoot = null;
+
+function MicPermissionPrompt({ onClose }) {
+  // Same contract as every other modal — slide MobileApp's top bar away.
+  useHideMobileHeader(true);
+  return createElement(PermissionsModal, {
+    isOpen: true,
+    requireCamera: false,
+    requireMic: true,
+    context: 'the AI scene partner',
+    onGranted: onClose,
+    onDenied: onClose,
+  });
+}
+
+function showMicPermissionPrompt() {
+  if (typeof document === 'undefined') return;
+  if (!micPromptRoot) {
+    const host = document.createElement('div');
+    document.body.appendChild(host);
+    micPromptRoot = createRoot(host);
+  }
+  const close = () => micPromptRoot.render(null);
+  micPromptRoot.render(createElement(MicPermissionPrompt, { onClose: close }));
+}
 
 /**
  * Pick the best MediaRecorder mime type available in this browser.
@@ -26,6 +66,9 @@ function pickAudioMime() {
 export const useRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordTimer, setRecordTimer] = useState(0);
+  // Exposed so a panel can also reflect the denial inline; the prompt above
+  // shows regardless, so nothing is silent if a caller ignores this.
+  const [micPermissionDenied, setMicPermissionDenied] = useState(false);
 
   const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
@@ -72,9 +115,11 @@ export const useRecording = () => {
         mediaStreamRef.current = await navigator.mediaDevices.getUserMedia({
           audio: { channelCount: 1, noiseSuppression: true, echoCancellation: true },
         });
+        setMicPermissionDenied(false);
       } catch (err) {
         console.error('Mic access error', err);
-        alert('Microphone access denied. Please allow microphone permissions.');
+        setMicPermissionDenied(true);
+        showMicPermissionPrompt();
         return false;
       }
     }
@@ -118,6 +163,7 @@ export const useRecording = () => {
   return {
     isRecording,
     recordTimer,
+    micPermissionDenied,
     mediaRecorderRef,
     mediaStreamRef,
     chunksRef,

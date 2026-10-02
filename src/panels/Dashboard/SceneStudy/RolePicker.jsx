@@ -1,12 +1,4 @@
-
-
-const VOICES = [
-  { id: 'partner_male',    label: 'George',  desc: 'Warm & Captivating',    accent: 'British',   gender: 'Male',    emoji: '👨' },
-  { id: 'partner_female',  label: 'Lily',    desc: 'Velvety Actress',       accent: 'British',   gender: 'Female',  emoji: '👩' },
-  { id: 'partner_neutral', label: 'River',   desc: 'Calm & Neutral',        accent: 'American',  gender: 'Neutral', emoji: '🧑' },
-  { id: 'cd_female',       label: 'Sarah',   desc: 'Mature & Confident',    accent: 'American',  gender: 'Female',  emoji: '👩‍💼' },
-  { id: 'cd_male',         label: 'Daniel',  desc: 'Steady Broadcaster',    accent: 'British',   gender: 'Male',    emoji: '👨‍💼' },
-];
+import { PARTNER_VOICES as VOICES, DEFAULT_PARTNER_VOICE } from './partnerVoices';
 
 export default function RolePicker({
   characters,
@@ -17,7 +9,7 @@ export default function RolePicker({
   onStart,
   onBack,
 }) {
-  const internalVoice = selectedVoice || 'partner_male';
+  const internalVoice = selectedVoice || DEFAULT_PARTNER_VOICE;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -80,7 +72,8 @@ export default function RolePicker({
       <div className="mb-5">
         <h3 className="text-base font-bold text-[#0A0A0A] mb-1">Choose Your AI Scene Partner's Voice</h3>
         <p className="text-[rgba(10,10,10,0.62)] text-sm">
-          This voice will read the other character's lines during practice and Live Study Mode.
+          This reads the character opposite you. In a scene with more than one other
+          character, the rest are cast from the remaining voices so they don't all sound alike.
         </p>
       </div>
 
