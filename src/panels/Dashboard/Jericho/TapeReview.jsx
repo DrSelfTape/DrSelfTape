@@ -189,7 +189,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   useAIGate();
   const dispatch = useDispatch();
   const bannerUserId = useSelector(s => s.auth?.user?.id) || 'anonymous';
-  const { tapeReviewLoading, tapeReviewResult, tapeReviewCompletionId, tapeReviewError, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl, revealPending } = useSelector((s) => s.jericho);
+  const { tapeReviewLoading, tapeReviewResult, tapeReviewCompletionId, tapeReviewError, tapeReviewPending, uploadProgress, compareLoading, compareResult, reviewRecording: recording, tapeReviewPlaybackUrl, revealPending } = useSelector((s) => s.jericho);
   const hasAiConsent = useSelector((s) => !!s.auth?.user?.ai_consent_accepted_at);
   const [checkingRecovery, setCheckingRecovery] = useState(() => !(tapeReviewLoading || tapeReviewResult || compareLoading || compareResult));
   // Full-read gate: Premium (unlimited) sees the complete casting read; free
@@ -258,7 +258,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const [role, setRole] = useState(recording?.role || (practiceVariant ? 'Morgan' : ''));
   const [tone, setTone] = useState('');
   const [sides, setSides] = useState(practiceVariant ? PRACTICE_SCENE_CONTENT : '');
-  const [showOptional, setShowOptional] = useState(false);
+  // Open by default: the sides field is what turns generic framing/eyeline notes
+  // into notes about the actor's actual lines. Hidden behind a disclosure, most
+  // actors submitted blind and got the generic read.
+  const [showOptional, setShowOptional] = useState(true);
   const [showTutorial, setShowTutorial] = useState(false);
   // Staged reveal of the result: 0 = gauge + quick read, 1 = + what's working,
   // 2 = + the fix (adjustments/one thing/mission), 3 = everything (scores,
@@ -581,6 +584,20 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     // attempt identity and its settled lifecycle live alongside it in Redux.
     if (reviewTape.rejected.match(res) && res.payload?.reuseKey === false) {
       idemKeyRef.current = null;
+    }
+  };
+
+  // "Check for my notes" after we stopped polling. Resumes the saved job when
+  // one is still on file, otherwise asks the server for the newest finished
+  // review. Never re-submits — that could pay for a second analysis.
+  const checkForNotes = () => {
+    tapSelect();
+    let slot = null;
+    try { slot = JSON.parse(localStorage.getItem(PENDING_JOB_KEY)); } catch { slot = null; }
+    if (slot?.jobId && pendingJobMatchesRecording(slot, recording)) {
+      dispatch(resumeAnalysisJob({ ...slot, kind: slot.kind || 'review' }));
+    } else {
+      dispatch(recoverLatestReview());
     }
   };
 
@@ -957,31 +974,52 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </>
         ))}
 
-        {/* Staged-reveal advance — one primary CTA that walks the notes in
-            three beats (worked → the fix → full read + share), with a quiet
-            skip for repeat readers. onClick only: a tap-belt double-fire here
-            would advance two stages. */}
-        {revealStage < 3 && (
-          <div className="studio-review-actions">
-            <button
-              type="button"
-              onClick={() => {
-                trackEvent('reveal_stage_advance', { to: 3 });
-                setRevealStage(3);
-              }}
-              className="studio-primary"
-            >
-              Explore my notes <span aria-hidden="true">→</span>
-            </button>
-            {!firstReview && <button
-              type="button"
-              onClick={() => setMode('compare')}
-              className="studio-text-button"
-            >
-              Compare with another take
-            </button>}
-          </div>
-        )}
+        {/* Staged-reveal advance — one primary CTA that walks the notes ONE
+            beat at a time (what's working → the fix → scores and the rest),
+            with a quiet skip for repeat readers. The counter tells the actor
+            more is coming, so a stage never reads as the end. onClick only: a
+            tap-belt double-fire here would advance two stages. */}
+        {revealStage < 3 && (() => {
+          const next = revealStage + 1;
+          const label = next === 1 ? "Show me what's working"
+            : next === 2 ? 'Show me the fix'
+            : 'Show my scores';
+          return (
+            <div className="studio-review-actions">
+              <p className="text-[11px] text-center text-[rgba(10,10,10,0.4)] mb-1.5">Beat {next} of 3</p>
+              <button
+                type="button"
+                onClick={() => {
+                  trackEvent('reveal_stage_advance', { to: next });
+                  tapSelect();
+                  setRevealStage(next);
+                }}
+                className="studio-primary"
+              >
+                {label} <span aria-hidden="true">→</span>
+              </button>
+              {revealStage < 2 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackEvent('reveal_stage_advance', { to: 3, skipped: true });
+                    setRevealStage(3);
+                  }}
+                  className="studio-text-button"
+                >
+                  Show everything
+                </button>
+              )}
+              {!firstReview && <button
+                type="button"
+                onClick={() => setMode('compare')}
+                className="studio-text-button"
+              >
+                Compare with another take
+              </button>}
+            </div>
+          );
+        })()}
       </div>
     );
   }
@@ -1126,13 +1164,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {fileError && <p className="text-xs text-red-500 mt-3 text-center">{fileError}</p>}
 
-        {/* Optional context */}
+        {/* Context fields. Open by default — this is the difference between
+            "watch your eyeline" and a note on line 3. */}
         <button
           onClick={() => setShowOptional((v) => !v)}
-          className="w-full flex items-center justify-between mt-3 px-1 py-2 text-xs font-medium text-[rgba(10,10,10,0.45)]"
+          className="w-full flex items-center justify-between gap-3 mt-3 px-1 py-2 text-left text-xs font-semibold text-[rgba(10,10,10,0.62)]"
         >
-          <span>Add context for sharper notes (optional)</span>
-          <ChevronDown size={14} className={`transition-transform ${showOptional ? 'rotate-180' : ''}`} />
+          <span>Paste your sides and the notes talk about your actual lines</span>
+          <ChevronDown size={14} className={`flex-shrink-0 transition-transform ${showOptional ? 'rotate-180' : ''}`} />
         </button>
         {showOptional && (
           <div className="space-y-2.5 mt-1">
@@ -1155,8 +1194,42 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           </div>
         )}
 
+        {/* Still-working notice: we stopped polling, the review didn't fail.
+            The only action that makes sense here is "look again", never "retry"
+            — a retry would risk a second paid analysis. */}
+        {tapeReviewPending && (
+          <div className="rounded-xl border border-[#D4A85F]/35 mt-3 p-3 flex items-start gap-2.5" style={{ background: 'rgba(212,168,95,0.08)' }}>
+            <Bell size={15} className="text-[#7A5A18] flex-shrink-0 mt-0.5" />
+            <div className="min-w-0">
+              <p className="text-xs text-[#0A0A0A] leading-relaxed">{String(tapeReviewPending)}</p>
+              <button
+                type="button"
+                onClick={checkForNotes}
+                onTouchEnd={(e) => { e.preventDefault(); checkForNotes(); }}
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7A5A18] underline mt-1.5"
+              >
+                <RotateCcw size={13} /> Check for my notes
+              </button>
+            </div>
+          </div>
+        )}
+
         {tapeReviewError && (
-          <p className="text-xs text-red-500 mt-3 text-center">{String(tapeReviewError)}</p>
+          <div className="rounded-xl border border-[#FF8280]/35 mt-3 p-3" style={{ background: 'rgba(255,130,128,0.07)' }}>
+            <p className="text-xs text-[#0A0A0A] leading-relaxed">{String(tapeReviewError)}</p>
+            {(file || recording) && (
+              <button
+                type="button"
+                onClick={submit}
+                onTouchEnd={(e) => { e.preventDefault(); submit(); }}
+                style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7A5A18] underline mt-1.5"
+              >
+                <RotateCcw size={13} /> Try again
+              </button>
+            )}
+          </div>
         )}
 
         {file && file.size > 60 * 1024 * 1024 && (
