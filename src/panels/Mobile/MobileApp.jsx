@@ -155,7 +155,6 @@ const SceneStudy = lazy(() => import("../Dashboard/SceneStudy"));
 const SelfTapeRecorder = lazy(() => import("../Dashboard/SceneStudy/SelfTapeRecorder"));
 const MeetingRoom = lazy(() => import("../Meeting/MeetingRoom"));
 const Referral = lazy(() => import("../Dashboard/Referral"));
-const Marketplace = lazy(() => import("../Dashboard/Marketplace"));
 const SelfTapesPanel = lazy(() => import("../Dashboard/SelfTapes"));
 
 /* ═══════════════════════════════════════════════════
@@ -981,7 +980,6 @@ const MORE_FEATURES = [
   { id: "green-room", label: "Green Room", desc: "Chat with your matched scene partners", emoji: "💬", color: "#A7D6FF", section: "Connect" },
   { id: "who-wants-to-read", label: "Who Wants to Read", desc: "Actors ready to rehearse with you", emoji: "❤️", color: "#FF8280", section: "Connect" },
   { id: "favorites", label: "Favorites", desc: "Your saved scene partners", emoji: "⭐", color: "#FCE072", section: "Connect" },
-  { id: "marketplace", label: "Reader Market", desc: "Book paid scene partners", emoji: "💰", color: "#FCE072", section: "Connect" },
   // auditions is a tab, not a panel — MoreScreen routes it via drst-navigate.
   { id: "auditions", label: "Audition Tracker", desc: "Log and track every audition", emoji: "🎯", color: "#A7D6FF", section: "My Work" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8", section: "My Work" },
@@ -1012,7 +1010,6 @@ const PANEL_COMPONENTS = {
   "favorites": Favorites,
   "meeting": MeetingRoom,
   "referral": Referral,
-  "marketplace": Marketplace,
   "self-tapes": SelfTapesPanel,
   // reader-profile mounts as a bare mobile panel (deep-linked from the Green
   // Room chat header's "View Profile"). It needs a readerId from the
@@ -3555,10 +3552,10 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
 }
 
 // These panels render their own headline inside the content (e.g. "My
-// Self-Tapes", "Reader Marketplace") — PanelScreen skips its header title for
+// Self-Tapes", "Submissions") — PanelScreen skips its header title for
 // them so the name doesn't appear twice stacked.
 const SELF_TITLED_PANELS = new Set([
-  'who-wants-to-read', 'favorites', 'submissions', 'marketplace',
+  'who-wants-to-read', 'favorites', 'submissions',
   'leaderboard', 'scripts', 'self-tapes',
 ]);
 
