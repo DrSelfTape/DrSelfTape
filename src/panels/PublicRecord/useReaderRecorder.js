@@ -24,6 +24,7 @@ export function useReaderRecorder() {
     isRecording,
     recordTimer,
     mediaRecorderRef,
+    mediaStreamRef,
     chunksRef,
     ensureRecorder,
     stopRecording,
@@ -31,6 +32,16 @@ export function useReaderRecorder() {
     setIsRecording,
     cleanup,
   } = useRecording();
+
+  // ensureRecorder() awaits a microphone permission prompt, and a stranger on
+  // a phone can tap another line — or leave the page entirely — while that
+  // prompt is still up. Two refs close that window:
+  //   startingRef is a SYNCHRONOUS lock, taken before the await, so a second
+  //   tap cannot replace a recorder that is already live.
+  //   aliveRef marks the page as mounted, so a permission granted after the
+  //   user navigated away stops its own tracks instead of recording nobody.
+  const startingRef = useRef(false);
+  const aliveRef = useRef(true);
 
   // { [lineId]: { blob, url, durationMs } }
   const [takes, setTakes] = useState({});
@@ -44,6 +55,7 @@ export function useReaderRecorder() {
   takesRef.current = takes;
 
   useEffect(() => () => {
+    aliveRef.current = false;
     Object.values(takesRef.current).forEach((t) => {
       if (t?.url) URL.revokeObjectURL(t.url);
     });
@@ -51,10 +63,35 @@ export function useReaderRecorder() {
   }, [cleanup]);
 
   const start = useCallback(async (lineId) => {
+    // Taken before any await: this is what stops a second card from
+    // swapping the recorder out from under a take already in progress.
+    if (startingRef.current) return false;
+    const live = mediaRecorderRef.current;
+    if (live && live.state === 'recording') return false;
+    startingRef.current = true;
+
     setMicDenied(false);
 
-    const ready = await ensureRecorder();
+    let ready;
+    try {
+      ready = await ensureRecorder();
+    } catch {
+      startingRef.current = false;
+      return false;
+    }
+
+    // The page went away while the permission sheet was up. Whatever we were
+    // granted belongs to nobody now — release it rather than leave the mic
+    // light on over a page the user already left.
+    if (!aliveRef.current) {
+      startingRef.current = false;
+      mediaStreamRef.current?.getTracks?.().forEach((t) => t.stop());
+      cleanup();
+      return false;
+    }
+
     if (!ready) {
+      startingRef.current = false;
       // useRecording already surfaces the denial to the user; the page adds
       // an inline, non-blocking hint because a stranger who taps Record and
       // sees nothing happen simply leaves.
@@ -63,7 +100,10 @@ export function useReaderRecorder() {
     }
 
     const rec = mediaRecorderRef.current;
-    if (!rec || rec.state !== 'inactive') return false;
+    if (!rec || rec.state !== 'inactive') {
+      startingRef.current = false;
+      return false;
+    }
 
     chunksRef.current = [];
     startedAtRef.current = Date.now();
@@ -87,15 +127,17 @@ export function useReaderRecorder() {
     try {
       rec.start();
     } catch {
+      startingRef.current = false;
       setIsRecording(false);
       return false;
     }
 
+    startingRef.current = false;
     setIsRecording(true);
     startTimer();
     setActiveLineId(lineId);
     return true;
-  }, [ensureRecorder, mediaRecorderRef, chunksRef, setIsRecording, startTimer]);
+  }, [ensureRecorder, mediaRecorderRef, mediaStreamRef, chunksRef, setIsRecording, startTimer, cleanup]);
 
   const stop = useCallback(() => {
     stopRecording();

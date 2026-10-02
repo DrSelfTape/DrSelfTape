@@ -118,7 +118,23 @@
   --dst-shadow-gold: 0 12px 30px rgba(252,224,114,0.30);
 
   /* ══ LEGACY ALIASES — declared once, follow the surface ══════════════
-   * Existing files keep working. New work uses the --dst-* name. */
+   * Existing files keep working. New work uses the --dst-* name.
+   *
+   * READ THIS BEFORE ASSUMING THESE ARE PASS-THROUGHS. They are NOT
+   * value-identical to what they replaced — they are the migration. An
+   * unmigrated screen that still says var(--text-primary) now renders the
+   * Studio ink (#20221F) where it used to render #0A0A0A, and --aurora-sub
+   * resolves to #575960 rather than rgba(10,10,10,.62). That is deliberate:
+   * pointing the old names at the new scale is what moves the whole app onto
+   * one language without touching 2,380 literals. Freezing them at their old
+   * values would strand every screen we have not restyled in the old palette
+   * for good.
+   *
+   * The shifts are neutral or better — same luminance band, warmer neutral —
+   * and --text-dim deliberately got MORE visible because at
+   * rgba(10,10,10,.28) it failed contrast everywhere it was used. But a
+   * screen nobody edited can still look slightly different after this
+   * change, so if you are bisecting an unexplained colour shift, start here. */
   --bg-deepest: var(--dst-paper);
   --bg-deep: var(--dst-paper);
   --bg-card: var(--dst-surface);

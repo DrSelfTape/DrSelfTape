@@ -190,9 +190,9 @@ const AskAFriendModal = ({
         {!minted ? (
           <>
             <p className='text-sm text-[var(--dst-ink-3)]'>
-              Pick the part you are not playing. Your friend gets a page with just
-              those lines, records them on their phone, and sends them back. No
-              account, nothing to install.
+              Pick the part you are not playing. Your friend gets the scene with
+              that character's lines marked to record, reads them on their phone,
+              and sends them back. No account, nothing to install.
             </p>
 
             {scenes.length > 1 ? (

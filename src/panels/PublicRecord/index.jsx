@@ -424,9 +424,15 @@ const PublicRecord = () => {
             type='button'
             className='rdr__btn rdr__btn--send'
             onClick={handleSend}
-            disabled={recordedCount === 0 || sending}
+            // Sending mid-record used to upload only the finalised takes and
+            // move to the thanks screen with the microphone still running —
+            // the take they were in the middle of was silently dropped and
+            // its Stop button went with it. Finish the line first.
+            disabled={recordedCount === 0 || sending || recorder.isRecording}
           >
-            {sending ? 'Sending' : sendError ? 'Try again' : 'Send recordings'}
+            {recorder.isRecording
+              ? 'Finish this line first'
+              : sending ? 'Sending' : sendError ? 'Try again' : 'Send recordings'}
           </button>
         </div>
       </div>

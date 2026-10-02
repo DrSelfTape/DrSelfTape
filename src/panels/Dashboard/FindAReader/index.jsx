@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
 import { Filter, Loader2, Users, Camera, WifiOff } from 'lucide-react';
 import SwipeCard from './components/SwipeCard';
 import SwipeActions from './components/SwipeActions';
@@ -66,7 +67,10 @@ const FindAReader = ({ embedded = false }) => {
   // the "Who Wants to Read" list.
   const goToLikes = useCallback(() => {
     tapPrimary();
-    if (window.innerWidth < 768) {
+    // Branch on the SHELL, not the viewport: a native iPad is >= 768px and
+    // used to fall through to navigate(), which does nothing in Capacitor,
+    // so the button was simply dead on tablets.
+    if (Capacitor.isNativePlatform() || window.innerWidth < 768) {
       window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'who-wants-to-read' } }));
     } else {
       navigate('/dashboard/who-wants-to-read');
@@ -185,8 +189,8 @@ const FindAReader = ({ embedded = false }) => {
     // — advancing again here would skip the reader behind it.
     setLastSwipe(null);
     if (!id) return;
-    const isMob = window.innerWidth < 768;
-    if (isMob) {
+    // Same fix as above — a match on a native iPad went nowhere.
+    if (Capacitor.isNativePlatform() || window.innerWidth < 768) {
       window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { panel: 'green-room' } }));
     } else {
       navigate(`/dashboard/its-a-scene/${id}`);

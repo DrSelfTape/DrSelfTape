@@ -24,10 +24,19 @@ import {
 
 const SILENCE_TIMEOUT = 1500;
 
-// Partner lines rendered ahead of the actor's cue. This does NOT add requests —
-// it moves the same one off the critical path — so the BE's 20/hour TTS throttle
-// sees the same traffic it did before, just earlier.
-const TTS_LOOKAHEAD = 2;
+// Partner lines rendered ahead of the actor's cue.
+//
+// For a scene played to the end this adds no requests — it moves the same one
+// off the critical path. But a scene ABANDONED mid-way has already fetched the
+// lines beyond where the actor stopped, and /ai/tts charges a token per line
+// (apps/ai/views.TTSView -> _spend_token), so every unplayed prefetch is a
+// token the actor paid for audio they never heard. Replays are free because
+// the Idempotency-Key is a digest of {text, voice}, but a first fetch is not.
+//
+// Hence ONE line of lookahead, not two: the next line is the only one that
+// removes the pause, and a deeper queue just doubles what an abandoned scene
+// costs someone on a 10-token plan.
+const TTS_LOOKAHEAD = 1;
 // Whole MP3s live in this cache; a long scene would otherwise hold every line of
 // audio for the session.
 const TTS_CACHE_MAX = 8;
@@ -497,6 +506,11 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       }
     }
     const ctx = audioContextRef.current;
+    // The scene this playback belongs to. Every await below can outlive it
+    // (a TTS response, a resume(), a decode), and without this check a late
+    // decode starts audio over a screen the actor already left.
+    const myGen = playGenRef.current;
+    const stale = () => playGenRef.current !== myGen;
 
     // Resume if suspended. NOTE: outside a user gesture this can silently
     // fail and leave the context suspended (iOS suspends it after any
@@ -526,6 +540,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       return;
     }
 
+    if (stale()) return;
+
     if (!arrayBuf || arrayBuf.byteLength === 0) {
       setStatus('listening');
       return;
@@ -541,6 +557,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // audio.play() rejections propagate to the caller so silence can be
     // surfaced instead of swallowed.
     const playViaHtmlAudio = async () => {
+      if (stale()) return;
       const blob = new Blob([arrayBuf], { type: 'audio/mpeg' });
       const blobUrl = URL.createObjectURL(blob);
       const audio = new Audio(blobUrl);
@@ -589,6 +606,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       }
       return;
     }
+
+    // Decoding is the longest await in the chain and the one Codex caught:
+    // cleanup saw no source to stop because the source did not exist yet.
+    if (stale()) return;
 
     return new Promise((resolve) => {
       const source = ctx.createBufferSource();
@@ -893,6 +914,32 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   // ── Native "listen" mode (iOS default): SFSpeechRecognizer via the Capgo
   // plugin + known-line endpointing. Both engines share expectedActorTurn and
   // cueMatch — see the content-trigger block in startRecognition above.
+
+  // audioRef holds EITHER an AudioBufferSourceNode (WebAudio path) or an
+  // Audio element (HTMLAudio fallback). Calling .stop() on the element
+  // throws TypeError, and every cleanup site swallowed it — so the fallback
+  // voice kept playing after End Scene and after unmount. Stop by type, and
+  // revoke the blob URL the element was holding.
+  const stopCurrentAudio = useCallback(() => {
+    const current = audioRef.current;
+    audioRef.current = null;
+    if (!current) return;
+    if (typeof current.stop === 'function') {
+      try { current.stop(); } catch { /* already stopped */ }
+      return;
+    }
+    try {
+      current.pause();
+      const src = current.src;
+      current.removeAttribute('src');
+      current.load();
+      if (src && src.startsWith('blob:')) URL.revokeObjectURL(src);
+    } catch { /* element already torn down */ }
+  }, []);
+
+  // Bumped whenever the scene stops. Anything that resumes after an await
+  // compares against it and refuses to start audio for a scene that is over.
+  const playGenRef = useRef(0);
 
   const stopNativeListen = useCallback(async () => {
     if (nativeConfirmRef.current) { clearTimeout(nativeConfirmRef.current); nativeConfirmRef.current = null; }
@@ -1264,10 +1311,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     stopNativeListen();
     if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
     if (cueConfirmRef.current) { clearTimeout(cueConfirmRef.current); cueConfirmRef.current = null; }
-    if (audioRef.current) {
-      try { audioRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
-      audioRef.current = null;
-    }
+    playGenRef.current += 1;
+    stopCurrentAudio();
     if (audioContextRef.current?.state === 'running') {
       audioContextRef.current.suspend();
     }
@@ -1280,7 +1325,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       resolve();
     }
     setStatus('idle');
-  }, [stopNativeListen]);
+  }, [stopNativeListen, stopCurrentAudio]);
 
   /**
    * Resume from pause — restart recognition and audio context.
@@ -1334,10 +1379,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       try { entry.controller.abort(); } catch { /* already settled */ }
     });
     ttsCacheRef.current.clear();
-    if (audioRef.current) {
-      try { audioRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
-      audioRef.current = null;
-    }
+    playGenRef.current += 1;
+    stopCurrentAudio();
     if (audioContextRef.current) {
       try { audioContextRef.current.close(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       audioContextRef.current = null;
@@ -1368,7 +1411,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         .then(() => dispatch(fetchCraftJourney()));
     }
     onExit();
-  }, [onExit, dispatch, lines, userRole, craftSkill, stopNativeListen]);
+  }, [onExit, dispatch, lines, userRole, craftSkill, stopNativeListen, stopCurrentAudio]);
 
   // Cleanup on unmount
   useEffect(() => {
