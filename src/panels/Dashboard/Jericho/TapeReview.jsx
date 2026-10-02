@@ -1,3 +1,4 @@
+import AIServiceNotice from '../../../components/Shared/AIServiceNotice';
 /**
  * Jericho — Tape Review
  * Submit an existing self-tape; Jericho returns structured acting notes
@@ -730,7 +731,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       const band = heroAvg != null ? gradeBand(heroAvg) : null;
       return <DesktopTapeReport
         renderDna={values => renderDesktopDna(values, firstName)}
-        key={resultKey} review={r} headlineScore={heroAvg} band={band} firstName={firstName}
+        key={resultKey} review={r} degraded={raw._meta?.degraded === true} headlineScore={heroAvg} band={band} firstName={firstName}
         file={file} playbackUrl={tapeReviewPlaybackUrl} role={role || recording?.role} sides={sides} scoreHistory={scoreHistory}
         sessionId={raw._session_id} duration={raw._meta?.duration_s}
         onReset={reset} onShare={handleShare} sharing={sharing}
@@ -760,6 +761,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
     return (
       <div className="dst-review-result space-y-4 sm:space-y-5">
+        <AIServiceNotice degraded={raw._meta?.degraded === true} />
         {/* First-review "how to read your notes" walkthrough — the pre-upload
             tutorial is deferred to here for that flow (modeToggle, which
             normally hosts the overlay, doesn't render on the result screen). */}

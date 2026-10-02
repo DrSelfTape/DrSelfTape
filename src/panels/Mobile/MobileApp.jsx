@@ -1,3 +1,4 @@
+import AIConsentSettings from '../../components/AIConsent/AIConsentSettings';
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -3333,6 +3334,8 @@ function ProfileScreen({ setCurrentPanel }) {
       <div style={{ marginBottom: 22 }}>
         <AuroraProgressCard />
       </div>
+
+      <AIConsentSettings />
 
       {/* Menu */}
       <div className="aurora-glass" style={{ borderRadius: 20, overflow: "hidden" }}>

@@ -298,7 +298,10 @@ btest('logout preserves unacknowledged answers only for their originating accoun
 });
 
 btest('flag-off markup, draft, writes, and event payloads match the pre-ticket main flow', async () => {
-  const onboardingSource = execFileSync('git', ['show', '4080179:src/panels/Onboarding/AuroraOnboarding.jsx'], {encoding: 'utf8', cwd: new URL('../', import.meta.url)});
+  // Preserve the legacy flow contract, with the explicit accessibility fix
+  // to its skip link. The axe suite separately verifies the rendered contrast.
+  const onboardingSource = execFileSync('git', ['show', '4080179:src/panels/Onboarding/AuroraOnboarding.jsx'], {encoding: 'utf8', cwd: new URL('../', import.meta.url)})
+    .replace("fontSize: 13, color: 'var(--aurora-sub)', opacity: 0.65", "fontSize: 13, color: 'var(--aurora-sub)'");
   const baseline = await startHarness(0, {firstReviewFlow: false, onboardingSource});
   const current = await startHarness(0, {firstReviewFlow: false});
   async function capture(url) {

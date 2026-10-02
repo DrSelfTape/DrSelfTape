@@ -1,3 +1,4 @@
+import AIConsentSettings from '../../../components/AIConsent/AIConsentSettings';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router-dom';
@@ -1005,6 +1006,8 @@ export default function Profile() {
       </div>
 
       <CastingConnections />
+
+      <AIConsentSettings />
 
       {/* ── Privacy & Account ── Apple guideline 5.1.1(v) requires an
            in-app account deletion option for any app that supports

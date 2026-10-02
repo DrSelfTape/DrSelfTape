@@ -9,6 +9,7 @@ import axios from '../../http';
 import endPoints from '../../constant';
 import { trackEvent, Events } from '../../../utils/analytics';
 import { reviewCompletionId } from '../../../utils/reviewCompletion';
+import { isAiConsentError } from '../../../components/AIConsent/consentError';
 
 // Map an AI-feature request error to a clear, actionable message. 402 = out of
 // tokens, 403 = AI consent not granted, 400 = the file(s) couldn't be read.
@@ -20,7 +21,8 @@ function aiErrorMessage(err, fallback) {
   const st = err?.response?.status;
   const msg = err?.response?.data?.message || err?.response?.data?.detail;
   if (st === 402) return "You're out of AI tokens. Top up to keep going.";
-  if (st === 403) return 'Turn on AI features in Settings to use this.';
+  if (isAiConsentError(err)) return 'Review the AI consent prompt, then try again if you choose to agree.';
+  if (st === 403) return 'You do not have access to this action.';
   if (st === 413) return 'That file is too large. Try a shorter or smaller export.';
   if (st === 400) return msg || "Those files couldn't be read. Try exporting as mp4 or mov.";
   if (st === 504) return msg || 'That took too long. Please try again.';

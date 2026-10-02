@@ -1,4 +1,11 @@
-export const consentRequestState = { pendingResolve: null };
+export const consentRequestState = { pendingResolve: null, pendingPromise: null };
+
+export function settleAiConsent(accepted) {
+  const resolve = consentRequestState.pendingResolve;
+  consentRequestState.pendingResolve = null;
+  consentRequestState.pendingPromise = null;
+  resolve?.(accepted);
+}
 
 /**
  * Opens the AI consent modal globally. Returns a Promise that resolves
@@ -9,14 +16,17 @@ export const consentRequestState = { pendingResolve: null };
  *   const ok = await requestAiConsent();
  *   if (!ok) return navigate(-1);
  */
-export function requestAiConsent() {
-  return new Promise((resolve) => {
+export function requestAiConsent({ force = false } = {}) {
+  // Concurrent feature gates share one answer; none can overwrite a waiter.
+  if (consentRequestState.pendingPromise) return consentRequestState.pendingPromise;
+  const promise = new Promise((resolve) => {
     consentRequestState.pendingResolve = resolve;
-    try {
-      window.dispatchEvent(new CustomEvent('drst-open-ai-consent'));
-    } catch {
-      resolve(false);
-    }
   });
+  consentRequestState.pendingPromise = promise;
+  try {
+    window.dispatchEvent(new CustomEvent('drst-open-ai-consent', { detail: { force } }));
+  } catch {
+    settleAiConsent(false);
+  }
+  return promise;
 }
-
