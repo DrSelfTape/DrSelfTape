@@ -8,6 +8,22 @@
  */
 export const WHATS_NEW = [
   {
+    id: 12,
+    version: '1.0.29',
+    date: 'October 2026',
+    title: 'A reader that keeps up, and a way to bring a friend',
+    intro: 'The scene partner stopped pausing between lines, the whole cast stopped sounding like one person, and you can now hand a friend one link and get their voice back.',
+    highlights: [
+      { emoji: '🫱', title: 'Ask a friend to read', body: 'Send one link. They open it on any phone, read the other character\'s lines, and tap send. No account, nothing to install. Their takes come back to you.' },
+      { emoji: '⚡', title: 'The reader answers straight away', body: 'Your partner\'s next line is ready before you finish yours, so the scene runs at the pace a scene actually runs.' },
+      { emoji: '🎭', title: 'Every character, its own voice', body: 'A three-hander sounds like three people now instead of one voice doing all the parts. You can pick who sounds like who.' },
+      { emoji: '👂', title: 'It listens on the web too', body: 'The reader comes in on your words, not just on silence — on your laptop and Android now, not only on iPhone.' },
+      { emoji: '🎬', title: 'Your notes arrive as notes', body: 'A review opens a beat at a time — what worked, then the fix, then your scores — instead of landing as one wall of text. Paste your sides and the notes talk about your actual lines.' },
+      { emoji: '🍎', title: 'Signing in with Apple just signs you in', body: 'No legal form before you have seen the app. And nothing asks for a last name we never collected.' },
+      { emoji: '✨', title: 'The whole app in one look', body: 'Home, submissions, auditions, readers and plans now match the studio look the rehearsal and review screens already had.' },
+    ],
+  },
+  {
     id: 11,
     version: '1.0.26',
     date: 'September 2026',
