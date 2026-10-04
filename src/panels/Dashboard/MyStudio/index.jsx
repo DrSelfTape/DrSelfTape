@@ -53,7 +53,7 @@ const fmtTime = (iso) => {
 
 const occursAt = (b) => b?.session_date || b?.start_datetime || null;
 
-function SessionCard({ booking, upcoming }) {
+export function SessionCard({ booking, upcoming }) {
   const when = occursAt(booking);
   const tapes = booking.tapes || [];
   const deliveryUrl = booking.delivery_path ? `${apiOrigin}${booking.delivery_path}` : null;
@@ -105,7 +105,7 @@ function SessionCard({ booking, upcoming }) {
               className="w-full inline-flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm cursor-pointer"
               style={{ background: GOLD, color: '#0A0A0A' }}
             >
-              Watch your tape &amp; notes
+              {booking.delivery_has_notes === true ? 'Watch your tape & notes' : 'Watch your tape'}
               <ChevronRight size={16} />
             </button>
           )}

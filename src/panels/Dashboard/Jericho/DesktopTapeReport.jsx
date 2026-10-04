@@ -1,3 +1,4 @@
+import AIServiceNotice from '../../../components/Shared/AIServiceNotice';
 import { useEffect, useId, useRef, useState } from 'react';
 import { TECH_SCORES, DNA } from './reviewResultFields';
 import { noteText, PERFORMANCE_FIELDS, reviewMoments, scoreValue, seekToMoment } from './desktopReviewData';
@@ -5,7 +6,7 @@ import axios from '../../../redux/http';
 import TapeReviewNotes from './TapeReviewNotes';
 import './desktopReview.css';
 
-export default function DesktopTapeReport({ review, headlineScore, band, firstName, file, playbackUrl, role, sides, createdAt, scoreHistory = [],
+export default function DesktopTapeReport({ review, degraded = false, headlineScore, band, firstName, file, playbackUrl, role, sides, createdAt, scoreHistory = [],
   sessionId, duration, onReset, onShare, sharing, onNextTake, onCompare, onSlate, renderDna, footer, children }) {
   const prefix = useId();
   const player = useRef(null);
@@ -46,6 +47,7 @@ export default function DesktopTapeReport({ review, headlineScore, band, firstNa
 
   return (
     <article className="noir-review" aria-label="Tape review report">
+      <AIServiceNotice degraded={degraded} />
       <header className="nr-header">
         <div>
           <p className="nr-eyebrow">JERICHO / CASTING NOTES{sessionId ? ` / ${sessionId}` : ''}</p>

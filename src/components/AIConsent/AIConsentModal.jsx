@@ -15,13 +15,13 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useStore } from 'react-redux';
 
 import axiosInstance from '../../redux/http';
 import { setAiConsentAcceptedAt } from '../../redux/features/auth/authSlice';
 import { openExternal } from '../../utils/openExternal';
 
-import { consentRequestState } from './consentRequest';
+import { settleAiConsent } from './consentRequest';
 
 const PRIVACY_URL = 'https://drselftape.app/privacy-policy.html';
 
@@ -72,57 +72,103 @@ function ProviderRow({ p }) {
 
 export default function AIConsentModal() {
   const dispatch = useDispatch();
-  const user = useSelector((s) => s?.auth?.user);
+  const store = useStore();
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const resolveRef = useRef(null);
+  const activeUser = useRef(null);
+  const generation = useRef(0);
+  const busy = useRef(false);
+  const dialogRef = useRef(null);
 
   const finish = useCallback((accepted) => {
+    generation.current++;
+    activeUser.current = null;
+    busy.current = false;
+    setSubmitting(false);
     setOpen(false);
     setError('');
-    if (resolveRef.current) {
-      resolveRef.current(accepted);
-      resolveRef.current = null;
-    }
-    // Clear the module-level pending slot unconditionally. The previous
-    // check (`=== resolveRef.current`) compared against the just-nulled
-    // ref, so it stayed pinned to the most-recent resolver across opens.
-    consentRequestState.pendingResolve = null;
+    settleAiConsent(accepted);
   }, []);
 
   useEffect(() => {
-    const handler = () => {
-      // If the user already has consent on file, resolve immediately —
-      // the modal never has to render. This makes it safe for every
-      // AI feature to `await requestAiConsent()` defensively.
-      if (user?.ai_consent_accepted_at) {
-        if (consentRequestState.pendingResolve) {
-          consentRequestState.pendingResolve(true);
-          consentRequestState.pendingResolve = null;
-        }
+    const invalidate = () => { generation.current++; };
+    const handler = (event) => {
+      const user = store.getState().auth?.user;
+      if (!user?.id) { finish(false); return; }
+      if (activeUser.current === user.id) return;
+      if (user.ai_consent_accepted_at && !event.detail?.force) {
+        settleAiConsent(true);
         return;
       }
-      resolveRef.current = consentRequestState.pendingResolve;
-      consentRequestState.pendingResolve = null;
+      activeUser.current = user.id;
+      if (event.detail?.force) dispatch(setAiConsentAcceptedAt(null));
       setOpen(true);
     };
+    const unsubscribe = store.subscribe(() => {
+      if (activeUser.current && store.getState().auth?.user?.id !== activeUser.current) finish(false);
+    });
     window.addEventListener('drst-open-ai-consent', handler);
-    return () => window.removeEventListener('drst-open-ai-consent', handler);
-  }, [user?.ai_consent_accepted_at]);
+    return () => {
+      window.removeEventListener('drst-open-ai-consent', handler);
+      unsubscribe();
+      invalidate();
+      settleAiConsent(false);
+    };
+  }, [dispatch, store, finish]);
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement;
+    dialogRef.current?.querySelector('button')?.focus();
+    window.dispatchEvent(new CustomEvent('drst-modal-open'));
+    const back = (event) => {
+      // Consume native Back while saving too: an accepted write is underway.
+      if (event.cancelable) event.preventDefault();
+      if (!busy.current) finish(false);
+    };
+    window.addEventListener('popstate', back);
+    window.addEventListener('drst-back', back);
+    return () => {
+      window.removeEventListener('popstate', back);
+      window.removeEventListener('drst-back', back);
+      window.dispatchEvent(new CustomEvent('drst-modal-closed'));
+      if (previous?.isConnected) previous.focus();
+    };
+  }, [open, finish]);
 
   const onAccept = async () => {
+    if (busy.current || !activeUser.current) return;
+    busy.current = true;
+    const requestGeneration = generation.current;
     setSubmitting(true);
     setError('');
     try {
       const { data } = await axiosInstance.post('/v1/users/ai-consent/', {});
-      const stamp = data?.data?.ai_consent_accepted_at || data?.ai_consent_accepted_at || new Date().toISOString();
+      if (generation.current !== requestGeneration) return;
+      const stamp = data?.data?.ai_consent_accepted_at || data?.ai_consent_accepted_at;
+      if (!stamp) throw new Error('Consent was not confirmed. Please try again.');
       dispatch(setAiConsentAcceptedAt(stamp));
       finish(true);
-    } catch (e) {
-      setError(e?.response?.data?.message || 'Could not record consent. Please try again.');
+    } catch {
+      if (generation.current === requestGeneration) setError('Could not record consent. Please try again.');
     } finally {
-      setSubmitting(false);
+      if (generation.current === requestGeneration) { busy.current = false; setSubmitting(false); }
+    }
+  };
+
+  const onKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!busy.current) finish(false);
+    }
+    if (event.key === 'Tab') {
+      const buttons = [...dialogRef.current.querySelectorAll('button:not(:disabled)')];
+      const first = buttons[0], last = buttons.at(-1);
+      if (!first) { event.preventDefault(); return; }
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     }
   };
 
@@ -130,6 +176,8 @@ export default function AIConsentModal() {
 
   const node = (
     <div
+      ref={dialogRef}
+      onKeyDown={onKeyDown}
       role="dialog"
       aria-modal="true"
       aria-labelledby="ai-consent-title"
