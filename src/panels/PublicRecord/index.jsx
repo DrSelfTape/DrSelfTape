@@ -180,9 +180,14 @@ const PublicRecord = () => {
 
   /* ── Record ────────────────────────────────────────────────────────── */
   const handleRecord = useCallback(async (lineId) => {
+    // While an upload is in flight the completion handler releases takes BY
+    // LINE ID, so a replacement recorded mid-send would be discarded by the ack
+    // for the take it replaced — the friend's newest audio, silently gone.
+    // Recording is blocked for the seconds a send takes; the cards show it.
+    if (sending) return;
     const ok = await start(lineId);
     if (ok) trackEvent('reader_invite_line_recorded', { line_id: lineId });
-  }, [start]);
+  }, [sending, start]);
 
   const handleSkip = useCallback((lineId) => {
     setSkipped((prev) => new Set(prev).add(lineId));
@@ -217,7 +222,12 @@ const PublicRecord = () => {
       // in hand so a retry costs the friend nothing.
       const storedIds = new Set((result?.stored || []).map((s) => s.line_id));
       storedIds.forEach((id) => discard(id));
-      setShowThanks(true);
+      // Only thank them for something that actually landed. The rejection
+      // notice lives below the `if (showThanks)` early return, so showing
+      // thanks on an all-rejected send told the friend "they have your takes"
+      // and then hid the reason nothing arrived.
+      if (stored > 0) setShowThanks(true);
+      else setSendError('None of those saved. Your recordings are still here — try again.');
       trackEvent('reader_invite_sent', { clips: stored, rejected: result?.rejected?.length || 0 });
     } catch (err) {
       if (err instanceof ReaderInviteUnavailableError) {
@@ -388,7 +398,12 @@ const PublicRecord = () => {
                 skipped={skipped.has(row.line.id)}
                 onRecord={() => handleRecord(row.line.id)}
                 onStop={stop}
-                onRedo={() => { discard(row.line.id); handleRecord(row.line.id); }}
+                busy={sending}
+                /* No eager discard: start() refuses while another line is
+                   recording, which used to delete the take and leave nothing
+                   in its place. onstop already swaps the take and revokes the
+                   old blob URL, so a successful retake replaces it cleanly. */
+                onRedo={() => handleRecord(row.line.id)}
                 onSkip={() => handleSkip(row.line.id)}
                 onUnskip={() => handleUnskip(row.line.id)}
               />

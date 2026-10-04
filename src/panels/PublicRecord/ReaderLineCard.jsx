@@ -14,6 +14,7 @@ const ReaderLineCard = ({
   total,
   take,
   isRecording,
+  busy,
   recordTimer,
   skipped,
   onRecord,
@@ -57,11 +58,11 @@ const ReaderLineCard = ({
           {done ? <audio className='rdr__player' src={take.url} controls preload='none' /> : null}
           <div className='rdr__controls'>
             {done ? (
-              <button type='button' className='rdr__btn' onClick={onRedo}>
+              <button type='button' className='rdr__btn' onClick={onRedo} disabled={busy}>
                 Record again
               </button>
             ) : (
-              <button type='button' className='rdr__btn rdr__btn--record' onClick={onRecord}>
+              <button type='button' className='rdr__btn rdr__btn--record' onClick={onRecord} disabled={busy}>
                 <span className='rdr__dot' aria-hidden='true' />
                 Record
               </button>
