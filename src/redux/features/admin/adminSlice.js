@@ -170,6 +170,7 @@ const adminSlice = createSlice({
   initialState: {
     stats: null,
     statsLoading: false,
+    statsError: null,
     users: [],
     usersLoading: false,
     userDetail: null,
@@ -205,14 +206,18 @@ const adminSlice = createSlice({
     builder
       .addCase(fetchAdminStats.pending, (state) => {
         state.statsLoading = true;
+        state.statsError = null;
         state.error = null;
       })
       .addCase(fetchAdminStats.fulfilled, (state, action) => {
         state.statsLoading = false;
+        state.statsError = null;
         state.stats = action.payload?.data || action.payload;
       })
       .addCase(fetchAdminStats.rejected, (state, action) => {
         state.statsLoading = false;
+        state.stats = null;
+        state.statsError = action.payload || action.error?.message || 'Unable to load dashboard data';
         state.error = action.payload;
       })
       // ── Fetch Reports ──
