@@ -18,6 +18,13 @@ export default function AdminStatCard({ icon: Icon, label, value, trend, trendLa
             {trendLabel && <span className="text-[#666666] font-normal ml-1">{trendLabel}</span>}
           </div>
         )}
+        {/* No numeric trend (e.g. a window metric with nothing to compare
+            against) but a caption was still given — show it plain, with no
+            arrow/percent, so a card can clarify what it counts without
+            implying a trend that isn't there. */}
+        {(trend === undefined || trend === null) && trendLabel && (
+          <p className="mt-2 text-sm text-[#666666] font-normal">{trendLabel}</p>
+        )}
       </div>
     </div>
   );

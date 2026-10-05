@@ -7,6 +7,10 @@ import {
   UserPlus,
   MessageSquare,
   ShieldBan,
+  Activity,
+  Clock,
+  Building2,
+  UserX,
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchAdminStats } from '../../redux/features/admin/adminSlice';
@@ -43,6 +47,10 @@ export default function AdminDashboard() {
     );
   }
 
+  // Labels below are deliberately literal about what each number counts —
+  // "Total Users" mixes organic app signups with bulk-imported studio
+  // clients, so the split and the never-logged-in count sit right next to
+  // it instead of implying every row is an organic, engaged user.
   const statCards = [
     {
       icon: Users,
@@ -52,11 +60,41 @@ export default function AdminDashboard() {
       trendLabel: 'vs last month',
     },
     {
+      icon: UserPlus,
+      label: 'Organic Users',
+      value: stats?.organic_users?.toLocaleString() ?? '—',
+      trendLabel: 'signed up in the app',
+    },
+    {
+      icon: Building2,
+      label: 'Studio Clients (Imported)',
+      value: stats?.studio_imported_users?.toLocaleString() ?? '—',
+      trendLabel: 'bulk-imported, not app signups',
+    },
+    {
       icon: UserCheck,
-      label: 'Active Users',
+      label: 'Active (30d)',
       value: stats?.active_users?.toLocaleString() ?? '1,083',
       trend: stats?.active_users_trend ?? 8.2,
-      trendLabel: 'vs last month',
+      trendLabel: 'vs prior 30d',
+    },
+    {
+      icon: Activity,
+      label: 'Active (7d)',
+      value: stats?.active_users_7d?.toLocaleString() ?? '—',
+      trendLabel: 'logged in this week',
+    },
+    {
+      icon: Clock,
+      label: 'Active (1d)',
+      value: stats?.active_users_1d?.toLocaleString() ?? '—',
+      trendLabel: 'logged in today',
+    },
+    {
+      icon: UserX,
+      label: 'Never Opened The App',
+      value: stats?.never_logged_in?.toLocaleString() ?? '—',
+      trendLabel: 'created, never logged in',
     },
     {
       icon: DollarSign,
@@ -67,10 +105,10 @@ export default function AdminDashboard() {
     },
     {
       icon: UserPlus,
-      label: 'New Signups',
+      label: 'New Signups (Organic)',
       value: stats?.new_signups?.toLocaleString() ?? '167',
       trend: stats?.signups_trend ?? 9.8,
-      trendLabel: 'this month',
+      trendLabel: 'this month, excludes studio imports',
     },
     {
       icon: MessageSquare,
