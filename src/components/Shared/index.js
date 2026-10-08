@@ -24,7 +24,6 @@ export { Line } from './Line';
 export { Search } from './Search';
 export { AddNewButton } from './AddNewButton';
 export { TooltipText } from './Tooltip';
-export { LineBarChat } from './LineBarChat';
 export { CustomAccordion } from './CustomAccordion';
 export { ProfilePictureUpload } from './ProfilePictureUpload';
 export { default as NotificationEmptyState } from './NotificationEmptyState';

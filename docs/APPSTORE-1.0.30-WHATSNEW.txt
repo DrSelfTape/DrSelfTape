@@ -1,0 +1,4 @@
+More control over your scene reader, with improved voice and playback settings.
+Clearer dialogue presentation while rehearsing your sides.
+Privacy and security improvements to the app and its diagnostics.
+Faster loading and stability improvements across the studio.

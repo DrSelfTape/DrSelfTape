@@ -8,6 +8,7 @@ import { warn as hapticWarn } from "../../utils/haptics";
 import AppleSignInButton from "../../components/Auth/AppleSignInButton";
 import { Capacitor } from "@capacitor/core";
 import { useIsMobile } from "../../hooks/useIsMobile";
+import { useIdleReady } from "../../hooks/useIdleReady";
 
 const COOLDOWN_AFTER = 5;
 const COOLDOWN_SECONDS = 30;
@@ -65,6 +66,9 @@ export default function LoginPage() {
   // Respect prefers-reduced-motion: skip the video background entirely so we
   // don't burn battery or trigger vestibular issues.
   const [reducedMotion, setReducedMotion] = useState(false);
+  // The background video is decorative; hold it off the critical path so the
+  // sign-in form paints first. The wash gradient covers the gap.
+  const idleReady = useIdleReady();
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -81,7 +85,9 @@ export default function LoginPage() {
     const v = videoRef.current;
     if (!v) return;
     v.play?.().catch(() => {});
-  }, [reducedMotion]);
+    // idleReady belongs here: the element does not exist on first paint, so
+    // without it this kick would fire once against a null ref and never again.
+  }, [reducedMotion, idleReady]);
 
   // Aurora Noir Ring 1 — desktop web renders the backstage-door split.
   const isMobile = useIsMobile();
@@ -406,9 +412,9 @@ export default function LoginPage() {
         </div>
         {/* The plate */}
         <div aria-hidden="true" style={{ flex: 1, position: "relative", overflow: "hidden", background: "#0B0A08" }}>
-          {!reducedMotion && (
+          {!reducedMotion && idleReady && (
             <video
-              src={BG_VIDEO} autoPlay loop muted playsInline preload="auto"
+              src={BG_VIDEO} autoPlay loop muted playsInline preload="metadata"
               style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", filter: "sepia(0.28) saturate(1.05) brightness(0.66) contrast(1.06)" }}
             />
           )}
@@ -440,7 +446,7 @@ export default function LoginPage() {
           the consolidated index.html pipeline — no per-page injection. */}
       {/* Washed-out video background. Hidden under prefers-reduced-motion;
           the wash gradient below still renders, so the screen never looks bare. */}
-      {!reducedMotion && (
+      {!reducedMotion && idleReady && (
         <div aria-hidden="true" style={{ position: "absolute", inset: 0, overflow: "hidden", background: "#0E0D0A" }}>
           <video
             ref={videoRef}
@@ -449,7 +455,7 @@ export default function LoginPage() {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             style={{
               position: "absolute", inset: 0, width: "100%", height: "100%",
               objectFit: "cover",

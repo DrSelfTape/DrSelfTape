@@ -1,4 +1,6 @@
-export default function StudioScript({ lines, userRole, currentLineIdx, panelRef }) {
+import ReaderDialogue from './ReaderDialogue';
+
+export default function StudioScript({ lines, userRole, currentLineIdx, panelRef, hideActor = false, showDirections = true }) {
   return (
 <div
           ref={panelRef}
@@ -37,7 +39,7 @@ export default function StudioScript({ lines, userRole, currentLineIdx, panelRef
                     {line.character}
                   </span>
                   <p className={`text-sm leading-snug ${isCurrent ? 'text-[#0A0A0A] font-medium' : 'text-[rgba(10,10,10,0.82)]'}`}>
-                    {line.dialogue}
+                    <ReaderDialogue key={`${currentLineIdx}-${hideActor}`} text={line.dialogue} hidden={isUser && hideActor} showDirections={showDirections}/>
                   </p>
                 </div>
               );

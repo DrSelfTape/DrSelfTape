@@ -4,6 +4,7 @@ import axios from 'axios';
 // Local Imports
 import { baseURL } from './constant';
 import { getDeviceId } from '../utils/deviceId';
+import { assertApiDestination } from '../utils/apiDestination';
 // NOTE: do NOT import authSlice here — it imports this file (circular dependency)
 
 const axiosInstance = axios.create({
@@ -37,6 +38,7 @@ const assertRequestUser = (config, store) => {
 };
 
 axiosInstance.interceptors.request.use(async (config) => {
+  assertApiDestination(config.url, config.baseURL, baseURL);
   // Import lazily to avoid store → slice → http → store initialization cycles.
   const { store } = await import('./store');
   if (Object.prototype.hasOwnProperty.call(config, '_authUserId')) {

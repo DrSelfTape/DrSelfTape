@@ -8,6 +8,19 @@
  */
 export const WHATS_NEW = [
   {
+    id: 13,
+    version: '1.0.30',
+    date: 'October 2026',
+    title: 'Your reader, your way — and an app that opens faster',
+    intro: 'You can set how the scene partner sounds and paces itself, the dialogue is easier to follow while you rehearse, and the whole app is about a third of its old size.',
+    highlights: [
+      { emoji: '🎚️', title: 'Reader settings you control', body: 'Choose the voice and the playback that suit the scene, instead of taking whatever the reader gives you.' },
+      { emoji: '📖', title: 'Dialogue you can actually follow', body: 'Lines read more clearly as the reader moves through them, so you can keep your eyes up and stay in the scene.' },
+      { emoji: '⚡', title: 'A much lighter app', body: 'The download is a fraction of what it was and screens come up faster — same studio, far less to carry.' },
+      { emoji: '🔒', title: 'Quieter about you', body: 'Tighter security on the app itself and less diagnostic information collected in the background.' },
+    ],
+  },
+  {
     id: 12,
     version: '1.0.29',
     date: 'October 2026',

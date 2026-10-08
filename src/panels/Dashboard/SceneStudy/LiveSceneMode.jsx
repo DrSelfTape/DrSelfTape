@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
 import ModePicker from './ModePicker';
 import StudioScript from './StudioScript';
+import ReaderSettings from './ReaderSettings';
+import ReaderDialogue from './ReaderDialogue';
+import { speakBasic } from '../../../utils/basicReader';
 import { StudioRehearsalHeader, StudioRehearsalControls } from './StudioRehearsalChrome';
 import axios from '../../../redux/http';
 import endPoints from '../../../redux/constant';
@@ -47,7 +50,7 @@ const TTS_CACHE_MAX = 8;
  * should not sound like one person doing all the parts, and the actor can
  * recast any of them before the scene starts.
  */
-function VoicePicker({ partnerCharacters, onSelect, onCancel }) {
+function VoicePicker({ partnerCharacters, onSelect, onCancel, settings, onSettings }) {
   const roles = partnerCharacters.length > 0 ? partnerCharacters : ['Scene Partner'];
   // Default casting is derived, not frozen in state, so a script that finishes
   // parsing after this mounts still shows every character pre-cast. Only the
@@ -65,7 +68,8 @@ function VoicePicker({ partnerCharacters, onSelect, onCancel }) {
             : 'Choose a voice for the AI scene partner'}
         </p>
 
-        <div className="space-y-5">
+        <ReaderSettings value={settings} onChange={onSettings}/>
+        <div className="space-y-5" hidden={settings.engine === 'basic'}>
           {roles.map((name) => (
             <div key={name}>
               <div className="text-[#7A5A18] text-xs font-bold uppercase tracking-widest mb-2">{name}</div>
@@ -219,6 +223,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     setCurrentLineIdx(idx);
   }, []);
   const [errorMsg, setErrorMsg] = useState('');
+  const [readerSettings, setReaderSettings] = useState({ hideActor: false, showDirections: true, speakDirections: false, engine: 'premium', voiceURI: '' });
+  const readerSettingsRef = useRef(readerSettings);
+  const updateReaderSettings = value => {
+    readerSettingsRef.current = value;
+    setReaderSettings(value);
+    // Do not keep paid prefetches alive after selecting a device voice.
+    ttsCacheRef.current.forEach(entry => entry.controller.abort());
+    ttsCacheRef.current.clear();
+  };
+  const readerText = useCallback(text => readerSettingsRef.current.speakDirections ? text : spokenText(text), []);
   const [aiCurrentLine, setAiCurrentLine] = useState('');
   // Which partner is speaking right now — with a voice per character the
   // on-screen name has to follow the audio instead of always naming the lead.
@@ -446,17 +460,18 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
    * lands instead of after a cold round trip.
    */
   const prefetchPartnerLines = useCallback((fromIdx, count = TTS_LOOKAHEAD) => {
+    if (readerSettingsRef.current.engine !== 'premium') return;
     let warmed = 0;
     for (let i = Math.max(0, fromIdx); i < lines.length && warmed < count; i += 1) {
       const line = lines[i];
       if (!line || line.character === userRole) continue;
       // Improv beats have no scripted words yet — nothing to render ahead.
-      const text = spokenText(line.dialogue || '').trim();
+      const text = readerText(line.dialogue || '').trim();
       if (!text) continue;
       warmed += 1;
       requestTTS(text, voiceFor(line.character));
     }
-  }, [lines, userRole, requestTTS, voiceFor]);
+  }, [lines, userRole, requestTTS, voiceFor, readerText]);
 
   // Drop anything the scene can no longer use — a recast character or an edited
   // line leaves audio behind that will never be served (the key carries both),
@@ -465,7 +480,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     const live = new Set();
     (lines || []).forEach((l) => {
       if (!l || l.character === userRole) return;
-      const text = spokenText(l.dialogue || '').trim();
+      const text = readerText(l.dialogue || '').trim();
       if (text) live.add(ttsCacheKey(text, voiceFor(l.character)));
     });
     ttsCacheRef.current.forEach((entry, key) => {
@@ -473,7 +488,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       try { entry.controller.abort(); } catch { /* already settled */ }
       ttsCacheRef.current.delete(key);
     });
-  }, [lines, userRole, voice, voiceOverrides, voiceFor]);
+  }, [lines, userRole, voice, voiceOverrides, voiceFor, readerText, readerSettings.speakDirections]);
 
   // Check browser support
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -493,7 +508,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
   /**
    * Play TTS audio for the AI response.
    */
-  const playTTS = useCallback(async (text, selectedVoice) => {
+  const playPremiumTTS = useCallback(async (text, selectedVoice) => {
     // Each line starts with a clean slate — a failure banner from a previous
     // line disappears as soon as a new line attempts playback.
     setErrorMsg('');
@@ -520,6 +535,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     if (ctx && ctx.state === 'suspended') {
       try { await ctx.resume(); } catch { /* swallow */ }
     }
+    if (stale()) return;
 
     let arrayBuf;
     try {
@@ -535,16 +551,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           errMsg = decoded?.message || errMsg;
         }
       } catch { /* Optional operation failed; continue with the existing fallback. */ }
-      setErrorMsg(`Voice error: ${errMsg}. Continuing without audio.`);
-      setStatus('listening');
-      return;
+      throw new Error(`Voice error: ${errMsg}`);
     }
 
     if (stale()) return;
 
     if (!arrayBuf || arrayBuf.byteLength === 0) {
-      setStatus('listening');
-      return;
+      throw new Error('The reader returned no audio.');
     }
 
     // HTMLAudio path — NOT gated by AudioContext state. Serves two cases:
@@ -562,35 +575,34 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       const blobUrl = URL.createObjectURL(blob);
       const audio = new Audio(blobUrl);
       audioRef.current = audio;
-      await audio.play();
-      await new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
         let done = false;
-        const cleanup = () => {
+        let watchdog;
+        const cleanup = (error) => {
           if (done) return;
           done = true;
+          clearTimeout(watchdog);
+          audio.onended = null;
+          audio.onerror = null;
+          audio.pause();
           try { URL.revokeObjectURL(blobUrl); } catch { /* noop */ }
-          audioRef.current = null;
-          resolve();
+          if (audioRef.current === audio) audioRef.current = null;
+          error ? reject(error) : resolve();
         };
-        audio.onended = cleanup;
+        audio.stop = () => cleanup();
+        audio.onended = () => cleanup();
         // Without these the scene hangs forever if the blob fails to play
         // or never fires 'ended'. Watchdog = clip duration + 2s slack,
         // falling back to 60s before metadata loads.
-        audio.onerror = cleanup;
-        setTimeout(cleanup, ((audio.duration || 58) + 2) * 1000);
+        audio.onerror = () => cleanup(new Error('The reader audio could not play.'));
+        watchdog = setTimeout(() => cleanup(new Error('The reader audio timed out.')), ((audio.duration || 58) + 2) * 1000);
+        audio.play().catch(cleanup);
       });
     };
 
     const webAudioReady = ctx && ctx.state === 'running';
     if (!webAudioReady) {
-      try {
-        await playViaHtmlAudio();
-      } catch {
-        // Even HTMLAudio couldn't start — tell the actor instead of reading
-        // the scene in silence. A screen tap is a gesture, so the next line's
-        // resume() attempt will succeed.
-        setErrorMsg("The reader's voice couldn't play. Tap the screen once and continue; the next line will have audio.");
-      }
+      await playViaHtmlAudio();
       return;
     }
 
@@ -599,11 +611,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       // .slice(0) prevents "detached ArrayBuffer" crash in Chrome
       audioBuffer = await ctx.decodeAudioData(arrayBuf.slice(0));
     } catch {
-      try {
-        await playViaHtmlAudio();
-      } catch {
-        // fallback playback failed
-      }
+      await playViaHtmlAudio();
       return;
     }
 
@@ -611,7 +619,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // cleanup saw no source to stop because the source did not exist yet.
     if (stale()) return;
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const source = ctx.createBufferSource();
       source.buffer = audioBuffer;
       // Boost the reader's voice — TTS output + the post-recording speaker route
@@ -626,23 +634,56 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       // Cap the wait at the buffer's known duration + 1.5s slack.
       const watchdogMs = Math.ceil((audioBuffer.duration + 1.5) * 1000);
       let done = false;
-      const finish = () => {
+      let watchdog;
+      const finish = (error) => {
         if (done) return;
         done = true;
-        audioRef.current = null;
-        resolve();
+        clearTimeout(watchdog);
+        source.onended = null;
+        if (audioRef.current === source) audioRef.current = null;
+        source.disconnect();
+        gain.disconnect();
+        error ? reject(error) : resolve();
       };
-      source.onended = finish;
-      setTimeout(finish, watchdogMs);
-      try { source.start(0); } catch { finish(); }
+      source.onended = () => finish();
+      watchdog = setTimeout(() => {
+        finish(new Error('The reader audio timed out.'));
+        try { source.stop(); } catch { /* already ended */ }
+      }, watchdogMs);
+      try { source.start(0); } catch (error) { finish(error); }
     });
   }, [requestTTS]);
+
+  const playTTS = useCallback(async (text, selectedVoice) => {
+    const generation = playGenRef.current;
+    setErrorMsg('');
+    if (!text?.trim()) return;
+    try {
+      if (readerSettingsRef.current.engine === 'basic') {
+        const playback = speakBasic(text, readerSettingsRef.current.voiceURI);
+        audioRef.current = playback;
+        await playback.promise;
+        if (audioRef.current === playback) audioRef.current = null;
+      } else {
+        await playPremiumTTS(text, selectedVoice);
+      }
+    } catch (error) {
+      if (generation !== playGenRef.current || !isActiveRef.current) return;
+      isActiveRef.current = false;
+      isPausedRef.current = true;
+      setIsPaused(true);
+      setStatus('error');
+      setErrorMsg(`${error.message} Your place is saved. Choose a voice below, then Resume to retry this line.`);
+    }
+  }, [playPremiumTTS]);
 
   /**
    * Play ALL consecutive AI lines from startIdx, one line at a time.
    * Each line: fetch GPT response for that exact script line → display → TTS → next line.
    */
   const playAiLinesFrom = useCallback(async (startIdx, historySnapshot) => {
+    const generation = playGenRef.current;
+    const stopped = () => !isActiveRef.current || generation !== playGenRef.current;
     let idx = startIdx;
 
     if (recognitionRef.current) {
@@ -653,7 +694,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     await resetAudioToPlayback();
 
     while (idx < lines.length && lines[idx].character !== userRole) {
-      if (!isActiveRef.current) return;
+      if (stopped()) return;
 
       const scriptLine = lines[idx];
       setCurrentLine(idx);
@@ -686,19 +727,20 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         }
       }
 
+      if (stopped()) return;
       setAiCurrentLine(aiText);
       setAiCurrentCharacter(scriptLine.character || '');
+      setStatus('playing');
+
+      // Same rule as the pre-timed path: speak the words, not the direction.
+      await playTTS(readerText(aiText), voiceFor(scriptLine.character));
+
+      if (stopped()) return;
       setConversationHistory((prev) => {
         const updated = [...prev, { role: 'ai', text: aiText }];
         conversationHistoryRef.current = updated;
         return updated;
       });
-      setStatus('playing');
-
-      // Same rule as the pre-timed path: speak the words, not the direction.
-      await playTTS(spokenText(aiText), voiceFor(scriptLine.character));
-
-      if (!isActiveRef.current) return;
       idx++;
     }
 
@@ -716,7 +758,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     scrollToLine(idx);
     setStatus('listening');
     beginListeningRef.current?.();
-  }, [lines, userRole, voiceFor, prefetchPartnerLines, playTTS, scrollToLine, setCurrentLine]);
+  }, [lines, userRole, voiceFor, prefetchPartnerLines, playTTS, scrollToLine, setCurrentLine, readerText]);
 
   /**
    * Called when actor finishes speaking. Records their line, then plays AI lines one by one.
@@ -1176,7 +1218,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       readerModeRef.current = 'voice';   // sync now so beginListening routes right
       setSceneStarted(true);
       isActiveRef.current = true;
-      sceneStartTimeRef.current = Date.now();
+      sceneStartTimeRef.current ??= Date.now();
 
       const firstLine = lines[0];
       if (firstLine && firstLine.character !== userRole) {
@@ -1204,10 +1246,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       // Without this, every iOS session (which forces pre-timed mode) had
       // duration=0 → practice-log skipped, Jericho session_log dur=0, and
       // the Craft Journey End-Scene completion guard never fired.
-      sceneStartTimeRef.current = Date.now();
+      sceneStartTimeRef.current ??= Date.now();
+
+      const generation = playGenRef.current;
+      const stopped = () => !isActiveRef.current || generation !== playGenRef.current;
 
       const runPreTimed = async (idx) => {
-        if (!isActiveRef.current) return;
+        if (stopped()) return;
         if (idx >= lines.length) {
           setStatus('idle');
           setSceneComplete(true);
@@ -1229,8 +1274,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           // her off" out loud.
           setAiCurrentLine(line.dialogue);
           setAiCurrentCharacter(line.character || '');
-          await playTTS(spokenText(line.dialogue), voiceFor(line.character));
-          if (!isActiveRef.current) return;
+          await playTTS(readerText(line.dialogue), voiceFor(line.character));
+          if (stopped()) return;
           // Pause for actor to absorb / react
           setStatus('idle');
           setAiCurrentLine('');
@@ -1238,24 +1283,20 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
           await new Promise((res) => setTimeout(res, pauseSecs * 1000));
           runPreTimed(idx + 1);
         } else {
-          // Actor's line — show it highlighted and wait. We give the
-          // actor two ways forward: tap the "Next →" button when they
-          // finish the line (preferred), or let the auto-advance
-          // safety timer fire after pauseSecs*2 seconds (so an idle
-          // session still moves along instead of hanging on the
-          // "Your line" state — the bug Joseph hit on TestFlight).
+          // Memory rehearsal leaves space for thought: only Next advances
+          // an actor line. Study retains the existing timed pacing.
           setStatus('listening'); // repurpose as "your turn"
           setAiCurrentLine('');
           if (isActiveRef.current) {
             await new Promise((res) => {
               actorAdvanceRef.current = res;
-              setTimeout(() => {
+              if (!readerSettingsRef.current.hideActor) setTimeout(() => {
                 // Only fire the safety timer if no manual tap landed first.
                 if (actorAdvanceRef.current === res) res();
               }, pauseSecs * 2000);
             });
+            if (stopped()) return;
             actorAdvanceRef.current = null;
-            if (!isActiveRef.current) return;
             runPreTimed(idx + 1);
           }
         }
@@ -1263,7 +1304,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
 
       runPreTimed(startIdx);
     },
-    [lines, userRole, applyPrimaryVoice, voiceFor, prefetchPartnerLines, playTTS, scrollToLine]
+    [lines, userRole, applyPrimaryVoice, voiceFor, prefetchPartnerLines, playTTS, scrollToLine, readerText]
   );
 
   // Bind the ref so onVoiceSelected (defined above) can call into the
@@ -1419,6 +1460,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     const ttsCache = ttsCacheRef.current;
     return () => {
       isActiveRef.current = false;
+      playGenRef.current += 1;
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       }
@@ -1455,6 +1497,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     return (
       <VoicePicker
         partnerCharacters={partnerCharacters}
+        settings={readerSettings}
+        onSettings={updateReaderSettings}
         onSelect={onVoiceSelected}
         onCancel={onExit}
       />
@@ -1529,6 +1573,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       />
       {/* Top Bar */}
       <StudioRehearsalHeader role={userRole} lineIndex={currentLineIdx} lineCount={lines.length} onEnd={endScene} />
+      {errorMsg && <div role="alert" className="mx-4 my-2 p-3 rounded-xl bg-red-50 text-red-800 text-sm shrink-0">{errorMsg}</div>}
+      {(!sceneStarted || isPaused) && <div className="px-4 overflow-y-auto max-h-[40vh] shrink-0"><ReaderSettings value={readerSettings} onChange={updateReaderSettings}/></div>}
       <div className="dst-rehearsal-header flex items-center justify-between px-6 py-4 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-[#D4A85F] animate-pulse" />
@@ -1606,7 +1652,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             )}
           </div>
         )}
-        <StudioScript lines={lines} userRole={userRole} currentLineIdx={currentLineIdx} panelRef={scriptPanelRef} />
+        <StudioScript lines={lines} userRole={userRole} currentLineIdx={currentLineIdx} panelRef={scriptPanelRef} hideActor={readerSettings.hideActor} showDirections={readerSettings.showDirections}/>
 
         {/* Main Stage */}
         <div className="dst-rehearsal-stage flex-1 flex flex-col items-center justify-center px-4 lg:px-6 min-h-0 overflow-y-auto relative z-10 bg-[var(--aurora-bg,#FAFAF7)]">
@@ -1691,7 +1737,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   {aiCurrentCharacter || partnerName}
                 </span>
                 <p className="text-[#0A0A0A] text-xl md:text-3xl font-light leading-relaxed">
-                  {aiCurrentLine}
+                  <ReaderDialogue text={aiCurrentLine} showDirections={readerSettings.showDirections}/>
                 </p>
               </>
             ) : status === 'listening' && lines[currentLineIdx]?.character === userRole ? (
@@ -1700,7 +1746,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   Your line · {userRole}
                 </span>
                 <p className="text-[#0A0A0A] text-xl md:text-3xl font-light leading-relaxed px-2">
-                  &ldquo;{lines[currentLineIdx]?.dialogue}&rdquo;
+                  <ReaderDialogue key={`${currentLineIdx}-${readerSettings.hideActor}`} text={lines[currentLineIdx]?.dialogue} hidden={readerSettings.hideActor} showDirections={readerSettings.showDirections}/>
                 </p>
               </>
             ) : status === 'listening' ? (
@@ -1741,18 +1787,6 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
             )}
           </div>
 
-          {/* Error Message — renders whenever a message is set, NOT only in
-              the terminal 'error' status: the TTS-failure paths deliberately
-              continue the scene (status stays 'listening'/'playing'), and
-              gating on status==='error' made those messages invisible (codex
-              review catch — the June-29 silent reader stayed silent AND
-              unexplained). playTTS clears it on each new line. */}
-          {errorMsg && (
-            <div role="alert" className="studio-rehearsal-error mt-4 bg-red-500/10 border border-red-500/20 rounded-xl px-6 py-3 max-w-md">
-              <p className="text-red-400 text-sm text-center">{errorMsg}</p>
-            </div>
-          )}
-
           {/* Conversation History (last few lines) */}
           {conversationHistory.length > 0 && (
             <div className="dst-rehearsal-history mt-8 max-w-lg w-full space-y-2 lg:hidden">
@@ -1768,7 +1802,7 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                   <span className="font-bold uppercase text-[10px] block mb-0.5">
                     {turn.role === 'actor' ? userRole : partnerName}
                   </span>
-                  {turn.text}
+                  <ReaderDialogue key={`${currentLineIdx}-${readerSettings.hideActor}`} text={turn.text} hidden={turn.role === 'actor' && readerSettings.hideActor} showDirections={readerSettings.showDirections}/>
                 </div>
               ))}
             </div>

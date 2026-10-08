@@ -12,6 +12,7 @@ import { validateEmail, validatePassword } from '../../../utils/utils';
 import { MIN_SIGNUP_AGE, calculateAge } from '../../../utils/age';
 import PasswordRequirements from '../../../components/Shared/PasswordRequirments';
 import { registerUser } from '../../../redux/features/auth/authSlice';
+import { useIdleReady } from '../../../hooks/useIdleReady';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 import AppleSignInButton from '../../../components/Auth/AppleSignInButton';
 import { Capacitor } from '@capacitor/core';
@@ -73,6 +74,8 @@ export const Signup = () => {
   // Respect prefers-reduced-motion: skip the video background entirely so we
   // don't burn battery or trigger vestibular issues. (LoginPage pattern.)
   const [reducedMotion, setReducedMotion] = useState(false);
+  // Decorative background video: defer past first paint. (LoginPage pattern.)
+  const idleReady = useIdleReady();
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -89,7 +92,9 @@ export const Signup = () => {
     const v = videoRef.current;
     if (!v) return;
     v.play?.().catch(() => {});
-  }, [reducedMotion]);
+    // idleReady belongs here: the element does not exist on first paint, so
+    // without it this kick would fire once against a null ref and never again.
+  }, [reducedMotion, idleReady]);
 
   // Capture ?ref= from a shared referral link (the BE share_url points at
   // /signup?ref=CODE). Persisted to localStorage so the code survives the
@@ -219,7 +224,7 @@ export const Signup = () => {
       {/* Washed-out video background — same asset and treatment as LoginPage.
           Hidden under prefers-reduced-motion; the wash gradient below still
           renders, so the screen never looks bare. */}
-      {!reducedMotion && (
+      {!reducedMotion && idleReady && (
         <div aria-hidden="true" style={{ position: 'absolute', inset: 0, overflow: 'hidden', background: '#0E0D0A' }}>
           <video
             ref={videoRef}
@@ -228,7 +233,7 @@ export const Signup = () => {
             loop
             muted
             playsInline
-            preload="auto"
+            preload="metadata"
             style={{
               position: 'absolute', inset: 0, width: '100%', height: '100%',
               objectFit: 'cover',

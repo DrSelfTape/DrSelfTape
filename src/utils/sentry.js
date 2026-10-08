@@ -6,6 +6,8 @@
 // a single static import anywhere in the boot tree would drag the whole SDK back
 // in. Captures before init resolves load the SDK on demand (a ~ms race at worst).
 
+import { scrubTelemetry } from './telemetryPrivacy';
+
 let _sentry = null;
 
 export async function initSentry() {
@@ -18,15 +20,15 @@ export async function initSentry() {
   Sentry.init({
     dsn,
     environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE,
-    // Collect IP address + user-agent for easier beta debugging.
-    sendDefaultPii: true,
+    sendDefaultPii: false,
     integrations: [
       Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration({ maskAllText: false, blockAllMedia: true }),
     ],
     tracesSampleRate: 0.1,
     replaysSessionSampleRate: 0.0,
-    replaysOnErrorSampleRate: 1.0,
+    replaysOnErrorSampleRate: 0.0,
+    beforeSendTransaction: event => scrubTelemetry(event),
+    beforeBreadcrumb: breadcrumb => scrubTelemetry(breadcrumb),
     // Don't spam Sentry with the chunk-reload errors we already handle.
     // Both `ignoreErrors` (SDK-level) and a regex sweep in beforeSend
     // (catch-all for variants the substring match misses).
@@ -51,7 +53,7 @@ export async function initSentry() {
       if (/MIME type|preload CSS|ChunkLoadError|dynamically imported|Importing a module script/i.test(msg)) {
         return null;
       }
-      return event;
+      return scrubTelemetry(event);
     },
   });
 }
@@ -80,8 +82,6 @@ export function identifySentryUser(user) {
   if (!user?.id) return;
   withSentry((S) => S.setUser({
     id: String(user.id),
-    email: user.email,
-    username: user.email,
   }));
 }
 

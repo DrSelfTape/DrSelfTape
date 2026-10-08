@@ -1706,7 +1706,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           border: '1px solid rgba(255,255,255,0.5)',
           overflow: 'hidden',
           position: 'relative',
-          background: '#0E0D0A url(/photos/audition-hall-hamlet.png) center 30%/cover',
+          background: '#0E0D0A url(/photos/audition-hall-hamlet.webp) center 30%/cover',
           boxShadow: '0 10px 28px rgba(20,18,14,0.18)',
           height: 116,
           display: 'block',

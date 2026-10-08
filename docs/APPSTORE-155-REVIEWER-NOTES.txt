@@ -1,0 +1,17 @@
+Dr Self Tape 1.0.30 (Build 155)
+
+Use the demo account supplied in App Store Connect's dedicated demo-account fields. Its production login was verified on 2026-10-08. No claim is made here about its current subscription or AI-consent state.
+
+CHANGES TO TEST
+1. Scene reader settings: open Scene Study, select or import a script, choose your role, then open the reader settings. Check voice/playback choices and practice a short scene.
+2. Dialogue presentation: in that scene, follow the displayed dialogue as the reader advances between lines.
+3. Privacy and security: this build updates the native Capacitor runtime and reduces diagnostic collection. Existing camera/microphone permissions remain part of the recording and rehearsal flows.
+4. Loading and navigation: sign in, move between Home, scripts and rehearsal, and return to the previous screen.
+
+SANITY CHECKS
+- Sign in with Apple or the supplied demo login.
+- Open plan/subscription options and verify product display and restore-purchase controls.
+- Check recording and reader audio on a physical iPhone.
+- Account deletion remains available under Profile / Privacy.
+
+This release does not include the proposed Imprint-inspired acting lessons.

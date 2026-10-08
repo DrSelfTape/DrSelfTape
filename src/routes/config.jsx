@@ -27,7 +27,6 @@ const PrivacyPolicy = lazy(() => import('../panels/Legal/PrivacyPolicy'));
 const PublicRecord = lazy(() => import('../panels/PublicRecord'));
 
 // Lazy-loaded UserPanel imports
-const Dashboard = lazy(() => import('../panels/UserPanel/Dashboard'));
 const CastingDirectorAuditions = lazy(() =>
   import('../panels/UserPanel/CastingDirector/Audition').then((m) => ({ default: m.CastingDirectorAuditions }))
 );

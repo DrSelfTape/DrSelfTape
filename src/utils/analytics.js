@@ -4,6 +4,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { baseURL } from '../redux/constant';
+import { scrubPostHogEvent, scrubTelemetry } from './telemetryPrivacy';
 
 const POSTHOG_KEY = import.meta.env.VITE_POSTHOG_KEY || '';
 const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
@@ -26,7 +27,13 @@ export async function initAnalytics() {
   try {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
-      autocapture: true,
+      // Explicit product events retain funnels without recording private sides
+      // or coaching text from the DOM. Recording can include unreleased scripts.
+      autocapture: false,
+      disable_session_recording: true,
+      mask_all_text: true,
+      mask_all_element_attributes: true,
+      before_send: event => scrubPostHogEvent(event, POSTHOG_KEY),
       capture_pageview: true,
       capture_pageleave: true,
       // Capture events from anonymous (logged-out) visitors too. Without
@@ -34,9 +41,8 @@ export async function initAnalytics() {
       // landing-page / signup-page activity from our beta funnels.
       person_profiles: 'always',
       persistence: 'localStorage',
-      // Client-side error tracking — without this, $exception never fires and
-      // a broken deploy is invisible until users complain.
-      capture_exceptions: true,
+      // Exceptions go through the separately sanitized Sentry path.
+      capture_exceptions: false,
       loaded: () => { initialized = true; },
     });
     // E-03: stamp WHICH client this is on every event. Native builds report
@@ -80,8 +86,6 @@ export async function identifyUser(user) {
   if (!posthog) return;
   try {
     posthog.identify(String(user.id), {
-      email: user.email,
-      name: `${user.first_name || ''} ${user.last_name || ''}`.trim(),
       role: user.role,
     });
   } catch { /* noop */ }
@@ -126,6 +130,7 @@ function newEventId() {
 }
 
 export function trackEvent(event, properties = {}) {
+  properties = scrubTelemetry(properties);
   const eventId = newEventId();
 
   // PostHog (lazy — only if a key is configured). Await init so the earliest
@@ -167,7 +172,7 @@ export function trackEvent(event, properties = {}) {
       if (fbp) enriched.fbp = fbp;
       if (fbc) enriched.fbc = fbc;
       if (typeof window !== 'undefined' && window.location) {
-        enriched.source_url = window.location.href;
+        enriched.source_url = scrubTelemetry(window.location.href);
       }
       fetch(`${baseURL}/v1/analytics/track/`, {
         method: 'POST',

@@ -101,12 +101,12 @@ function formatDate(dateStr) {
 }
 
 const SCRIPT_PHOTOS = [
-  '/photos/audition-hall-hamlet.png',
-  '/photos/audition-wait-32.png',
-  '/photos/class-table.png',
-  '/photos/night-study.png',
-  '/photos/partners-table.png',
-  '/photos/street-script.png',
+  '/photos/audition-hall-hamlet.webp',
+  '/photos/audition-wait-32.webp',
+  '/photos/class-table.webp',
+  '/photos/night-study.webp',
+  '/photos/partners-table.webp',
+  '/photos/street-script.webp',
 ];
 
 function pickScriptPhoto(id) {
