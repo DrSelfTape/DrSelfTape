@@ -257,11 +257,11 @@ const FindAReader = ({ embedded = false }) => {
         Filters
       </button>
 
-      {/* Photo/avatar gate. Copy and both routes out live in VisibilityPrompt
+      {/* Photo gate. The copy and the single route out live in VisibilityPrompt
           so this and the Home card can never tell different stories. */}
       {!hasPhoto && !readersLoading && (
         <div className="w-full max-w-sm mt-4">
-          <VisibilityPrompt userId={profile?.id} name={profile?.first_name} />
+          <VisibilityPrompt />
         </div>
       )}
 

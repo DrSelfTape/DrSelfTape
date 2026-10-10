@@ -8,8 +8,6 @@ import { fetchProfileThunk } from '../../redux/features/profile/profileSlice';
 import { markStep } from '../Dashboard/tutorialProgress';
 import { trackEvent, Events } from '../../utils/analytics';
 import { ReaderPortrait } from '../Aurora';
-import { avatarStyleFor } from '../Aurora/avatarStyle';
-import AvatarPicker from './AvatarPicker';
 import HeadshotCropper from './HeadshotCropper';
 
 /**
@@ -22,23 +20,27 @@ import HeadshotCropper from './HeadshotCropper';
  * with") described a nicety. Being unable to be matched at all is not a
  * nicety, so this says the true thing instead.
  *
- * Two ways out, deliberately equal in weight. Some actors will not put their
- * face on a swipe card; that is a position, not an unfinished profile, and the
- * illustrated avatar exists so it doesn't cost them every match. The avatar is
- * plainly a drawing — we do not generate synthetic faces, because a fake face
- * on a real person's profile misleads whoever is choosing who to run lines
- * with.
+ * ONE way out: a real photo. Until 2026-10-10 an illustrated avatar also
+ * counted, offered here as an equal-weight choice for actors who will not put
+ * their face on a swipe card. Joseph ended that on seeing one on a card —
+ * "only real uploaded images should be considered in the pool" — because an
+ * actor picking a reader is picking a person to run lines with, and a drawing
+ * tells them nothing about who they would be meeting.
+ *
+ * The avatar is NOT gone: it is still someone's picture in chat, the Green
+ * Room and their profile, and is still chosen from Profile -> Appearance. It
+ * simply no longer deals you into the deck, so offering it HERE — on the
+ * prompt whose entire job is getting you into the deck — would be a dead end
+ * dressed as a solution.
+ *
+ * We still do not generate synthetic faces: a fake face on a real person's
+ * profile misleads whoever is choosing who to run lines with.
  */
-export default function VisibilityPrompt({ userId, name, onDismiss, compact = false }) {
+export default function VisibilityPrompt({ onDismiss, compact = false }) {
   const dispatch = useDispatch();
   const [cropSrc, setCropSrc] = useState(null);
   const [busy, setBusy] = useState(false);
   const [findings, setFindings] = useState([]);
-  // null until they open the picker — the avatar is a CHOICE, so nothing is
-  // preselected. It used to be assigned by hashing the user id, which handed
-  // plenty of women a male-presenting face.
-  const [picking, setPicking] = useState(false);
-  const [chosen, setChosen] = useState(null);
   // Set once the choice is saved, so the prompt goes away without waiting on a
   // profile refetch that might fail.
   const [done, setDone] = useState(false);
@@ -81,7 +83,21 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
         // component, and the inline list disappears before it can be read.
         dispatch(showSnackbar({ message: found[0].message, variant: 'warning' }));
       }
-      dispatch(fetchProfileThunk());
+      // Flip the headline to "YOU'RE VISIBLE" on the SAVED photo. Until
+      // 2026-10-10 only the avatar path set this, so the primary action —
+      // uploading a face — never showed its own success state; the card kept
+      // saying "YOU'RE NOT BEING SHOWN" until the parent happened to unmount
+      // it. Found while removing the avatar route left setDone unused.
+      setDone(true);
+      // The prompt AND the deck are both gated on needs_visual, so this refetch
+      // is what actually reveals Match. Await it and retry once — dispatching
+      // and walking away meant a cellular blip left the flag stale.
+      try {
+        await dispatch(fetchProfileThunk()).unwrap();
+      } catch {
+        await new Promise((r) => setTimeout(r, 900));
+        dispatch(fetchProfileThunk());
+      }
       markStep('headshot');
       // findings.length tells us whether our own quality checks are firing on
       // real uploads, or whether the validator is shouting at nobody.
@@ -95,35 +111,6 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
     setBusy(false);
   };
 
-  const chooseAvatar = async (index) => {
-    setBusy(true);
-    try {
-      await axios.patch(`${baseURL}/v1/users/profile/`, { avatar_style: avatarStyleFor(index) });
-      // Mark it chosen only once the SERVER has it. Setting this on click left
-      // a failed save looking successful — the avatar stayed ringed as selected
-      // while the server still had nothing.
-      setChosen(index);
-      setDone(true);
-      // The prompt AND the deck are both gated on needs_visual, so this refetch
-      // is what actually reveals Match. Await it and retry once — dispatching
-      // and walking away meant a cellular blip left the flag stale.
-      try {
-        await dispatch(fetchProfileThunk()).unwrap();
-      } catch {
-        await new Promise((r) => setTimeout(r, 900));
-        dispatch(fetchProfileThunk());
-      }
-      markStep('headshot');
-      trackEvent(Events.VISIBILITY_AVATAR_CHOSEN, { index });
-      dispatch(showSnackbar({ message: "You're visible in Match now.", variant: 'success' }));
-    } catch (err) {
-      dispatch(showSnackbar({
-        message: err?.response?.data?.message || "Couldn't save that. Please try again.",
-        variant: 'error',
-      }));
-    }
-    setBusy(false);
-  };
 
   return (
     <div
@@ -179,45 +166,8 @@ export default function VisibilityPrompt({ userId, name, onDismiss, compact = fa
                  style={{ display: 'none' }} disabled={busy} onChange={pickFile} />
         </label>
 
-        <button
-          type="button"
-          onClick={() => { if (!picking) trackEvent(Events.VISIBILITY_PICKER_OPENED); setPicking((v) => !v); }}
-          disabled={busy}
-          aria-expanded={picking}
-          style={{
-            flex: '1 1 150px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            gap: 10, padding: '10px 16px', borderRadius: 14, minHeight: 48,
-            background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)',
-            color: 'var(--aurora-text)', fontWeight: 600, fontSize: 14,
-            cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
-          }}
-        >
-          {/* The thumbnail is a PREVIEW of what's on offer. Once the grid is
-              open it previews nothing, so it goes — leaving a decorative face
-              next to the word "Close" just reads as a stray graphic. */}
-          {!picking && (
-            <span style={{ width: 30, height: 30, borderRadius: '50%', overflow: 'hidden', flexShrink: 0 }}>
-              <ReaderPortrait reader={{ id: userId, name }} />
-            </span>
-          )}
-          {picking ? 'Close' : 'Pick an avatar'}
-        </button>
       </div>
 
-      {picking && (
-        <div>
-          <p style={{ color: 'var(--aurora-sub)', fontSize: 12.5, margin: '0 0 10px' }}>
-            Pick the one you want.
-          </p>
-          <AvatarPicker
-            userId={userId}
-            name={name}
-            selected={chosen === null ? '' : avatarStyleFor(chosen)}
-            disabled={busy}
-            onPick={(i) => chooseAvatar(i)}
-          />
-        </div>
-      )}
 
       <p style={{ color: 'var(--aurora-sub)', fontSize: 12, lineHeight: 1.45, margin: 0, opacity: 0.85 }}>
         Rather not put your face on a swipe card? The avatar makes you visible without one.

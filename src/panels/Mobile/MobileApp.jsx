@@ -1464,7 +1464,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           they pick either route and never nags someone already visible. */}
       {profile?.needs_visual && (
         <div style={{ paddingTop: 8 }}>
-          <VisibilityPrompt userId={profile?.id} name={profile?.first_name} compact />
+          <VisibilityPrompt compact />
         </div>
       )}
 

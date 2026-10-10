@@ -393,7 +393,7 @@ export default function DashboardHome() {
             the Match tab they aren't visiting. `needs_visual` is computed from
             the same rule the deck uses, so this can't nag someone already
             visible. */}
-        {profile?.needs_visual && <VisibilityPrompt userId={profile?.id} name={profile?.first_name} />}
+        {profile?.needs_visual && <VisibilityPrompt />}
         <TutorialChecklist />
       </div>
 
