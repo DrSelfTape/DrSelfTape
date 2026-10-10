@@ -3,8 +3,6 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import ScriptUpload from './ScriptUpload';
 import SidesUpload from './SidesUpload';
 import RolePicker from './RolePicker';
-import Teleprompter from './Teleprompter';
-import PracticeV2 from './PracticeV2';
 import RecordTake from './RecordTake';
 import LiveSceneMode from './LiveSceneMode';
 import SelfTapeRecorder from './SelfTapeRecorder';
@@ -14,8 +12,13 @@ import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { parseScript, extractCharacters } from '../../../utils/scriptParse';
 
-const STEPS = ['upload', 'pick-role', 'practice'];
-const STEP_LABELS = ['Upload Script', 'Pick Role', 'Practice'];
+// Picking a role lands straight in the AI Reader. The silent teleprompter
+// used to sit between them as its own step with a Practice / AI Reader toggle,
+// which asked the actor to choose a mode before they had heard the scene — and
+// the reader IS the product. Removed 2026-10-10 at Joseph's call: "for the
+// practice we only need the AI reader, instead of practice or AI reader."
+const STEPS = ['upload', 'pick-role', 'live'];
+const STEP_LABELS = ['Upload Script', 'Pick Role', 'AI Reader'];
 
 export default function SceneStudy() {
   // Apple Guideline 5.1.1(i) — Practice mode pipes script text through
@@ -77,7 +80,7 @@ export default function SceneStudy() {
     }
   }, [location?.state]);
 
-  // Parse lines (always — Teleprompter / PracticeV2 need the dialogue
+  // Parse lines (always — LiveSceneMode / RecordTake need the dialogue
   // structure, not just the cast list). For the character list itself
   // we prefer the BE-cached value when available and fall back to the
   // parser, so legacy scripts saved before the `characters` field
@@ -95,7 +98,7 @@ export default function SceneStudy() {
 
   // Mark tutorial step when user starts practicing
   useEffect(() => {
-    if (step === 'practice' || step === 'live') {
+    if (step === 'live') {
       markStep('practice_ai');
     }
   }, [step]);
@@ -119,7 +122,7 @@ export default function SceneStudy() {
         <SelfTapeRecorder
           lines={parsedLines}
           userRole={selectedRole}
-          onClose={() => { setShowJournal('self-tape'); setStep('practice'); }}
+          onClose={() => { setShowJournal('self-tape'); setStep('pick-role'); }}
         />
       </>
     );
@@ -134,7 +137,7 @@ export default function SceneStudy() {
         characters={characters}
         initialVoice={selectedVoice}
         craftSkill={craftSkill}
-        onExit={() => { setShowJournal('live-scene'); setStep('practice'); }}
+        onExit={() => { setShowJournal('live-scene'); setStep('pick-role'); }}
       />
     );
   }
@@ -142,7 +145,7 @@ export default function SceneStudy() {
   return (
     <div className="max-w-5xl mx-auto px-2">
       {/* Live Study Mode Banner — hidden in v2 layout (tabs replace it) */}
-      {!useV2 && (step === 'practice' || step === 'pick-role') && selectedRole && (
+      {!useV2 && step === 'pick-role' && selectedRole && (
         <div className="mb-4 sm:mb-6 rounded-2xl p-5 border relative overflow-hidden aurora-card">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_left,_rgba(212,168,95,0.16),_transparent_60%)]" />
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -171,7 +174,7 @@ export default function SceneStudy() {
       )}
 
       {/* Step Indicator — hidden in v2 practice view (tabs replace it) */}
-      {!(useV2 && step === 'practice') && <div className="flex items-center gap-2 mb-4 sm:mb-8">
+      <div className="flex items-center gap-2 mb-4 sm:mb-8">
         {STEPS.map((s, i) => (
           <div key={s} className="flex items-center gap-2">
             <div
@@ -200,7 +203,7 @@ export default function SceneStudy() {
             )}
           </div>
         ))}
-      </div>}
+      </div>
 
       {/* Step Content */}
       {step === 'upload' && (
@@ -234,29 +237,8 @@ export default function SceneStudy() {
           onSelectRole={setSelectedRole}
           selectedVoice={selectedVoice}
           onSelectVoice={setSelectedVoice}
-          onStart={() => setStep('practice')}
+          onStart={() => setStep('live')}
           onBack={() => setStep('upload')}
-        />
-      )}
-
-      {step === 'practice' && !useV2 && (
-        <Teleprompter
-          lines={parsedLines}
-          userRole={selectedRole}
-          onRecord={() => setStep('record')}
-          onBack={() => setStep('pick-role')}
-          onGoLive={() => setStep('live')}
-          /* Self-Tape removed per product call — the recorder UX wasn't
-             strong enough to ship alongside Practice + AI Reader. */
-        />
-      )}
-
-      {step === 'practice' && useV2 && (
-        <PracticeV2
-          lines={parsedLines}
-          userRole={selectedRole}
-          onBack={() => setStep('pick-role')}
-          onGoLive={() => setStep('live')}
         />
       )}
 
@@ -264,7 +246,7 @@ export default function SceneStudy() {
         <RecordTake
           lines={parsedLines}
           userRole={selectedRole}
-          onBack={() => { setShowJournal('scene-study'); setStep('practice'); }}
+          onBack={() => { setShowJournal('scene-study'); setStep('pick-role'); }}
         />
       )}
 
