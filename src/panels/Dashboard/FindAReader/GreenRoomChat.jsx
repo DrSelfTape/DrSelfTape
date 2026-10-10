@@ -376,9 +376,18 @@ const GreenRoomChat = (props = {}) => {
       className="flex flex-col aurora-page-in"
       style={{
         background: 'var(--aurora-bg)',
-        // 100dvh shrinks with the iOS keyboard so the message input stays
-        // visible above the keyboard. 100vh did not — see Build 22 fix.
-        height: 'calc(100dvh - 80px)',
+        // Fill the shell's content box, do not re-derive it. The parent already
+        // reserves both bars —
+        //   paddingTop:    calc(54px + env(safe-area-inset-top))
+        //   paddingBottom: calc(84px + env(safe-area-inset-bottom))
+        // — which is ~231px on an iPhone 17, while this subtracted a flat 80px.
+        // The missing ~150px pushed the bottom of the column, and with it the
+        // message composer, below the visible area and behind the tab pill.
+        //
+        // 100% still tracks the live iOS viewport: the chain above is
+        // root(100dvh) -> .studio-mobile-shell(100dvh) -> content(flex:1), so
+        // the Build 22 keyboard fix is preserved without a magic number.
+        height: '100%',
       }}
     >
       {/* Header */}
