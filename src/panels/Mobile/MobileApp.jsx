@@ -31,6 +31,7 @@ import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import { V1HeroGraph, V1Sparkles } from "../../components/Aurora";
 import { AuroraHUD, AuroraQuests, AuroraStreakGuard, AuroraSeason, AuroraProgressCard, auroraCelebrate, SlateTip } from "../../components/Aurora/game";
+import { nextFabHidden } from "../../components/Slate/fabScroll";
 import SlateCopilot, { SlateFAB } from "../../components/Slate/SlateCopilot";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
@@ -3993,13 +3994,27 @@ export default function DrSelfTapeApp() {
   // open event listener below), which is the one case it should disappear.
   const [headerHidden, setHeaderHidden] = useState(false);
   const lastScrollYRef = useRef(0);
+  // Slate's 76px mascot floats at bottom: safe + 98px, so it covers a ~90px
+  // band on the right that the content box's 84px paddingBottom does not
+  // reserve — a card sitting there is partly unreadable and partly untappable.
+  // Rather than pad every screen by another 90px forever, the FAB does what a
+  // FAB should: it steps aside while you are reading and comes back when you
+  // stop. Hidden on the way DOWN, back on the way up or at rest.
+  const [fabHidden, setFabHidden] = useState(false);
+  const fabIdleRef = useRef(null);
   const handleContentScroll = (e) => {
     // Track scroll for any consumers that care, but no longer toggle
     // headerHidden — the bar stays anchored to the top of the screen.
-    lastScrollYRef.current = e.currentTarget.scrollTop;
+    const y = e.currentTarget.scrollTop;
+    setFabHidden((prev) => nextFabHidden(prev, y, lastScrollYRef.current));
+    lastScrollYRef.current = y;
+    // Scrolling can stop without another event, so bring it back on idle.
+    if (fabIdleRef.current) clearTimeout(fabIdleRef.current);
+    fabIdleRef.current = setTimeout(() => setFabHidden(false), 900);
   };
+  useEffect(() => () => { if (fabIdleRef.current) clearTimeout(fabIdleRef.current); }, []);
   // No-op kept so existing useEffect deps don't break.
-  useEffect(() => { lastScrollYRef.current = 0; }, [tab, currentPanel]);
+  useEffect(() => { lastScrollYRef.current = 0; setFabHidden(false); }, [tab, currentPanel]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -4525,7 +4540,7 @@ export default function DrSelfTapeApp() {
           {/* Slate copilot — gold FAB on the tab screens (hidden inside a panel,
               a modal, or when the console is up); full console / dock overlay. */}
           {!copilotOpen && !currentPanel && !tabBarHidden && tab !== 'tape-review' && (
-            <SlateFAB onOpen={openSlate} />
+            <SlateFAB onOpen={openSlate} hidden={fabHidden} />
           )}
           {copilotOpen && (
             <SlateCopilot

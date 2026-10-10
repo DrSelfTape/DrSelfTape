@@ -71,7 +71,7 @@ function Avatar({ size = 40 }) {
 }
 
 // ── The floating action button (entry point) ─────────────────────────────────
-export function SlateFAB({ onOpen }) {
+export function SlateFAB({ onOpen, hidden = false }) {
   // First-run hint: a one-time speech bubble that says what Slate is, then
   // gets out of the way. Shows up to a few times until the user opens Slate.
   const [hint, setHint] = useState(false);
@@ -99,7 +99,7 @@ export function SlateFAB({ onOpen }) {
   return (
     <>
       <style>{SLATE_CSS}</style>
-      {hint && (
+      {hint && !hidden && (
         <button
           onClick={openSlate}
           aria-label="Meet Slate, your on-set assistant"
@@ -136,7 +136,18 @@ export function SlateFAB({ onOpen }) {
           position: 'absolute', right: 14, bottom: 'calc(env(safe-area-inset-bottom, 0px) + 98px)', zIndex: 29,
           width: 76, height: 76, border: 'none', background: 'transparent', cursor: 'pointer', padding: 0,
           WebkitTapHighlightColor: 'transparent',
+          // Step aside while the user is scrolling down past this band, and
+          // come back on the way up or at rest. Translated rather than
+          // unmounted so the halo/ripple animations do not restart each time,
+          // and pointerEvents go with it so a hidden mascot cannot eat a tap
+          // meant for the card underneath it.
+          transform: hidden ? 'translateY(140%) scale(0.85)' : 'translateY(0) scale(1)',
+          opacity: hidden ? 0 : 1,
+          pointerEvents: hidden ? 'none' : 'auto',
+          transition: 'transform 260ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease',
         }}
+        aria-hidden={hidden ? true : undefined}
+        tabIndex={hidden ? -1 : undefined}
       >
         {/* Soft gold halo behind the character (breathes) + expanding ripple. */}
         <span className="slate-halo" style={{ position: 'absolute', inset: '2%', borderRadius: 100,
