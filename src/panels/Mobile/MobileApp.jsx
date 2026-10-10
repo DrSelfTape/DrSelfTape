@@ -1949,14 +1949,20 @@ function HomeScreen({ setTab, setCurrentPanel }) {
                       overflow: 'hidden', textOverflow: 'ellipsis',
                     }}
                   >
-                    {sub.project_title || sub.project || 'Untitled'}
+                    {/* SubmissionSerializer returns `project_name` and `role`
+                        (apps/auditions/serializers.py). This read `project_title ||
+                        project` and `character`, none of which the API has ever sent,
+                        so every Recent row rendered "Untitled" with no role beneath
+                        it — while the Submissions list two screens away used the
+                        right names and looked fine. */}
+                    {sub.project_name || 'Untitled'}
                   </div>
-                  {sub.character && (
+                  {sub.role && (
                     <div
                       className="aurora-mono"
                       style={{ fontSize: 'var(--type-xs)', color: 'var(--aurora-dim)', marginTop: 3, letterSpacing: '0.05em' }}
                     >
-                      {String(sub.character).toUpperCase()}
+                      {String(sub.role).toUpperCase()}
                     </div>
                   )}
                 </div>
