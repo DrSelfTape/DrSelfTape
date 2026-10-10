@@ -1,5 +1,5 @@
-import Button from '@mui/material/Button';
-import { CircularProgress } from '@mui/material';
+import { splitSx, token } from '../sx';
+import '../controls.css';
 
 /**
  * CustomButton — the default button on every non-Studio screen.
@@ -10,8 +10,14 @@ import { CircularProgress } from '@mui/material';
  * draws at 36px and an invisible pseudo-element stretches the HIT area
  * back to 44 without touching the layout.
  *
- * Every prop that worked before still works. `sx` is still spread last,
+ * Every prop that worked before still works. `sx` is still applied last,
  * so a caller that already pinned its own height keeps it.
+ *
+ * 2026-10-10: reimplemented without @mui/material. This component and
+ * CustomModal were the only things dragging MUI onto the first-paint
+ * critical path — 428KB for a Button, a CircularProgress, a Modal and a
+ * Close icon. The metrics in controls.css reproduce MUI's Button defaults
+ * exactly, so this is a bundle change and not a design change.
  */
 export const CustomButton = ({
   variant = 'contained',
@@ -30,88 +36,76 @@ export const CustomButton = ({
 }) => {
   // #ef4444 under white text measures 3.8:1 — under AA on a button whose
   // whole job is to be read before something is destroyed.
-  const baseColor = isDelete ? 'var(--dst-danger, #C62828)' : 'primary.main';
-  const hoverColor = isDelete ? 'var(--dst-danger-deep, #A32020)' : 'primary.dark';
+  const baseColor = isDelete ? 'var(--dst-danger, #C62828)' : token('primary.main');
+  const hoverColor = isDelete ? 'var(--dst-danger-deep, #A32020)' : token('primary.dark');
+
+  const { style: sxStyle, hover: sxHover, disabled: sxDisabled } = splitSx(sx);
+  const isOutlined = variant === 'outlined';
+  const isDisabled = Boolean(disabled || loading);
+
+  // Colours travel as custom properties because :hover and :disabled cannot be
+  // expressed inline, and callers pass both through sx.
+  const vars = {};
+  if (isOutlined) {
+    vars['--dst-btn-bg'] = 'transparent';
+    vars['--dst-btn-fg'] = baseColor;
+    vars['--dst-btn-border'] = baseColor;
+    vars['--dst-btn-bg-hover'] = isDelete
+      ? 'var(--dst-danger-tint, rgba(198,40,40,0.10))'
+      : 'rgba(0, 0, 0, 0.04)';
+    vars['--dst-btn-fg-hover'] = baseColor;
+    vars['--dst-btn-border-hover'] = baseColor;
+  } else {
+    // A caller that set its own background/colour via sx owns both states,
+    // exactly as it did when sx was spread last into MUI's styles.
+    vars['--dst-btn-bg'] = sxStyle.backgroundColor || baseColor;
+    vars['--dst-btn-fg'] = sxStyle.color || '#fff';
+    vars['--dst-btn-bg-hover'] = sxStyle.backgroundColor || hoverColor;
+    vars['--dst-btn-fg-hover'] = sxStyle.color || '#fff';
+  }
+  // An explicit &:hover in sx wins over everything above.
+  if (sxHover?.backgroundColor) vars['--dst-btn-bg-hover'] = sxHover.backgroundColor;
+  if (sxHover?.color) vars['--dst-btn-fg-hover'] = sxHover.color;
+  if (sxHover?.borderColor) vars['--dst-btn-border-hover'] = sxHover.borderColor;
+  if (sxStyle.borderColor) vars['--dst-btn-border'] = sxStyle.borderColor;
+
+  const classes = [
+    'dst-btn',
+    isOutlined ? 'dst-btn--outlined' : '',
+    dense ? 'dst-btn--dense' : '',
+    className || '',
+  ].filter(Boolean).join(' ');
+
+  const spinnerSize = CircularProgressSize || 16;
 
   return (
-    <Button
-      variant={variant}
-      onClick={disabled || loading ? null : onClick}
-      disabled={disabled || loading}
+    <button
       type={type || 'submit'}
-      className={className}
-      startIcon={startIcon}
-      endIcon={endIcon}
+      onClick={isDisabled ? undefined : onClick}
+      disabled={isDisabled}
+      className={classes}
       aria-busy={loading ? true : undefined}
-      sx={{
-        textTransform: 'none',
-        minHeight: dense ? 'var(--dst-tap-dense, 36px)' : 'var(--dst-tap-min, 44px)',
-        display: 'flex !important',
-        textWrap: 'nowrap',
-        alignItems: 'center',
-        boxShadow: 'none',
-        // Dense keeps its small box and borrows the missing millimetres.
-        ...(dense && {
-          position: 'relative',
-          '&::after': {
-            content: '""',
-            position: 'absolute',
-            left: '50%',
-            top: '50%',
-            translate: '-50% -50%',
-            width: '100%',
-            height: 'var(--dst-tap-min, 44px)',
-          },
-        }),
-        ...(variant === 'outlined' && {
-          backgroundColor: 'transparent',
-          border: '1px solid',
-          borderColor: baseColor,
-          color: baseColor,
-          '&:hover': {
-            backgroundColor: isDelete
-              ? 'var(--dst-danger-tint, rgba(198,40,40,0.10))'
-              : 'rgba(0, 0, 0, 0.04)',
-            borderColor: baseColor,
-            color: baseColor,
-            boxShadow: 'none',
-          },
-          '&:disabled': {
-            backgroundColor: 'transparent',
-            borderColor: baseColor,
-            color: baseColor,
-            opacity: 0.5,
-          },
-        }),
-        ...(variant === 'contained' && {
-          backgroundColor: sx?.backgroundColor || baseColor,
-          color: sx?.color || 'white',
-          '&:hover': {
-            backgroundColor: sx?.backgroundColor || hoverColor,
-            boxShadow: 'none',
-          },
-          '&:disabled': {
-            backgroundColor: sx?.backgroundColor || baseColor,
-            color: sx?.color || 'white',
-            opacity: 0.5,
-          },
-        }),
-        ...sx,
-      }}
+      style={{ ...vars, ...sxStyle, ...(isDisabled && sxDisabled ? sxDisabled : null) }}
     >
+      {startIcon}
       {loading ? (
-        <div className='flex items-center gap-1'>
+        <span className='flex items-center gap-1'>
           {children}
-          <CircularProgress
-            size={CircularProgressSize || 16}
-            sx={{
-              color: variant === 'outlined' ? baseColor : 'white',
+          <span
+            className='dst-spinner'
+            role='progressbar'
+            aria-hidden='true'
+            style={{
+              width: spinnerSize,
+              height: spinnerSize,
+              color: isOutlined ? baseColor : '#fff',
             }}
           />
-        </div>
+        </span>
       ) : (
         children
       )}
-    </Button>
+      {endIcon}
+    </button>
   );
 };

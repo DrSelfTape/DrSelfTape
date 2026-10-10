@@ -1,0 +1,115 @@
+/* CustomButton / CustomModal — the MUI-free implementations.
+ *
+ * These two components were the ONLY thing pulling @mui/material onto the
+ * first-paint critical path: App.jsx -> PublicRoutes -> RoleSelectionModal ->
+ * CustomButton/CustomModal -> @mui, for a Button, a CircularProgress, a Modal
+ * and a Close icon. 428KB — 42% of first-paint JS — for four primitives.
+ *
+ * The rules below reproduce MUI's default Button metrics exactly (padding,
+ * radius, type scale, min-width) so this swap changes no pixels. Colours are
+ * passed in as custom properties by the component, because inline style cannot
+ * express :hover or :disabled and sx() callers rely on both.
+ */
+
+.dst-btn {
+  /* MUI Button default metrics — do not "tidy" these, they are load-bearing. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 64px;
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.75;
+  letter-spacing: 0.02857em;
+  text-transform: none;
+  text-wrap: nowrap;
+  box-shadow: none;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 250ms cubic-bezier(0.4, 0, 0.2, 1),
+              color 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: var(--dst-tap-min, 44px);
+  background-color: var(--dst-btn-bg, transparent);
+  color: var(--dst-btn-fg, inherit);
+}
+
+.dst-btn:hover:not(:disabled) {
+  background-color: var(--dst-btn-bg-hover, var(--dst-btn-bg, transparent));
+  border-color: var(--dst-btn-border-hover, var(--dst-btn-border, transparent));
+  color: var(--dst-btn-fg-hover, var(--dst-btn-fg, inherit));
+}
+
+.dst-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  pointer-events: none;
+}
+
+.dst-btn--outlined {
+  border: 1px solid var(--dst-btn-border, currentColor);
+  background-color: transparent;
+}
+
+/* Dense keeps its small box and borrows the missing millimetres, so a toolbar
+ * or table-row action can be 36px tall and still clear Apple's 44px floor. */
+.dst-btn--dense {
+  min-height: var(--dst-tap-dense, 36px);
+  position: relative;
+}
+
+.dst-btn--dense::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  width: 100%;
+  height: var(--dst-tap-min, 44px);
+}
+
+/* Replaces MUI's CircularProgress. Same 16px default, same indeterminate spin. */
+.dst-spinner {
+  display: inline-block;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: dst-spin 0.9s linear infinite;
+  flex: none;
+}
+
+@keyframes dst-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dst-spinner { animation-duration: 2.4s; }
+  .dst-btn { transition: none; }
+}
+
+/* ---- Modal: replaces @mui/material/Modal ---------------------------------
+ * MUI's Modal gave us a portal, a backdrop, escape-to-close and scroll lock.
+ * The component supplies the portal and the key handling; these are the looks.
+ */
+.dst-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1300; /* MUI's default modal z-index — other overlays assume it */
+  background-color: rgba(0, 0, 0, 0.5);
+  animation: dst-fade-in 180ms ease-out;
+}
+
+@keyframes dst-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dst-modal-backdrop { animation: none; }
+}

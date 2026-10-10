@@ -86,28 +86,52 @@ export default defineConfig(({ mode }) => ({
     sourcemap: mode === 'production' && process.env.SENTRY_AUTH_TOKEN ? 'hidden' : false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-redux": ["@reduxjs/toolkit", "react-redux", "redux-persist"],
-          "vendor-recharts": ["recharts"],
-          "vendor-lucide": ["lucide-react"],
-          "vendor-mui": ["@mui/material", "@mui/icons-material", "@mui/x-date-pickers", "@emotion/react", "@emotion/styled", "@emotion/cache"],
-          "vendor-calendar": [
-            "@fullcalendar/core",
-            "@fullcalendar/daygrid",
-            "@fullcalendar/interaction",
-            "@fullcalendar/react",
-            "@fullcalendar/timegrid",
-          ],
-          "vendor-ai": ["pdfjs-dist"],
-          "vendor-sentry": ["@sentry/react"],
-          // posthog is dynamically imported only when VITE_POSTHOG_KEY is set;
-          // Rollup will emit its chunk on demand, so we don't pre-declare it.
-          "vendor-webrtc": ["@daily-co/daily-js"],
-          "vendor-media": ["react-media-recorder", "html2canvas", "canvas-confetti"],
-          "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
-          "vendor-headlessui": ["@headlessui/react"],
-          "vendor-dates": ["dayjs"],
+        // Function form, not the object form. The object form matches bare
+        // specifiers, but Vite pre-bundles dependencies so the id Rollup sees
+        // is a resolved path — which is why pinning "react/jsx-runtime" by name
+        // silently did nothing. Matching on the resolved id is deterministic.
+        //
+        // WHY THIS MATTERS: @emotion/react (grouped with MUI) also depends on
+        // react/jsx-runtime. Rollup files a shared module into whichever manual
+        // chunk claims it first, and it was landing in vendor-mui — so the entry
+        // chunk carried `import{j as f}from"./vendor-mui..."` and had to download
+        // 428KB of Material UI just to get JSX. React must win that race.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          const after = id.split("node_modules/").pop();
+          const pkg = after.startsWith("@")
+            ? after.split("/").slice(0, 2).join("/")
+            : after.split("/")[0];
+
+          // React first, so the JSX runtime and scheduler never get adopted by
+          // another vendor group.
+          if (["react", "react-dom", "react-router", "react-router-dom", "scheduler"].includes(pkg)) {
+            return "vendor-react";
+          }
+          const GROUPS = {
+            "vendor-redux": ["@reduxjs/toolkit", "react-redux", "redux-persist"],
+            "vendor-recharts": ["recharts"],
+            "vendor-lucide": ["lucide-react"],
+            "vendor-mui": ["@mui/material", "@mui/icons-material", "@mui/x-date-pickers",
+                           "@mui/system", "@mui/utils", "@mui/base",
+                           "@emotion/react", "@emotion/styled", "@emotion/cache"],
+            "vendor-calendar": ["@fullcalendar/core", "@fullcalendar/daygrid",
+                                "@fullcalendar/interaction", "@fullcalendar/react",
+                                "@fullcalendar/timegrid"],
+            "vendor-ai": ["pdfjs-dist"],
+            "vendor-sentry": ["@sentry/react"],
+            // posthog is dynamically imported only when VITE_POSTHOG_KEY is set;
+            // Rollup emits its chunk on demand, so we don't pre-declare it.
+            "vendor-webrtc": ["@daily-co/daily-js"],
+            "vendor-media": ["react-media-recorder", "html2canvas", "canvas-confetti"],
+            "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
+            "vendor-headlessui": ["@headlessui/react"],
+            "vendor-dates": ["dayjs"],
+          };
+          for (const [chunk, pkgs] of Object.entries(GROUPS)) {
+            if (pkgs.includes(pkg)) return chunk;
+          }
+          return undefined;
         },
       },
     },

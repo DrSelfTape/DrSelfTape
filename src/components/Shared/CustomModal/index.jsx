@@ -1,12 +1,15 @@
 // Library imports
-import Modal from '@mui/material/Modal';
+import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
-// Icons Import
-import CloseIcon from '@mui/icons-material/Close';
+// Icons Import — lucide is already in the eager bundle (28KB for every icon
+// we use); @mui/icons-material was not, and pulled 428KB of MUI with it.
+import { X as CloseIcon } from 'lucide-react';
 
 // Local Imports
 import { CustomButton } from '../CustomButton';
 import { Line } from '../Line';
+import '../controls.css';
 
 export const CustomModal = ({
   children,
@@ -93,15 +96,56 @@ export const CustomModal = ({
     close?.(event, reason);
   };
 
-  return (
-    <div>
-      <Modal
-        open={open}
-        onClose={handleModalClose}
-        disableEscapeKeyDown={disableEscapeKeyDown}
+  const pressStartedOnBackdrop = useRef(false);
+
+  // MUI's <Modal> supplied four things, replaced here in order: a portal, a
+  // backdrop, escape-to-close and scroll lock on the body.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKeyDown = (event) => {
+      if (event.key !== 'Escape' || disableEscapeKeyDown) return;
+      handleModalClose(event, 'escapeKeyDown');
+    };
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+    // handleModalClose is recreated each render; the listener reads the latest
+    // close/disable props through it, so depending on `open` alone is correct.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, disableEscapeKeyDown]);
+
+  if (!open) return null;
+
+  return createPortal(
+    (
+      <div
+        className='dst-modal-backdrop'
+        role='presentation'
+        onPointerDown={(event) => { pressStartedOnBackdrop.current = event.target === event.currentTarget; }}
+        onClick={(event) => {
+          // Close only when the press BOTH started and ended on the backdrop,
+          // so selecting text inside the panel and releasing outside it does
+          // not dismiss the dialog. Keyed off click rather than mousedown
+          // because WKWebView synthesises click from a tap reliably and
+          // mousedown inside a position:fixed overlay it does not
+          // ([[reference_ios_wkwebview_constraints]]).
+          if (event.target !== event.currentTarget) return;
+          if (!pressStartedOnBackdrop.current) return;
+          pressStartedOnBackdrop.current = false;
+          handleModalClose(event, 'backdropClick');
+        }}
       >
         {/* Main container */}
         <div
+          role='dialog'
+          aria-modal='true'
+          aria-label={typeof title === 'string' ? title : undefined}
+          onPointerDown={(event) => event.stopPropagation()}
+          onClick={(event) => event.stopPropagation()}
           className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white shadow-2xl rounded-lg pt-2.5 px-5 pb-2.5 ${mainBoxClassName}`}
         >
           {/* Modal Header */}
@@ -110,9 +154,14 @@ export const CustomModal = ({
           >
             <p className='text-[18px] text-gray-600'>{title}</p>
             {!hideCloseIcon && (
-              <div className='ml-auto cursor-pointer' onClick={() => close?.()}>
-                <CloseIcon />
-              </div>
+              <button
+                type='button'
+                aria-label='Close'
+                className='ml-auto cursor-pointer bg-transparent border-0 p-0 text-gray-600'
+                onClick={() => close?.()}
+              >
+                <CloseIcon size={24} />
+              </button>
             )}
           </div>
           <Line className={'mt-2.5'} />
@@ -174,7 +223,8 @@ export const CustomModal = ({
             </div>
           )}
         </div>
-      </Modal>
-    </div>
+      </div>
+    ),
+    document.body
   );
 };
