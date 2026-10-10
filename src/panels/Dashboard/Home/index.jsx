@@ -67,7 +67,6 @@ const NAV_DETAIL = {
   '/dashboard/green-room': { panel: 'green-room' },
   '/dashboard/auditions': { tab: 'auditions' },
   '/dashboard/cd-sim': { panel: 'cd-sim' },
-  '/dashboard/marketplace': { panel: 'marketplace' },
   '/dashboard/referral': { panel: 'referral' },
   '/dashboard/self-tapes': { panel: 'self-tapes' },
   '/dashboard/submissions': { panel: 'submissions' },
@@ -159,11 +158,16 @@ const ENGAGEMENT_ROTATION = [
     icon: BookOpen,
   },
   {
-    title: 'Book a paid reader',
-    description: 'Browse pro readers in the Marketplace and book a session.',
-    cta: 'Open Marketplace',
-    path: '/dashboard/marketplace',
-    icon: ShoppingBag,
+    // Was "Book a paid reader" → /dashboard/marketplace. Paid readers are
+    // hidden (routes/config.jsx: "zero opt-ins made this a dead end") and that
+    // panel is gone, so the card advertised a feature that redirected on web
+    // and silently no-op'd on mobile. The underlying want is real, so it now
+    // points at the live reader surface instead of being deleted.
+    title: 'Find a reader',
+    description: 'Match with another actor to read the other part with you.',
+    cta: 'Find a Reader',
+    path: '/dashboard/find-a-reader',
+    icon: Users2,
   },
   {
     title: 'Invite a friend',

@@ -115,8 +115,10 @@ function navDetailForPush(notif) {
       return { tab: 'green-room' };
     case 'booking_confirmed':
     case 'booking_cancelled':
-      // Reader-market booking changes open the marketplace.
-      return { panel: 'marketplace' };
+      // STUDIO booking changes (apps/bookings), not the reader market — the
+      // old comment said otherwise and sent the tap at a panel that no longer
+      // exists, so the push silently did nothing.
+      return { panel: 'my-studio' };
     // community_activity / admin_broadcast have no dedicated mobile screen —
     // they fall through to null, which still opens the in-app notification
     // center (drst-push-tap pops the bell) so the tap is never a dead end.

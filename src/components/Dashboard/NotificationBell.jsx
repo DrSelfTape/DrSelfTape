@@ -196,8 +196,11 @@ export default function NotificationBell({ onNavigate }) {
         rehearsal_missed:    { web: greenRoom,                      mobile: { panel: 'green-room' } },
         new_message:         { web: greenRoom,                      mobile: { panel: 'green-room' } },
         room_invite:         { web: '/dashboard/green-room',        mobile: { tab: 'green-room' } },
-        booking_confirmed:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
-        booking_cancelled:   { web: '/dashboard/marketplace',       mobile: { panel: 'marketplace' } },
+        // Bookings are STUDIO sessions (apps/bookings → operator/delivery), not
+        // the retired reader marketplace. They belong in My Studio, which is
+        // where a client's own studio sessions and footage live.
+        booking_confirmed:   { web: '/dashboard/my-studio',          mobile: { panel: 'my-studio' } },
+        booking_cancelled:   { web: '/dashboard/my-studio',          mobile: { panel: 'my-studio' } },
         // Coach collaboration flow — same targets routes/notificationConfig.js
         // gives the full Notifications page. Desktop only: the mobile shell has
         // no collaboration panel, so those clicks just mark read there.
