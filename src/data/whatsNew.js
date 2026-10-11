@@ -8,6 +8,19 @@
  */
 export const WHATS_NEW = [
   {
+    id: 14,
+    version: '1.0.31',
+    date: 'October 2026',
+    title: 'The fixes you asked for, and the fastest the app has been',
+    intro: 'Two things that were quietly in your way are gone, your audition tracker shows real titles again, and the app opens faster than it ever has.',
+    highlights: [
+      { emoji: '💬', title: 'You can reply in the Green Room', body: 'The message box was sitting under the tab bar on some phones, so you could read a conversation without being able to answer it. It fits properly now.' },
+      { emoji: '🎬', title: 'Slate gets out of the way', body: 'The clapperboard button used to sit on top of whatever you were reading. It now steps aside as you scroll and comes back when you reach the top.' },
+      { emoji: '📋', title: 'Your tracker says what it is', body: 'Recent auditions on the home screen were all reading "Untitled". They show the real project and role again.' },
+      { emoji: '⚡', title: 'Opens faster still', body: 'Roughly half as much to download before the first screen appears, on top of last week\'s slimming.' },
+    ],
+  },
+  {
     id: 13,
     version: '1.0.30',
     date: 'October 2026',
