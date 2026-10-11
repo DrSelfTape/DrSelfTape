@@ -7,6 +7,9 @@ import { useIsMobile } from '../../hooks/useIsMobile';
 import { trackCampaignArrival } from '../../utils/communications';
 import { clearCampaignNavigation, takeCampaignNavigation, CAMPAIGN_ROUTES } from '../../utils/communications';
 import { useSelector } from 'react-redux';
+// Styles every screen under this layout (rehearsal, review, the mobile shell).
+// Lives here rather than App.css so it is not render-blocking at boot.
+import '../../studio.css';
 
 export default function DashboardLayout() {
   const isMobile = useIsMobile();

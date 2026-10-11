@@ -7,7 +7,12 @@ import { RoleBasedRedirect } from './RoleBasedRedirect';
 // Direct file imports (not via the barrel) so tree-shaking can't pull in
 // the rest of components/Shared — keeps the initial bundle lean.
 import { ComingSoon } from '../components/Shared/ComingSoon';
-import { Layout } from '../components/Shared/Layout';
+// Layout is the DESKTOP CONSOLE shell — ConsoleFrame, the sidebar and its ~20
+// lucide icons, the command palette. Importing it eagerly, three lines under a
+// comment about keeping the initial bundle lean, put all of that in the boot
+// chunk for a logged-out user who will never see it. Every <Layout> route is
+// already lazy and already under the single <Suspense> in routes/index.jsx.
+const Layout = lazy(() => import('../components/Shared/Layout').then((m) => ({ default: m.Layout })));
 
 // Login is the most common entry point — keep it eager so first paint is fast.
 // All other auth/marketing pages lazy-load to keep the initial bundle small.

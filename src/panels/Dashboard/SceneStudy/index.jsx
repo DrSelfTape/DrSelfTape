@@ -3,11 +3,8 @@ import { useLocation, useSearchParams } from 'react-router-dom';
 import ScriptUpload from './ScriptUpload';
 import SidesUpload from './SidesUpload';
 import RolePicker from './RolePicker';
-import RecordTake from './RecordTake';
 import LiveSceneMode from './LiveSceneMode';
-import SelfTapeRecorder from './SelfTapeRecorder';
 import PostSessionJournal from '../../../components/Shared/PostSessionJournal';
-import FocusMode from '../../../components/Shared/FocusMode';
 import { markStep } from '../../../components/Dashboard/tutorialProgress';
 import useAIGate from '../../../components/AIConsent/useAIGate';
 import { parseScript, extractCharacters } from '../../../utils/scriptParse';
@@ -34,8 +31,6 @@ export default function SceneStudy() {
   const [selectedRole, setSelectedRole] = useState('');
   const [selectedVoice, setSelectedVoice] = useState('partner_male');
   const [showJournal, setShowJournal] = useState(null); // null or session type string
-  const [showFocusMode, setShowFocusMode] = useState(false);
-  const [pendingStep, setPendingStep] = useState(null); // step to go to after focus mode
   // Set when entering from Craft Journey — passed to LiveSceneMode so the
   // session-complete handler can dispatch completeCraftNode and unlock
   // the next node on the path.
@@ -104,29 +99,8 @@ export default function SceneStudy() {
   }, [step]);
 
   // Focus mode — breathing exercise before recording
-  if (showFocusMode) {
-    return (
-      <FocusMode
-        onComplete={() => {
-          setShowFocusMode(false);
-          if (pendingStep) { setStep(pendingStep); setPendingStep(null); }
-        }}
-      />
-    );
-  }
 
   // Self-tape recording mode — full screen camera overlay
-  if (step === 'self-tape') {
-    return (
-      <>
-        <SelfTapeRecorder
-          lines={parsedLines}
-          userRole={selectedRole}
-          onClose={() => { setShowJournal('self-tape'); setStep('pick-role'); }}
-        />
-      </>
-    );
-  }
 
   // Live scene mode — full screen overlay
   if (step === 'live') {
@@ -239,14 +213,6 @@ export default function SceneStudy() {
           onSelectVoice={setSelectedVoice}
           onStart={() => setStep('live')}
           onBack={() => setStep('upload')}
-        />
-      )}
-
-      {step === 'record' && (
-        <RecordTake
-          lines={parsedLines}
-          userRole={selectedRole}
-          onBack={() => { setShowJournal('scene-study'); setStep('pick-role'); }}
         />
       )}
 

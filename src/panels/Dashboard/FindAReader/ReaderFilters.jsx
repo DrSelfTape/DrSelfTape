@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { X } from 'lucide-react';
 import {
   updateReaderFilters,
-  fetchAvailableReaders,
   setFiltersLocal,
 } from '../../../redux/features/readers/readersMatchSlice';
 import { patchUserSettings } from '../../../redux/features/userSettings/userSettingsSlice';
@@ -96,7 +95,10 @@ const ReaderFilters = ({ onClose }) => {
       // still apply locally
     }
 
-    dispatch(fetchAvailableReaders(filters));
+    // No manual fetch here. patchUserSettings above changes savedFilters,
+    // which the effect in FindAReader/index.jsx watches — it does the fetch.
+    // Dispatching here as well meant one Apply tap fired three byte-identical
+    // deck requests and blanked the deck to its loading state three times.
     onClose();
   };
 

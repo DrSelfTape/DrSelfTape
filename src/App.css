@@ -1,7 +1,10 @@
 /* Fonts load from the single consolidated <link> in index.html (Ring 0). */
 @import 'tailwindcss';
 @import './tokens.css';
-@import './studio.css';
+/* studio.css is NOT imported here. It only styles screens under
+   DashboardLayout, and an @import in the boot stylesheet makes 12.8KB of it
+   render-blocking for a logged-out user who never sees any of them. It is
+   imported by DashboardLayout instead, so it loads with the console. */
 
 /* ── Theme Variables ─────────────────────────────────────────────────
  * The scale lives in ./tokens.css — one --dst-* ramp, with every legacy

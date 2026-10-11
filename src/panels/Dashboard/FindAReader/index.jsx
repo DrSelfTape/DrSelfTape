@@ -86,7 +86,11 @@ const FindAReader = ({ embedded = false }) => {
     } else {
       dispatch(fetchAvailableReaders());
     }
-  }, [settingsLoaded, savedFilters, dispatch]);
+    // Depend on the filters' VALUE, not the object identity. patchUserSettings
+    // mints a fresh object on both .pending and .fulfilled, so an identity dep
+    // re-ran this twice per Apply — two more identical deck fetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [settingsLoaded, JSON.stringify(savedFilters || null), dispatch]);
 
   const [celebrating, setCelebrating] = useState(null); // null | { matchId }
   // Swipes made this browsing session — drives the Session-Complete recap

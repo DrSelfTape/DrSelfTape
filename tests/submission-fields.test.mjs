@@ -18,7 +18,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const SUBMISSION_FIELDS = new Set([
-  'id', 'actor', 'actor_email', 'audition_slot',
+  // actor_email was removed from the serializer 2026-10-10 (a per-row user
+  // query for a field nothing read). Mirrored here the same day.
+  'id', 'actor', 'audition_slot',
   'project_name', 'role', 'casting_office', 'casting_director',
   'submitted_via', 'submitted_at', 'deadline', 'video_url',
   'status', 'notes', 'follow_up_date',
