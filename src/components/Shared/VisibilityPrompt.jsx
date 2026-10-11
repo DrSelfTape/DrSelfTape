@@ -170,8 +170,9 @@ export default function VisibilityPrompt({ onDismiss, compact = false }) {
 
 
       <p style={{ color: 'var(--aurora-sub)', fontSize: 12, lineHeight: 1.45, margin: 0, opacity: 0.85 }}>
-        Rather not put your face on a swipe card? The avatar makes you visible without one.
-        It&apos;s clearly a drawing, so nobody is misled about who they matched with.
+        A real photo is the only thing that deals you into the deck. An actor picking a
+        reader is picking a person to run lines with, so the illustrated avatar no longer
+        stands in for a face here &mdash; it still shows as your picture everywhere else.
       </p>
 
       {onDismiss && (

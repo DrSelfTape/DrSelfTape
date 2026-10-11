@@ -54,7 +54,10 @@
 
 .dst-btn--outlined {
   border: 1px solid var(--dst-btn-border, currentColor);
-  background-color: transparent;
+  /* var, not a literal: an outlined caller may pass its own backgroundColor via
+     sx, and that colour arrives as --dst-btn-bg so :hover can still override
+     it. Defaults to transparent, so no outlined button changes appearance. */
+  background-color: var(--dst-btn-bg, transparent);
 }
 
 /* Dense keeps its small box and borrows the missing millimetres, so a toolbar

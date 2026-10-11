@@ -56,7 +56,12 @@ async function open(t) {
   const page = await browser.newPage();
   const errors = [];
   page.on('pageerror', e => errors.push(e.message));
-  await page.setContent(`<style>${css}</style><div id="root"></div>`);
+  // #outside sits AFTER #root deliberately: the button tests use
+  // querySelector('button'), which takes the first in document order, so the
+  // rendered component must come first.
+  await page.setContent(
+    `<style>${css}</style><div id="root"></div><button id="outside">behind</button>`
+  );
   await page.addScriptTag({ content: bundle });
   t.after(async () => { await page.close(); assert.deepEqual(errors, []); });
   return page;
@@ -106,19 +111,34 @@ test('disabled and loading both block the click, and loading shows a spinner', a
 });
 
 test('sx still applies, including a theme token and a hover override', async t => {
+  // This used to assert the hover VARIABLE and call it done, while the rendered
+  // hover was dead: the base colour was also spread into the inline style, and
+  // an inline declaration outranks .dst-btn:hover, so the button never
+  // repainted. Assert the painted colour in both states instead — the variable
+  // being right is not the contract, the button changing colour is.
   const page = await open(t);
   await page.evaluate(() => renderButton({
     sx: { backgroundColor: '#123456', color: 'primary.contrastText', '&:hover': { backgroundColor: '#abcdef' } },
   }));
-  await page.waitForFunction(() => document.querySelector('button')?.style.backgroundColor === 'rgb(18, 52, 86)');
+  await page.waitForFunction(
+    () => getComputedStyle(document.querySelector('button')).backgroundColor === 'rgb(18, 52, 86)'
+  );
   assert.deepEqual(await page.evaluate(() => {
     const b = document.querySelector('button');
     return {
       bg: getComputedStyle(b).backgroundColor,
       fg: getComputedStyle(b).color,
       hoverVar: b.style.getPropertyValue('--dst-btn-bg-hover').trim(),
+      // The colours travel as custom properties ONLY; inline would win over :hover.
+      inlineBg: b.style.backgroundColor,
     };
-  }), { bg: 'rgb(18, 52, 86)', fg: 'rgb(255, 255, 255)', hoverVar: '#abcdef' });
+  }), { bg: 'rgb(18, 52, 86)', fg: 'rgb(255, 255, 255)', hoverVar: '#abcdef', inlineBg: '' });
+
+  await page.hover('button');
+  await page.waitForFunction(
+    () => getComputedStyle(document.querySelector('button')).backgroundColor === 'rgb(171, 205, 239)',
+    { timeout: 4000 },
+  ).catch(() => { throw new Error('hovering did not repaint the button to the sx &:hover colour'); });
 });
 
 test('a responsive sx value is dropped rather than emitted as [object Object]', async t => {
@@ -184,4 +204,143 @@ test('closing restores body scroll', async t => {
   await page.evaluate(() => renderModal({ open: false }));
   await page.waitForFunction(() => document.body.style.overflow === '');
   assert.equal(await page.evaluate(() => !!document.querySelector('[role="dialog"]')), false);
+});
+
+test('escape calls the CURRENT close prop, not the one captured when it opened', async t => {
+  // The keydown listener is registered once per open, so a plain closure froze
+  // whichever handleModalClose existed at that moment. A consumer that
+  // re-rendered with a different `close` got the stale one on Escape, while
+  // clicking the X got the new one — two buttons, two different behaviours.
+  const page = await open(t);
+  await page.evaluate(() => {
+    window.whichClose = [];
+    window.renderWithClose = (tag) => renderModal({ close: () => window.whichClose.push(tag) });
+    window.renderWithClose('first');
+  });
+  await page.waitForFunction(() => document.querySelector('[role="dialog"]'));
+  await page.evaluate(() => window.renderWithClose('second'));
+  await page.waitForFunction(() => document.querySelector('[role="dialog"]'));
+  await page.keyboard.press('Escape');
+  assert.deepEqual(await page.evaluate(() => window.whichClose), ['second']);
+});
+
+test('keyboard focus cannot leave the dialog, and comes back on close', async t => {
+  // MUI's Modal shipped a FocusTrap; the hand-rolled replacement had no focus
+  // management at all, so Tab walked straight out and Enter could fire a
+  // control behind the overlay.
+  const page = await open(t);
+  await page.evaluate(() => document.getElementById('outside').focus());
+  await page.evaluate(() => renderModal({}));
+  await page.waitForFunction(() => document.querySelector('[role="dialog"]'));
+
+  // Focus moved INTO the dialog on open.
+  assert.equal(
+    await page.evaluate(() => document.querySelector('[role="dialog"]').contains(document.activeElement)),
+    true,
+    'opening the dialog should move focus inside it',
+  );
+
+  // Tabbing all the way round must never land on the background button.
+  for (let i = 0; i < 12; i += 1) await page.keyboard.press('Tab');
+  assert.equal(await page.evaluate(() => document.activeElement.id), '',
+    'Tab escaped the dialog and reached a background control');
+  assert.equal(
+    await page.evaluate(() => document.querySelector('[role="dialog"]').contains(document.activeElement)),
+    true,
+    'focus should still be inside the dialog after cycling',
+  );
+
+  // Shift+Tab backwards from the first item must wrap, not escape.
+  await page.keyboard.down('Shift');
+  for (let i = 0; i < 12; i += 1) await page.keyboard.press('Tab');
+  await page.keyboard.up('Shift');
+  assert.equal(
+    await page.evaluate(() => document.querySelector('[role="dialog"]').contains(document.activeElement)),
+    true,
+    'Shift+Tab escaped the dialog',
+  );
+
+  // Closing returns focus where the user left it.
+  await page.evaluate(() => renderModal({ open: false }));
+  await page.waitForFunction(() => !document.querySelector('[role="dialog"]'));
+  assert.equal(await page.evaluate(() => document.activeElement.id), 'outside',
+    'closing should restore focus to whatever had it before');
+});
+
+test('shift+tab from the panel itself cannot walk out backwards', async t => {
+  // The panel is focusable at tabIndex -1 and takes focus when you click blank
+  // space inside the dialog. node.contains(node) is true, so the trap read that
+  // as "already inside" while the panel matched neither end of the focus ring —
+  // and Shift+Tab fell through to native backward navigation, out of the modal.
+  const page = await open(t);
+  await page.evaluate(() => document.getElementById('outside').focus());
+  await page.evaluate(() => renderModal({}));
+  await page.waitForFunction(() => document.querySelector('[role="dialog"]'));
+
+  await page.evaluate(() => document.querySelector('[role="dialog"]').focus());
+  assert.equal(await page.evaluate(() => document.activeElement.getAttribute('role')), 'dialog');
+
+  await page.keyboard.down('Shift');
+  await page.keyboard.press('Tab');
+  await page.keyboard.up('Shift');
+  assert.equal(
+    await page.evaluate(() => document.querySelector('[role="dialog"]').contains(document.activeElement)),
+    true,
+    'shift+tab from the panel escaped the dialog',
+  );
+  assert.notEqual(await page.evaluate(() => document.activeElement.id), 'outside');
+});
+
+test('a dialog with no focusable control keeps focus on the panel', async t => {
+  // Not reachable from any current caller (all render the close button), but a
+  // trap waiting for the first hideCloseIcon + noFooter caller: with no items
+  // to cycle, Tab fell through to native navigation and left the dialog.
+  const page = await open(t);
+  await page.evaluate(() => document.getElementById('outside').focus());
+  await page.evaluate(() => renderModal({ hideCloseIcon: true, noFooter: true }));
+  await page.waitForFunction(() => document.querySelector('[role="dialog"]'));
+  assert.equal(
+    await page.evaluate(() => document.activeElement.getAttribute('role')), 'dialog',
+    'the panel should hold focus when it has no focusable child',
+  );
+  for (const shift of [false, true]) {
+    if (shift) await page.keyboard.down('Shift');
+    await page.keyboard.press('Tab');
+    if (shift) await page.keyboard.up('Shift');
+    assert.equal(
+      await page.evaluate(() => document.activeElement.getAttribute('role')), 'dialog',
+      `${shift ? 'shift+tab' : 'tab'} left an empty dialog`,
+    );
+  }
+});
+
+test('a tabIndex -1 control cannot become a focus-trap boundary', async t => {
+  // <button tabIndex={-1}> matches the button selector but native Tab skips
+  // it. Treating it as the ring's first element meant the real edge was never
+  // detected and Shift+Tab walked past it into the page behind.
+  const page = await open(t);
+  await page.evaluate(() => {
+    const root = document.getElementById('root');
+    root.insertAdjacentHTML('beforebegin', '<button id="before">ahead</button>');
+  });
+  await page.evaluate(() => renderModal({
+    hideCloseIcon: true,
+    noFooter: true,
+    children: undefined,
+  }));
+  await page.waitForFunction(() => document.querySelector('[role="dialog"]'));
+  await page.evaluate(() => {
+    const body = document.querySelector('[role="dialog"] #body') || document.querySelector('[role="dialog"]');
+    body.insertAdjacentHTML('afterend',
+      '<button id="skipme" tabindex="-1">A</button><button id="real">B</button>');
+  });
+  await page.evaluate(() => document.getElementById('real').focus());
+  await page.keyboard.down('Shift');
+  await page.keyboard.press('Tab');
+  await page.keyboard.up('Shift');
+  assert.equal(
+    await page.evaluate(() => document.querySelector('[role="dialog"]').contains(document.activeElement)),
+    true,
+    'shift+tab escaped past a tabIndex -1 control',
+  );
 });

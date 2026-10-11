@@ -31,7 +31,7 @@ import SidesUpload from "../Dashboard/SceneStudy/SidesUpload";
 import AuroraOnboarding from "../Onboarding/AuroraOnboarding";
 import { V1HeroGraph, V1Sparkles } from "../../components/Aurora";
 import { AuroraHUD, AuroraQuests, AuroraStreakGuard, AuroraSeason, AuroraProgressCard, auroraCelebrate, SlateTip } from "../../components/Aurora/game";
-import { nextFabHidden } from "../../components/Slate/fabScroll";
+import { nextFabState } from "../../components/Slate/fabScroll";
 import SlateCopilot, { SlateFAB } from "../../components/Slate/SlateCopilot";
 import NotificationBell from "../../components/Dashboard/NotificationBell";
 import TutorialChecklist from "../../components/Dashboard/TutorialChecklist";
@@ -4007,16 +4007,33 @@ export default function DrSelfTapeApp() {
   // FAB should: it steps aside while you are reading and comes back when you
   // stop. Hidden on the way DOWN, back on the way up or at rest.
   const [fabHidden, setFabHidden] = useState(false);
+  // Mirrors fabHidden for the scroll handler, which must read the current value
+  // without the handler being recreated on every toggle.
+  const fabHiddenRef = useRef(false);
+  const fabAnchorRef = useRef(0);
   const fabIdleRef = useRef(null);
   const handleContentScroll = (e) => {
     // Track scroll for any consumers that care, but no longer toggle
     // headerHidden — the bar stays anchored to the top of the screen.
     const y = e.currentTarget.scrollTop;
-    setFabHidden((prev) => nextFabHidden(prev, y, lastScrollYRef.current));
+    // Anchor, not "the previous event": re-pointing it every event meant a slow
+    // drag (<=6px per event) never cleared the slack and the mascot never moved.
+    const next = nextFabState({ hidden: fabHiddenRef.current, anchor: fabAnchorRef.current }, y);
+    if (next.hidden !== fabHiddenRef.current) {
+      fabHiddenRef.current = next.hidden;
+      setFabHidden(next.hidden);
+    }
+    fabAnchorRef.current = next.anchor;
     lastScrollYRef.current = y;
     // Scrolling can stop without another event, so bring it back on idle.
     if (fabIdleRef.current) clearTimeout(fabIdleRef.current);
-    fabIdleRef.current = setTimeout(() => setFabHidden(false), 900);
+    fabIdleRef.current = setTimeout(() => {
+      // Coming back on idle has to reset the mirror AND re-anchor, or the next
+      // scroll measures from a stale place and the first gesture is ignored.
+      fabHiddenRef.current = false;
+      fabAnchorRef.current = lastScrollYRef.current;
+      setFabHidden(false);
+    }, 900);
   };
   useEffect(() => () => { if (fabIdleRef.current) clearTimeout(fabIdleRef.current); }, []);
   // No-op kept so existing useEffect deps don't break.

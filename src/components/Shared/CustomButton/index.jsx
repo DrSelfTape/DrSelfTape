@@ -47,14 +47,14 @@ export const CustomButton = ({
   // expressed inline, and callers pass both through sx.
   const vars = {};
   if (isOutlined) {
-    vars['--dst-btn-bg'] = 'transparent';
-    vars['--dst-btn-fg'] = baseColor;
-    vars['--dst-btn-border'] = baseColor;
+    vars['--dst-btn-bg'] = sxStyle.backgroundColor || 'transparent';
+    vars['--dst-btn-fg'] = sxStyle.color || baseColor;
+    vars['--dst-btn-border'] = sxStyle.borderColor || baseColor;
     vars['--dst-btn-bg-hover'] = isDelete
       ? 'var(--dst-danger-tint, rgba(198,40,40,0.10))'
       : 'rgba(0, 0, 0, 0.04)';
-    vars['--dst-btn-fg-hover'] = baseColor;
-    vars['--dst-btn-border-hover'] = baseColor;
+    vars['--dst-btn-fg-hover'] = sxStyle.color || baseColor;
+    vars['--dst-btn-border-hover'] = sxStyle.borderColor || baseColor;
   } else {
     // A caller that set its own background/colour via sx owns both states,
     // exactly as it did when sx was spread last into MUI's styles.
@@ -62,12 +62,26 @@ export const CustomButton = ({
     vars['--dst-btn-fg'] = sxStyle.color || '#fff';
     vars['--dst-btn-bg-hover'] = sxStyle.backgroundColor || hoverColor;
     vars['--dst-btn-fg-hover'] = sxStyle.color || '#fff';
+    if (sxStyle.borderColor) {
+      vars['--dst-btn-border'] = sxStyle.borderColor;
+      vars['--dst-btn-border-hover'] = sxStyle.borderColor;
+    }
   }
   // An explicit &:hover in sx wins over everything above.
   if (sxHover?.backgroundColor) vars['--dst-btn-bg-hover'] = sxHover.backgroundColor;
   if (sxHover?.color) vars['--dst-btn-fg-hover'] = sxHover.color;
   if (sxHover?.borderColor) vars['--dst-btn-border-hover'] = sxHover.borderColor;
-  if (sxStyle.borderColor) vars['--dst-btn-border'] = sxStyle.borderColor;
+
+  // Those three colours now travel ONLY as custom properties, and must not also
+  // be spread inline below. An inline declaration outranks every stylesheet
+  // rule, so while `backgroundColor` sat in the inline style, `.dst-btn:hover`
+  // could never repaint a button whose base colour came from sx — the hover
+  // was dead on the six callers that pass a base colour AND an '&:hover',
+  // even though the var above was being set correctly.
+  const sxRest = { ...sxStyle };
+  delete sxRest.backgroundColor;
+  delete sxRest.color;
+  delete sxRest.borderColor;
 
   const classes = [
     'dst-btn',
@@ -85,7 +99,7 @@ export const CustomButton = ({
       disabled={isDisabled}
       className={classes}
       aria-busy={loading ? true : undefined}
-      style={{ ...vars, ...sxStyle, ...(isDisabled && sxDisabled ? sxDisabled : null) }}
+      style={{ ...vars, ...sxRest, ...(isDisabled && sxDisabled ? sxDisabled : null) }}
     >
       {startIcon}
       {loading ? (

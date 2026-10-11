@@ -7,40 +7,67 @@
 // the clue: it only collides with whatever happens to land in that band.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { nextFabHidden, FAB_SCROLL_SLACK, FAB_TOP_ZONE } from '../src/components/Slate/fabScroll.js';
+import {
+  nextFabState, FAB_SCROLL_SLACK, FAB_TOP_ZONE,
+} from '../src/components/Slate/fabScroll.js';
 
-test('scrolling down hides it, scrolling back up brings it home', () => {
-  assert.equal(nextFabHidden(false, 200, 100), true, 'a clear downward scroll should hide it');
-  assert.equal(nextFabHidden(true, 100, 200), false, 'scrolling up should bring it back');
+// ── nextFabState: the same decision measured against a held anchor ──────────
+// The shell re-pointed the comparison on every scroll event, so a drag moving
+// <=FAB_SCROLL_SLACK per event never cleared the slack and the mascot never
+// stepped aside — the collision the feature exists to fix, on exactly the slow
+// scroll where a user is reading.
+const run = (ys, start = { hidden: false, anchor: 0 }) =>
+  ys.reduce((state, y) => nextFabState(state, y), start);
+
+test('a slow sustained scroll eventually hides it', () => {
+  // 5px per event: every single delta is inside the slack.
+  const ys = [];
+  for (let y = 30; y <= 200; y += 5) ys.push(y);
+  assert.equal(run(ys, { hidden: false, anchor: 30 }).hidden, true,
+    'slow downward movement must accumulate against the anchor');
 });
 
-test('it is always visible near the top of a list', () => {
-  // A screen the user has not scrolled should show the mascot — that is the
-  // whole point of a FAB.
-  assert.equal(nextFabHidden(true, 0, 500), false);
-  assert.equal(nextFabHidden(true, FAB_TOP_ZONE, 500), false);
-  assert.equal(nextFabHidden(false, FAB_TOP_ZONE, 0), false);
+test('jitter around a resting point still never hides it', () => {
+  // Oscillation cannot drag the anchor along, so it cannot accumulate.
+  const ys = [];
+  for (let i = 0; i < 40; i += 1) ys.push(400 + (i % 2 ? 4 : -4));
+  assert.equal(run(ys, { hidden: false, anchor: 400 }).hidden, false,
+    'a thumb resting on the glass must not strobe the mascot');
 });
 
-test('a thumb resting on the glass does not flicker it', () => {
-  // Sub-slack jitter in either direction must hold the current state, or the
-  // mascot strobes while a finger rests on a scrolling list.
-  for (const dy of [0, 1, -1, FAB_SCROLL_SLACK, -FAB_SCROLL_SLACK]) {
-    assert.equal(nextFabHidden(true, 400 + dy, 400), true, `dy=${dy} should hold hidden`);
-    assert.equal(nextFabHidden(false, 400 + dy, 400), false, `dy=${dy} should hold visible`);
-  }
+test('scrolling back up brings it home', () => {
+  const after = run([200, 100], { hidden: false, anchor: 100 });
+  assert.equal(after.hidden, false);
 });
 
-test('iOS rubber-banding past the top does not leave it hidden', () => {
-  // Overscroll reports a negative scrollTop on iOS; that must read as "at the
-  // top", not as a large upward delta that happens to work by accident.
-  assert.equal(nextFabHidden(true, -40, 10), false);
+test('the top zone always wins and re-anchors', () => {
+  const after = nextFabState({ hidden: true, anchor: 900 }, 0);
+  assert.deepEqual(after, { hidden: false, anchor: 0 });
+});
+
+test('rubber-banding past the top reads as at-the-top', () => {
+  assert.equal(nextFabState({ hidden: true, anchor: 10 }, -40).hidden, false);
 });
 
 test('a long flick down hides it and it stays hidden through the flick', () => {
-  let hidden = false;
-  for (const y of [0, 60, 180, 340, 520, 700]) {
-    hidden = nextFabHidden(hidden, y, y - 60);
+  assert.equal(run([0, 60, 180, 340, 520, 700]).hidden, true,
+    'it should remain out of the way for the whole flick');
+});
+
+test('a delta of exactly the slack holds the current state', () => {
+  // The boundary is deliberately inclusive: the slack is what stops a resting
+  // thumb strobing the mascot, so exactly-slack must not flip it.
+  for (const dy of [0, FAB_SCROLL_SLACK, -FAB_SCROLL_SLACK]) {
+    const from = { hidden: true, anchor: 400 };
+    assert.equal(nextFabState(from, 400 + dy).hidden, true, `dy=${dy} should hold hidden`);
+    assert.equal(
+      nextFabState({ hidden: false, anchor: 400 }, 400 + dy).hidden, false,
+      `dy=${dy} should hold visible`,
+    );
   }
-  assert.equal(hidden, true, 'it should remain out of the way for the whole flick');
+});
+
+test('it is visible anywhere inside the top zone', () => {
+  assert.equal(nextFabState({ hidden: true, anchor: 500 }, FAB_TOP_ZONE).hidden, false);
+  assert.equal(nextFabState({ hidden: true, anchor: 0 }, 1).hidden, false);
 });
