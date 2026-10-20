@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test": "node --test --test-concurrency=1 --test-timeout=150000 tests/*.test.mjs",
     "preview": "vite preview",
+    "sync:ios": "npx cap sync ios && node scripts/strip-native-cruft.mjs",
     "test:a11y": "node --test --test-concurrency=1 --test-timeout=150000 tests/accessibility.browser.test.mjs",
     "qa:build": "node scripts/build-qa-harness.mjs",
     "qa:ios": "python3 scripts/build-qa-ios.py",
