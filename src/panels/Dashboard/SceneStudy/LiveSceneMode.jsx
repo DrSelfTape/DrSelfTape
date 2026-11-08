@@ -1464,8 +1464,16 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch { /* Optional operation failed; continue with the existing fallback. */ }
       }
-      try { NativeSpeech.stop(); } catch { /* not running */ }
-      try { NativeSpeech.removeAllListeners(); } catch { /* none */ }
+      // Capacitor resolves a plugin's web stub through a dynamic import, so
+      // these REJECT A PROMISE rather than throwing — and a try/catch around a
+      // call we never await catches nothing. On the web the stub rejects with
+      // "Speech recognition is not available on the web." and it surfaced as an
+      // unhandled rejection every time someone left Live Scene Mode in a
+      // browser (Sentry JAVASCRIPT-REACT-R). Unmount cleanup cannot be async,
+      // so catch the promise instead. Promise.resolve().then() rather than a
+      // bare .catch() because it also covers a stub that throws synchronously.
+      Promise.resolve().then(() => NativeSpeech.stop()).catch(() => { /* not running */ });
+      Promise.resolve().then(() => NativeSpeech.removeAllListeners()).catch(() => { /* none */ });
       if (nativeTickRef.current) clearInterval(nativeTickRef.current);
       if (nativeConfirmRef.current) clearTimeout(nativeConfirmRef.current);
       if (cueConfirmRef.current) clearTimeout(cueConfirmRef.current);
