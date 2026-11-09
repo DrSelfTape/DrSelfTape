@@ -14,12 +14,25 @@ export async function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   if (!dsn) return;
 
+  // A dev build must not report into the production project. `environment`
+  // below falls back to import.meta.env.MODE, so every `npm run dev` session
+  // filed events tagged environment=development — 395 of them landed on one
+  // issue (JAVASCRIPT-REACT-9, "VoipCall plugin is not implemented on ios"),
+  // which then sat at the TOP of the board by volume for five months
+  // describing a bug that only ever existed in builds through 1.0.21. Loud,
+  // permanent, and not about production at all.
+  //
+  // Setting VITE_SENTRY_ENVIRONMENT opts a local build back in deliberately,
+  // for when you do want to debug against Sentry.
+  const explicitEnv = import.meta.env.VITE_SENTRY_ENVIRONMENT;
+  if (!explicitEnv && !import.meta.env.PROD) return;
+
   const Sentry = await import('@sentry/react');
   _sentry = Sentry;
 
   Sentry.init({
     dsn,
-    environment: import.meta.env.VITE_SENTRY_ENVIRONMENT || import.meta.env.MODE,
+    environment: explicitEnv || import.meta.env.MODE,
     sendDefaultPii: false,
     integrations: [
       Sentry.browserTracingIntegration(),
