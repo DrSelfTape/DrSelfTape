@@ -23,6 +23,7 @@ import VisibilityPrompt from '../../../components/Shared/VisibilityPrompt';
 import TutorialAchievement from '../../../components/Dashboard/TutorialAchievement';
 import DailyChallengeCard from '../../../components/Dashboard/DailyChallengeCard';
 import StudioHomeHero from '../../../components/FutureStudio/StudioHomeHero';
+import { consoleSurfaceEnabled } from '../../../utils/consoleSurface';
 
 const TYPE_COLORS = {
   film: 'var(--aurora-heritage-gold)',
@@ -217,6 +218,10 @@ export default function DashboardHome() {
   const { submissions } = useSelector((state) => state.submissions);
   const profile = useSelector((s) => s.profile?.profile);
 
+  // Resolved once per mount. consoleSurfaceEnabled() reads window.innerWidth,
+  // so it does not react to a resize across the 992px line — same contract as
+  // theme.jsx, which stamps data-surface from the same predicate on mount.
+  const [consoleSurface] = useState(consoleSurfaceEnabled);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showTutorialAchievement, setShowTutorialAchievement] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -318,7 +323,7 @@ export default function DashboardHome() {
   const showNextStep = nextStep.key !== 'first_review';
 
   return (
-    <div className="dst-studio-panel dst-home future-home-surface">
+    <div className={`dst-studio-panel dst-home${consoleSurface ? '' : ' future-home-surface'}`}>
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
@@ -328,7 +333,31 @@ export default function DashboardHome() {
         <NotificationBell />
       </div>
 
-      <StudioHomeHero firstReview={!firstReviewDone} onReview={() => go(TAPE_REVIEW_PATH)} onPractice={() => go('/dashboard/scene-study')} onReaders={() => go('/dashboard/find-a-reader')} />
+      {/* Aurora Noir governs desktop web, and its spec rebuilds Home wholesale
+          (Ring 2) with the actor's own latest frame as the hero. StudioHomeHero
+          is the NATIVE hero: it hard-codes a green palette with glow, orbiting
+          depth and infinite motion — three of the spec's hard bans (§7.2, §7.4,
+          §7.7) — and only 5 of its 69 colours have a token equivalent, so
+          re-skinning it would not fix any of that. Until Ring 2 lands, desktop
+          web keeps the tokenised studio-hero it ran until 2026-11-09, which
+          already reads gold on the console surface and green on native. */}
+      {consoleSurface ? (
+        <section className="studio-hero">
+          <span className="studio-hero-mark" aria-hidden="true"><Sparkles className="w-5 h-5" /></span>
+          <span className="studio-eyebrow">Tape Review</span>
+          <h2 className="studio-hero-title">An honest read on your own tape</h2>
+          <p className="studio-hero-copy">
+            Upload a take and get casting-grade notes in minutes — what landed, what read
+            as indicated, and the one fix worth making before you send it.
+          </p>
+          <button type="button" className="studio-cta" onClick={() => go(TAPE_REVIEW_PATH)}>
+            {firstReviewDone ? 'Review a new tape' : 'Get my first notes'}
+            <span aria-hidden="true">&rarr;</span>
+          </button>
+        </section>
+      ) : (
+        <StudioHomeHero firstReview={!firstReviewDone} onReview={() => go(TAPE_REVIEW_PATH)} onPractice={() => go('/dashboard/scene-study')} onReaders={() => go('/dashboard/find-a-reader')} />
+      )}
       <div className="future-home-support">
       {/* Studio clients — desktop only, on purpose. The studio hub is a
           separate product surface from the mobile actor app; see the fork
