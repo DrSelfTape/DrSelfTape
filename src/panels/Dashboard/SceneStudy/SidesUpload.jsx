@@ -23,7 +23,7 @@ import { aiIdempotencyHeaders } from '../../../utils/aiIdempotency';
  * ultimately feed the existing LiveSceneMode reader.
  */
 
-const GOLD = '#D4A85F';
+const GOLD = '#b4dda4';
 
 // Scene → the CHARACTER: dialogue string the existing parser/reader expects.
 // Drop action + parentheticals — the AI reader only speaks dialogue, and a
@@ -131,7 +131,7 @@ export default function SidesUpload({ onReady }) {
       {/* Upload tile */}
       <label htmlFor="sides-upload-input" style={{ display: 'block', cursor: loading ? 'default' : 'pointer', pointerEvents: loading ? 'none' : 'auto' }}>
         <div style={{
-          background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.06))',
+          background: 'linear-gradient(135deg, #b4dda424, #87b19a10)',
           borderRadius: 18, padding: 22, marginBottom: 14,
           border: `1.5px solid ${GOLD}55`, position: 'relative', overflow: 'hidden',
         }}>
@@ -172,7 +172,7 @@ export default function SidesUpload({ onReady }) {
       {error && (
         <div style={{
           background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)',
-          color: '#b91c1c', borderRadius: 12, padding: '10px 14px', fontSize: 13, marginBottom: 14,
+          color: 'var(--dst-danger)', borderRadius: 12, padding: '10px 14px', fontSize: 13, marginBottom: 14,
         }}>{error}</div>
       )}
 
@@ -221,7 +221,7 @@ export default function SidesUpload({ onReady }) {
               }}>Cancel</button>
               <button onClick={start} disabled={!role} style={{
                 flex: 2, padding: 14, borderRadius: 14, border: 'none',
-                background: `linear-gradient(135deg, ${GOLD}, #7A5A18)`, color: '#0E0D0A',
+                background: `linear-gradient(135deg, ${GOLD}, #8bb497)`, color: '#0E0D0A',
                 fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: role ? 1 : 0.5,
               }}>Start reading →</button>
             </div>

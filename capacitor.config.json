@@ -4,19 +4,19 @@
   "webDir": "dist",
   "ios": {
     "contentInset": "never",
-    "backgroundColor": "#FAFAF7",
+    "backgroundColor": "#0B1516",
     "preferredContentMode": "mobile"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
-      "backgroundColor": "#FAFAF7",
+      "backgroundColor": "#0B1516",
       "showSpinner": false,
       "launchAutoHide": true
     },
     "StatusBar": {
-      "style": "LIGHT",
-      "backgroundColor": "#FAFAF7"
+      "style": "DARK",
+      "backgroundColor": "#0B1516"
     },
     "Keyboard": {
       "resize": "native",

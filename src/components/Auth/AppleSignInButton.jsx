@@ -260,7 +260,7 @@ export default function AppleSignInButton({ disabled, onError, onSuccess, dateOf
           style={{
             width: '100%', height: 48, padding: '0 14px', borderRadius: 14,
             border: '1.5px solid var(--aurora-line)',
-            background: 'rgba(255,255,255,0.7)',
+            background: 'var(--dst-glass)',
             fontFamily: "'Space Grotesk', system-ui, sans-serif",
             fontSize: 16, color: 'var(--aurora-text)', outline: 'none',
           }}

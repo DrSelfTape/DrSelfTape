@@ -79,7 +79,7 @@ const Header = ({
                 onClick={onCancel}
                 sx={{
                   borderColor: '#6b7280',
-                  color: '#6b7280',
+                  color: 'var(--dst-ink-2)',
                   fontSize: '14px',
                   fontWeight: 500,
                   letterSpacing: '0.01em',
@@ -89,7 +89,7 @@ const Header = ({
                   '&:hover': {
                     backgroundColor: 'rgba(107, 114, 128, 0.05)',
                     borderColor: '#4b5563',
-                    color: '#4b5563',
+                    color: 'var(--dst-ink-2)',
                     boxShadow: 'none',
                     transform: 'translateY(-1px)',
                   },

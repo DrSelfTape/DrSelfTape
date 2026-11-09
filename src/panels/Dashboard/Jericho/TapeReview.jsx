@@ -6,6 +6,7 @@
  */
 import { useState, useRef, useEffect } from 'react';
 import DesktopPerformanceDNA from './DesktopPerformanceDNA';
+import StudioReviewLoading from '../../../components/FutureStudio/StudioReviewLoading';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTokenBalance } from '../../../hooks/useTokenBalance';
 import {
@@ -60,14 +61,14 @@ function FirstReviewPaywall({ onUpgrade }) {
   useEffect(() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_SHOWN); }, []);
   return (
     <div className="rounded-2xl border border-[#D4A85F]/30 p-5 text-center tr-reveal" style={{ '--tr-i': 7, background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.05))' }}>
-      <h3 className="text-base font-bold text-[#0A0A0A] leading-snug">You got the headline. There&apos;s a full casting read behind it.</h3>
-      <p className="text-sm text-[rgba(10,10,10,0.6)] mt-1.5 leading-relaxed">
+      <h3 className="text-base font-bold text-[var(--dst-ink)] leading-snug">You got the headline. There&apos;s a full casting read behind it.</h3>
+      <p className="text-sm text-[var(--dst-ink-3)] mt-1.5 leading-relaxed">
         Unlock the rest on every tape: the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA. Any plan.
       </p>
       <button
         onClick={onUpgrade}
-        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
-        style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all hover:shadow-lg dst-press"
+        style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
       >
         <Sparkles size={15} /> Unlock my full read
       </button>
@@ -94,10 +95,10 @@ function FullReadLocked({ onUpgrade, hidden }) {
   return (
     <div className="rounded-2xl border border-[#D4A85F]/30 p-5 tr-reveal" style={{ '--tr-i': 7, background: 'linear-gradient(135deg, rgba(212,168,95,0.10), rgba(122,90,24,0.04))' }}>
       <div className="flex items-center gap-2">
-        <Lock size={15} className="text-[#7A5A18]" />
-        <h3 className="text-sm font-bold text-[#0A0A0A]">Your full casting read is ready</h3>
+        <Lock size={15} className="text-[var(--dst-brass-ink)]" />
+        <h3 className="text-sm font-bold text-[var(--dst-ink)]">Your full casting read is ready</h3>
       </div>
-      <p className="text-sm text-[rgba(10,10,10,0.62)] mt-1.5 leading-relaxed">
+      <p className="text-sm text-[var(--dst-ink-3)] mt-1.5 leading-relaxed">
         {bits.length > 0
           ? `You've got the headline. This tape also has ${bits.join(' · ')}. Unlock it on every tape. Any plan.`
           : "You've got the headline. Unlock the full craft breakdown, every adjustment, your technical scorecard, and your Performance DNA, on every tape. Any plan."}
@@ -105,15 +106,15 @@ function FullReadLocked({ onUpgrade, hidden }) {
       <div className="mt-3 space-y-2" style={{ filter: 'blur(5px)', opacity: 0.5, pointerEvents: 'none' }} aria-hidden="true">
         {['Framing', 'Eyeline', 'Listening', 'Emotional arc'].map((l) => (
           <div key={l} className="flex items-center gap-2">
-            <span className="text-[11px] text-[rgba(10,10,10,0.5)]" style={{ width: 90 }}>{l}</span>
+            <span className="text-[11px] text-[var(--dst-ink-3)]" style={{ width: 90 }}>{l}</span>
             <div className="flex-1 h-1.5 rounded-full bg-[#D4A85F]/20"><div className="h-1.5 rounded-full bg-[#D4A85F]" style={{ width: '72%' }} /></div>
           </div>
         ))}
       </div>
       <button
         onClick={() => { trackEvent('fullread_locked_tap'); onUpgrade?.(); }}
-        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
-        style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+        className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all hover:shadow-lg dst-press"
+        style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
       >
         <Sparkles size={15} /> Unlock the full read
       </button>
@@ -150,9 +151,9 @@ function NotificationsNudge() {
   };
   return (
     <div className="rounded-2xl border border-[#D4A85F]/25 p-4 flex items-start gap-3" style={{ background: 'rgba(212,168,95,0.06)' }}>
-      <Bell size={16} className="text-[#7A5A18] flex-shrink-0 mt-0.5" />
+      <Bell size={16} className="text-[var(--dst-brass-ink)] flex-shrink-0 mt-0.5" />
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-[#0A0A0A] font-medium leading-snug">
+        <p className="text-sm text-[var(--dst-ink)] font-medium leading-snug">
           Turn on notifications to get your notes the moment they&apos;re ready.
         </p>
         <button
@@ -160,7 +161,7 @@ function NotificationsNudge() {
           onClick={openNotificationSettings}
           onTouchEnd={(e) => { e.preventDefault(); openNotificationSettings(); }}
           style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-          className="text-xs font-bold text-[#7A5A18] underline mt-1.5"
+          className="text-xs font-bold text-[var(--dst-brass-ink)] underline mt-1.5"
         >
           Open Settings
         </button>
@@ -171,7 +172,7 @@ function NotificationsNudge() {
         onTouchEnd={(e) => { e.preventDefault(); dismiss(); }}
         style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
         aria-label="Dismiss"
-        className="flex-shrink-0 text-[rgba(10,10,10,0.35)]"
+        className="flex-shrink-0 text-[var(--dst-ink-3)]"
       >
         <X size={14} />
       </button>
@@ -311,18 +312,8 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
   const uploadShownRef = useRef(false); // fire first_review_upload_shown once
   const notesViewedRef = useRef(false); // fire first_review_notes_viewed once
 
-  // Staged analysis progress (Tier 2 item 3): once the R2 upload completes,
-  // the multi-minute wait is split into two honest, time-based stages —
-  // "watching" (frames + audio pass) then "writing" (the notes come together).
-  // No fake percentages; the stage flip just keeps the screen visibly alive.
-  const [analysisStage, setAnalysisStage] = useState('watching');
+  // Only the upload exposes measured progress; provider work is indeterminate.
   const analysisUploading = tapeReviewLoading && uploadProgress < 100;
-  useEffect(() => {
-    if (!tapeReviewLoading) { setAnalysisStage('watching'); return; }
-    if (analysisUploading) return; // stage clock starts when the upload lands
-    const t = setTimeout(() => setAnalysisStage('writing'), 45000);
-    return () => clearTimeout(t);
-  }, [tapeReviewLoading, analysisUploading]);
 
   // First time an actor opens the analyzer → show the walkthrough. Suppressed
   // during the free first review (it would stack on the fresh offer handoff);
@@ -492,10 +483,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
     <>
       {showTutorial && <TapeAnalyzerTutorial onClose={() => setShowTutorial(false)} />}
       <div className="flex items-center gap-1.5 mb-4">
-        <div className="flex gap-1.5 p-1 rounded-xl bg-[#F4F4EE] flex-1">
+        <div className="flex gap-1.5 p-1 rounded-xl bg-[var(--dst-surface-sunken)] flex-1">
           <button
             onClick={() => setMode('single')}
-            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'single' ? 'bg-white text-[#0A0A0A] shadow-sm' : 'text-[rgba(10,10,10,0.5)]'}`}
+            className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'single' ? 'bg-[var(--dst-surface)] text-[var(--dst-ink)] shadow-sm' : 'text-[var(--dst-ink-3)]'}`}
           >
             <Sparkles size={13} /> Review a take
           </button>
@@ -505,7 +496,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           {!firstReview && !recording && (
             <button
               onClick={() => setMode('compare')}
-              className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'compare' ? 'bg-white text-[#0A0A0A] shadow-sm' : 'text-[rgba(10,10,10,0.5)]'}`}
+              className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-colors ${mode === 'compare' ? 'bg-[var(--dst-surface)] text-[var(--dst-ink)] shadow-sm' : 'text-[var(--dst-ink-3)]'}`}
             >
               <Trophy size={13} /> Compare takes
             </button>
@@ -514,7 +505,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         <button
           onClick={() => setShowTutorial(true)}
           aria-label="How the analyzer works"
-          className="w-9 h-9 rounded-xl bg-[#F4F4EE] flex items-center justify-center text-[#7A5A18] flex-shrink-0 hover:bg-[#D4A85F]/15 transition-colors"
+          className="w-9 h-9 rounded-xl bg-[var(--dst-surface-sunken)] flex items-center justify-center text-[var(--dst-brass-ink)] flex-shrink-0 hover:bg-[#D4A85F]/15 transition-colors"
         >
           <HelpCircle size={17} />
         </button>
@@ -614,65 +605,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
   // ─── Loading — staged progress (upload → watching → writing) ────────
   if (tapeReviewLoading) {
-    const uploading = analysisUploading;
-    const stages = [
-      {
-        key: 'upload',
-        label: recording ? 'Loading your saved take' : uploading ? `Uploading your take… ${uploadProgress}%` : 'Take uploaded',
-        active: uploading,
-        done: !uploading,
-      },
-      {
-        key: 'watching',
-        label: 'Watching your performance',
-        active: !uploading && analysisStage === 'watching',
-        done: !uploading && analysisStage === 'writing',
-      },
-      {
-        key: 'writing',
-        label: 'Writing your casting notes',
-        active: !uploading && analysisStage === 'writing',
-        done: false,
-      },
-    ];
-    return (
-      <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-8" style={SURFACE}>
-        <div className="max-w-xs mx-auto">
-          {/* Real percentage bar while the upload is the real work */}
-          {uploading && (
-            <div className="h-1.5 rounded-full mb-6 overflow-hidden" style={{ background: 'rgba(10,10,10,0.08)' }}>
-              <div
-                className="h-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%`, background: 'linear-gradient(90deg, #D4A85F, #7A5A18)' }}
-              />
-            </div>
-          )}
-          <div className="space-y-4">
-            {stages.map((st) => (
-              <div key={st.key} className="flex items-center gap-3">
-                <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                  {st.done ? (
-                    <CheckCircle2 size={18} className="text-[#7A5A18]" />
-                  ) : st.active ? (
-                    <Loader2 size={18} className="animate-spin text-[#7A5A18]" />
-                  ) : (
-                    <span className="w-2 h-2 rounded-full" style={{ background: 'rgba(10,10,10,0.18)' }} />
-                  )}
-                </span>
-                <p className={`text-sm ${st.active ? 'font-bold text-[#0A0A0A]' : st.done ? 'font-medium text-[rgba(10,10,10,0.55)]' : 'font-medium text-[rgba(10,10,10,0.35)]'}`}>
-                  {st.label}
-                </p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-[rgba(10,10,10,0.4)] mt-6 leading-relaxed">
-            {uploading
-              ? 'Large tapes can take a few minutes to upload on a mobile connection. Keep the app open until the upload finishes.'
-              : 'Reading your framing, eyeline, lighting, and the performance arc beat by beat. You can close the app. We’ll notify you when your notes are ready.'}
-          </p>
-        </div>
-      </div>
-    );
+    return <StudioReviewLoading uploading={analysisUploading} progress={uploadProgress} recording={!!recording} />;
   }
 
   // ─── Result ────────────────────────────────────────────────────────
@@ -692,12 +625,12 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-[#FF8280]/30 p-5 text-center" style={SURFACE}>
-            <p className="text-sm font-bold text-[#0A0A0A]">This review came back incomplete, so your token was refunded. Please try again.</p>
+            <p className="text-sm font-bold text-[var(--dst-ink)]">This review came back incomplete, so your token was refunded. Please try again.</p>
           </div>
           <button
             onClick={reset}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
-            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all hover:shadow-lg dst-press"
+            style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
           >
             <RotateCcw size={15} /> Try again
           </button>
@@ -794,11 +727,11 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             Only renders when this tape actually beat a previous best. */}
         {revealStage >= 3 && newRecords.length > 0 && (
           <div className="rounded-2xl border border-[#D4A85F]/35 p-4 tr-reveal" style={{ '--tr-i': 1, background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}>
-            <h3 className="text-xs font-bold text-[#7A5A18] mb-2 uppercase tracking-wider">New personal best{newRecords.length > 1 ? 's' : ''}</h3>
+            <h3 className="text-xs font-bold text-[var(--dst-brass-ink)] mb-2 uppercase tracking-wider">New personal best{newRecords.length > 1 ? 's' : ''}</h3>
             <div className="flex flex-wrap gap-2">
               {newRecords.slice(0, 4).map((rec) => (
                 <span key={rec.key} className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
-                  style={{ background: 'rgba(212,168,95,0.18)', color: '#7A5A18', border: '1px solid rgba(212,168,95,0.4)' }}>
+                  style={{ background: 'rgba(212,168,95,0.18)', color: 'var(--dst-brass-ink)', border: '1px solid rgba(212,168,95,0.4)' }}>
                   🏅 {rec.label} {rec.value.toFixed(1)}
                   <span style={{ opacity: 0.6, fontWeight: 400 }}>was {rec.prev.toFixed(1)}</span>
                 </span>
@@ -819,9 +752,9 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           const path = pts.map((e, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(e.avg).toFixed(1)}`).join(' ');
           const delta = pts[pts.length - 1].avg - pts[0].avg;
           return (
-            <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 tr-reveal" style={{ '--tr-i': 2, background: 'rgba(255,255,255,0.6)' }}>
+            <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 tr-reveal" style={{ '--tr-i': 2, background: 'var(--dst-glass)' }}>
               <div className="flex items-baseline justify-between mb-2">
-                <h3 className="text-xs font-bold text-[#0A0A0A]">Your scores over time</h3>
+                <h3 className="text-xs font-bold text-[var(--dst-ink)]">Your scores over time</h3>
                 <span className="text-[11px] font-semibold" style={{ color: delta >= 0 ? '#22c55e' : 'rgba(10,10,10,0.45)' }}>
                   {delta >= 0.1 ? `▲ +${delta.toFixed(1)} since your first tape here` : `${pts.length} reviews tracked`}
                 </span>
@@ -852,10 +785,10 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               style={{ '--tr-i': 3, background: 'linear-gradient(135deg, rgba(212,168,95,0.14), rgba(122,90,24,0.05))' }}
             >
               <div className="flex items-center gap-2 mb-1">
-                <Target size={15} className="text-[#7A5A18]" />
-                <span className="text-sm font-bold text-[#0A0A0A]">Next Take Mission</span>
+                <Target size={15} className="text-[var(--dst-brass-ink)]" />
+                <span className="text-sm font-bold text-[var(--dst-ink)]">Next Take Mission</span>
               </div>
-              <p className="text-xs text-[rgba(10,10,10,0.65)] leading-relaxed">
+              <p className="text-xs text-[var(--dst-ink-3)] leading-relaxed">
                 Re-record working on this note{file ? ' and compare it against this take' : ''}. See if your next take lands it. →
               </p>
             </button>
@@ -894,7 +827,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             }}
             onTouchEnd={(e) => { e.preventDefault(); e.currentTarget.click(); }}
             className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold border border-[#D4A85F]/40 transition-all hover:bg-[#D4A85F]/10 tr-reveal"
-            style={{ '--tr-i': 2, color: '#7A5A18', background: 'rgba(212,168,95,0.06)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            style={{ '--tr-i': 2, color: 'var(--dst-brass-ink)', background: 'rgba(212,168,95,0.06)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           >
             🎬 Talk these notes through with Slate
           </button>
@@ -914,7 +847,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
                   type="button"
                   disabled={sharing}
                   onClick={() => handleShare('story')}
-                  className="flex-[2] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60"
+                  className="flex-[2] inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold text-[var(--dst-brass-ink)] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 disabled:opacity-60"
                 >
                   {sharing ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
                   {sharing ? 'Preparing your card…' : 'Share to Story'}
@@ -923,7 +856,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
                   type="button"
                   disabled={sharing}
                   onClick={() => handleShare('square')}
-                  className="flex-1 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-[#7A5A18]/80 border border-[#D4A85F]/25 transition-all hover:bg-[#D4A85F]/10 disabled:opacity-60"
+                  className="flex-1 inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-[var(--dst-brass-ink)]/80 border border-[#D4A85F]/25 transition-all hover:bg-[#D4A85F]/10 disabled:opacity-60"
                 >
                   Square post
                 </button>
@@ -943,7 +876,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             <FirstReviewPaywall onUpgrade={() => { trackEvent(Events.FIRST_REVIEW_PAYWALL_TAP); onUpgrade?.(); }} />
             <button
               onClick={reset}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-[rgba(10,10,10,0.55)] tr-reveal"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium text-[var(--dst-ink-3)] tr-reveal"
               style={{ '--tr-i': 7 }}
             >
               <RotateCcw size={14} /> Review another take
@@ -958,14 +891,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               onClick={() => setMode('compare')}
               onTouchEnd={(e) => { e.preventDefault(); setMode('compare'); }}
               style={{ '--tr-i': 7, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 tr-reveal"
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-brass-ink)] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15 tr-reveal"
             >
               <Trophy size={15} /> Compare this take against another →
             </button>
             <button
               onClick={reset}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg tr-reveal dst-press"
-              style={{ '--tr-i': 7, background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+              className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all hover:shadow-lg tr-reveal dst-press"
+              style={{ '--tr-i': 7, background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
             >
               <RotateCcw size={15} /> Review another take
             </button>
@@ -986,7 +919,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             : 'Show my scores';
           return (
             <div className="studio-review-actions">
-              <p className="text-[11px] text-center text-[rgba(10,10,10,0.4)] mb-1.5">Beat {next} of 3</p>
+              <p className="text-[11px] text-center text-[var(--dst-ink-3)] mb-1.5">Beat {next} of 3</p>
               <button
                 type="button"
                 onClick={() => {
@@ -1045,16 +978,16 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
       {firstReview && onExitFirstReview && (
         <button
           onClick={onExitFirstReview}
-          className="w-full text-center text-xs font-medium text-[rgba(10,10,10,0.45)] py-1 hover:text-[#7A5A18]"
+          className="w-full text-center text-xs font-medium text-[var(--dst-ink-3)] py-1 hover:text-[var(--dst-brass-ink)]"
         >
           Maybe later. Explore the app first →
         </button>
       )}
       <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
-        <h3 className="text-sm font-bold text-[#0A0A0A] mb-1 flex items-center gap-2">
-          <Film size={16} className="text-[#7A5A18]" /> Submit a self-tape
+        <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-1 flex items-center gap-2">
+          <Film size={16} className="text-[var(--dst-brass-ink)]" /> Submit a self-tape
         </h3>
-        <p className="text-xs text-[rgba(10,10,10,0.45)] mb-4 leading-relaxed">
+        <p className="text-xs text-[var(--dst-ink-3)] mb-4 leading-relaxed">
           {recording ? 'Jericho will review your saved take for casting-grade notes: framing, eyeline, your choices, and the performance arc.' : 'Upload or record a take and Jericho gives you real casting-grade notes: framing, eyeline, your choices, and the performance arc.'}
         </p>
 
@@ -1064,19 +997,19 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {firstReview && (
           <div className="rounded-xl border border-[#D4A85F]/30 bg-[#D4A85F]/[0.06] p-3 mb-4">
             <div className="flex items-center gap-1.5 mb-2">
-              <Sparkles size={12} className="text-[#7A5A18]" />
-              <span className="text-[10px] font-bold tracking-wider text-[#7A5A18] uppercase">Example · sample notes, not your tape</span>
+              <Sparkles size={12} className="text-[var(--dst-brass-ink)]" />
+              <span className="text-[10px] font-bold tracking-wider text-[var(--dst-brass-ink)] uppercase">Example · sample notes, not your tape</span>
             </div>
             <div className="flex gap-2 mb-2">
               {[['Framing', '8'], ['Eyeline', '7'], ['Energy', '9']].map(([k, v]) => (
-                <div key={k} className="flex-1 text-center rounded-lg bg-white/50 py-1.5">
-                  <div className="text-sm font-bold text-[#0A0A0A]">{v}<span className="text-[10px] text-[rgba(10,10,10,0.4)]">/10</span></div>
-                  <div className="text-[9px] text-[rgba(10,10,10,0.5)]">{k}</div>
+                <div key={k} className="flex-1 text-center rounded-lg bg-[var(--dst-surface)]/50 py-1.5">
+                  <div className="text-sm font-bold text-[var(--dst-ink)]">{v}<span className="text-[10px] text-[var(--dst-ink-3)]">/10</span></div>
+                  <div className="text-[9px] text-[var(--dst-ink-3)]">{k}</div>
                 </div>
               ))}
             </div>
-            <p className="text-[11px] leading-snug text-[rgba(10,10,10,0.6)]">
-              <span className="font-semibold text-[#0A0A0A]">The one thing:</span> your listening drops on line 3. Let the reader's line land before you react. <span className="text-[rgba(10,10,10,0.45)]">Record or upload your take to get notes like this on YOUR performance.</span>
+            <p className="text-[11px] leading-snug text-[var(--dst-ink-3)]">
+              <span className="font-semibold text-[var(--dst-ink)]">The one thing:</span> your listening drops on line 3. Let the reader's line land before you react. <span className="text-[var(--dst-ink-3)]">Record or upload your take to get notes like this on YOUR performance.</span>
             </p>
           </div>
         )}
@@ -1088,15 +1021,15 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         {practiceActive && (
           <div className="rounded-xl border border-[#D4A85F]/40 bg-[#D4A85F]/[0.08] p-4 mb-4">
             <div className="flex items-center gap-1.5 mb-2">
-              <Film size={12} className="text-[#7A5A18]" />
-              <span className="text-[10px] font-bold tracking-wider text-[#7A5A18] uppercase">{PRACTICE_SCENE_TITLE}</span>
+              <Film size={12} className="text-[var(--dst-brass-ink)]" />
+              <span className="text-[10px] font-bold tracking-wider text-[var(--dst-brass-ink)] uppercase">{PRACTICE_SCENE_TITLE}</span>
             </div>
-            <p className="text-[11px] text-[rgba(10,10,10,0.5)] mb-2">
+            <p className="text-[11px] text-[var(--dst-ink-3)] mb-2">
               You're Morgan, leaving a voicemail you weren't supposed to leave. Read it once, then tape it any way you feel it.
             </p>
-            <div className="rounded-lg bg-white/60 p-3 max-h-44 overflow-y-auto">
+            <div className="rounded-lg bg-[var(--dst-surface)]/60 p-3 max-h-44 overflow-y-auto">
               {PRACTICE_SCENE_CONTENT.split('\n\n').map((line, k) => (
-                <p key={k} className="text-[12.5px] leading-relaxed text-[#0A0A0A] mb-2 last:mb-0">
+                <p key={k} className="text-[12.5px] leading-relaxed text-[var(--dst-ink)] mb-2 last:mb-0">
                   {line.replace(/^MORGAN: /, '')}
                 </p>
               ))}
@@ -1105,7 +1038,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
               type="button"
               onClick={startRecord}
               onTouchEnd={(e) => { e.preventDefault(); startRecord(); }}
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
               className="w-full mt-3 inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-white transition-all hover:shadow-lg"
             >
               <Film size={15} /> Ready? Record your take
@@ -1129,15 +1062,15 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         >
           {file ? (
             <>
-              <Film size={22} className="text-[#7A5A18]" />
-              <span className="text-sm font-medium text-[#0A0A0A] truncate max-w-full px-2">{file.name}</span>
-              <span className="text-[10px] text-[rgba(10,10,10,0.4)]">{(file.size / (1024 * 1024)).toFixed(1)} MB · tap to change</span>
+              <Film size={22} className="text-[var(--dst-brass-ink)]" />
+              <span className="text-sm font-medium text-[var(--dst-ink)] truncate max-w-full px-2">{file.name}</span>
+              <span className="text-[10px] text-[var(--dst-ink-3)]">{(file.size / (1024 * 1024)).toFixed(1)} MB · tap to change</span>
             </>
           ) : (
             <>
-              <Upload size={22} className="text-[rgba(10,10,10,0.4)]" />
-              <span className="text-sm font-medium text-[rgba(10,10,10,0.62)]">Choose a video</span>
-              <span className="text-[10px] text-[rgba(10,10,10,0.4)]">mp4, mov, or webm · up to 500 MB</span>
+              <Upload size={22} className="text-[var(--dst-ink-3)]" />
+              <span className="text-sm font-medium text-[var(--dst-ink-3)]">Choose a video</span>
+              <span className="text-[10px] text-[var(--dst-ink-3)]">mp4, mov, or webm · up to 500 MB</span>
             </>
           )}
         </button>
@@ -1154,7 +1087,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
           onClick={startRecord}
           onTouchEnd={(e) => { e.preventDefault(); startRecord(); }}
           style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-          className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15"
+          className="w-full mt-2 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-brass-ink)] border border-[#D4A85F]/40 bg-[#D4A85F]/8 transition-all hover:bg-[#D4A85F]/15"
         >
           <Film size={15} /> No tape? Record one now
         </button>
@@ -1168,7 +1101,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             "watch your eyeline" and a note on line 3. */}
         <button
           onClick={() => setShowOptional((v) => !v)}
-          className="w-full flex items-center justify-between gap-3 mt-3 px-1 py-2 text-left text-xs font-semibold text-[rgba(10,10,10,0.62)]"
+          className="w-full flex items-center justify-between gap-3 mt-3 px-1 py-2 text-left text-xs font-semibold text-[var(--dst-ink-3)]"
         >
           <span>Paste your sides and the notes talk about your actual lines</span>
           <ChevronDown size={14} className={`flex-shrink-0 transition-transform ${showOptional ? 'rotate-180' : ''}`} />
@@ -1178,18 +1111,18 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             <input
               value={role} onChange={(e) => setRole(e.target.value)}
               placeholder="Character name (e.g. MaryBeth)"
-              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[#F4F4EE] border border-[rgba(10,10,10,0.08)] text-[#0A0A0A] placeholder:text-[rgba(10,10,10,0.35)] outline-none focus:border-[#D4A85F]/50"
+              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[var(--dst-surface-sunken)] border border-[rgba(10,10,10,0.08)] text-[var(--dst-ink)] placeholder:text-[var(--dst-ink-3)] outline-none focus:border-[#D4A85F]/50"
             />
             <input
               value={tone} onChange={(e) => setTone(e.target.value)}
               placeholder="Tone target from the brief (e.g. grounded and warm)"
-              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[#F4F4EE] border border-[rgba(10,10,10,0.08)] text-[#0A0A0A] placeholder:text-[rgba(10,10,10,0.35)] outline-none focus:border-[#D4A85F]/50"
+              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[var(--dst-surface-sunken)] border border-[rgba(10,10,10,0.08)] text-[var(--dst-ink)] placeholder:text-[var(--dst-ink-3)] outline-none focus:border-[#D4A85F]/50"
             />
             <textarea
               value={sides} onChange={(e) => setSides(e.target.value)}
               placeholder="Paste the sides / scene text…"
               rows={4}
-              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[#F4F4EE] border border-[rgba(10,10,10,0.08)] text-[#0A0A0A] placeholder:text-[rgba(10,10,10,0.35)] outline-none focus:border-[#D4A85F]/50 resize-none"
+              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[var(--dst-surface-sunken)] border border-[rgba(10,10,10,0.08)] text-[var(--dst-ink)] placeholder:text-[var(--dst-ink-3)] outline-none focus:border-[#D4A85F]/50 resize-none"
             />
           </div>
         )}
@@ -1199,15 +1132,15 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
             — a retry would risk a second paid analysis. */}
         {tapeReviewPending && (
           <div className="rounded-xl border border-[#D4A85F]/35 mt-3 p-3 flex items-start gap-2.5" style={{ background: 'rgba(212,168,95,0.08)' }}>
-            <Bell size={15} className="text-[#7A5A18] flex-shrink-0 mt-0.5" />
+            <Bell size={15} className="text-[var(--dst-brass-ink)] flex-shrink-0 mt-0.5" />
             <div className="min-w-0">
-              <p className="text-xs text-[#0A0A0A] leading-relaxed">{String(tapeReviewPending)}</p>
+              <p className="text-xs text-[var(--dst-ink)] leading-relaxed">{String(tapeReviewPending)}</p>
               <button
                 type="button"
                 onClick={checkForNotes}
                 onTouchEnd={(e) => { e.preventDefault(); checkForNotes(); }}
                 style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7A5A18] underline mt-1.5"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--dst-brass-ink)] underline mt-1.5"
               >
                 <RotateCcw size={13} /> Check for my notes
               </button>
@@ -1217,14 +1150,14 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
 
         {tapeReviewError && (
           <div className="rounded-xl border border-[#FF8280]/35 mt-3 p-3" style={{ background: 'rgba(255,130,128,0.07)' }}>
-            <p className="text-xs text-[#0A0A0A] leading-relaxed">{String(tapeReviewError)}</p>
+            <p className="text-xs text-[var(--dst-ink)] leading-relaxed">{String(tapeReviewError)}</p>
             {(file || recording) && (
               <button
                 type="button"
                 onClick={submit}
                 onTouchEnd={(e) => { e.preventDefault(); submit(); }}
                 style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-[#7A5A18] underline mt-1.5"
+                className="inline-flex items-center gap-1.5 text-xs font-bold text-[var(--dst-brass-ink)] underline mt-1.5"
               >
                 <RotateCcw size={13} /> Try again
               </button>
@@ -1233,7 +1166,7 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         )}
 
         {file && file.size > 60 * 1024 * 1024 && (
-          <p className="text-[11px] text-[#7A5A18] mt-3 text-center leading-relaxed">
+          <p className="text-[11px] text-[var(--dst-brass-ink)] mt-3 text-center leading-relaxed">
             Heads up: this is a large tape ({(file.size / (1024 * 1024)).toFixed(0)} MB). On a slower
             connection the upload can take a few minutes; keep the app open and watch the progress.
           </p>
@@ -1242,12 +1175,12 @@ export default function TapeReview({ firstReview = false, onUpgrade, onExitFirst
         <button
           onClick={submit}
           disabled={!!(recording && checkingRecovery) || (!file && !recording)}
-          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
-          style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
+          style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
         >
           <Sparkles size={15} /> Get my notes
         </button>
-        <p className="text-[10px] text-[rgba(10,10,10,0.35)] text-center mt-2">
+        <p className="text-[10px] text-[var(--dst-ink-3)] text-center mt-2">
           {(firstReview || !tutorialProgress.first_review)
             ? 'Your first review is free · your tape is analyzed, not stored for training'
             : 'Uses 1 token · your tape is analyzed, not stored for training'}

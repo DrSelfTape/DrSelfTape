@@ -85,6 +85,7 @@ export const CustomButton = ({
 
   const classes = [
     'dst-btn',
+    isDelete ? 'dst-btn--danger' : '',
     isOutlined ? 'dst-btn--outlined' : '',
     dense ? 'dst-btn--dense' : '',
     className || '',

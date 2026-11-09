@@ -116,7 +116,7 @@ const DeleteAccountModal = ({ open, onClose }) => {
             width: '100%', height: 44, padding: '0 14px',
             border: '1px solid var(--aurora-line, rgba(10,10,10,0.12))',
             borderRadius: 10, fontSize: 14, color: 'var(--aurora-text)',
-            background: '#FFFFFF', outline: 'none', marginBottom: 12,
+            background: 'var(--dst-surface)', outline: 'none', marginBottom: 12,
           }}
         />
 
@@ -133,7 +133,7 @@ const DeleteAccountModal = ({ open, onClose }) => {
             width: '100%', height: 44, padding: '0 14px',
             border: '1px solid var(--aurora-line, rgba(10,10,10,0.12))',
             borderRadius: 10, fontSize: 14, color: 'var(--aurora-text)',
-            background: '#FFFFFF', outline: 'none', marginBottom: 16,
+            background: 'var(--dst-surface)', outline: 'none', marginBottom: 16,
           }}
         />
 
@@ -153,7 +153,7 @@ const DeleteAccountModal = ({ open, onClose }) => {
             style={{
               flex: 1, height: 44, borderRadius: 22,
               border: '1px solid var(--aurora-line, rgba(10,10,10,0.12))',
-              background: '#FFFFFF',
+              background: 'var(--dst-surface)',
               color: 'var(--aurora-text)',
               fontWeight: 600, fontSize: 14,
               cursor: loading ? 'not-allowed' : 'pointer',

@@ -22,6 +22,7 @@ import TutorialChecklist from '../../../components/Dashboard/TutorialChecklist';
 import VisibilityPrompt from '../../../components/Shared/VisibilityPrompt';
 import TutorialAchievement from '../../../components/Dashboard/TutorialAchievement';
 import DailyChallengeCard from '../../../components/Dashboard/DailyChallengeCard';
+import StudioHomeHero from '../../../components/FutureStudio/StudioHomeHero';
 
 const TYPE_COLORS = {
   film: 'var(--aurora-heritage-gold)',
@@ -317,7 +318,7 @@ export default function DashboardHome() {
   const showNextStep = nextStep.key !== 'first_review';
 
   return (
-    <div className="dst-studio-panel dst-home">
+    <div className="dst-studio-panel dst-home future-home-surface">
       {showOnboarding && <ReaderOnboardingModal onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
@@ -327,6 +328,8 @@ export default function DashboardHome() {
         <NotificationBell />
       </div>
 
+      <StudioHomeHero firstReview={!firstReviewDone} onReview={() => go(TAPE_REVIEW_PATH)} onPractice={() => go('/dashboard/scene-study')} onReaders={() => go('/dashboard/find-a-reader')} />
+      <div className="future-home-support">
       {/* Studio clients — desktop only, on purpose. The studio hub is a
           separate product surface from the mobile actor app; see the fork
           decision. Renders nothing for anyone without sessions. */}
@@ -337,22 +340,6 @@ export default function DashboardHome() {
 
       {/* ── Profile completeness — auto-hides when 100% ── */}
       <ProfileCompleteness />
-
-      {/* ── Tape Review — the thing this company sells. Permanent and
-             primary, not a rotating peer of "invite a friend". ── */}
-      <section className="studio-hero">
-        <span className="studio-hero-mark" aria-hidden="true"><Sparkles className="w-5 h-5" /></span>
-        <span className="studio-eyebrow">Tape Review</span>
-        <h2 className="studio-hero-title">An honest read on your own tape</h2>
-        <p className="studio-hero-copy">
-          Upload a take and get casting-grade notes in minutes — what landed, what read
-          as indicated, and the one fix worth making before you send it.
-        </p>
-        <button type="button" className="studio-cta" onClick={() => go(TAPE_REVIEW_PATH)}>
-          {firstReviewDone ? 'Review a new tape' : 'Get my first notes'}
-          <span aria-hidden="true">&rarr;</span>
-        </button>
-      </section>
 
       {/* ── Next step — one quiet nudge under the hero ── */}
       {showNextStep && (
@@ -465,6 +452,7 @@ export default function DashboardHome() {
 
       {/* Upcoming Callbacks */}
       <UpcomingCallbacks />
+      </div>
     </div>
   );
 }

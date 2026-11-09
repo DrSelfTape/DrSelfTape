@@ -147,7 +147,7 @@ export default function ReportBlockMenu({
         height: 32,
         borderRadius: '50%',
         border: '1px solid var(--aurora-line)',
-        background: 'rgba(255,255,255,0.7)',
+        background: 'var(--dst-glass)',
         backdropFilter: 'blur(10px)',
         display: 'flex',
         alignItems: 'center',

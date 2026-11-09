@@ -89,7 +89,7 @@ export default function SampleReview({ firstName, onClose, onTry }) {
             disabled={launching}
             onClick={() => start('record')}
             className="w-full rounded-full px-5 py-4 text-sm font-semibold disabled:opacity-50"
-            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', color: '#0A0A0A', touchAction: 'manipulation' }}
+            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)', color: 'var(--dst-ink)', touchAction: 'manipulation' }}
           >Record the practice scene →</button>
           <button
             type="button"

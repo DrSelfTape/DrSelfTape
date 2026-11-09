@@ -96,7 +96,7 @@ export default function PrivacyPolicy() {
           <li>Export your data in a portable format.</li>
         </ul>
         <p>
-          To exercise any of these rights, email <a href="mailto:info@drselftapes.com" style={{ color: '#7A5A18', fontWeight: 600 }}>info@drselftapes.com</a> from the address associated with your account. We will respond within 30 days.
+          To exercise any of these rights, email <a href="mailto:info@drselftapes.com" style={{ color: 'var(--dst-brass-ink)', fontWeight: 600 }}>info@drselftapes.com</a> from the address associated with your account. We will respond within 30 days.
         </p>
       </Section>
 
@@ -135,7 +135,7 @@ export default function PrivacyPolicy() {
 
       <Section heading="Contact">
         <p>
-          Questions about this Privacy Policy or your data? Email <a href="mailto:info@drselftapes.com" style={{ color: '#7A5A18', fontWeight: 600 }}>info@drselftapes.com</a>.
+          Questions about this Privacy Policy or your data? Email <a href="mailto:info@drselftapes.com" style={{ color: 'var(--dst-brass-ink)', fontWeight: 600 }}>info@drselftapes.com</a>.
         </p>
       </Section>
     </LegalLayout>

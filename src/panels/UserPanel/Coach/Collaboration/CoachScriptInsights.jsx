@@ -102,7 +102,7 @@ const CoachScriptInsights = () => {
                   '&:hover': {
                     backgroundColor: 'rgba(239, 68, 68, 0.06)',
                     borderColor: '#dc2626',
-                    color: '#dc2626',
+                    color: 'var(--dst-danger)',
                     boxShadow: 'none',
                     transform: 'translateY(-1px)',
                   },
@@ -121,7 +121,7 @@ const CoachScriptInsights = () => {
                 onClick={handleBack}
                 sx={{
                   borderColor: '#6b7280',
-                  color: '#6b7280',
+                  color: 'var(--dst-ink-2)',
                   fontSize: '14px',
                   fontWeight: 500,
                   letterSpacing: '0.01em',
@@ -131,7 +131,7 @@ const CoachScriptInsights = () => {
                   '&:hover': {
                     backgroundColor: 'rgba(107, 114, 128, 0.05)',
                     borderColor: '#4b5563',
-                    color: '#4b5563',
+                    color: 'var(--dst-ink-2)',
                     boxShadow: 'none',
                     transform: 'translateY(-1px)',
                   },

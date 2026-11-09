@@ -320,7 +320,7 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
             onClick={handleSubmit}
             disabled={uploading || fileTooBig || !file || !title.trim()}
             className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
-            style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
+            style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
           >
             {uploading
               ? (saveLocallyFirst ? 'Saving…' : `Uploading… ${progress}%`)
@@ -416,7 +416,7 @@ function SubmitModal({ tape, onClose }) {
               onClick={handleSubmit}
               disabled={submitting || !submittedTo.trim()}
               className="flex-1 py-3 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50"
-              style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
+              style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
             >
               {submitting ? 'Submitting...' : 'Submit'}
             </button>
@@ -627,7 +627,7 @@ export function TapeCard({
           onTouchEnd={(e) => { e.preventDefault(); if (!isLocalOnly && !reviewBusy) onReview(tape); }}
           disabled={isLocalOnly || reviewBusy}
           className="w-full mt-3 py-2.5 rounded-lg text-xs font-semibold disabled:opacity-50"
-          style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
         >
           Get casting notes
         </button>
@@ -650,7 +650,7 @@ export function TapeCard({
             onClick={() => onSubmitCasting(tape)}
             disabled={isLocalOnly}
             className="flex-1 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
-            style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
+            style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
           >
             <Send className="w-3.5 h-3.5" />
             Submit
@@ -883,7 +883,7 @@ export default function SelfTapes() {
         <button
           onClick={() => setShowUpload(true)}
           className="text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors flex items-center gap-2"
-          style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
+          style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
         >
           <Upload className="w-4 h-4" />
           Upload
@@ -916,7 +916,7 @@ export default function SelfTapes() {
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: 'scenes' } }))}
               className="mt-4 font-semibold px-5 py-2.5 rounded-xl transition-colors"
-              style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', fontSize: 'var(--type-base)' }}
+              style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)', fontSize: 'var(--type-base)' }}
             >
               Record a take
             </button>
@@ -924,7 +924,7 @@ export default function SelfTapes() {
             <button
               onClick={() => setShowUpload(true)}
               className="mt-4 font-semibold px-5 py-2.5 rounded-xl transition-colors"
-              style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)', fontSize: 'var(--type-base)' }}
+              style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)', fontSize: 'var(--type-base)' }}
             >
               Upload a self-tape
             </button>

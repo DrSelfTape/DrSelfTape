@@ -152,7 +152,7 @@ export default function MeetingRoom() {
           colors: {
             accent: '#D4A85F',
             accentText: '#0A0A0A',
-            background: '#0c0e14',
+            background: 'var(--dst-paper)',
             backgroundAccent: '#161A24',
             baseText: '#F4F4EE',
             border: '#2A2E3A',

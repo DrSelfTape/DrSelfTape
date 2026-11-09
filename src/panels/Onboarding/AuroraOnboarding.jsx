@@ -209,8 +209,8 @@ function ChipRow({ options, value, onPick }) {
             onClick={() => onPick(opt)}
             style={{
               padding: '9px 14px', borderRadius: 100, cursor: 'pointer',
-              background: on ? 'var(--aurora-text)' : 'rgba(255,255,255,0.6)',
-              color: on ? '#fff' : 'var(--aurora-text)',
+              background: on ? 'var(--dst-fill-ink)' : 'var(--dst-surface)',
+              color: on ? 'var(--dst-on-fill-ink)' : 'var(--dst-ink)',
               border: `1.5px solid ${on ? 'var(--aurora-text)' : 'var(--aurora-line)'}`,
               fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 500,
             }}

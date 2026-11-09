@@ -6,6 +6,8 @@ import { getPendingAuditionNotification, clearAuditionNotification } from "../..
 import useAuditionNotification from "../../hooks/useAuditionNotification";
 import { useTokenBalance } from "../../hooks/useTokenBalance";
 import NoTokensModal from "../../components/NoTokensModal";
+import StudioHomeHero from '../../components/FutureStudio/StudioHomeHero';
+import StudioTabGlow from '../../components/FutureStudio/StudioTabGlow';
 import UpdateBanner from "../../components/UpdateBanner";
 import AnnouncementBanner from "../../components/AnnouncementBanner";
 import { clearCampaignNavigation, takeCampaignNavigation } from '../../utils/communications';
@@ -191,15 +193,15 @@ const CORAL_GLOW = "rgba(255,130,128,0.25)";
 const MAGENTA = "#C855F0";
 const MAGENTA_DIM = "rgba(200,85,240,0.12)";
 
-const BG_DEEPEST = "#080a0f";
-const BG_DEEP = "#0c0e14";
-const BG_CARD = "#13151d";
-const BG_ELEVATED = "#1a1c26";
+const BG_DEEPEST = "var(--dst-paper)";
+const BG_DEEP = "var(--dst-paper)";
+const BG_CARD = "var(--dst-surface)";
+const BG_ELEVATED = "var(--dst-surface-sunken)";
 const BORDER = "rgba(167,236,218,0.06)";
 const BORDER_ACTIVE = "rgba(167,236,218,0.15)";
-const TEXT_PRIMARY = "#f2f0ed";
-const TEXT_SECONDARY = "#8a9a96";
-const TEXT_MUTED = "#4a5a56";
+const TEXT_PRIMARY = "var(--dst-ink)";
+const TEXT_SECONDARY = "var(--dst-ink-2)";
+const TEXT_MUTED = "var(--dst-ink-3)";
 
 const GREEN = "#5ee6b8";
 const BLUE = "#7eb8ec";
@@ -700,8 +702,8 @@ function AuroraPipeline({ stats, auditions, setTab }) {
                   transition: 'height 0.5s cubic-bezier(.2,.7,.3,1)',
                 }}
               >
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.6)' }} />
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--type-lg)', color: '#0A0A0A', fontWeight: 600 }}>{b.val}</span>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'var(--dst-glass)' }} />
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--type-lg)', color: 'var(--dst-ink)', fontWeight: 600 }}>{b.val}</span>
               </div>
               <div
                 style={{
@@ -1193,7 +1195,7 @@ const SLATE_TIPS = [
   'Slate calm. The take starts before “action.”',
 ];
 
-function HomeScreen({ setTab, setCurrentPanel }) {
+export function HomeScreen({ setTab, setCurrentPanel }) {
   const dispatch = useDispatch();
   usePushNotifications();
   const {
@@ -1406,38 +1408,18 @@ function HomeScreen({ setTab, setCurrentPanel }) {
   // Home for everyone: free-offer copy + first-review handoff while the
   // free review is unclaimed, standard copy + tab handoff afterwards.
   const tapeReviewHero = (
-    <button
-      type="button"
-      onClick={() => (firstReviewPending ? launchFreeReview() : setTab('tape-review'))}
-      style={{
-        width: '100%', marginBottom: 14, padding: 0, cursor: 'pointer',
-        borderRadius: 20, border: '1px solid rgba(212,168,95,0.45)', overflow: 'hidden',
-        position: 'relative',
-        background: 'linear-gradient(120deg, #1A1305 0%, #3A2A0E 45%, #7A5A18 100%)',
-        boxShadow: '0 12px 30px rgba(122,90,24,0.28)',
-        height: 132, display: 'block', textAlign: 'left',
-      }}
-    >
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(120% 80% at 100% 0%, rgba(212,168,95,0.38), transparent 60%)' }} />
-      <div style={{ position: 'absolute', left: 18, top: 0, bottom: 0, right: 92, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-        <span className="aurora-eyebrow" style={{ color: '#FCE072' }}>
-          {firstReviewPending ? '✨ FREE · AI TAPE REVIEW' : '✨ NEW · AI TAPE REVIEW'}
-        </span>
-        <div className="aurora-display" style={{ fontSize: 'var(--type-lg)', color: '#FFF', letterSpacing: '-0.4px', lineHeight: 1.12, marginTop: 5 }}>
-          {firstReviewPending ? 'Your first review is free →' : 'Casting-grade notes on your self-tape →'}
-        </div>
-        <span style={{ fontSize: 'var(--type-sm)', color: 'rgba(255,255,255,0.72)', marginTop: 6, fontWeight: 500 }}>
-          Submit a take · we'll notify you when your notes are ready
-        </span>
-      </div>
-      <div style={{ position: 'absolute', right: 18, top: 0, bottom: 0, display: 'flex', alignItems: 'center' }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 30 }}>🎥</div>
-      </div>
-    </button>
+    <StudioHomeHero
+      firstReview={firstReviewPending}
+      onReview={() => (firstReviewPending ? launchFreeReview() : setTab('tape-review'))}
+      onPractice={() => setTab('scenes')}
+      onReaders={() => setTab('find-a-reader')}
+      balance={balance} unlimited={tokensUnlimited} balanceLoading={tokensLoading} balanceError={tokensError}
+      onMembership={() => setCurrentPanel('membership')}
+    />
   );
 
   return (
-    <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 20px 32px", minHeight: '100%' }}>
+    <div className="future-home-surface" style={{ padding: "0 20px 32px", minHeight: '100%' }}>
       {showOnboarding && <AuroraOnboarding onClose={() => setShowOnboarding(false)} />}
       {showTutorialAchievement && <TutorialAchievement show onClose={() => setShowTutorialAchievement(false)} />}
 
@@ -1478,11 +1460,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       )}
 
       {/* ── Greeting block ── */}
-      <div style={{ padding: '24px 0 22px' }}>
+      <div className="future-home-greeting-wrap" style={{ padding: '24px 0 22px' }}>
         <span className="aurora-eyebrow" style={{ display: 'block', marginBottom: 6 }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()}
         </span>
-        <h1 className="aurora-display" style={{
+        <h1 className="aurora-display future-home-greeting" style={{
           fontSize: 30, color: 'var(--aurora-text)', margin: 0,
           letterSpacing: '-0.7px', lineHeight: 1.15,
         }}>
@@ -1493,6 +1475,8 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {/* ── Tape Review hero — permanent position 1 (free-offer copy while
            the first review is unclaimed, standard copy after) ── */}
       {tapeReviewHero}
+
+      <div className="future-home-support">
 
       {/* ── First-session: the checklist is the ONE guidance system, right
            under the hero (it subsumes the Smart Next Step banner). ── */}
@@ -1519,8 +1503,8 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           width: '100%', display: 'flex', alignItems: 'center', gap: 14,
           padding: '16px 18px', marginBottom: 14, cursor: 'pointer',
           textAlign: 'left', borderRadius: 18,
-          background: 'linear-gradient(135deg, rgba(10,10,10,0.95), rgba(30,28,22,0.95))',
-          border: '1px solid rgba(212,168,95,0.32)',
+          background: 'linear-gradient(135deg, #243d34, #152724)',
+          border: '1px solid rgba(180,221,164,0.32)',
           position: 'relative', overflow: 'hidden',
           boxShadow: '0 12px 28px rgba(10,10,10,0.28)',
         }}
@@ -1528,7 +1512,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
         <div
           style={{
             position: 'absolute', top: -40, right: -40, width: 180, height: 180,
-            background: 'radial-gradient(circle, rgba(212,168,95,0.45), transparent 70%)',
+            background: 'radial-gradient(circle, rgba(180,221,164,0.45), transparent 70%)',
             pointerEvents: 'none',
           }}
         />
@@ -1536,11 +1520,11 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           style={{
             position: 'relative',
             width: 48, height: 48, borderRadius: 14,
-            background: 'linear-gradient(135deg, #F0D097, #D4A85F)',
+            background: 'linear-gradient(135deg, #ddffd0, #a7cfad)',
             border: '1px solid rgba(255,255,255,0.45)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: '#1A1408',
-            boxShadow: '0 6px 18px rgba(212,168,95,0.45)',
+            boxShadow: '0 6px 18px rgba(180,221,164,0.45)',
             flexShrink: 0,
           }}
         >
@@ -1582,7 +1566,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {/* ── Smart Next Step CTA ── */}
       <button
         onClick={handleNextStep}
-        className="aurora-card"
+        className="aurora-card future-next-step"
         style={{
           width: "100%", display: "flex", alignItems: "center", gap: 14,
           padding: "16px 18px", cursor: "pointer", textAlign: "left",
@@ -1602,7 +1586,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           <p style={{ fontSize: 12, color: 'var(--aurora-sub)', margin: "3px 0 0", lineHeight: 1.3 }}>{nextStep.desc}</p>
         </div>
         <span className="aurora-micro" style={{
-          fontSize: 'var(--type-sm)', fontWeight: 700, color: "#fff",
+          fontSize: 'var(--type-sm)', fontWeight: 700, color: "var(--dst-on-fill-ink)",
           background: 'var(--aurora-accent)', padding: "8px 14px", borderRadius: 100,
           whiteSpace: "nowrap", flexShrink: 0,
           boxShadow: 'var(--aurora-shadow-coral)',
@@ -1620,7 +1604,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             background: 'linear-gradient(135deg, var(--aurora-heritage-gold), var(--aurora-heritage-gold-light))',
             borderRadius: 24, padding: '20px 22px', marginBottom: 14,
             border: 'none', position: 'relative', overflow: 'hidden',
-            boxShadow: '0 12px 30px rgba(212,168,95,0.30)',
+            boxShadow: '0 12px 30px rgba(180,221,164,0.30)',
           }}
         >
           <div style={{
@@ -1768,7 +1752,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
           cursor: 'pointer',
           textAlign: 'left',
           borderRadius: 18,
-          background: 'linear-gradient(135deg, rgba(167,214,255,0.45) 0%, rgba(159,230,180,0.45) 100%)',
+          background: 'linear-gradient(135deg, rgba(133,180,153,0.25) 0%, rgba(159,230,180,0.12) 100%)',
           border: '1px solid rgba(255,255,255,0.55)',
           boxShadow: '0 8px 22px rgba(159,230,180,0.18)',
           position: 'relative',
@@ -1804,7 +1788,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
             fontSize: 'var(--type-sm)',
             fontWeight: 700,
             color: '#0E0D0A',
-            background: 'rgba(255,255,255,0.7)',
+            background: 'var(--dst-glass)',
             padding: '6px 12px',
             borderRadius: 100,
             whiteSpace: 'nowrap',
@@ -2197,6 +2181,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
       {/* The old V1FAB radial quick-actions ("+") button was removed — Slate is
           now the single floating action entry point (its cards cover the same
           jobs: tape notes, log audition, find reader, sides). */}
+      </div>
     </div>
   );
 }
@@ -2204,7 +2189,7 @@ function HomeScreen({ setTab, setCurrentPanel }) {
 /* ═══════════════════════════════════════════════════
    AUDITIONS
    ═══════════════════════════════════════════════════ */
-function AuditionsScreen() {
+export function AuditionsScreen() {
   const dispatch = useDispatch();
   const rawAuditions = useSelector((state) => state.auditions.data || []);
   const submissions = useSelector((state) => state.submissions.submissions || []);
@@ -2459,7 +2444,7 @@ function AuditionsScreen() {
                 disabled={addSaving || !addForm.project.trim()}
                 style={{
                   width: "100%", padding: "14px", borderRadius: 14, border: "none", cursor: "pointer",
-                  background: `linear-gradient(135deg, var(--aurora-accent), var(--aurora-accent-deep))`, color: "#fff",
+                  background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)',
                   boxShadow: 'var(--aurora-shadow-coral)',
                   fontSize: 15, fontWeight: 700, opacity: addSaving || !addForm.project.trim() ? 0.5 : 1,
                 }}
@@ -2503,7 +2488,7 @@ function AuditionsScreen() {
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.3s",
                 }}>
-                  <span style={{ fontSize: 'var(--type-xs)', fontWeight: 700, color: "#fff" }}>{count}</span>
+                  <span style={{ fontSize: 'var(--type-xs)', fontWeight: 700, color: 'var(--dst-on-fill-ink)' }}>{count}</span>
                 </div>
               );
             })}
@@ -2536,7 +2521,7 @@ function AuditionsScreen() {
                   <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{sub.project_name || "Untitled"}</p>
                   <span className="aurora-mono" style={{
                     fontSize: 'var(--type-xs)', padding: "3px 10px", borderRadius: 100, marginLeft: 8,
-                    background: auroraColor, color: '#0A0A0A',
+                    background: auroraColor, color: 'var(--dst-ink)',
                     textTransform: "uppercase", whiteSpace: "nowrap", letterSpacing: '0.08em',
                   }}>{sub.status || "sent"}</span>
                 </div>
@@ -2594,7 +2579,7 @@ function AuditionsScreen() {
             Nothing tracked yet. Add the audition you're prepping and you'll get a reminder before it's due.
           </p>
           <button onClick={() => setShowAddForm(true)} style={{
-            background: 'var(--aurora-accent)', color: '#fff', border: 'none', borderRadius: 14,
+            background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)', border: 'none', borderRadius: 14,
             padding: '12px 18px', fontSize: 'var(--type-base)', fontWeight: 700, cursor: 'pointer',
           }}>
             Add an audition
@@ -2624,7 +2609,7 @@ function AuditionsScreen() {
                   <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{a.project}</p>
                   <span className="aurora-mono" style={{
                     fontSize: 'var(--type-xs)', padding: "3px 10px", borderRadius: 100,
-                    background: statusColor, color: '#0A0A0A', textTransform: 'uppercase',
+                    background: statusColor, color: 'var(--dst-ink)', textTransform: 'uppercase',
                     letterSpacing: '0.08em', marginLeft: 8, whiteSpace: 'nowrap', flexShrink: 0,
                   }}>{statusLabel}</span>
                 </div>
@@ -2702,7 +2687,7 @@ function AuditionsScreen() {
                 display: "inline-block", marginTop: 10,
                 fontSize: 'var(--type-sm)', padding: "4px 12px", borderRadius: 100,
                 background: STATUS_COLORS[selected.status] || 'var(--aurora-line)',
-                color: '#0A0A0A', textTransform: "uppercase", letterSpacing: '0.1em',
+                color: 'var(--dst-ink)', textTransform: "uppercase", letterSpacing: '0.1em',
               }}>{(selected.status || "").replace("_", " ")}</span>
             </div>
 
@@ -2849,7 +2834,7 @@ ALEX: Get the forks.
 
 JO: Already in my pocket.`;
 
-function ScenesScreen({ setTab }) {
+export function ScenesScreen({ setTab }) {
   const dispatch = useDispatch();
   const fallbackScripts = useSelector((state) => state.sceneStudyScripts.scripts || []);
   const realScripts = useSelector((state) => state.scripts.scripts || []);
@@ -3038,7 +3023,7 @@ function ScenesScreen({ setTab }) {
         />
       )}
       <div style={{ padding: "20px 0 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--aurora-text)', margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--aurora-text)', margin: 0, fontFamily: 'var(--dst-font-serif)' }}>Scene Study</h1>
         <button style={{
           width: 38, height: 38, borderRadius: 12,
           background: 'var(--aurora-glass)',
@@ -3279,7 +3264,7 @@ function LiveScreen() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 64px)", overflow: "hidden" }}>
       <div style={{ padding: "24px 16px 12px", flexShrink: 0 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: "'Playfair Display', serif" }}>Scene Study</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: TEXT_PRIMARY, margin: 0, fontFamily: 'var(--dst-font-serif)' }}>Scene Study</h1>
         <p style={{ fontSize: 12, color: TEXT_SECONDARY, margin: "8px 0 0", fontStyle: "italic", letterSpacing: "0.2px" }}>Rehearse with your AI scene partner</p>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0 16px 24px", WebkitOverflowScrolling: "touch" }}>
@@ -3381,7 +3366,7 @@ function ProfileScreen({ setCurrentPanel }) {
               width: "100%", height: "100%",
               background: `linear-gradient(135deg, var(--aurora-peach), var(--aurora-accent))`,
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 34, fontWeight: 600, color: '#fff',
+              fontSize: 34, fontWeight: 600, color: 'var(--dst-on-fill-ink)',
               fontFamily: '"Space Grotesk", sans-serif',
             }}>{initials}</div>
           )}
@@ -3517,7 +3502,7 @@ const CONNECT_SECTIONS = [
   { key: 'favorites', label: 'Favorites', panelId: 'favorites' },
 ];
 
-function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
+export function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
   const active = CONNECT_SECTIONS.find(s => s.key === section) || CONNECT_SECTIONS[0];
   // A scene-match deep link (tab:'green-room' + subPanel) only applies to the
   // Chat (green-room) section — thread it through so the match opens instead
@@ -3570,7 +3555,7 @@ function ConnectScreen({ section, setSection, onBack, pendingSubPanel }) {
   );
 }
 
-function MoreScreen({ setCurrentPanel }) {
+export function MoreScreen({ setCurrentPanel }) {
   const dispatch = useDispatch();
   return (
     <div className="aurora-orbs aurora-orbs-live" style={{ padding: "0 16px 32px", minHeight: '100%' }}>
@@ -3628,12 +3613,12 @@ function MoreScreen({ setCurrentPanel }) {
           background: "color-mix(in oklch, var(--aurora-rose) 22%, transparent)",
           border: "1px solid color-mix(in oklch, var(--aurora-rose) 40%, transparent)",
           display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-          cursor: "pointer", color: '#C04949',
+          cursor: "pointer", color: 'var(--dst-danger)',
           fontSize: 'var(--type-sm)', letterSpacing: '0.12em', textTransform: 'uppercase',
           backdropFilter: 'blur(12px)',
         }}
       >
-        <Icon name="logout" size={14} color="#C04949" />
+        <Icon name="logout" size={14} color="var(--dst-danger)" />
         Log Out
       </button>
     </div>
@@ -3664,7 +3649,7 @@ function GreenRoomChatWrapper({ matchId, onBack }) {
   return (
     <Suspense fallback={
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-        <div style={{ fontSize: 'var(--type-base)', color: "#8a9a96" }}>Loading...</div>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--dst-ink-2)' }}>Loading...</div>
       </div>
     }>
       <GreenRoomChat matchId={matchId} onBack={onBack} />
@@ -3681,7 +3666,7 @@ function ReaderProfileWrapper({ readerId, onBack }) {
   return (
     <Suspense fallback={
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-        <div style={{ fontSize: 'var(--type-base)', color: "#8a9a96" }}>Loading...</div>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--dst-ink-2)' }}>Loading...</div>
       </div>
     }>
       <ReaderProfile readerId={readerId} onBack={onBack} />
@@ -3694,7 +3679,7 @@ function ItsASceneWrapper({ matchId, onGoToGreenRoom, onKeepBrowsing }) {
   return (
     <Suspense fallback={
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: 200 }}>
-        <div style={{ fontSize: 'var(--type-base)', color: "#8a9a96" }}>Loading...</div>
+        <div style={{ fontSize: 'var(--type-base)', color: 'var(--dst-ink-2)' }}>Loading...</div>
       </div>
     }>
       <ItsAScene matchId={matchId} onGoToGreenRoom={onGoToGreenRoom} onKeepBrowsing={onKeepBrowsing} />
@@ -3710,7 +3695,7 @@ const SELF_TITLED_PANELS = new Set([
   'leaderboard', 'scripts', 'self-tapes', 'my-studio',
 ]);
 
-function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
+export function PanelScreen({ panelId, onBack, initialSubPanel, readerId }) {
   // initialSubPanel seeds the sub-screen for a deep-link (e.g. a fresh
   // scene_partner_match → { id: 'its-a-scene', matchId }). It's only read at
   // mount; the parent re-keys PanelScreen on each new deep-link so this runs.
@@ -3887,7 +3872,7 @@ function TopBarAvatar({ active, onClick }) {
             color: BG_DEEPEST,
             fontSize: 'var(--type-base)',
             fontWeight: 700,
-            fontFamily: "'Playfair Display', serif",
+            fontFamily: 'var(--dst-font-serif)',
           }}
         >
           {initials}
@@ -3999,6 +3984,24 @@ export default function DrSelfTapeApp() {
   // down. The bar still slides away for modals (driven by the modal-
   // open event listener below), which is the one case it should disappear.
   const [headerHidden, setHeaderHidden] = useState(false);
+  const futureThemeActive = true;
+  useEffect(() => {
+    const root = document.documentElement;
+    const alreadyThemed = root.classList.contains('future-theme');
+    root.classList.add('future-theme');
+    return () => { if (!alreadyThemed) root.classList.remove('future-theme'); };
+  }, []);
+  // The status bar must follow the surface behind it when a panel hides the header.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { Capacitor } = await import('@capacitor/core');
+      if (!Capacitor.isNativePlatform()) return;
+      const { StatusBar, Style } = await import('@capacitor/status-bar');
+      if (!cancelled) await StatusBar.setStyle({ style: headerHidden && !futureThemeActive ? Style.Light : Style.Dark });
+    })().catch(() => { /* Optional native chrome must not block navigation. */ });
+    return () => { cancelled = true; };
+  }, [headerHidden, futureThemeActive]);
   const lastScrollYRef = useRef(0);
   // Slate's 76px mascot floats at bottom: safe + 98px, so it covers a ~90px
   // band on the right that the content box's 84px paddingBottom does not
@@ -4369,7 +4372,7 @@ export default function DrSelfTapeApp() {
       `}</style>
 
       {isMobile ? (
-        <div className="studio-mobile-shell" style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
+        <div className={`studio-mobile-shell ${futureThemeActive ? 'future-theme' : ''}`} style={{ display: "flex", flexDirection: "column", height: "100dvh", minHeight: 0 }}>
           {/* Top Bar — Aurora style: logo badge + mono wordmark, bell + avatar.
               Solid pinned bar with a subtle bottom hairline so the chrome
               reads as part of the build, not floating elements over the
@@ -4498,6 +4501,7 @@ export default function DrSelfTapeApp() {
             opacity: tabBarHidden ? 0 : 1,
             transform: tabBarHidden ? 'translateY(120%)' : 'translateY(0)',
           }}>
+            <StudioTabGlow activeKey={currentPanel || tab} />
             {TABS.filter(t => t.id !== 'more').map(t => {
               const a = tab === t.id && !currentPanel;
               return (
@@ -4601,7 +4605,7 @@ export default function DrSelfTapeApp() {
               </div>
               <div>
                 <span style={{ fontSize: 16, fontWeight: 700, color: TEXT_PRIMARY, letterSpacing: "-0.3px", display: "block" }}>Dr Self Tape</span>
-                <span style={{ fontSize: 'var(--type-xs)', color: TEXT_MUTED, fontStyle: "italic", fontFamily: "'Playfair Display', serif" }}>One take at a time</span>
+                <span style={{ fontSize: 'var(--type-xs)', color: TEXT_MUTED, fontStyle: "italic", fontFamily: 'var(--dst-font-serif)' }}>One take at a time</span>
               </div>
             </div>
 

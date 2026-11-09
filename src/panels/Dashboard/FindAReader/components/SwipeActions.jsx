@@ -32,7 +32,7 @@ const SwipeActions = ({ onPass, onStar, onMatch, disabled }) => (
       }}
       title="Priority Read"
     >
-      <Star size={18} color="#FCE072" fill="#FCE072" />
+      <Star size={18} color="var(--aurora-gold)" fill="var(--aurora-gold)" />
     </button>
 
     {/* Match / Clapperboard */}
@@ -41,12 +41,12 @@ const SwipeActions = ({ onPass, onStar, onMatch, disabled }) => (
       disabled={disabled}
       className="w-16 h-16 rounded-full flex items-center justify-center transition-transform active:scale-95 disabled:opacity-40"
       style={{
-        background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
-        boxShadow: '0 8px 22px rgba(212,168,95,0.45)',
+        background: 'var(--dst-fill-ink)',
+        boxShadow: '0 8px 22px #0003',
       }}
       title="Want to Read"
     >
-      <Clapperboard size={28} color="white" />
+      <Clapperboard size={28} color="var(--dst-on-fill-ink)" />
     </button>
   </div>
 );

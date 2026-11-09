@@ -86,7 +86,7 @@ const ProfileCompleteness = ({ onTapMissing }) => {
           className="h-full transition-all duration-500"
           style={{
             width: `${percent}%`,
-            background: 'linear-gradient(90deg, #D4A85F, #7A5A18)',
+            background: 'var(--dst-brass-ui)',
           }}
         />
       </div>
@@ -101,7 +101,7 @@ const ProfileCompleteness = ({ onTapMissing }) => {
             style={{
               background: 'color-mix(in oklch, var(--aurora-accent) 12%, transparent)',
               border: '1px solid color-mix(in oklch, var(--aurora-accent) 30%, transparent)',
-              color: '#7A5A18',
+              color: 'var(--dst-brass-ink)',
             }}
           >
             + {field.label}

@@ -20,15 +20,15 @@ const TEXT        = 'var(--aurora-text)';
 const TEXT2       = 'var(--aurora-sub)';
 const LABEL_COLOR = 'var(--aurora-accent-deep)';   // deep gold — section labels
 const SELECTED    = 'var(--aurora-accent-deep)';   // deep gold — selected chip text/border
-const SELECTED_BG = 'rgba(212,168,95,0.14)';
-const SELECTED_BD = 'rgba(212,168,95,0.38)';
+const SELECTED_BG = 'var(--dst-brass-tint)';
+const SELECTED_BD = 'var(--dst-brass-tint-line)';
 const MINT        = 'var(--aurora-mint)';
 const MINT_BG     = 'rgba(159,230,180,0.18)';
 const MINT_BD     = 'rgba(159,230,180,0.45)';
 
 /* Button gradient: antique gold spectrum, Aurora light theme */
-const BTN_GRADIENT = 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 60%, var(--aurora-accent-deep) 100%)';
-const BTN_TEXT     = '#FFFFFF';
+const BTN_GRADIENT = 'var(--dst-fill-ink)';
+const BTN_TEXT     = 'var(--dst-on-fill-ink)';
 
 /* ═══════════════════════════════════════════════════
    DATA

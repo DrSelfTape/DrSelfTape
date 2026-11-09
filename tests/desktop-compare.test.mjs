@@ -95,9 +95,11 @@ test('hover scrub is bounded and never runs on touch, playing video or reduced m
   assert.equal(scrubTake(null, pointer), false);
 });
 
-for (const [native, mobile] of [[false, true], [true, true], [true, false]]) for (const paid of [true, false]) test(`mobile compare is byte-identical to main (native=${native}, small=${mobile}, paid=${paid})`, () => {
+// Theme colors may change; retain the original content, controls, and paid gating.
+const withoutPresentation = html => html.replace(/ (?:class|style)="[^"]*"/g, '');
+for (const [native, mobile] of [[false, true], [true, true], [true, false]]) for (const paid of [true, false]) test(`mobile compare retains content and controls (native=${native}, small=${mobile}, paid=${paid})`, () => {
   setupReviewRender({ native, mobile, paid, compare: result });
   const before = render(original.CompareTakes);
   setupReviewRender({ native, mobile, paid, compare: result });
-  assert.equal(render(current.CompareTakes), before);
+  assert.equal(withoutPresentation(render(current.CompareTakes)), withoutPresentation(before));
 });

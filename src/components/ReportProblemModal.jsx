@@ -97,13 +97,13 @@ export default function ReportProblemModal({ onClose }) {
             </p>
             <button onClick={onClose} style={{
               width: '100%', padding: 14, borderRadius: 14, border: 'none', cursor: 'pointer',
-              background: `linear-gradient(135deg, ${GOLD}, #7A5A18)`, color: '#0E0D0A', fontSize: 14, fontWeight: 800,
+              background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)', fontSize: 14, fontWeight: 800,
             }}>Done</button>
           </div>
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7A5A18', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dst-brass-ink)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                 <Bug size={13} /> Report a problem
               </span>
               <button onClick={onClose} aria-label="Close" style={{
@@ -135,14 +135,14 @@ export default function ReportProblemModal({ onClose }) {
               }}
             />
 
-            {error && <p style={{ fontSize: 12.5, color: '#b91c1c', margin: '8px 2px 0' }}>{error}</p>}
+            {error && <p style={{ fontSize: 12.5, color: 'var(--dst-danger)', margin: '8px 2px 0' }}>{error}</p>}
 
             <button
               onClick={submit}
               disabled={!message.trim() || sending}
               style={{
                 width: '100%', marginTop: 14, padding: 14, borderRadius: 14, border: 'none',
-                background: `linear-gradient(135deg, ${GOLD}, #7A5A18)`, color: '#0E0D0A',
+                background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)',
                 fontSize: 14, fontWeight: 800, cursor: 'pointer',
                 opacity: (!message.trim() || sending) ? 0.5 : 1,
               }}

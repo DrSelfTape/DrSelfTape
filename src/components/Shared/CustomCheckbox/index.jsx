@@ -40,7 +40,7 @@ export const CustomCheckbox = ({
         width: 'fit-content',
         userSelect: 'none',
         '& .MuiFormControlLabel-label': {
-          color: 'gray',
+          color: 'var(--dst-ink-2)',
           paddingTop: '2.5px',
           fontSize: '14px',
         },
@@ -53,7 +53,7 @@ export const CustomCheckbox = ({
         <span>
           {label}
           {required && (
-           required && <span className='text-red-800 text-[16px] ml-1'>*</span>
+           required && <span className='text-[var(--dst-danger)] text-[16px] ml-1'>*</span>
           )}
         </span>
       }

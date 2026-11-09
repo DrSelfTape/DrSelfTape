@@ -144,7 +144,7 @@ export default function TermsOfService() {
 
       <Section heading="13. Contact">
         <p>
-          Questions about these Terms? Email <a href="mailto:info@drselftapes.com" style={{ color: '#7A5A18', fontWeight: 600 }}>info@drselftapes.com</a>.
+          Questions about these Terms? Email <a href="mailto:info@drselftapes.com" style={{ color: 'var(--dst-brass-ink)', fontWeight: 600 }}>info@drselftapes.com</a>.
           You can also write to us at: Dr Self Tape LLC, 1621 Vista Del Mar, Hollywood, CA 90028, USA.
         </p>
       </Section>
@@ -215,7 +215,7 @@ export default function TermsOfService() {
         <p>
           <strong>14.8 Developer name and contact.</strong> Dr Self Tape LLC, 1968 S. Coast Hwy
           #4490, Laguna Beach, CA 92651, USA. Email:{' '}
-          <a href="mailto:info@drselftapes.com" style={{ color: '#7A5A18', fontWeight: 600 }}>info@drselftapes.com</a>.
+          <a href="mailto:info@drselftapes.com" style={{ color: 'var(--dst-brass-ink)', fontWeight: 600 }}>info@drselftapes.com</a>.
           Direct any questions, complaints, or claims regarding the Licensed Application to this
           address.
         </p>

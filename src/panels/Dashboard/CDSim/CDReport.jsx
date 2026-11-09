@@ -265,10 +265,10 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-4 mb-8">
         <div>
-          <h2 className="font-serif text-2xl font-bold text-[#0A0A0A]">
+          <h2 className="font-serif text-2xl font-bold text-[var(--dst-ink)]">
             Your Coach's Notes
           </h2>
-          <p className="text-[rgba(10,10,10,0.62)] mt-1 text-sm">
+          <p className="text-[var(--dst-ink-2)] mt-1 text-sm">
             AI-generated direction based on your scene and role.
           </p>
         </div>
@@ -279,11 +279,10 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
             onClick={handleListenAll}
             onTouchEnd={(e) => { e.preventDefault(); if (!isAllLoading) handleListenAll(); }}
             disabled={isAllLoading}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[#0A0A0A] text-sm font-semibold transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-[var(--dst-ink)] text-sm font-semibold transition-all disabled:opacity-50"
             style={{
-              background: isAllPlaying
-                ? 'linear-gradient(135deg, #7A5A18, #D4A85F)'
-                : 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+              background: 'var(--dst-fill-ink)',
+              color: 'var(--dst-on-fill-ink)',
               boxShadow: '0 4px 15px rgba(212,168,95,0.35)',
               touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent',
@@ -303,7 +302,7 @@ export default function CDReport({ report, onRunAgain, selectedVoice }) {
             type="button"
             onClick={onRunAgain}
             onTouchEnd={(e) => { e.preventDefault(); onRunAgain?.(); }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-white font-medium text-sm transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--dst-line)] text-[var(--dst-ink-2)] hover:bg-[var(--dst-surface)] font-medium text-sm transition-colors"
             style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           >
             <RotateCcw size={16} />

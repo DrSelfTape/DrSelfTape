@@ -494,7 +494,7 @@ const GreenRoomChat = (props = {}) => {
       {sessionBooked && (
         <div
           className="mx-4 mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold"
-          style={{ background: 'rgba(159,230,180,0.18)', border: '1px solid rgba(159,230,180,0.40)', color: '#1A6A38' }}
+          style={{ background: 'rgba(159,230,180,0.18)', border: '1px solid rgba(159,230,180,0.40)', color: 'var(--dst-success)' }}
         >
           <Check size={14} />
           <span className="flex-1">Session booked! You can now start your rehearsal.</span>
@@ -557,7 +557,7 @@ const GreenRoomChat = (props = {}) => {
               className="w-full flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all disabled:opacity-50"
               style={{
                 background: brightGoldGradient,
-                color: '#0A0A0A',
+                color: 'var(--dst-ink)',
                 boxShadow: '0 6px 18px rgba(252,224,114,0.32)',
               }}
             >

@@ -12,11 +12,30 @@
         <scene sceneID="EHf-IW-A2E">
             <objects>
                 <viewController id="01J-lp-oVM" sceneMemberID="viewController">
-                    <imageView key="view" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Splash" id="snD-IY-ifK">
+                    <view key="view" contentMode="scaleToFill" id="snD-IY-ifK">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                    </imageView>
+                        <subviews>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" image="DrSelfTapeLogo" translatesAutoresizingMaskIntoConstraints="NO" id="dst-brand-logo">
+                                <color key="tintColor" red="0.941" green="1" blue="0.902" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="240" id="dst-logo-width"/>
+                                    <constraint firstAttribute="height" constant="240" id="dst-logo-height"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="Step into your scene." textAlignment="center" translatesAutoresizingMaskIntoConstraints="NO" id="dst-brand-subtitle">
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="0.655" green="0.847" blue="0.761" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" red="0.043" green="0.082" blue="0.086" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        <constraints>
+                            <constraint firstItem="dst-brand-logo" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="dst-title-x"/>
+                            <constraint firstItem="dst-brand-logo" firstAttribute="centerY" secondItem="snD-IY-ifK" secondAttribute="centerY" constant="-30" id="dst-title-y"/>
+                            <constraint firstItem="dst-brand-subtitle" firstAttribute="centerX" secondItem="snD-IY-ifK" secondAttribute="centerX" id="dst-subtitle-x"/>
+                            <constraint firstItem="dst-brand-subtitle" firstAttribute="top" secondItem="dst-brand-logo" secondAttribute="bottom" constant="14" id="dst-subtitle-y"/>
+                        </constraints>
+                    </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -24,7 +43,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Splash" width="1366" height="1366"/>
+        <image name="DrSelfTapeLogo" width="800" height="800"/>
         <systemColor name="systemBackgroundColor">
             <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>

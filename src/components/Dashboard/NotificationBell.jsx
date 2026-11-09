@@ -246,7 +246,7 @@ export default function NotificationBell({ onNavigate }) {
               onClick={doMarkAll}
               disabled={markingAll}
               className="aurora-mono transition-opacity"
-              style={{ color: '#7A5A18', background: 'transparent', border: 'none', fontSize: 10, fontWeight: 600, letterSpacing: '0.1px', cursor: 'pointer', opacity: markingAll ? 0.5 : 1 }}
+              style={{ color: 'var(--dst-brass-ink)', background: 'transparent', border: 'none', fontSize: 10, fontWeight: 600, letterSpacing: '0.1px', cursor: 'pointer', opacity: markingAll ? 0.5 : 1 }}
             >
               {markingAll ? 'MARKING…' : unread.length === 1 ? 'MARK READ' : 'MARK ALL READ'}
             </button>
@@ -415,7 +415,7 @@ export default function NotificationBell({ onNavigate }) {
               {loading && <div className="flex items-center justify-center py-12"><div className="w-6 h-6 border-2 border-[#D4A85F]/30 border-t-[#FF8280] rounded-full animate-spin" /></div>}
               {!loading && groups.length === 0 && (
                 <div style={{ textAlign: 'center', paddingTop: 90 }}>
-                  <div className="mx-auto mb-4 flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)', color: '#7A5A18' }}><Bell className="w-6 h-6" /></div>
+                  <div className="mx-auto mb-4 flex items-center justify-center" style={{ width: 64, height: 64, borderRadius: 22, background: 'var(--aurora-glass)', border: '1px solid var(--aurora-glass-border)', color: 'var(--dst-brass-ink)' }}><Bell className="w-6 h-6" /></div>
                   <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 22, letterSpacing: '-0.3px', color: 'var(--text-primary)' }}>All quiet on this front.</div>
                   <div className="aurora-mono" style={{ fontSize: 9, color: 'var(--text-dim)', letterSpacing: '0.18px', marginTop: 8 }}>NOTHING NEEDS YOU HERE</div>
                 </div>

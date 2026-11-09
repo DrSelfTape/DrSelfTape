@@ -45,21 +45,21 @@ export default function TapeAnalyzerTutorial({ onClose }) {
           maxHeight: '88vh', overflowY: 'auto',
         }}
       >
-        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7A5A18' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--dst-brass-ink)' }}>
           Self-Tape Analyzer
         </span>
 
         <div className="flex items-center gap-2.5">
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(212,168,95,0.18)' }}>
-            <Film className="w-6 h-6" style={{ color: '#7A5A18' }} />
+            <Film className="w-6 h-6" style={{ color: 'var(--dst-brass-ink)' }} />
           </div>
           <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(212,168,95,0.28)' }}>
-            <Trophy className="w-6 h-6" style={{ color: '#7A5A18' }} />
+            <Trophy className="w-6 h-6" style={{ color: 'var(--dst-brass-ink)' }} />
           </div>
         </div>
 
         <div className="text-center">
-          <h2 className="aurora-display" style={{ fontSize: 22, color: 'var(--aurora-text, #0A0A0A)', margin: '0 0 6px', letterSpacing: '-0.4px', fontFamily: "'Playfair Display', serif" }}>
+          <h2 className="aurora-display" style={{ fontSize: 22, color: 'var(--aurora-text, #0A0A0A)', margin: '0 0 6px', letterSpacing: '-0.4px', fontFamily: 'var(--dst-font-serif)' }}>
             Notes like a casting director
           </h2>
           <p style={{ color: 'var(--aurora-sub, rgba(10,10,10,0.55))', fontSize: 13.5, lineHeight: 1.55, margin: 0 }}>

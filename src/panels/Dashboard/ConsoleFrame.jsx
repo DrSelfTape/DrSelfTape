@@ -37,7 +37,7 @@ export default function ConsoleFrame({ children }) {
             {showAnnouncement && <AnnouncementBanner />}
             {/* The script page under the stage light */}
             <div className="console-paper" style={{
-              borderRadius: 22, background: '#FAFAF7', padding: 32, minHeight: 'calc(100vh - 120px)',
+              borderRadius: 22, background: 'var(--dst-paper)', padding: 32, minHeight: 'calc(100vh - 120px)',
               boxShadow: '0 1px 2px rgba(0,0,0,0.5), 0 24px 60px rgba(0,0,0,0.45)',
               border: '1px solid rgba(245,237,220,0.06)',
             }}>

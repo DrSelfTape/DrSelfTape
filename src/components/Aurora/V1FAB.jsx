@@ -89,7 +89,7 @@ export default function V1FAB({
               borderRadius: '50%',
               border: 'none',
               cursor: 'pointer',
-              background: '#FFFFFF',
+              background: 'var(--dst-surface)',
               color: 'var(--aurora-text)',
               display: 'flex',
               flexDirection: 'column',

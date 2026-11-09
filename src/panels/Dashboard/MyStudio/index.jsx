@@ -19,7 +19,7 @@ import axios from '../../../redux/http';
 import endPoints, { baseURL } from '../../../redux/constant';
 import { openExternal } from '../../../utils/openExternal';
 
-const GOLD = '#D4A85F';
+const GOLD = 'var(--dst-fill-ink)';
 
 // Fallback only. The real destination comes from the server, routed by the
 // client's most recent studio — each location is a separate Wix site on its own
@@ -59,13 +59,13 @@ function SessionCard({ booking, upcoming }) {
   const deliveryUrl = booking.delivery_path ? `${apiOrigin}${booking.delivery_path}` : null;
 
   return (
-    <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] bg-white p-4 mb-3">
+    <div className="rounded-2xl border border-[var(--dst-line)] bg-[var(--dst-surface)] p-4 mb-3">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <div className="font-semibold text-[15px] text-[#0A0A0A] truncate">
+          <div className="font-semibold text-[15px] text-[var(--dst-ink)] truncate">
             {booking.service_name || 'Studio Session'}
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[rgba(10,10,10,0.62)]">
+          <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[var(--dst-ink-2)]">
             <span className="inline-flex items-center gap-1">
               <Calendar size={13} /> {fmtDate(when)}
             </span>
@@ -84,7 +84,7 @@ function SessionCard({ booking, upcoming }) {
         {upcoming && (
           <span
             className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full"
-            style={{ color: '#0A0A0A', background: 'rgba(212,168,95,0.22)' }}
+            style={{ color: 'var(--dst-ink)', background: 'rgba(212,168,95,0.22)' }}
           >
             Upcoming
           </span>
@@ -93,8 +93,8 @@ function SessionCard({ booking, upcoming }) {
 
       {/* The tape is the reason a past session is worth looking at. */}
       {!upcoming && tapes.length > 0 && (
-        <div className="mt-3 pt-3 border-t border-[rgba(10,10,10,0.07)]">
-          <div className="flex items-center gap-2 text-[13px] text-[rgba(10,10,10,0.62)] mb-2">
+        <div className="mt-3 pt-3 border-t border-[var(--dst-line)]">
+          <div className="flex items-center gap-2 text-[13px] text-[var(--dst-ink-2)] mb-2">
             <Film size={14} />
             {tapes.length} {tapes.length === 1 ? 'tape' : 'tapes'} from this session
           </div>
@@ -103,7 +103,7 @@ function SessionCard({ booking, upcoming }) {
               type="button"
               onClick={() => openExternal(deliveryUrl)}
               className="w-full inline-flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm cursor-pointer"
-              style={{ background: GOLD, color: '#0A0A0A' }}
+              style={{ background: GOLD, color: 'var(--dst-on-fill-ink)' }}
             >
               Watch your tape &amp; notes
               <ChevronRight size={16} />
@@ -116,7 +116,7 @@ function SessionCard({ booking, upcoming }) {
           shot before the studio started delivering into the app — say so
           plainly rather than rendering an empty shelf. */}
       {!upcoming && tapes.length === 0 && (
-        <div className="mt-3 pt-3 border-t border-[rgba(10,10,10,0.07)] text-[13px] text-[rgba(10,10,10,0.45)]">
+        <div className="mt-3 pt-3 border-t border-[var(--dst-line)] text-[13px] text-[var(--dst-ink-2)]">
           No tape attached to this session.
         </div>
       )}
@@ -162,13 +162,13 @@ export default function MyStudio() {
 
   return (
     <div className="px-4 pb-24 pt-2 max-w-2xl mx-auto">
-      <h1 className="text-[22px] font-semibold text-[#0A0A0A] mb-1">My Studio</h1>
-      <p className="text-[14px] text-[rgba(10,10,10,0.62)] mb-5">
+      <h1 className="text-[22px] font-semibold text-[var(--dst-ink)] mb-1">My Studio</h1>
+      <p className="text-[14px] text-[var(--dst-ink-2)] mb-5">
         Your sessions at Dr Self Tape, and the footage from each one.
       </p>
 
       {loading && (
-        <div className="flex items-center gap-2 text-[rgba(10,10,10,0.62)] text-sm py-10 justify-center">
+        <div className="flex items-center gap-2 text-[var(--dst-ink-2)] text-sm py-10 justify-center">
           <Loader2 size={16} className="animate-spin" /> Loading your sessions…
         </div>
       )}
@@ -181,7 +181,7 @@ export default function MyStudio() {
 
       {!loading && upcoming.length > 0 && (
         <>
-          <h2 className="text-[13px] font-bold uppercase tracking-wide text-[rgba(10,10,10,0.45)] mb-2">
+          <h2 className="text-[13px] font-bold uppercase tracking-wide text-[var(--dst-ink-2)] mb-2">
             Next up
           </h2>
           {upcoming.map((b) => <SessionCard key={b.id} booking={b} upcoming />)}
@@ -190,12 +190,12 @@ export default function MyStudio() {
 
       {!loading && past.length > 0 && (
         <>
-          <h2 className="mt-6 text-[13px] font-bold uppercase tracking-wide text-[rgba(10,10,10,0.45)] mb-2">
+          <h2 className="mt-6 text-[13px] font-bold uppercase tracking-wide text-[var(--dst-ink-2)] mb-2">
             Past sessions
           </h2>
           {past.map((b) => <SessionCard key={b.id} booking={b} upcoming={false} />)}
           {past.length >= PAST_LIMIT && (
-            <p className="text-[13px] text-[rgba(10,10,10,0.45)] text-center mt-1 mb-2">
+            <p className="text-[13px] text-[var(--dst-ink-2)] text-center mt-1 mb-2">
               Showing your {PAST_LIMIT} most recent sessions.
             </p>
           )}
@@ -204,10 +204,10 @@ export default function MyStudio() {
 
       {hasNothing && (
         <div className="text-center py-12 px-4">
-          <div className="text-[15px] font-semibold text-[#0A0A0A] mb-1">
+          <div className="text-[15px] font-semibold text-[var(--dst-ink)] mb-1">
             No sessions yet
           </div>
-          <p className="text-[14px] text-[rgba(10,10,10,0.62)] mb-5">
+          <p className="text-[14px] text-[var(--dst-ink-2)] mb-5">
             Book a session at the studio and your tape and casting notes will land
             here automatically.
           </p>
@@ -219,7 +219,7 @@ export default function MyStudio() {
           type="button"
           onClick={() => openExternal(bookUrl)}
           className="w-full mt-4 px-5 py-4 rounded-xl font-semibold text-[15px] cursor-pointer"
-          style={{ background: GOLD, color: '#0A0A0A' }}
+          style={{ background: GOLD, color: 'var(--dst-on-fill-ink)' }}
         >
           {past.length > 0 ? 'Book another session' : 'Book a session'}
         </button>

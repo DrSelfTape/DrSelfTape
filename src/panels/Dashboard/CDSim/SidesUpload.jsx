@@ -133,16 +133,16 @@ function WarmupAndRuler({ mission, setMission, len, setLen }) {
                 padding: '14px 16px', borderRadius: 16,
                 position: 'relative', overflow: 'hidden', border: 'none',
                 background: on
-                  ? `linear-gradient(135deg, ${m.tint}, color-mix(in oklch, ${m.tint} 70%, #000))`
-                  : 'rgba(255,255,255,0.6)',
+                  ? 'var(--dst-fill-ink)'
+                  : 'var(--dst-surface)',
                 boxShadow: on ? `0 8px 22px ${m.shadow}` : 'none',
-                outline: `1.5px solid ${on ? m.tint : 'var(--aurora-line)'}`,
+                outline: `1.5px solid ${on ? 'var(--dst-brass-tint-line)' : 'var(--aurora-line)'}`,
                 outlineOffset: '-1.5px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{
-                  fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: '#0E0D0A',
+                  fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: on ? '#0E0D0A' : 'var(--dst-ink)',
                 }}>{m.label}</span>
                 {m.hot && (
                   <span style={{
@@ -375,8 +375,8 @@ export default function SidesUpload({ onSubmit }) {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-5">
-        <h2 className="text-2xl font-bold text-[#0A0A0A]">Upload Your Sides</h2>
-        <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
+        <h2 className="text-2xl font-bold text-[var(--dst-ink)]">Upload Your Sides</h2>
+        <p className="text-[var(--dst-ink-2)] text-sm mt-1">
           {canContinue
             ? 'Review your sides below, then start your session.'
             : 'Upload a .txt or .pdf file, or paste your sides below'}
@@ -392,20 +392,20 @@ export default function SidesUpload({ onSubmit }) {
 
       {canContinue ? (
         <>
-          <div className="bg-[#F4F4EE] rounded-xl border border-[rgba(10,10,10,0.08)] p-4">
+          <div className="bg-[var(--dst-surface-sunken)] rounded-xl border border-[var(--dst-line)] p-4">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold text-[rgba(10,10,10,0.4)] uppercase tracking-wide">
+              <p className="text-xs font-semibold text-[var(--dst-ink-2)] uppercase tracking-wide">
                 {fileName ? `Sides Preview · ${fileName}` : 'Sides Preview'}
               </p>
               <button
                 type="button"
                 onClick={clearAll}
-                className="text-xs font-medium text-[#7A5A18] hover:underline cursor-pointer"
+                className="text-xs font-medium text-[var(--dst-brass-ink)] hover:underline cursor-pointer"
               >
                 Clear
               </button>
             </div>
-            <pre className="text-sm text-[rgba(10,10,10,0.7)] whitespace-pre-wrap max-h-72 overflow-y-auto font-sans leading-relaxed">
+            <pre className="text-sm text-[var(--dst-ink-2)] whitespace-pre-wrap max-h-72 overflow-y-auto font-sans leading-relaxed">
               {scriptText.slice(0, 2000)}
               {scriptText.length > 2000 && '\n…'}
             </pre>
@@ -425,7 +425,7 @@ export default function SidesUpload({ onSubmit }) {
             className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer mb-4 ${
               dragActive
                 ? 'border-[#D4A85F] bg-[#D4A85F]/5'
-                : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F] bg-[#F4F4EE]'
+                : 'border-[var(--dst-line)] hover:border-[#D4A85F] bg-[var(--dst-surface-sunken)]'
             }`}
             onDrop={handleDrop}
             onDragOver={handleDragOver}
@@ -434,17 +434,17 @@ export default function SidesUpload({ onSubmit }) {
           >
             {pdfLoading ? (
               <div className="flex flex-col items-center gap-2">
-                <svg className="w-10 h-10 text-[#7A5A18] animate-spin" viewBox="0 0 24 24" fill="none">
+                <svg className="w-10 h-10 text-[var(--dst-brass-ink)] animate-spin" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-25" />
                   <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-75" />
                 </svg>
-                <p className="text-sm font-medium text-[#0A0A0A]">{pdfStatus || 'Processing...'}</p>
-                <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">This may take a few seconds</p>
+                <p className="text-sm font-medium text-[var(--dst-ink)]">{pdfStatus || 'Processing...'}</p>
+                <p className="text-xs text-[var(--dst-ink-2)] mt-1">This may take a few seconds</p>
               </div>
             ) : (
               <>
                 <svg
-                  className="w-10 h-10 mx-auto text-[rgba(10,10,10,0.4)] mb-3"
+                  className="w-10 h-10 mx-auto text-[var(--dst-ink-2)] mb-3"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -456,10 +456,10 @@ export default function SidesUpload({ onSubmit }) {
                     d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
                   />
                 </svg>
-                <p className="text-sm font-medium text-[#0A0A0A]">
+                <p className="text-sm font-medium text-[var(--dst-ink)]">
                   {fileName || 'Drag & drop your sides here'}
                 </p>
-                <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1">Accepts .txt and .pdf files</p>
+                <p className="text-xs text-[var(--dst-ink-2)] mt-1">Accepts .txt and .pdf files</p>
               </>
             )}
             <input
@@ -479,7 +479,7 @@ export default function SidesUpload({ onSubmit }) {
 
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
-            <span className="text-xs text-[rgba(10,10,10,0.4)] font-medium">OR PASTE BELOW</span>
+            <span className="text-xs text-[var(--dst-ink-2)] font-medium">OR PASTE BELOW</span>
             <div className="flex-1 h-px bg-[rgba(10,10,10,0.14)]" />
           </div>
 
@@ -491,7 +491,7 @@ export default function SidesUpload({ onSubmit }) {
               if (fileName) setFileName('');
             }}
             placeholder={`Paste your sides here...\n\nFormat example:\nJOHN: Hey, how's it going?\nSARAH: Not bad, just got back from the audition.\nJOHN: How did it go?`}
-            className="w-full h-56 border border-[rgba(10,10,10,0.14)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[#F4F4EE] text-[#0A0A0A]"
+            className="w-full h-56 border border-[var(--dst-line)] rounded-xl px-4 py-3 text-sm focus:border-[#D4A85F] focus:ring-2 focus:ring-[#D4A85F]/20 outline-none resize-none bg-[var(--dst-surface-sunken)] text-[var(--dst-ink)]"
           />
         </>
       )}
@@ -499,7 +499,7 @@ export default function SidesUpload({ onSubmit }) {
       <button
         onClick={() => onSubmit(scriptText)}
         disabled={!canContinue}
-        className="mt-5 w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        className="mt-5 w-full bg-[var(--dst-fill-ink)] hover:bg-[var(--dst-fill-ink-press)] text-[var(--dst-on-fill-ink)] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
       >
         Start Session
       </button>

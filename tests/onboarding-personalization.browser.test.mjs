@@ -335,11 +335,22 @@ btest('flag-off markup, draft, writes, and event payloads match the pre-ticket m
   // gates Continue, and the chips never did — but the baseline labels them as
   // if they were required, which is the thing that was fixed. Strip the suffix
   // from both sides so this test still compares structure, not stale labels.
+  //
+  // Third: ChipRow moved off hard-coded colours onto the --dst-* design tokens
+  // (src/tokens.css), which is what gives those chips a dark mode the literals
+  // never could. The baseline predates the token system, so the SAME rendering
+  // decision is simply written two ways. Map the baseline's literals onto the
+  // tokens — applied to both sides, so a chip that genuinely changed colour
+  // still fails. Nothing else in the flow uses this pairing.
   const normalise = (cap) => ({
     ...cap,
     snapshots: cap.snapshots.map((html) =>
       html.replace(/opacity: 0\.65;?\s*/g, '').replace(/;\s+"/g, ';"')
-        .replace(/ · OPTIONAL/g, '')),
+        .replace(/ · OPTIONAL/g, '')
+        .replace(/background: rgba\(255, 255, 255, 0\.6\)/g, 'background: var(--dst-surface)')
+        .replace(/background: var\(--aurora-text\)/g, 'background: var(--dst-fill-ink)')
+        .replace(/color: var\(--aurora-text\)/g, 'color: var(--dst-ink)')
+        .replace(/color: rgb\(255, 255, 255\)/g, 'color: var(--dst-on-fill-ink)')),
   });
   try {
     assert.deepEqual(

@@ -286,29 +286,29 @@ export default function CDSim() {
     <div className="max-w-7xl mx-auto px-4 py-6">
       {/* Step Indicator — hidden during analyzing */}
       {step !== 'analyzing' && (
-        <div className="flex items-center gap-2 mb-8">
+        <div className="flex items-center gap-1 sm:gap-2 mb-8">
           {STEPS.map((s, i) => (
-            <div key={s} className="flex items-center gap-2">
+            <div key={s} className="flex items-center gap-1 sm:gap-2">
               <div
                 className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                   i <= currentStepIdx
-                    ? 'bg-[#D4A85F] text-[#0A0A0A]'
-                    : 'bg-[#F4F4EE] text-[rgba(10,10,10,0.4)]'
+                    ? 'bg-[var(--dst-fill-ink)] text-[var(--dst-on-fill-ink)]'
+                    : 'bg-[var(--dst-surface-sunken)] text-[var(--dst-ink-2)]'
                 }`}
               >
                 {i + 1}
               </div>
               <span
                 className={`text-sm font-medium hidden sm:inline ${
-                  i <= currentStepIdx ? 'text-[#0A0A0A]' : 'text-[rgba(10,10,10,0.4)]'
+                  i <= currentStepIdx ? 'text-[var(--dst-ink)]' : 'text-[var(--dst-ink-2)]'
                 }`}
               >
                 {STEP_LABELS[i]}
               </span>
               {i < STEPS.length - 1 && (
                 <div
-                  className={`w-8 h-0.5 ${
-                    i < currentStepIdx ? 'bg-[#D4A85F]' : 'bg-[#F4F4EE]'
+                  className={`w-3 sm:w-8 h-0.5 ${
+                    i < currentStepIdx ? 'bg-[var(--dst-fill-ink)]' : 'bg-[var(--dst-surface-sunken)]'
                   }`}
                 />
               )}

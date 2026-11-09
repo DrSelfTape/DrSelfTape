@@ -126,7 +126,7 @@ export default function WhatsNewModal({ enabled = true, forceOpen = false, onClo
           onClick={dismiss}
           style={{
             width: '100%', marginTop: 20, padding: '14px', borderRadius: 16, border: 'none', cursor: 'pointer',
-            background: `linear-gradient(135deg, ${GOLD}, #7A5A18)`, color: '#0E0D0A', fontSize: 14, fontWeight: 800,
+            background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)', fontSize: 14, fontWeight: 800,
           }}
         >
           Got it

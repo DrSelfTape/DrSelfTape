@@ -2,8 +2,8 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-[#0A0A0A]">Pick Your Role</h2>
-        <p className="text-[rgba(10,10,10,0.62)] text-sm mt-1">
+        <h2 className="text-2xl font-bold text-[var(--dst-ink)]">Pick Your Role</h2>
+        <p className="text-[var(--dst-ink-2)] text-sm mt-1">
           Select the character you'll be reading for. The AI will play all other roles as your Casting Director.
         </p>
       </div>
@@ -24,13 +24,13 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                   onClick={() => onSelectRole(name)}
                   className={`p-4 rounded-xl border-2 text-sm font-semibold transition-all cursor-pointer ${
                     isSelected
-                      ? 'border-[#D4A85F] bg-[#D4A85F]/5 text-[#7A5A18] shadow-sm'
-                      : 'border-[rgba(10,10,10,0.14)] bg-white text-[rgba(10,10,10,0.62)] hover:border-[#D4A85F]'
+                      ? 'border-[#D4A85F] bg-[#D4A85F]/5 text-[var(--dst-brass-ink)] shadow-sm'
+                      : 'border-[var(--dst-line)] bg-[var(--dst-surface)] text-[var(--dst-ink-2)] hover:border-[#D4A85F]'
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2">
                     <svg
-                      className={`w-5 h-5 ${isSelected ? 'text-[#7A5A18]' : 'text-[rgba(10,10,10,0.4)]'}`}
+                      className={`w-5 h-5 ${isSelected ? 'text-[var(--dst-brass-ink)]' : 'text-[var(--dst-ink-2)]'}`}
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -45,7 +45,7 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
                     {name}
                   </div>
                   {isSelected && (
-                    <p className="text-[10px] mt-1 text-[#7A5A18] font-normal">Your role</p>
+                    <p className="text-[10px] mt-1 text-[var(--dst-brass-ink)] font-normal">Your role</p>
                   )}
                 </button>
               );
@@ -53,8 +53,8 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
           </div>
 
           {selectedRole && (
-            <div className="mt-6 bg-white rounded-xl border border-[rgba(10,10,10,0.08)] p-4 text-sm text-[rgba(10,10,10,0.62)]">
-              <span className="font-semibold text-[#0A0A0A]">
+            <div className="mt-6 bg-[var(--dst-surface)] rounded-xl border border-[var(--dst-line)] p-4 text-sm text-[var(--dst-ink-2)]">
+              <span className="font-semibold text-[var(--dst-ink)]">
                 I will be reading all other roles as your Casting Director today.
               </span>{' '}
               When you're ready, hit Begin Session and we'll start from the top.
@@ -66,14 +66,14 @@ export default function RoleSelect({ characters, selectedRole, onSelectRole, onS
       <div className="flex gap-3 mt-6">
         <button
           onClick={onBack}
-          className="flex-1 px-4 py-3 text-sm font-semibold text-[rgba(10,10,10,0.62)] bg-[#F4F4EE] hover:bg-[#3A3A3A] rounded-lg transition-colors cursor-pointer"
+          className="flex-1 px-4 py-3 text-sm font-semibold text-[var(--dst-ink-2)] bg-[var(--dst-surface-sunken)] hover:bg-[var(--dst-surface)] rounded-lg transition-colors cursor-pointer"
         >
           Back
         </button>
         <button
           onClick={onStart}
           disabled={!selectedRole}
-          className="flex-1 bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex-1 bg-[var(--dst-fill-ink)] hover:bg-[var(--dst-fill-ink-press)] text-[var(--dst-on-fill-ink)] px-5 py-3 rounded-lg font-semibold text-sm transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
           Begin Session
         </button>

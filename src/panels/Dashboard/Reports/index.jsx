@@ -81,7 +81,7 @@ export default function Reports() {
           <button
             onClick={() => dispatch(fetchReportsThunk())}
             className="px-5 py-2.5 text-sm font-semibold rounded-lg transition-colors"
-            style={{ background: 'var(--aurora-heritage-gold)', color: 'var(--aurora-text)' }}
+            style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
           >
             Retry
           </button>

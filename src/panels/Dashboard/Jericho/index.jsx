@@ -58,11 +58,11 @@ const COACHING_STYLES = [
 ];
 
 const INSIGHT_ICONS = {
-  strength: { icon: Star, color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
-  weakness: { icon: Target, color: '#ef4444', bg: 'rgba(239,68,68,0.1)' },
-  pattern: { icon: BarChart3, color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+  strength: { icon: Star, color: 'var(--dst-success)', bg: 'rgba(34,197,94,0.1)' },
+  weakness: { icon: Target, color: 'var(--dst-danger)', bg: 'rgba(239,68,68,0.1)' },
+  pattern: { icon: BarChart3, color: 'var(--dst-sky)', bg: 'rgba(59,130,246,0.1)' },
   breakthrough: { icon: Zap, color: '#FCE072', bg: 'rgba(252,224,114,0.1)' },
-  recommendation: { icon: Sparkles, color: '#D4A85F', bg: 'rgba(212,168,95,0.1)' },
+  recommendation: { icon: Sparkles, color: 'var(--dst-brass-ink)', bg: 'rgba(212,168,95,0.1)' },
 };
 
 const SESSION_TYPE_LABELS = {
@@ -204,14 +204,14 @@ function ReviewDetailSheet({ session, onClose }) {
       style={{ zIndex: 110, background: 'var(--aurora-bg)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
     >
       <div
-        className="flex items-center justify-between px-4 py-4 border-b border-[rgba(10,10,10,0.08)] sticky top-0 z-10"
+        className="flex items-center justify-between px-4 py-4 border-b border-[var(--dst-line)] sticky top-0 z-10"
         style={{ background: 'var(--aurora-bg)', paddingTop: 'max(16px, env(safe-area-inset-top, 0px))' }}
       >
         <div className="flex items-center gap-2">
-          <Film size={16} className="text-[#7A5A18]" />
-          <h2 id="history-review-title" className="text-base font-bold text-[#0A0A0A]">Tape Review</h2>
+          <Film size={16} className="text-[var(--dst-brass-ink)]" />
+          <h2 id="history-review-title" className="text-base font-bold text-[var(--dst-ink)]">Tape Review</h2>
           {session.created_at && (
-            <span className="text-xs text-[rgba(10,10,10,0.4)]">
+            <span className="text-xs text-[var(--dst-ink-2)]">
               {new Date(session.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           )}
@@ -221,7 +221,7 @@ function ReviewDetailSheet({ session, onClose }) {
           type="button"
           onTouchEnd={(e) => { e.preventDefault(); onClose(); }}
           onClick={onClose}
-          className="w-11 h-11 rounded-full flex items-center justify-center border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)]"
+          className="w-11 h-11 rounded-full flex items-center justify-center border border-[var(--dst-line)] text-[var(--dst-ink-2)]"
           style={TAP_STYLE}
           aria-label="Close review"
         ><X size={16} /></button>
@@ -229,21 +229,21 @@ function ReviewDetailSheet({ session, onClose }) {
       <div className={`flex-1 px-4 py-6 ${desktop ? 'max-w-7xl' : 'max-w-2xl'} mx-auto w-full`}>
         {loading && (
           <div role="status" className="flex items-center justify-center gap-3 py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--dst-brass-ink)]" />
             <span className="text-sm">Loading your review…</span>
           </div>
         )}
         {error && (
           <div className="text-center py-20">
-            <p role="alert" className="text-sm text-[rgba(10,10,10,0.62)] mb-4">{error}</p>
+            <p role="alert" className="text-sm text-[var(--dst-ink-2)] mb-4">{error}</p>
             <button type="button" onClick={retry} onTouchEnd={(e) => { e.preventDefault(); retry(); }}
-              className="px-5 py-2.5 rounded-xl text-sm font-bold text-[#0A0A0A]"
-              style={{ ...TAP_STYLE, background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}>Try again</button>
+              className="px-5 py-2.5 rounded-xl text-sm font-bold text-[var(--dst-ink)]"
+              style={{ ...TAP_STYLE, background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}>Try again</button>
           </div>
         )}
         {detail && !loading && !error && (
           <div className="space-y-4 sm:space-y-5">
-            {band && <p className="text-sm font-bold text-[#7A5A18]">{band.label} · {avg.toFixed(1)}/10</p>}
+            {band && <p className="text-sm font-bold text-[var(--dst-brass-ink)]">{band.label} · {avg.toFixed(1)}/10</p>}
             {hasTapeKeys ? (
               <>
                 {desktop ? <DesktopTapeReport review={notes} headlineScore={avg} band={band}
@@ -254,7 +254,7 @@ function ReviewDetailSheet({ session, onClose }) {
                 {/* Old tone-only responses have no verdict card to host chips. */}
                 {!feedback.verdict && tags.length > 0 && (
                   <div className="flex flex-wrap gap-2">{tags.map((tag, i) => (
-                    <span key={i} className="px-3 py-1.5 rounded-full text-xs bg-[#D4A85F]/10 text-[#7A5A18]">{tag}</span>
+                    <span key={i} className="px-3 py-1.5 rounded-full text-xs bg-[#D4A85F]/10 text-[var(--dst-brass-ink)]">{tag}</span>
                   ))}</div>
                 )}
                 {locked && (
@@ -264,23 +264,23 @@ function ReviewDetailSheet({ session, onClose }) {
                     onTouchEnd={(e) => { e.preventDefault(); goUpgrade({ source: 'history_full_read', returnTo: 'jericho' }); }}
                     className="w-full text-left rounded-2xl p-4 border border-[#D4A85F]/35"
                     style={{ ...TAP_STYLE, background: 'rgba(212,168,95,0.08)' }}>
-                    <span className="flex items-center gap-2 text-sm font-bold text-[#0A0A0A]">
-                      <Lock size={14} className="text-[#7A5A18]" />Unlock the full read with any plan
+                    <span className="flex items-center gap-2 text-sm font-bold text-[var(--dst-ink)]">
+                      <Lock size={14} className="text-[var(--dst-brass-ink)]" />Unlock the full read with any plan
                     </span>
                   </button>
                 )}
               </>
             ) : (
-              <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                <h3 className="text-xs font-bold text-[rgba(10,10,10,0.4)] uppercase tracking-wide mb-4">Session Notes</h3>
+              <div className="rounded-2xl border border-[var(--dst-line)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                <h3 className="text-xs font-bold text-[var(--dst-ink-2)] uppercase tracking-wide mb-4">Session Notes</h3>
                 {legacyFields.length > 0
                   ? legacyFields.map(([key, value]) => (
                     <div key={key} className="mb-3">
-                      <p className="text-xs font-bold text-[#7A5A18]">{key.replace(/_/g, ' ')}</p>
-                      <p className="text-sm text-[rgba(10,10,10,0.62)]">{typeof value === 'string' ? value : JSON.stringify(value)}</p>
+                      <p className="text-xs font-bold text-[var(--dst-brass-ink)]">{key.replace(/_/g, ' ')}</p>
+                      <p className="text-sm text-[var(--dst-ink-2)]">{typeof value === 'string' ? value : JSON.stringify(value)}</p>
                     </div>
                   ))
-                  : <p className="text-sm text-[rgba(10,10,10,0.4)]">{typeof feedback === 'string' && feedback ? feedback : 'No notes stored for this session.'}</p>}
+                  : <p className="text-sm text-[var(--dst-ink-2)]">{typeof feedback === 'string' && feedback ? feedback : 'No notes stored for this session.'}</p>}
               </div>
             )}
             {(feedback?.verdict || tags.length > 0) && (
@@ -290,7 +290,7 @@ function ReviewDetailSheet({ session, onClose }) {
                     <button key={format} type="button" disabled={sharing}
                       onClick={() => handleShare(format)}
                       onTouchEnd={(e) => { e.preventDefault(); handleShare(format); }}
-                      className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-[#7A5A18] border border-[#D4A85F]/40 disabled:opacity-60"
+                      className="flex-1 px-4 py-3 rounded-xl text-sm font-bold text-[var(--dst-brass-ink)] border border-[#D4A85F]/40 disabled:opacity-60"
                       style={TAP_STYLE}>
                       <Share2 size={15} className="inline mr-2" />
                       {sharing ? 'Preparing your card…' : format === 'story' ? 'Share to Story' : 'Square post'}
@@ -393,14 +393,14 @@ function DNABars({ dna = {} }) {
         return (
           <div key={m.key} className="flex items-center gap-3">
             <Icon size={16} style={{ color: m.color, flexShrink: 0 }} />
-            <span className="text-xs text-[rgba(10,10,10,0.62)] w-24 truncate">{m.label}</span>
-            <div className="flex-1 h-2 rounded-full bg-[#F4F4EE] overflow-hidden">
+            <span className="text-xs text-[var(--dst-ink-2)] w-24 truncate">{m.label}</span>
+            <div className="flex-1 h-2 rounded-full bg-[var(--dst-surface-sunken)] overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-700"
                 style={{ width: `${val * 10}%`, background: m.color }}
               />
             </div>
-            <span className="text-xs font-bold text-[#0A0A0A] w-6 text-right">{val}</span>
+            <span className="text-xs font-bold text-[var(--dst-ink)] w-6 text-right">{val}</span>
           </div>
         );
       })}
@@ -486,7 +486,7 @@ export default function JerichoDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen px-4 py-6 sm:p-8 flex items-center justify-center" style={{ background: 'var(--aurora-bg)' }}>
-        <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--dst-brass-ink)]" />
       </div>
     );
   }
@@ -500,8 +500,8 @@ export default function JerichoDashboard() {
           <div className="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-6">
             <Brain className="w-8 h-8 text-amber-500" />
           </div>
-          <h2 className="text-xl font-bold text-[#0A0A0A] mb-2">Couldn&apos;t load Jericho</h2>
-          <p className="text-sm text-[rgba(10,10,10,0.62)] mb-6">{String(memoryError)}</p>
+          <h2 className="text-xl font-bold text-[var(--dst-ink)] mb-2">Couldn&apos;t load Jericho</h2>
+          <p className="text-sm text-[var(--dst-ink-2)] mb-6">{String(memoryError)}</p>
           <button
             onClick={() => {
               dispatch(fetchActorMemory());
@@ -509,8 +509,8 @@ export default function JerichoDashboard() {
               dispatch(fetchEvolution());
               dispatch(fetchRecentSessions(10));
             }}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A]"
-            style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)]"
+            style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
           >
             Try again
           </button>
@@ -525,20 +525,20 @@ export default function JerichoDashboard() {
       <div className="min-h-screen px-4 py-6 sm:p-8" style={{ background: 'var(--aurora-bg)' }}>
         <div className="max-w-2xl mx-auto text-center py-20">
           <div className="w-24 h-24 rounded-full bg-[#D4A85F]/10 border border-[#D4A85F]/20 flex items-center justify-center mx-auto mb-6">
-            <Brain className="w-12 h-12 text-[#7A5A18]" />
+            <Brain className="w-12 h-12 text-[var(--dst-brass-ink)]" />
           </div>
-          <h1 className="text-2xl font-bold text-[#0A0A0A] mb-3">Meet Jericho</h1>
+          <h1 className="text-2xl font-bold text-[var(--dst-ink)] mb-3">Meet Jericho</h1>
           {/* V-03: one honest sentence, one CTA to the real next action. The
               secondary raw-href link is gone — a full navigation out of the
               mobile shell was the only thing it did on a phone. */}
-          <p className="text-[rgba(10,10,10,0.62)] text-sm mb-8 max-w-md mx-auto leading-relaxed">
+          <p className="text-[var(--dst-ink-2)] text-sm mb-8 max-w-md mx-auto leading-relaxed">
             Jericho builds your actor profile from every session — it starts with your first Tape Review.
           </p>
           <div className="flex justify-center">
             <button
               onClick={() => { setActiveTab('tape'); setEntered(true); }}
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
-              style={{ background: 'linear-gradient(135deg, #D4A85F, #7A5A18)' }}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all hover:shadow-lg dst-press"
+              style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
             >
               <Film size={16} /> Review a Self-Tape
             </button>
@@ -565,11 +565,11 @@ export default function JerichoDashboard() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <Brain className="w-5 h-5 text-[#7A5A18]" />
-              <h1 className="text-xl font-bold text-[#0A0A0A]">Jericho</h1>
-              <span className="text-xs bg-[#D4A85F]/15 text-[#7A5A18] px-2 py-0.5 rounded-full font-semibold">AI Coach</span>
+              <Brain className="w-5 h-5 text-[var(--dst-brass-ink)]" />
+              <h1 className="text-xl font-bold text-[var(--dst-ink)]">Jericho</h1>
+              <span className="text-xs bg-[#D4A85F]/15 text-[var(--dst-brass-ink)] px-2 py-0.5 rounded-full font-semibold">AI Coach</span>
             </div>
-            <p className="text-sm text-[rgba(10,10,10,0.4)]">
+            <p className="text-sm text-[var(--dst-ink-2)]">
               {totalSessions > 0
                 ? `${totalSessions} session${totalSessions !== 1 ? 's' : ''} analyzed · always evolving`
                 : 'Your personal acting coach is learning...'}
@@ -578,7 +578,7 @@ export default function JerichoDashboard() {
           {memory?.summary && (
             <button
               onClick={() => setShowStylePicker(!showStylePicker)}
-              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:text-[#0A0A0A] hover:border-[#555] transition-colors"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium border border-[var(--dst-line)] text-[var(--dst-ink-2)] hover:text-[var(--dst-ink)] hover:border-[#555] transition-colors"
             >
               {COACHING_STYLES.find((s) => s.id === coachingStyle)?.emoji} {coachingStyle}
             </button>
@@ -587,8 +587,8 @@ export default function JerichoDashboard() {
 
         {/* ── Coaching Style Picker ── */}
         {showStylePicker && (
-          <div className="mb-6 rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-            <h3 className="text-sm font-bold text-[#0A0A0A] mb-3">Coaching Style</h3>
+          <div className="mb-6 rounded-2xl border border-[var(--dst-line)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+            <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-3">Coaching Style</h3>
             <div className="flex gap-2">
               {COACHING_STYLES.map((s) => (
                 <button
@@ -600,12 +600,12 @@ export default function JerichoDashboard() {
                   className={`flex-1 flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
                     coachingStyle === s.id
                       ? 'border-[#D4A85F] bg-[#D4A85F]/10'
-                      : 'border-[rgba(10,10,10,0.08)] hover:border-[rgba(10,10,10,0.14)]'
+                      : 'border-[var(--dst-line)] hover:border-[var(--dst-line)]'
                   }`}
                 >
                   <span className="text-xl">{s.emoji}</span>
-                  <span className="text-xs font-semibold text-[#0A0A0A]">{s.label}</span>
-                  <span className="text-[10px] text-[rgba(10,10,10,0.4)] leading-tight text-center">{s.desc}</span>
+                  <span className="text-xs font-semibold text-[var(--dst-ink)]">{s.label}</span>
+                  <span className="text-[10px] text-[var(--dst-ink-2)] leading-tight text-center">{s.desc}</span>
                 </button>
               ))}
             </div>
@@ -613,7 +613,7 @@ export default function JerichoDashboard() {
         )}
 
         {/* ── Tab Navigation ── */}
-        <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 border border-[rgba(10,10,10,0.08)]">
+        <div className="flex gap-1 mb-6 bg-[var(--dst-surface)] rounded-xl p-1 border border-[var(--dst-line)]">
           {[
             { id: 'overview', label: 'Overview', icon: BarChart3 },
             { id: 'tape', label: 'Tape', icon: Film },
@@ -628,8 +628,8 @@ export default function JerichoDashboard() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                   active
-                    ? 'bg-[#D4A85F]/15 text-[#7A5A18] border border-[#D4A85F]/20'
-                    : 'text-[rgba(10,10,10,0.4)] hover:text-[rgba(10,10,10,0.62)]'
+                    ? 'bg-[#D4A85F]/15 text-[var(--dst-brass-ink)] border border-[#D4A85F]/20'
+                    : 'text-[var(--dst-ink-2)] hover:text-[var(--dst-ink-2)]'
                 }`}
               >
                 <Icon size={14} />
@@ -641,7 +641,7 @@ export default function JerichoDashboard() {
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-[#7A5A18]" />
+            <Loader2 className="w-8 h-8 animate-spin text-[var(--dst-brass-ink)]" />
           </div>
         ) : (
           <>
@@ -650,14 +650,14 @@ export default function JerichoDashboard() {
               <div className="space-y-4 sm:space-y-6">
                 {/* Actor Summary */}
                 {memory?.summary && (
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                  <div className="rounded-2xl border border-[var(--dst-line)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-xl bg-[#D4A85F]/10 flex items-center justify-center flex-shrink-0">
-                        <Brain size={18} className="text-[#7A5A18]" />
+                        <Brain size={18} className="text-[var(--dst-brass-ink)]" />
                       </div>
                       <div>
-                        <h3 className="text-sm font-bold text-[#0A0A0A] mb-1">Jericho&apos;s Assessment</h3>
-                        <p className="text-sm text-[rgba(10,10,10,0.62)] leading-relaxed">{memory.summary}</p>
+                        <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-1">Jericho&apos;s Assessment</h3>
+                        <p className="text-sm text-[var(--dst-ink-2)] leading-relaxed">{memory.summary}</p>
                       </div>
                     </div>
                   </div>
@@ -665,9 +665,9 @@ export default function JerichoDashboard() {
 
                 {/* Performance DNA */}
                 {desktopDNA ? <DesktopDNAOverview /> : (
-                <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                  <h3 className="text-sm font-bold text-[#0A0A0A] mb-4 flex items-center gap-2">
-                    <Zap size={16} className="text-[#7A5A18]" /> Performance DNA
+                <div className="rounded-2xl border border-[var(--dst-line)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                  <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-4 flex items-center gap-2">
+                    <Zap size={16} className="text-[var(--dst-brass-ink)]" /> Performance DNA
                   </h3>
                   {/* Radar on desktop, bars on mobile */}
                   <div className="hidden sm:block">
@@ -682,8 +682,8 @@ export default function JerichoDashboard() {
                 {/* Strengths & Growth Areas */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Strengths */}
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                    <h3 className="text-sm font-bold text-[#0A0A0A] mb-3 flex items-center gap-2">
+                  <div className="rounded-2xl border border-[var(--dst-line)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                    <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-3 flex items-center gap-2">
                       <Star size={14} className="text-emerald-400" /> Strengths
                     </h3>
                     {strengths.length > 0 ? (
@@ -695,13 +695,13 @@ export default function JerichoDashboard() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-[rgba(10,10,10,0.4)]">Complete more sessions for Jericho to identify your strengths.</p>
+                      <p className="text-xs text-[var(--dst-ink-2)]">Complete more sessions for Jericho to identify your strengths.</p>
                     )}
                   </div>
 
                   {/* Growth Areas */}
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                    <h3 className="text-sm font-bold text-[#0A0A0A] mb-3 flex items-center gap-2">
+                  <div className="rounded-2xl border border-[var(--dst-line)] p-4" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                    <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-3 flex items-center gap-2">
                       <Target size={14} className="text-amber-400" /> Growth Areas
                     </h3>
                     {(growthAreas.length > 0 || weaknesses.length > 0) ? (
@@ -718,7 +718,7 @@ export default function JerichoDashboard() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-xs text-[rgba(10,10,10,0.4)]">Areas for improvement will appear as Jericho learns your patterns.</p>
+                      <p className="text-xs text-[var(--dst-ink-2)]">Areas for improvement will appear as Jericho learns your patterns.</p>
                     )}
                   </div>
                 </div>
@@ -734,12 +734,12 @@ export default function JerichoDashboard() {
                     return (
                       <div
                         key={stat.label}
-                        className="rounded-xl border border-[rgba(10,10,10,0.08)] p-3 text-center"
+                        className="rounded-xl border border-[var(--dst-line)] p-3 text-center"
                         style={{ background: 'var(--bg-surface, #1A1A2E)' }}
                       >
                         <Icon size={18} style={{ color: stat.color }} className="mx-auto mb-1" />
-                        <p className="text-lg font-bold text-[#0A0A0A]">{stat.value}</p>
-                        <p className="text-[10px] text-[rgba(10,10,10,0.4)] font-medium">{stat.label}</p>
+                        <p className="text-lg font-bold text-[var(--dst-ink)]">{stat.value}</p>
+                        <p className="text-[10px] text-[var(--dst-ink-2)] font-medium">{stat.label}</p>
                       </div>
                     );
                   })}
@@ -747,20 +747,20 @@ export default function JerichoDashboard() {
 
                 {/* Evolution Timeline Preview */}
                 {evolution.length > 0 && (
-                  <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
-                    <h3 className="text-sm font-bold text-[#0A0A0A] mb-3 flex items-center gap-2">
+                  <div className="rounded-2xl border border-[var(--dst-line)] p-4 sm:p-5" style={{ background: 'var(--bg-surface, #1A1A2E)' }}>
+                    <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-3 flex items-center gap-2">
                       <TrendingUp size={16} className="text-[#A7ECDA]" /> Evolution
                     </h3>
                     <div className="space-y-2">
                       {evolution.slice(0, 5).map((e, i) => (
-                        <div key={i} className="flex items-center justify-between py-2 border-b border-[rgba(10,10,10,0.08)] last:border-0">
+                        <div key={i} className="flex items-center justify-between py-2 border-b border-[var(--dst-line)] last:border-0">
                           <div>
-                            <span className="text-xs font-medium text-[#0A0A0A]">{e.metric_name?.replace(/_/g, ' ')}</span>
-                            {e.notes && <p className="text-[10px] text-[rgba(10,10,10,0.4)] mt-0.5">{e.notes}</p>}
+                            <span className="text-xs font-medium text-[var(--dst-ink)]">{e.metric_name?.replace(/_/g, ' ')}</span>
+                            {e.notes && <p className="text-[10px] text-[var(--dst-ink-2)] mt-0.5">{e.notes}</p>}
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-[#0A0A0A]">{e.value}</span>
-                            <span className="text-[10px] text-[rgba(10,10,10,0.4)]">/10</span>
+                            <span className="text-sm font-bold text-[var(--dst-ink)]">{e.value}</span>
+                            <span className="text-[10px] text-[var(--dst-ink-2)]">/10</span>
                           </div>
                         </div>
                       ))}
@@ -784,7 +784,7 @@ export default function JerichoDashboard() {
               <div className="space-y-3">
                 {insightsLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#7A5A18]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-[var(--dst-brass-ink)]" />
                   </div>
                 ) : insights.length > 0 ? (
                   insights.map((insight, i) => {
@@ -793,7 +793,7 @@ export default function JerichoDashboard() {
                     return (
                       <div
                         key={i}
-                        className="rounded-xl border border-[rgba(10,10,10,0.08)] p-4 flex gap-3"
+                        className="rounded-xl border border-[var(--dst-line)] p-4 flex gap-3"
                         style={{ background: 'var(--bg-surface, #1A1A2E)' }}
                       >
                         <div
@@ -804,12 +804,12 @@ export default function JerichoDashboard() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs font-bold text-[#0A0A0A] capitalize">
+                            <span className="text-xs font-bold text-[var(--dst-ink)] capitalize">
                               {insight.insight_type}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold"
                               style={{
-                                background: `${style.color}20`,
+                                background: `color-mix(in srgb, ${style.color} 12%, transparent)`,
                                 color: style.color,
                               }}
                             >
@@ -819,8 +819,8 @@ export default function JerichoDashboard() {
                               <Shield size={10} className="text-emerald-400" title="High confidence" />
                             )}
                           </div>
-                          <p className="text-sm text-[rgba(10,10,10,0.62)] leading-relaxed">{insight.description}</p>
-                          <p className="text-[10px] text-[rgba(10,10,10,0.4)] mt-1">
+                          <p className="text-sm text-[var(--dst-ink-2)] leading-relaxed">{insight.description}</p>
+                          <p className="text-[10px] text-[var(--dst-ink-2)] mt-1">
                             Based on {insight.evidence_count} session{insight.evidence_count !== 1 ? 's' : ''}
                             {' · '}
                             {Math.round(insight.confidence * 100)}% confidence
@@ -832,7 +832,7 @@ export default function JerichoDashboard() {
                 ) : (
                   <div className="text-center py-12">
                     <Sparkles className="w-10 h-10 text-[#3A3A3A] mx-auto mb-3" />
-                    <p className="text-sm text-[rgba(10,10,10,0.4)]">Insights will appear after a few coaching sessions.</p>
+                    <p className="text-sm text-[var(--dst-ink-2)]">Insights will appear after a few coaching sessions.</p>
                     <p className="text-xs text-[#555] mt-1">Jericho needs at least 3 sessions to start spotting patterns.</p>
                   </div>
                 )}
@@ -844,7 +844,7 @@ export default function JerichoDashboard() {
               <div className="space-y-2">
                 {sessionsLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-6 h-6 animate-spin text-[#7A5A18]" />
+                    <Loader2 className="w-6 h-6 animate-spin text-[var(--dst-brass-ink)]" />
                   </div>
                 ) : recentSessions.length > 0 ? (
                   recentSessions.map((session, i) => {
@@ -862,7 +862,7 @@ export default function JerichoDashboard() {
                           onTouchEnd: (e) => { e.preventDefault(); setSelectedSession(session); },
                           onClick: () => setSelectedSession(session),
                         })}
-                        className={`rounded-xl border border-[rgba(10,10,10,0.08)] p-3 sm:p-4 flex items-center gap-3${isTapeReview ? ' w-full text-left' : ''}`}
+                        className={`rounded-xl border border-[var(--dst-line)] p-3 sm:p-4 flex items-center gap-3${isTapeReview ? ' w-full text-left' : ''}`}
                         style={{
                           background: 'var(--bg-surface, #1A1A2E)',
                           ...(isTapeReview && { touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }),
@@ -871,14 +871,14 @@ export default function JerichoDashboard() {
                         <span className="text-lg">{typeInfo.emoji}</span>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-[#0A0A0A]">{typeInfo.label}</span>
+                            <span className="text-xs font-bold text-[var(--dst-ink)]">{typeInfo.label}</span>
                             {session.role_played && (
-                              <span className="text-[10px] text-[#7A5A18] font-medium">as {session.role_played}</span>
+                              <span className="text-[10px] text-[var(--dst-brass-ink)] font-medium">as {session.role_played}</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
                             {session.user_mood && (
-                              <span className="text-[10px] text-[rgba(10,10,10,0.62)]">{session.user_mood}</span>
+                              <span className="text-[10px] text-[var(--dst-ink-2)]">{session.user_mood}</span>
                             )}
                             {session.user_rating && (
                               <span className="text-[10px] text-amber-400">
@@ -889,7 +889,7 @@ export default function JerichoDashboard() {
                         </div>
                         <div className="text-right flex-shrink-0">
                           {date && (
-                            <p className="text-[10px] text-[rgba(10,10,10,0.4)]">
+                            <p className="text-[10px] text-[var(--dst-ink-2)]">
                               {date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                             </p>
                           )}
@@ -904,7 +904,7 @@ export default function JerichoDashboard() {
                 ) : (
                   <div className="text-center py-12">
                     <Clock className="w-10 h-10 text-[#3A3A3A] mx-auto mb-3" />
-                    <p className="text-sm text-[rgba(10,10,10,0.4)]">No sessions yet.</p>
+                    <p className="text-sm text-[var(--dst-ink-2)]">No sessions yet.</p>
                     <p className="text-xs text-[#555] mt-1">Your coaching and practice sessions will appear here.</p>
                   </div>
                 )}

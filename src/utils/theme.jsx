@@ -1,28 +1,27 @@
 import { useEffect } from 'react';
 import { ThemeContext } from './useTheme';
 import { consoleSurfaceEnabled } from './consoleSurface';
+import { Capacitor } from '@capacitor/core';
 
-// Light-only mode (decision 2026-05-29). Dark theme retired in favor of the
-// single Aurora-derived light surface. We keep ThemeProvider + the useTheme
-// hook so existing imports don't break, but theme is now a constant.
+// The native app uses the unified Future Studio dark theme. Desktop web
+// retains its own surface; the mobile shell also themes body-level portals.
 export function ThemeProvider({ children }) {
-  // Pin the document attribute to 'light' on every mount. CSS variables keyed
-  // to [data-theme="light"] resolve; the [data-theme="dark"] block is dead
-  // code that we'll sweep later.
+  const theme = Capacitor.isNativePlatform() ? 'dark' : 'light';
+  // Keep legacy theme-aware components aligned with the native palette.
   // Aurora Noir (Ring 0): the console surface stamps on desktop web only,
   // gated by consoleSurfaceEnabled() (VITE_CONSOLE_THEME or the
   // dst_console_preview localStorage override).
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.setAttribute('data-theme', theme);
     if (consoleSurfaceEnabled()) {
       document.documentElement.setAttribute('data-surface', 'console');
     } else {
       document.documentElement.removeAttribute('data-surface');
     }
-  }, []);
+  }, [theme]);
 
   return (
-    <ThemeContext.Provider value={{ theme: 'light', setTheme: () => {}, toggleTheme: () => {} }}>
+    <ThemeContext.Provider value={{ theme, setTheme: () => {}, toggleTheme: () => {} }}>
       {children}
     </ThemeContext.Provider>
   );

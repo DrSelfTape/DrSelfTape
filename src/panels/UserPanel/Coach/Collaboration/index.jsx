@@ -248,7 +248,7 @@ const CoachCollaboration = () => {
                       '&:hover': {
                         backgroundColor: 'rgba(239, 68, 68, 0.06)',
                         borderColor: '#dc2626',
-                        color: '#dc2626',
+                        color: 'var(--dst-danger)',
                       },
                     }}
                   >

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
-import { MapPin, Clock } from 'lucide-react';
+import { MapPin, Clock, X, Star, Clapperboard } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { tapSelect, tapPrimary } from '../../../../utils/haptics';
 import { lastSeenLabel } from '../../../../utils/matchSignals';
@@ -208,6 +208,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
   return (
     <div
       ref={cardRef}
+      className="future-reader-card"
       style={cardStyle}
       onMouseDown={(e) => handleDragStart(e.clientX)}
       onMouseMove={(e) => handleDragMove(e.clientX)}
@@ -413,6 +414,7 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
           <div style={{ display: 'flex', gap: 18, justifyContent: 'center', paddingTop: 12, paddingBottom: 8, alignItems: 'center' }}>
             {/* Pass */}
             <button
+              aria-label="Pass on this reader"
               onTouchEnd={(e) => { e.stopPropagation(); tapSelect(); onSwipeLeft?.(); }}
               onClick={(e) => { e.stopPropagation(); tapSelect(); onSwipeLeft?.(); }}
               style={{
@@ -425,37 +427,39 @@ const SwipeCard = ({ actor, onSwipeLeft, onSwipeRight, onStar, isTop }) => {
                 backdropFilter: 'blur(20px) saturate(1.4)',
                 WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
               }}
-            >✕</button>
+            ><X size={22} aria-hidden="true" /></button>
 
             {/* Star */}
             <button
+              aria-label="Prioritize this reader"
               onTouchEnd={(e) => { e.stopPropagation(); onStar?.(); }}
               onClick={(e) => { e.stopPropagation(); onStar?.(); }}
               style={{
                 width: 50, height: 50, borderRadius: '50%',
-                background: 'rgba(252,224,114,0.18)',
-                border: '1px solid rgba(252,224,114,0.45)',
-                color: '#FCE072',
+                background: 'rgba(200,246,182,0.18)',
+                border: '1px solid rgba(200,246,182,0.45)',
+                color: '#c8f6b6',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 20, cursor: 'pointer',
                 backdropFilter: 'blur(20px) saturate(1.4)',
                 WebkitBackdropFilter: 'blur(20px) saturate(1.4)',
               }}
-            >⭐</button>
+            ><Star size={21} aria-hidden="true" /></button>
 
             {/* Slate */}
             <button
+              aria-label="Read with this actor"
               onTouchEnd={(e) => { e.stopPropagation(); tapPrimary(); onSwipeRight?.(); }}
               onClick={(e) => { e.stopPropagation(); tapPrimary(); onSwipeRight?.(); }}
               style={{
                 width: 64, height: 64, borderRadius: '50%',
-                background: 'linear-gradient(135deg, #D4A85F, #7A5A18)',
+                background: '#c8f6b6', color: '#193424',
                 border: 'none',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 24, cursor: 'pointer',
-                boxShadow: '0 8px 22px rgba(212,168,95,0.45)',
+                boxShadow: '0 8px 22px rgba(170,220,160,0.2)',
               }}
-            >🎬</button>
+            ><Clapperboard size={26} aria-hidden="true" /></button>
           </div>
         )}
       </div>

@@ -54,12 +54,12 @@ function SubmissionPreviewRow({ row, selected, onToggle }) {
 
       {/* Project + Role */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{ fontSize: 13, fontWeight: 600, color: '#f2f0ed', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.project}</p>
-        <p style={{ fontSize: 11, color: '#8a9a96', margin: 0 }}>{row.role} · {row.casting_director}</p>
+        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--dst-ink)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.project}</p>
+        <p style={{ fontSize: 11, color: 'var(--dst-ink-2)', margin: 0 }}>{row.role} · {row.casting_director}</p>
       </div>
 
       {/* Date */}
-      <span style={{ fontSize: 11, color: '#4a5a56', flexShrink: 0 }}>
+      <span style={{ fontSize: 11, color: 'var(--dst-ink-3)', flexShrink: 0 }}>
         {row.submitted_at ? new Date(row.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
       </span>
 
@@ -136,15 +136,15 @@ export default function TalentReportImporter({ onClose, onImported }) {
 
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2147483000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div style={{ background: '#13151d', borderRadius: 20, border: '1px solid rgba(167,236,218,0.1)', width: '100%', maxWidth: 680, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--dst-surface)', borderRadius: 20, border: '1px solid rgba(167,236,218,0.1)', width: '100%', maxWidth: 680, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid rgba(167,236,218,0.07)' }}>
           <div>
-            <h2 style={{ color: '#f2f0ed', fontSize: 18, fontWeight: 700, margin: 0 }}>Import Agency Report</h2>
-            <p style={{ color: '#8a9a96', fontSize: 13, margin: '3px 0 0' }}>Upload your talent report PDF and we'll parse it automatically</p>
+            <h2 style={{ color: 'var(--dst-ink)', fontSize: 18, fontWeight: 700, margin: 0 }}>Import Agency Report</h2>
+            <p style={{ color: 'var(--dst-ink-2)', fontSize: 13, margin: '3px 0 0' }}>Upload your talent report PDF and we'll parse it automatically</p>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#8a9a96' }}>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', color: 'var(--dst-ink-2)' }}>
             <X size={18} />
           </button>
         </div>
@@ -158,8 +158,8 @@ export default function TalentReportImporter({ onClose, onImported }) {
               <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(94,230,184,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <CheckCircle size={30} color="#5ee6b8" />
               </div>
-              <h3 style={{ color: '#f2f0ed', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Imported!</h3>
-              <p style={{ color: '#8a9a96', fontSize: 14, margin: 0 }}>{importDone} submissions added to your tracker</p>
+              <h3 style={{ color: 'var(--dst-ink)', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Imported!</h3>
+              <p style={{ color: 'var(--dst-ink-2)', fontSize: 14, margin: 0 }}>{importDone} submissions added to your tracker</p>
             </div>
           )}
 
@@ -179,8 +179,8 @@ export default function TalentReportImporter({ onClose, onImported }) {
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,130,128,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <Upload size={24} color="#FF8280" />
               </div>
-              <p style={{ color: '#f2f0ed', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Drop your talent report PDF here</p>
-              <p style={{ color: '#8a9a96', fontSize: 13, margin: '0 0 16px' }}>Eco Cast, agency submission reports, any standard format</p>
+              <p style={{ color: 'var(--dst-ink)', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Drop your talent report PDF here</p>
+              <p style={{ color: 'var(--dst-ink-2)', fontSize: 13, margin: '0 0 16px' }}>Eco Cast, agency submission reports, any standard format</p>
               <div style={{ display: 'inline-block', background: 'rgba(255,130,128,0.12)', border: '1px solid rgba(255,130,128,0.25)', borderRadius: 20, padding: '6px 18px', fontSize: 12, color: '#FF8280', fontWeight: 600 }}>
                 Choose PDF
               </div>
@@ -194,8 +194,8 @@ export default function TalentReportImporter({ onClose, onImported }) {
               <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(167,236,218,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
                 <Loader2 size={26} color="#A7ECDA" style={{ animation: 'spin 1s linear infinite' }} />
               </div>
-              <p style={{ color: '#f2f0ed', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Parsing {fileName}...</p>
-              <p style={{ color: '#8a9a96', fontSize: 13, margin: 0 }}>Jericho is reading your report</p>
+              <p style={{ color: 'var(--dst-ink)', fontSize: 15, fontWeight: 600, margin: '0 0 6px' }}>Parsing {fileName}...</p>
+              <p style={{ color: 'var(--dst-ink-2)', fontSize: 13, margin: 0 }}>Jericho is reading your report</p>
             </div>
           )}
 
@@ -218,9 +218,9 @@ export default function TalentReportImporter({ onClose, onImported }) {
                   { label: 'Callbacks', value: parsedReport.summary?.total_callbacks || 0, color: '#FCE072' },
                   { label: 'Self Tapes', value: parsedReport.summary?.total_self_tapes || 0, color: '#7eb8ec' },
                 ].map(s => (
-                  <div key={s.label} style={{ background: '#1a1c26', borderRadius: 12, padding: '10px 16px', flex: 1, minWidth: 100, textAlign: 'center' }}>
+                  <div key={s.label} style={{ background: 'var(--dst-surface-sunken)', borderRadius: 12, padding: '10px 16px', flex: 1, minWidth: 100, textAlign: 'center' }}>
                     <p style={{ fontSize: 22, fontWeight: 800, color: s.color, margin: '0 0 2px' }}>{s.value}</p>
-                    <p style={{ fontSize: 11, color: '#8a9a96', margin: 0 }}>{s.label}</p>
+                    <p style={{ fontSize: 11, color: 'var(--dst-ink-2)', margin: 0 }}>{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -229,8 +229,8 @@ export default function TalentReportImporter({ onClose, onImported }) {
               {parsedReport.talent_name && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
                   <FileText size={15} color="#A7ECDA" />
-                  <span style={{ fontSize: 13, color: '#8a9a96' }}>
-                    <strong style={{ color: '#f2f0ed' }}>{parsedReport.talent_name}</strong>
+                  <span style={{ fontSize: 13, color: 'var(--dst-ink-2)' }}>
+                    <strong style={{ color: 'var(--dst-ink)' }}>{parsedReport.talent_name}</strong>
                     {parsedReport.period_start && ` · ${parsedReport.period_start} → ${parsedReport.period_end}`}
                   </span>
                 </div>
@@ -241,18 +241,18 @@ export default function TalentReportImporter({ onClose, onImported }) {
                 <button onClick={toggleAll} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#A7ECDA', fontWeight: 600, padding: 0 }}>
                   {selectedIds.size === subs.length ? 'Deselect All' : `Select All (${subs.length})`}
                 </button>
-                <span style={{ fontSize: 12, color: '#4a5a56' }}>{selectedIds.size} selected</span>
+                <span style={{ fontSize: 12, color: 'var(--dst-ink-3)' }}>{selectedIds.size} selected</span>
               </div>
 
               {/* Rows */}
-              <div style={{ background: '#1a1c26', borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ background: 'var(--dst-surface-sunken)', borderRadius: 12, overflow: 'hidden', marginBottom: 12 }}>
                 {displaySubs.map((row, i) => (
                   <SubmissionPreviewRow key={i} row={row} selected={selectedIds.has(i)} onToggle={() => toggleRow(i)} />
                 ))}
               </div>
 
               {subs.length > 15 && (
-                <button onClick={() => setShowAll(!showAll)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#8a9a96', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, margin: '0 auto 4px', padding: '4px 8px' }}>
+                <button onClick={() => setShowAll(!showAll)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--dst-ink-2)', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, margin: '0 auto 4px', padding: '4px 8px' }}>
                   {showAll ? <><ChevronUp size={14} /> Show less</> : <><ChevronDown size={14} /> Show all {subs.length} submissions</>}
                 </button>
               )}
@@ -263,7 +263,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
         {/* Footer */}
         {parsedReport && importDone === null && (
           <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(167,236,218,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <button onClick={() => { dispatch(clearParsedReport()); setFileName(''); setSelectedIds(new Set()); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#8a9a96' }}>
+            <button onClick={() => { dispatch(clearParsedReport()); setFileName(''); setSelectedIds(new Set()); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: 'var(--dst-ink-2)' }}>
               ← Upload different file
             </button>
             <button

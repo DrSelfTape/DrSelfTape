@@ -145,7 +145,7 @@ export default function AIConsentModal() {
       <div style={{
         width: '100%', maxWidth: 460,
         maxHeight: 'calc(100dvh - 40px)',
-        background: '#FFFDF8',
+        background: 'var(--dst-paper)',
         borderRadius: 20,
         border: '1px solid rgba(212, 168, 95, 0.35)',
         boxShadow: '0 20px 60px rgba(0,0,0,0.35)',
@@ -212,7 +212,7 @@ export default function AIConsentModal() {
         <div style={{
           padding: '14px 22px 22px',
           display: 'flex', gap: 10,
-          background: '#FFFDF8',
+          background: 'var(--dst-paper)',
           borderTop: '1px solid rgba(212, 168, 95, 0.18)',
         }}>
           <button

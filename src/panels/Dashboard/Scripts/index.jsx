@@ -127,8 +127,8 @@ const inputStyle = {
 };
 
 const goldGradient = {
-  background: 'linear-gradient(135deg, var(--aurora-heritage-gold-light) 0%, var(--aurora-heritage-gold) 55%, var(--aurora-heritage-gold-deep) 100%)',
-  color: '#FFF',
+  background: 'var(--dst-fill-ink)',
+  color: 'var(--dst-on-fill-ink)',
   boxShadow: '0 8px 20px rgba(212,168,95,0.25)',
 };
 
@@ -257,7 +257,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
                 onClick={() => setTab(t.key)}
                 className="px-3 py-1.5 text-xs rounded-full font-semibold transition"
                 style={active
-                  ? { background: 'var(--aurora-heritage-gold)', color: '#FFF' }
+                  ? { background: 'var(--aurora-heritage-gold)', color: 'var(--dst-on-fill-ink)' }
                   : { background: 'rgba(10,10,10,0.04)', color: 'var(--aurora-sub)' }
                 }
               >
@@ -288,7 +288,7 @@ function AddScriptModal({ onClose, onSubmit, loading }) {
               <div className="flex flex-col items-center gap-2">
                 <FileText size={28} style={{ color: 'var(--aurora-heritage-gold-deep)' }} />
                 <p className="text-sm font-semibold" style={{ color: 'var(--aurora-text)' }}>{fileName}</p>
-                <p className="text-xs" style={{ color: '#1A6A38' }}>✓ Loaded · {content.length.toLocaleString()} characters</p>
+                <p className="text-xs" style={{ color: 'var(--dst-success)' }}>✓ Loaded · {content.length.toLocaleString()} characters</p>
                 <p className="text-xs" style={{ color: 'var(--aurora-dim)' }}>Tap to replace</p>
               </div>
             ) : (
@@ -423,7 +423,7 @@ function ScriptCard({ script, onDelete, onPractice, onCDSim }) {
             onClick={onDelete}
             onTouchEnd={(e) => { e.preventDefault(); onDelete(); }}
             className="px-3 py-2 text-sm font-semibold rounded-lg transition"
-            style={{ background: 'var(--aurora-coral, #FF8280)', color: '#FFF', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            style={{ background: 'var(--aurora-coral, #FF8280)', color: 'var(--dst-on-fill-ink)', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
           >
             Confirm
           </button>

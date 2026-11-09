@@ -23,10 +23,10 @@ const REF_CODE_KEY = 'dst_ref_code';
 
 // Visual language shared with LoginPage.jsx — the signup an ad-clicker lands
 // on must smell like the login screen they just saw, not a different app.
-const DEEP = '#4A3208';
-const TEXT = '#0E0D0A';
-const SUB = 'rgba(14,13,10,0.6)';
-const DIM = 'rgba(14,13,10,0.4)';
+const DEEP = 'var(--dst-brass-ink)';
+const TEXT = 'var(--dst-ink)';
+const SUB = 'var(--dst-ink-2)';
+const DIM = 'var(--dst-ink-3)';
 
 const BG_VIDEO = `${import.meta.env.BASE_URL}login-bg.mp4`;
 
@@ -245,7 +245,7 @@ export const Signup = () => {
       )}
 
       {/* Aurora wash — always renders, regardless of video presence. */}
-      <div aria-hidden="true" style={{
+      <div className="future-auth-wash" aria-hidden="true" style={{
         position: 'absolute', inset: 0, pointerEvents: 'none',
         background: `
           linear-gradient(180deg, rgba(250,250,247,0.55) 0%, rgba(250,250,247,0.30) 32%, rgba(250,250,247,0.62) 70%, rgba(250,250,247,0.96) 100%),
@@ -275,6 +275,7 @@ export const Signup = () => {
         {/* Full Dr Self Tape logo — same mark as the login screen. */}
         <div style={{ display: 'flex', justifyContent: 'center' }}>
           <img
+            className="future-auth-logo"
             src={`${import.meta.env.BASE_URL}logo-black.png`}
             alt="Dr Self Tape"
             style={{
@@ -307,7 +308,7 @@ export const Signup = () => {
           </p>
 
           {/* Glass card — same treatment as the login auth card. */}
-          <div style={{
+          <div className="future-auth-card" style={{
             marginTop: 22, borderRadius: 26, padding: 20, position: 'relative', overflow: 'hidden',
             background: 'linear-gradient(160deg, rgba(255,255,255,0.78), rgba(255,255,255,0.58))',
             backdropFilter: 'blur(30px) saturate(1.6)',

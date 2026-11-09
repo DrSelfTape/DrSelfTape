@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux';
 
 // Local Imports
 import PrivateRoutes from './PrivateRoutes';
+import BootSplash from '../components/Shared/BootSplash';
 import PublicRoutes from './PublicRoutes';
 import {
   authRoutes,
@@ -40,7 +41,7 @@ export const Router = () => {
   }, [currentRole]);
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen"><div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" /></div>}>
+    <Suspense fallback={<BootSplash />}>
       <Routes>
 
         {/* Open routes: no PrivateRoutes (which would demand a login) and no

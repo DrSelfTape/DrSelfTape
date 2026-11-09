@@ -16,11 +16,11 @@ const COOLDOWN_SECONDS = 30;
 const ACCENT = "#D4A85F";
 // DEEP was #7A5A18 — too washed-out over the bright aurora background. Darkened
 // for legibility of eyebrow text, forgot-password / signup links, and error copy.
-const DEEP = "#4A3208";
-const BG = "#FAFAF7";
-const TEXT = "#0E0D0A";
-const SUB = "rgba(14,13,10,0.6)";
-const DIM = "rgba(14,13,10,0.4)";
+const DEEP = "var(--dst-brass-ink)";
+const BG = "var(--dst-paper)";
+const TEXT = "var(--dst-ink)";
+const SUB = "var(--dst-ink-2)";
+const DIM = "var(--dst-ink-3)";
 
 const BG_VIDEO = `${import.meta.env.BASE_URL}login-bg.mp4`;
 
@@ -168,7 +168,7 @@ export default function LoginPage() {
   const authCard = (
     <>
           {/* Glass auth card */}
-          <div ref={cardRef} style={{
+          <div ref={cardRef} className="future-auth-card" style={{
             marginTop: 26, borderRadius: 26, padding: 20, position: "relative", overflow: "hidden",
             scrollMarginTop: "calc(env(safe-area-inset-top, 0px) + 16px)",
             background: "linear-gradient(160deg, rgba(255,255,255,0.78), rgba(255,255,255,0.58))",
@@ -181,7 +181,7 @@ export default function LoginPage() {
               {/* Email field */}
               <div style={{
                 display: "flex", alignItems: "center", gap: 10,
-                background: "rgba(255,255,255,0.6)", border: "1px solid rgba(10,10,10,0.08)",
+                background: 'var(--dst-glass)', border: "1px solid rgba(10,10,10,0.08)",
                 borderRadius: 14, padding: "13px 14px", marginBottom: 10,
               }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="1.7" style={{ flexShrink: 0 }}>
@@ -201,7 +201,7 @@ export default function LoginPage() {
               {/* Password field */}
               <div style={{
                 display: "flex", alignItems: "center", gap: 10,
-                background: "rgba(255,255,255,0.6)", border: "1px solid rgba(10,10,10,0.08)",
+                background: 'var(--dst-glass)', border: "1px solid rgba(10,10,10,0.08)",
                 borderRadius: 14, padding: "13px 14px", marginBottom: capsLockOn ? 4 : 10,
               }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={DIM} strokeWidth="1.7" style={{ flexShrink: 0 }}>
@@ -439,7 +439,7 @@ export default function LoginPage() {
       // 100dvh shrinks with the iOS virtual keyboard so the Sign In button
       // stays reachable when the password field is focused.
       minHeight: "100dvh", position: "relative", overflow: "hidden",
-      background: "#0E0D0A", color: TEXT,
+      background: "var(--dst-paper)", color: TEXT,
       fontFamily: "'Space Grotesk', system-ui, sans-serif",
     }}>
       {/* Fonts (Space Grotesk / JetBrains Mono / Instrument Serif) come from
@@ -467,7 +467,7 @@ export default function LoginPage() {
       )}
 
       {/* Aurora wash — always renders, regardless of video presence. */}
-      <div aria-hidden="true" style={{
+      <div className="future-auth-wash" aria-hidden="true" style={{
         position: "absolute", inset: 0, pointerEvents: "none",
         background: `
           linear-gradient(180deg, rgba(250,250,247,0.55) 0%, rgba(250,250,247,0.30) 32%, rgba(250,250,247,0.62) 70%, rgba(250,250,247,0.96) 100%),
@@ -500,6 +500,7 @@ export default function LoginPage() {
             we drop the previous tiny mark + "DR · SELF · TAPE" text row. */}
         <div style={{ display: "flex", justifyContent: "center" }}>
           <img
+            className="future-auth-logo"
             src={`${import.meta.env.BASE_URL}logo-black.png`}
             alt="Dr Self Tape"
             style={{

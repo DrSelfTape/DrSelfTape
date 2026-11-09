@@ -553,7 +553,7 @@ export default function SlateCopilot({ minimized, context, scripts = [], onClose
         <div className="v1-slate-scroll" style={{ position: 'relative', zIndex: 2, display: 'flex', gap: 8, padding: '8px 16px 10px', overflowX: 'auto' }}>
           {chips.map((c, i) => (
             <button key={c + i} onClick={() => onChip(c)} className="v1c-chip" style={{
-              flex: '0 0 auto', padding: '9px 15px', borderRadius: 100, background: '#FFFFFF', border: `1px solid ${T.accent}55`,
+              flex: '0 0 auto', padding: '9px 15px', borderRadius: 100, background: 'var(--dst-surface)', border: `1px solid ${T.accent}55`,
               color: T.deep, fontFamily: SANS, fontSize: 12.5, fontWeight: 500, whiteSpace: 'nowrap', cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(122,90,24,0.06)', animation: `v1cChip 0.34s cubic-bezier(.2,.7,.3,1) ${i * 0.05}s both`, WebkitTapHighlightColor: 'transparent',
             }}>{c}</button>

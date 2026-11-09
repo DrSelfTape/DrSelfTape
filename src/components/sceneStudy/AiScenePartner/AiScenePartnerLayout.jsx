@@ -394,7 +394,7 @@ const AiScenePartnerLayout = () => {
             className='!min-w-[70px] !h-8 bg-white text-red-600 hover:bg-gray-100'
             sx={{
               backgroundColor: '#ffffff',
-              color: '#dc2626',
+              color: 'var(--dst-danger)',
               '&:hover': {
                 backgroundColor: '#f3f4f6',
               },

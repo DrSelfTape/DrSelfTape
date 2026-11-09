@@ -12,6 +12,13 @@ import { ErrorBoundary } from './ErrorBoundary.jsx';
 import { ThemeProvider } from './utils/theme.jsx';
 import { initSentry } from './utils/sentry.js';
 import ForceUpdateGate from './components/ForceUpdateGate.jsx';
+import BootSplash from './components/Shared/BootSplash';
+import NativeLaunchIntro from './components/FutureStudio/NativeLaunchIntro';
+import { Capacitor } from '@capacitor/core';
+import './components/FutureStudio/future-studio.css';
+
+// The native app has one theme, including authentication and body-level portals.
+if (Capacitor.isNativePlatform()) document.documentElement.classList.add('future-theme');
 
 // Kick off Sentry init (dynamically loads the SDK only when a DSN is set, so it
 // stays out of the boot chunk). Fire-and-forget — capture* helpers load the SDK
@@ -78,7 +85,8 @@ initSentry().catch(() => { /* telemetry must never block boot */ });
 createRoot(document.getElementById('root')).render(
   <ErrorBoundary>
     <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
+      <NativeLaunchIntro>
+      <PersistGate loading={<BootSplash />} persistor={persistor}>
         {/* ThemeProvider must sit INSIDE Provider — it now uses
             useSelector/useDispatch to sync theme with the server-
             backed userSettings slice. Outside Provider, the Redux
@@ -94,6 +102,7 @@ createRoot(document.getElementById('root')).render(
           </BrowserRouter>
         </ThemeProvider>
       </PersistGate>
+      </NativeLaunchIntro>
     </Provider>
   </ErrorBoundary>
 )

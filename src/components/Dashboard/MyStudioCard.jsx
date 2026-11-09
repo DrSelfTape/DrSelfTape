@@ -108,7 +108,7 @@ export default function MyStudioCard() {
             className="aurora-mono"
             style={{
               flex: 1, padding: '11px 12px', borderRadius: 100, cursor: 'pointer', border: 'none',
-              background: 'var(--aurora-heritage-gold-deep)', color: '#0A0A0A',
+              background: 'var(--aurora-heritage-gold-deep)', color: 'var(--dst-ink)',
               fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', fontWeight: 700,
             }}
           >

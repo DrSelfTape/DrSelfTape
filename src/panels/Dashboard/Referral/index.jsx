@@ -223,8 +223,8 @@ export default function Referral() {
           onClick={handleShare}
           className="mt-4 w-full font-semibold py-3 rounded-xl transition-colors flex items-center justify-center gap-2"
           style={{
-            background: 'var(--aurora-heritage-gold)',
-            color: 'var(--aurora-accent-deep)',
+            background: 'var(--dst-fill-ink)',
+            color: 'var(--dst-on-fill-ink)',
           }}
         >
           <Share2 className="w-5 h-5" />

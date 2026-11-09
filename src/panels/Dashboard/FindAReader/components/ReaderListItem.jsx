@@ -108,7 +108,7 @@ const ReaderListItem = ({ match, onClick }) => {
                 className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tracking-wider uppercase"
                 style={{
                   background: 'rgba(212,168,95,0.15)',
-                  color: '#7A5A18',
+                  color: 'var(--dst-brass-ink)',
                   letterSpacing: '0.05em',
                 }}
               >

@@ -19,7 +19,7 @@ import { Capacitor } from '@capacitor/core';
 import DesktopCompareMatrix from './DesktopCompareMatrix';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
-const GOLD = '#D4A85F';
+const GOLD = 'var(--dst-brass-ui)';
 // Keep each take phone-friendly to upload (the BE caps at 200MB/take too). A
 // real self-tape of one scene exports well under this.
 const MAX_TAKE_MB = 200;
@@ -37,10 +37,10 @@ const MEDAL = ['🥇', '🥈', '🥉', '4'];
 function ScoreBar100({ value, gold }) {
   const v = Math.max(0, Math.min(100, Number(value) || 0));
   return (
-    <div className="w-full h-2 rounded-full bg-[#F4F4EE] overflow-hidden">
+    <div className="w-full h-2 rounded-full bg-[var(--dst-surface-sunken)] overflow-hidden">
       <div
         className="h-full rounded-full transition-all duration-700"
-        style={{ width: `${v}%`, background: gold ? `linear-gradient(90deg, ${GOLD}, #7A5A18)` : 'rgba(10,10,10,0.35)' }}
+        style={{ width: `${v}%`, background: gold ? GOLD : 'var(--dst-ink-3)' }}
       />
     </div>
   );
@@ -153,12 +153,12 @@ export default function CompareTakes({ seed = null }) {
   if (compareLoading) {
     const uploading = uploadProgress < 100;
     return (
-      <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-10 text-center" style={SURFACE}>
-        <Loader2 className="w-9 h-9 animate-spin text-[#7A5A18] mx-auto mb-4" />
-        <p className="text-sm font-bold text-[#0A0A0A]">
+      <div className="rounded-2xl border border-[var(--dst-line)] p-10 text-center" style={SURFACE}>
+        <Loader2 className="w-9 h-9 animate-spin text-[var(--dst-brass-ink)] mx-auto mb-4" />
+        <p className="text-sm font-bold text-[var(--dst-ink)]">
           {uploading ? `Uploading your takes… ${uploadProgress}%` : 'Jericho is comparing your takes…'}
         </p>
-        <p className="text-xs text-[rgba(10,10,10,0.4)] mt-1.5 max-w-xs mx-auto leading-relaxed">
+        <p className="text-xs text-[var(--dst-ink-2)] mt-1.5 max-w-xs mx-auto leading-relaxed">
           {uploading
             ? 'Several large takes can take a few minutes to upload on a mobile connection. Keep the app open.'
             : 'Reading each take’s arc, choices and truth, then picking the one to submit. This takes ~1-2 minutes.'}
@@ -185,12 +185,12 @@ export default function CompareTakes({ seed = null }) {
       return (
         <div className="space-y-4">
           <div className="rounded-2xl border border-[#FF8280]/30 p-5 text-center" style={SURFACE}>
-            <p className="text-sm font-bold text-[#0A0A0A]">This comparison came back incomplete. Your tokens were refunded. Please try again.</p>
+            <p className="text-sm font-bold text-[var(--dst-ink)]">This comparison came back incomplete. Your tokens were refunded. Please try again.</p>
           </div>
           <button
             onClick={reset}
-            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg dst-press"
-            style={{ background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
+            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all hover:shadow-lg dst-press"
+            style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
           >
             <RotateCcw size={15} /> Try again
           </button>
@@ -206,14 +206,14 @@ export default function CompareTakes({ seed = null }) {
         {/* Winner banner */}
         <div className="rounded-2xl border border-[#D4A85F]/35 p-5 text-center tr-reveal" style={{ '--tr-i': 0, background: 'linear-gradient(135deg, rgba(212,168,95,0.16), rgba(122,90,24,0.05))' }}>
           <div className="w-12 h-12 rounded-2xl bg-[#D4A85F]/20 flex items-center justify-center mx-auto mb-2.5">
-            {isDup ? <Copy size={20} className="text-[#7A5A18]" /> : <Trophy size={22} className="text-[#7A5A18]" />}
+            {isDup ? <Copy size={20} className="text-[var(--dst-brass-ink)]" /> : <Trophy size={22} className="text-[var(--dst-brass-ink)]" />}
           </div>
-          <p className="text-[11px] font-bold text-[#7A5A18] uppercase tracking-widest mb-1">{isDup ? 'Same take' : 'Submit this one'}</p>
-          <h3 className="text-xl font-bold text-[#0A0A0A] leading-snug" style={{ fontFamily: "'Playfair Display', serif" }}>
+          <p className="text-[11px] font-bold text-[var(--dst-brass-ink)] uppercase tracking-widest mb-1">{isDup ? 'Same take' : 'Submit this one'}</p>
+          <h3 className="text-xl font-bold text-[var(--dst-ink)] leading-snug" style={{ fontFamily: 'var(--dst-font-serif)' }}>
             {r.headline || `Take ${r.winner} is your strongest`}
           </h3>
           {r.why_winner && (
-            <p className="text-sm text-[rgba(10,10,10,0.7)] leading-relaxed mt-2.5 max-w-md mx-auto">{r.why_winner}</p>
+            <p className="text-sm text-[var(--dst-ink-2)] leading-relaxed mt-2.5 max-w-md mx-auto">{r.why_winner}</p>
           )}
         </div>
 
@@ -237,30 +237,30 @@ export default function CompareTakes({ seed = null }) {
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 flex items-center justify-center flex-shrink-0 text-2xl">
-                    {isDup ? <Copy size={18} className="text-[#7A5A18]/60" /> : (MEDAL[idx] || idx + 1)}
+                    {isDup ? <Copy size={18} className="text-[var(--dst-brass-ink)]/60" /> : (MEDAL[idx] || idx + 1)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="text-sm font-bold text-[#0A0A0A]">
-                        Take {n}{isWinner && <span className="ml-2 text-[10px] font-bold text-[#7A5A18] uppercase tracking-wide">Winner</span>}
+                      <p className="text-sm font-bold text-[var(--dst-ink)]">
+                        Take {n}{isWinner && <span className="ml-2 text-[10px] font-bold text-[var(--dst-brass-ink)] uppercase tracking-wide">Winner</span>}
                       </p>
-                      <span className="text-sm font-extrabold text-[#0A0A0A]">{t.score != null ? t.score : '·'}<span className="text-[10px] text-[rgba(10,10,10,0.4)] font-medium">/100</span></span>
+                      <span className="text-sm font-extrabold text-[var(--dst-ink)]">{t.score != null ? t.score : '·'}<span className="text-[10px] text-[var(--dst-ink-2)] font-medium">/100</span></span>
                     </div>
                     <div className="mt-1.5"><ScoreBar100 value={t.score} gold={isWinner} /></div>
-                    {t.one_line && <p className="text-xs text-[rgba(10,10,10,0.6)] italic mt-1.5">{t.one_line}</p>}
+                    {t.one_line && <p className="text-xs text-[var(--dst-ink-2)] italic mt-1.5">{t.one_line}</p>}
                   </div>
                 </div>
 
                 {t.best_moment && (
-                  <p className="text-sm text-[rgba(10,10,10,0.72)] leading-relaxed mt-3">
-                    <span className="font-semibold text-[#0A0A0A]">Best moment: </span>{t.best_moment}
+                  <p className="text-sm text-[var(--dst-ink-2)] leading-relaxed mt-3">
+                    <span className="font-semibold text-[var(--dst-ink)]">Best moment: </span>{t.best_moment}
                   </p>
                 )}
                 {t.steal && (
                   <div className="flex items-start gap-2 mt-2.5 rounded-xl bg-[#D4A85F]/8 border border-[#D4A85F]/20 px-3 py-2">
-                    <Scissors size={13} className="text-[#7A5A18] mt-0.5 flex-shrink-0" />
-                    <p className="text-xs text-[rgba(10,10,10,0.72)] leading-relaxed">
-                      <span className="font-semibold text-[#7A5A18]">Steal from this take: </span>{t.steal}
+                    <Scissors size={13} className="text-[var(--dst-brass-ink)] mt-0.5 flex-shrink-0" />
+                    <p className="text-xs text-[var(--dst-ink-2)] leading-relaxed">
+                      <span className="font-semibold text-[var(--dst-brass-ink)]">Steal from this take: </span>{t.steal}
                     </p>
                   </div>
                 )}
@@ -270,7 +270,7 @@ export default function CompareTakes({ seed = null }) {
                 {!notesLocked && (
                 <button
                   onClick={() => setExpanded(open ? null : n)}
-                  className="w-full flex items-center justify-center gap-1.5 mt-3 py-1.5 text-xs font-semibold text-[#7A5A18]"
+                  className="w-full flex items-center justify-center gap-1.5 mt-3 py-1.5 text-xs font-semibold text-[var(--dst-brass-ink)]"
                 >
                   {open ? 'Hide' : 'See full notes for this take'}
                   <ChevronDown size={13} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
@@ -278,22 +278,22 @@ export default function CompareTakes({ seed = null }) {
                 )}
 
                 {!notesLocked && open && (
-                  <div className="mt-2 pt-3 border-t border-[rgba(10,10,10,0.06)] space-y-3">
+                  <div className="mt-2 pt-3 border-t border-[var(--dst-line)] space-y-3">
                     {a.verdict && (
-                      <p className="text-sm text-[#0A0A0A] font-medium leading-relaxed">{a.verdict}</p>
+                      <p className="text-sm text-[var(--dst-ink)] font-medium leading-relaxed">{a.verdict}</p>
                     )}
                     {a.performance && PERF_FIELDS.filter((f) => a.performance[f.key]).map((f) => (
                       <div key={f.key}>
-                        <p className="text-[11px] font-bold text-[#7A5A18] uppercase tracking-wide mb-0.5">{f.label}</p>
-                        <p className="text-sm text-[rgba(10,10,10,0.7)] leading-relaxed">{a.performance[f.key]}</p>
+                        <p className="text-[11px] font-bold text-[var(--dst-brass-ink)] uppercase tracking-wide mb-0.5">{f.label}</p>
+                        <p className="text-sm text-[var(--dst-ink-2)] leading-relaxed">{a.performance[f.key]}</p>
                       </div>
                     ))}
                     {Array.isArray(a.adjustments) && a.adjustments.length > 0 && (
                       <div>
-                        <p className="text-[11px] font-bold text-[#7A5A18] uppercase tracking-wide mb-1 flex items-center gap-1"><Target size={12} /> Next take</p>
+                        <p className="text-[11px] font-bold text-[var(--dst-brass-ink)] uppercase tracking-wide mb-1 flex items-center gap-1"><Target size={12} /> Next take</p>
                         <div className="space-y-1.5">
                           {a.adjustments.slice(0, 3).map((adj, i) => (
-                            <p key={i} className="text-sm text-[rgba(10,10,10,0.72)] leading-relaxed">• {adj.note || adj}</p>
+                            <p key={i} className="text-sm text-[var(--dst-ink-2)] leading-relaxed">• {adj.note || adj}</p>
                           ))}
                         </div>
                       </div>
@@ -315,10 +315,10 @@ export default function CompareTakes({ seed = null }) {
             style={{ '--tr-i': order.length + 1, background: 'linear-gradient(135deg, rgba(212,168,95,0.12), rgba(122,90,24,0.04))' }}
           >
             <div className="flex items-center gap-2 mb-1.5">
-              <Lock size={14} className="text-[#7A5A18]" />
-              <span className="text-sm font-bold text-[#0A0A0A]">Unlock the full read on all {order.length} takes, on any plan</span>
+              <Lock size={14} className="text-[var(--dst-brass-ink)]" />
+              <span className="text-sm font-bold text-[var(--dst-ink)]">Unlock the full read on all {order.length} takes, on any plan</span>
             </div>
-            <p className="text-xs text-[rgba(10,10,10,0.6)] leading-relaxed">
+            <p className="text-xs text-[var(--dst-ink-2)] leading-relaxed">
               The deep per-take breakdown: performance, what to fix, and what to steal from each.
             </p>
           </button>
@@ -330,14 +330,14 @@ export default function CompareTakes({ seed = null }) {
             <h3 className="text-xs font-bold text-[#FF8280] uppercase tracking-wide mb-1.5 flex items-center gap-1.5">
               <Sparkles size={13} /> Your move
             </h3>
-            <p className="text-sm text-[#0A0A0A] leading-relaxed font-medium">{r.what_to_do}</p>
+            <p className="text-sm text-[var(--dst-ink)] leading-relaxed font-medium">{r.what_to_do}</p>
           </div>
         )}
 
         <button
           onClick={reset}
-          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all hover:shadow-lg tr-reveal dst-press"
-          style={{ '--tr-i': order.length + 1, background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
+          className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all hover:shadow-lg tr-reveal dst-press"
+          style={{ '--tr-i': order.length + 1, background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
         >
           <RotateCcw size={15} /> Compare another set
         </button>
@@ -355,21 +355,21 @@ export default function CompareTakes({ seed = null }) {
             <Target size={14} className="text-[#FF8280]" />
             <span className="text-xs font-bold text-[#FF8280] uppercase tracking-wide">Next Take Mission</span>
           </div>
-          <p className="text-sm text-[#0A0A0A] leading-relaxed">
+          <p className="text-sm text-[var(--dst-ink)] leading-relaxed">
             Re-record working on this note, then compare against your original take:
           </p>
-          <p className="text-sm font-semibold text-[#0A0A0A] mt-1.5">“{focusNote}”</p>
+          <p className="text-sm font-semibold text-[var(--dst-ink)] mt-1.5">“{focusNote}”</p>
           {slots[0] && (
-            <p className="text-xs text-[rgba(10,10,10,0.5)] mt-2">Your original take is loaded as Take 1. Add your new take below.</p>
+            <p className="text-xs text-[var(--dst-ink-2)] mt-2">Your original take is loaded as Take 1. Add your new take below.</p>
           )}
         </div>
       )}
 
-      <div className="rounded-2xl border border-[rgba(10,10,10,0.08)] p-4 sm:p-5" style={SURFACE}>
-        <h3 className="text-sm font-bold text-[#0A0A0A] mb-1 flex items-center gap-2">
-          <Trophy size={16} className="text-[#7A5A18]" /> Compare your takes
+      <div className="rounded-2xl border border-[var(--dst-line)] p-4 sm:p-5" style={SURFACE}>
+        <h3 className="text-sm font-bold text-[var(--dst-ink)] mb-1 flex items-center gap-2">
+          <Trophy size={16} className="text-[var(--dst-brass-ink)]" /> Compare your takes
         </h3>
-        <p className="text-xs text-[rgba(10,10,10,0.45)] mb-4 leading-relaxed">
+        <p className="text-xs text-[var(--dst-ink-2)] mb-4 leading-relaxed">
           Upload 2-4 takes of the <span className="font-semibold">same</span> scene. Jericho ranks them and tells you which to submit, and why it beats the others.
         </p>
 
@@ -380,25 +380,25 @@ export default function CompareTakes({ seed = null }) {
               <button
                 onClick={() => inputRefs.current[i]?.click()}
                 className={`flex-1 rounded-xl border-2 border-dashed px-4 py-3.5 flex items-center gap-3 transition-colors ${
-                  f ? 'border-[#D4A85F]/50 bg-[#D4A85F]/5' : 'border-[rgba(10,10,10,0.14)] hover:border-[#D4A85F]/40'
+                  f ? 'border-[#D4A85F]/50 bg-[#D4A85F]/5' : 'border-[var(--dst-line)] hover:border-[#D4A85F]/40'
                 }`}
               >
-                <div className="w-8 h-8 rounded-lg bg-[#D4A85F]/12 flex items-center justify-center flex-shrink-0 text-xs font-bold text-[#7A5A18]">{i + 1}</div>
+                <div className="w-8 h-8 rounded-lg bg-[#D4A85F]/12 flex items-center justify-center flex-shrink-0 text-xs font-bold text-[var(--dst-brass-ink)]">{i + 1}</div>
                 {f ? (
                   <>
-                    <Film size={16} className="text-[#7A5A18] flex-shrink-0" />
-                    <span className="text-sm font-medium text-[#0A0A0A] truncate flex-1 text-left">{f.name}</span>
-                    <span className="text-[10px] text-[rgba(10,10,10,0.4)] flex-shrink-0">{(f.size / (1024 * 1024)).toFixed(0)}MB</span>
+                    <Film size={16} className="text-[var(--dst-brass-ink)] flex-shrink-0" />
+                    <span className="text-sm font-medium text-[var(--dst-ink)] truncate flex-1 text-left">{f.name}</span>
+                    <span className="text-[10px] text-[var(--dst-ink-2)] flex-shrink-0">{(f.size / (1024 * 1024)).toFixed(0)}MB</span>
                   </>
                 ) : (
                   <>
-                    <Upload size={16} className="text-[rgba(10,10,10,0.4)] flex-shrink-0" />
-                    <span className="text-sm font-medium text-[rgba(10,10,10,0.55)] flex-1 text-left">Take {i + 1} · choose a video</span>
+                    <Upload size={16} className="text-[var(--dst-ink-2)] flex-shrink-0" />
+                    <span className="text-sm font-medium text-[var(--dst-ink-2)] flex-1 text-left">Take {i + 1} · choose a video</span>
                   </>
                 )}
               </button>
               {slots.length > 2 && (
-                <button onClick={() => removeSlot(i)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[rgba(10,10,10,0.4)] hover:text-red-500 flex-shrink-0">
+                <button onClick={() => removeSlot(i)} className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--dst-ink-2)] hover:text-red-500 flex-shrink-0">
                   <X size={16} />
                 </button>
               )}
@@ -412,11 +412,11 @@ export default function CompareTakes({ seed = null }) {
         </div>
 
         {slots.length < 4 && (
-          <button onClick={addSlot} className="w-full mt-2.5 inline-flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-[#7A5A18] hover:bg-[#D4A85F]/5 rounded-lg transition-colors">
+          <button onClick={addSlot} className="w-full mt-2.5 inline-flex items-center justify-center gap-1.5 py-2 text-xs font-semibold text-[var(--dst-brass-ink)] hover:bg-[#D4A85F]/5 rounded-lg transition-colors">
             <Plus size={14} /> Add another take
           </button>
         )}
-        <p className="text-[11px] text-[rgba(10,10,10,0.4)] text-center mt-1.5">
+        <p className="text-[11px] text-[var(--dst-ink-2)] text-center mt-1.5">
           Best with short takes of one scene. They upload fast and compare cleanly.
         </p>
         {sizeError && (
@@ -426,7 +426,7 @@ export default function CompareTakes({ seed = null }) {
         {/* Optional context (shared across takes) */}
         <button
           onClick={() => setShowOptional((v) => !v)}
-          className="w-full flex items-center justify-between mt-3 px-1 py-2 text-xs font-medium text-[rgba(10,10,10,0.45)]"
+          className="w-full flex items-center justify-between mt-3 px-1 py-2 text-xs font-medium text-[var(--dst-ink-2)]"
         >
           <span>Add context for sharper ranking (optional)</span>
           <ChevronDown size={14} className={`transition-transform ${showOptional ? 'rotate-180' : ''}`} />
@@ -436,18 +436,18 @@ export default function CompareTakes({ seed = null }) {
             <input
               value={role} onChange={(e) => setRole(e.target.value)}
               placeholder="Character name (e.g. MaryBeth)"
-              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[#F4F4EE] border border-[rgba(10,10,10,0.08)] text-[#0A0A0A] placeholder:text-[rgba(10,10,10,0.35)] outline-none focus:border-[#D4A85F]/50"
+              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[var(--dst-surface-sunken)] border border-[var(--dst-line)] text-[var(--dst-ink)] placeholder:text-[var(--dst-ink-2)] outline-none focus:border-[#D4A85F]/50"
             />
             <input
               value={tone} onChange={(e) => setTone(e.target.value)}
               placeholder="Tone target from the brief (e.g. grounded and warm)"
-              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[#F4F4EE] border border-[rgba(10,10,10,0.08)] text-[#0A0A0A] placeholder:text-[rgba(10,10,10,0.35)] outline-none focus:border-[#D4A85F]/50"
+              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[var(--dst-surface-sunken)] border border-[var(--dst-line)] text-[var(--dst-ink)] placeholder:text-[var(--dst-ink-2)] outline-none focus:border-[#D4A85F]/50"
             />
             <textarea
               value={sides} onChange={(e) => setSides(e.target.value)}
               placeholder="Paste the sides / scene text…"
               rows={4}
-              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[#F4F4EE] border border-[rgba(10,10,10,0.08)] text-[#0A0A0A] placeholder:text-[rgba(10,10,10,0.35)] outline-none focus:border-[#D4A85F]/50 resize-none"
+              className="w-full px-3 py-2.5 rounded-lg text-sm bg-[var(--dst-surface-sunken)] border border-[var(--dst-line)] text-[var(--dst-ink)] placeholder:text-[var(--dst-ink-2)] outline-none focus:border-[#D4A85F]/50 resize-none"
             />
           </div>
         )}
@@ -457,7 +457,7 @@ export default function CompareTakes({ seed = null }) {
         )}
 
         {files.reduce((s, f) => s + (f?.size || 0), 0) > 60 * 1024 * 1024 && (
-          <p className="text-[11px] text-[#7A5A18] mt-3 text-center leading-relaxed">
+          <p className="text-[11px] text-[var(--dst-brass-ink)] mt-3 text-center leading-relaxed">
             Heads up: these are large takes ({(files.reduce((s, f) => s + (f?.size || 0), 0) / (1024 * 1024)).toFixed(0)} MB total).
             On a slower connection the upload can take a few minutes; keep the app open and watch the progress.
           </p>
@@ -466,12 +466,12 @@ export default function CompareTakes({ seed = null }) {
         <button
           onClick={submit}
           disabled={!canSubmit}
-          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[#0A0A0A] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
-          style={{ background: `linear-gradient(135deg, ${GOLD}, #7A5A18)` }}
+          className="w-full mt-4 inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-[var(--dst-ink)] transition-all enabled:hover:shadow-lg disabled:opacity-40 disabled:cursor-not-allowed dst-press"
+          style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)' }}
         >
           <Trophy size={15} /> {files.length >= 2 ? `Rank my ${files.length} takes` : 'Rank my takes'}
         </button>
-        <p className="text-[10px] text-[rgba(10,10,10,0.35)] text-center mt-2">
+        <p className="text-[10px] text-[var(--dst-ink-2)] text-center mt-2">
           {files.length >= 2
             ? `Uses ${files.length} tokens (1 per take) · each take gets full notes too`
             : 'Uses 1 token per take · each take gets full notes too'}

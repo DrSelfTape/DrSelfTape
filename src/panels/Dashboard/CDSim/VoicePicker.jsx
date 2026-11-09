@@ -26,8 +26,8 @@ const VOICES = [
 export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinue }) {
   return (
     <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-[#0A0A0A] mb-2">Choose Your Coach</h2>
-      <p className="text-[rgba(10,10,10,0.62)] mb-8">
+      <h2 className="text-2xl font-bold text-[var(--dst-ink)] mb-2">Choose Your Coach</h2>
+      <p className="text-[var(--dst-ink-2)] mb-8">
         Each coach brings a different approach to breaking down your scene.
       </p>
 
@@ -39,11 +39,11 @@ export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinu
             className={`p-6 rounded-2xl border-2 text-left transition-all ${
               selectedVoice === v.key
                 ? 'border-[#D4A85F] bg-[#D4A85F]/5 shadow-md'
-                : 'border-[rgba(10,10,10,0.14)] bg-white hover:border-[#D4A85F]'
+                : 'border-[var(--dst-line)] bg-[var(--dst-surface)] hover:border-[#D4A85F]'
             }`}
           >
-            <div className="font-bold text-lg text-[#0A0A0A]">{v.name}</div>
-            <div className="text-sm text-[rgba(10,10,10,0.62)] mt-2">{v.description}</div>
+            <div className="font-bold text-lg text-[var(--dst-ink)]">{v.name}</div>
+            <div className="text-sm text-[var(--dst-ink-2)] mt-2">{v.description}</div>
           </button>
         ))}
       </div>
@@ -51,14 +51,14 @@ export default function VoicePicker({ selectedVoice, onSelect, onBack, onContinu
       <div className="flex gap-3">
         <button
           onClick={onBack}
-          className="px-6 py-3 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] hover:bg-white font-medium"
+          className="px-6 py-3 rounded-xl border border-[var(--dst-line)] text-[var(--dst-ink-2)] hover:bg-[var(--dst-surface)] font-medium"
         >
           Back
         </button>
         <button
           onClick={onContinue}
           disabled={!selectedVoice}
-          className="flex-1 px-6 py-3 rounded-xl bg-[#D4A85F] text-[#0A0A0A] font-semibold hover:bg-[#C09850] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 px-6 py-3 rounded-xl bg-[var(--dst-fill-ink)] text-[var(--dst-on-fill-ink)] font-semibold hover:bg-[var(--dst-fill-ink-press)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           Continue
         </button>

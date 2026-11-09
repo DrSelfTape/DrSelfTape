@@ -7,7 +7,7 @@ export function LegalLayout({ title, lastUpdated, children }) {
   const navigate = useNavigate();
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF7', color: '#0A0A0A', fontFamily: "-apple-system, BlinkMacSystemFont, 'Space Grotesk', 'Poppins', sans-serif" }}>
+    <div style={{ minHeight: '100vh', background: 'var(--dst-paper)', color: 'var(--dst-ink)', fontFamily: "-apple-system, BlinkMacSystemFont, 'Space Grotesk', 'Poppins', sans-serif" }}>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
 
       {/* Sticky header */}
@@ -39,14 +39,14 @@ export function LegalLayout({ title, lastUpdated, children }) {
       }}>
         <p style={{
           textTransform: 'uppercase', letterSpacing: '0.18em',
-          fontSize: 11, fontWeight: 700, color: '#7A5A18', marginBottom: 8,
+          fontSize: 11, fontWeight: 700, color: 'var(--dst-brass-ink)', marginBottom: 8,
         }}>
           Legal
         </p>
         <h1 style={{
           fontFamily: "'Playfair Display', serif",
           fontSize: 32, fontWeight: 700, letterSpacing: '-0.6px',
-          color: '#0A0A0A', margin: 0,
+          color: 'var(--dst-ink)', margin: 0,
         }}>
           {title}
         </h1>
@@ -73,7 +73,7 @@ export function Section({ heading, children }) {
     <section style={{ marginTop: 28 }}>
       <h2 style={{
         fontFamily: "'Playfair Display', serif",
-        fontSize: 20, fontWeight: 600, color: '#0A0A0A',
+        fontSize: 20, fontWeight: 600, color: 'var(--dst-ink)',
         margin: '0 0 10px',
       }}>
         {heading}
