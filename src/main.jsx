@@ -17,8 +17,12 @@ import NativeLaunchIntro from './components/FutureStudio/NativeLaunchIntro';
 import { Capacitor } from '@capacitor/core';
 import './components/FutureStudio/future-studio.css';
 
-// The native app has one theme, including authentication and body-level portals.
-if (Capacitor.isNativePlatform()) document.documentElement.classList.add('future-theme');
+// One theme everywhere, including authentication and body-level portals. This
+// was native-only, which left web rendering the light token values with the
+// hard-coded dark Future Studio hero sitting inside them — a seam visible to
+// anyone moving between Home and Subscription. Native has shipped this exact
+// configuration all along, so every screen has already run under this palette.
+document.documentElement.classList.add('future-theme');
 
 // Kick off Sentry init (dynamically loads the SDK only when a DSN is set, so it
 // stays out of the boot chunk). Fire-and-forget — capture* helpers load the SDK
