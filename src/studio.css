@@ -122,3 +122,16 @@
 @media (prefers-reduced-motion: reduce) {
   .studio-primary, .studio-scene-progress > div > span { transition: none; }
 }
+
+/* ── Help slide-over (Aurora Noir Ring 2) ──────────────────────────────
+   Motion per the console signature: transform/opacity only, under 300ms,
+   strong ease-out. Both are suppressed under reduced motion by the guard in
+   HelpSlideOver itself, so these never need a media query of their own. */
+@keyframes dst-help-in {
+  from { opacity: 0; transform: translate3d(16px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes dst-help-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

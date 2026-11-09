@@ -11,6 +11,22 @@ import { navGroupsForRole } from './navGroups';
  * Noir without branching. Motion per the console signature: 200ms strong
  * ease-out enter, transform/opacity only.
  */
+// Slash verbs (Aurora Noir Ring 2, §5). Typing "/" turns the palette from a
+// jump list into a verb list — the fastest path to the five things people
+// actually open the app to do, plus the shortcut sheet.
+//
+// /compare has no route of its own: Compare Takes renders inside Tape Review
+// (TapeReview.jsx mounts <CompareTakes/>), so the verb lands there and the
+// hint says so rather than pretending it is a separate screen.
+const SLASH_VERBS = [
+  { verb: '/record', label: 'Record a take', hint: 'Self-Tapes', path: '/dashboard/self-tapes' },
+  { verb: '/review', label: 'Tape Review', hint: 'Casting-grade notes', path: '/dashboard/jericho?tab=tape' },
+  { verb: '/compare', label: 'Compare Takes', hint: 'Inside Tape Review', path: '/dashboard/jericho?tab=tape' },
+  { verb: '/reader', label: 'Find a reader', hint: 'Connect', path: '/dashboard/find-a-reader' },
+  { verb: '/sides', label: 'Bring your own sides', hint: 'Scene Study', path: '/dashboard/scene-study' },
+  { verb: '/shortcuts', label: 'Keyboard shortcuts', hint: 'Help', action: 'help' },
+];
+
 export default function ConsoleCommandPalette() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -26,6 +42,12 @@ export default function ConsoleCommandPalette() {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return commands;
+    // A leading slash switches modes entirely: verbs only, no nav noise.
+    if (q.startsWith('/')) {
+      return SLASH_VERBS
+        .filter((v) => v.verb.startsWith(q) || v.label.toLowerCase().includes(q.slice(1)))
+        .map((v) => ({ ...v, label: v.label, group: v.hint }));
+    }
     return commands.filter((c) =>
       c.label.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)
     );
@@ -48,6 +70,14 @@ export default function ConsoleCommandPalette() {
   const go = useCallback((cmd) => {
     if (!cmd) return;
     close();
+    // A verb can be an action rather than a destination (/shortcuts opens the
+    // help slide-over). Dispatched after close() so focus restoration has
+    // already run and the slide-over takes focus cleanly.
+    if (cmd.action === 'help') {
+      try { window.dispatchEvent(new CustomEvent('drst-open-help')); } catch { /* noop */ }
+      return;
+    }
+    if (!cmd.path) return;
     navigate(cmd.path);
   }, [close, navigate]);
 
@@ -110,7 +140,7 @@ export default function ConsoleCommandPalette() {
             else if (e.key === 'ArrowUp') { e.preventDefault(); setCursor((c) => Math.max(0, c - 1)); }
             else if (e.key === 'Enter') { e.preventDefault(); go(results[cursor]); }
           }}
-          placeholder="Jump to…"
+          placeholder="Jump to… or / for verbs"
           style={{
             width: '100%', padding: '15px 18px', border: 'none', outline: 'none',
             background: 'transparent', color: 'var(--aurora-text)', fontSize: 15,
@@ -120,7 +150,17 @@ export default function ConsoleCommandPalette() {
         <div style={{ maxHeight: '46vh', overflowY: 'auto', padding: 6 }}>
           {results.length === 0 && (
             <p style={{ padding: '14px 12px', fontSize: 13, color: 'var(--aurora-dim)', margin: 0 }}>
-              Nothing matches "{query}"
+              {query.trim().startsWith('/')
+                ? <>No verb matches "{query}" — try /record, /review, /compare, /reader, /sides or /shortcuts</>
+                : <>Nothing matches "{query}"</>}
+            </p>
+          )}
+          {!query.trim() && (
+            <p style={{
+              padding: '8px 12px 10px', margin: 0, fontSize: 11, letterSpacing: '0.06em',
+              textTransform: 'uppercase', fontFamily: 'var(--dst-font-mono)', color: 'var(--aurora-dim)',
+            }}>
+              Type / for verbs
             </p>
           )}
           {results.map((cmd, i) => {

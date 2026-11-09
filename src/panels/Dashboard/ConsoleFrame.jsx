@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import Sidebar from '../../components/Sidebar.jsx'
 import AnnouncementBanner from '../../components/AnnouncementBanner.jsx'
 import ConsoleCommandPalette from '../../components/ConsoleCommandPalette.jsx'
+import HelpSlideOver from '../../components/HelpSlideOver.jsx'
 import { consoleSurfaceEnabled } from '../../utils/consoleSurface';
 import { useLocation } from 'react-router-dom';
 
@@ -27,6 +28,7 @@ export default function ConsoleFrame({ children }) {
       <div className="flex h-screen">
         <Sidebar />
         <ConsoleCommandPalette />
+        <HelpSlideOver />
         <main className="relative flex-1 ml-64 overflow-auto" style={{ background: 'var(--aurora-bg)' }}>
           {/* The one light source — upper region, ~5% gold, per the spec */}
           <div aria-hidden="true" className="pointer-events-none fixed inset-0 ml-64" style={{
