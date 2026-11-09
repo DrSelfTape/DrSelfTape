@@ -180,15 +180,20 @@ export default function HelpSlideOver() {
 
         <Section icon={<Sparkles size={15} />} title="What's new">
           {WHATS_NEW.slice(0, 3).map((rel) => (
-            <div key={rel.id} style={{ marginBottom: 14 }}>
+            <div key={rel.id} style={{ marginBottom: 16 }}>
               <p style={{ margin: 0, font: '400 10px/1.4 var(--dst-font-mono)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--dst-brass-ui)' }}>
-                {rel.version}
+                {rel.version}{rel.date ? ` · ${rel.date}` : ''}
               </p>
+              {rel.title && (
+                <p style={{ margin: '4px 0 0', font: '600 12.5px/1.45 var(--dst-font-sans)', color: 'var(--dst-ink)' }}>
+                  {rel.title}
+                </p>
+              )}
               <ul style={{ listStyle: 'none', margin: '6px 0 0', padding: 0 }}>
-                {(rel.items || rel.notes || []).slice(0, 4).map((it, i) => (
-                  <li key={i} style={{ font: '400 12.5px/1.6 var(--dst-font-sans)', color: 'var(--dst-ink-2)', paddingLeft: 12, position: 'relative' }}>
-                    <span aria-hidden="true" style={{ position: 'absolute', left: 0, color: 'var(--dst-ink-3)' }}>·</span>
-                    {typeof it === 'string' ? it : (it.title || it.text || it.label)}
+                {(rel.highlights || []).slice(0, 4).map((it, i) => (
+                  <li key={i} style={{ display: 'flex', gap: 7, font: '400 12.5px/1.6 var(--dst-font-sans)', color: 'var(--dst-ink-2)' }}>
+                    <span aria-hidden="true" style={{ flex: '0 0 auto' }}>{it.emoji}</span>
+                    <span>{it.title}</span>
                   </li>
                 ))}
               </ul>
