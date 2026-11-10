@@ -15,7 +15,16 @@ import { isIOSNative, saveLocalTape, deleteLocalTape, makeLocalTapeId, listLocal
 import { openExternal } from '../../../utils/openExternal';
 import {
   enqueueUpload, subscribe as subscribeQueue, getQueueSnapshot,
+  removeTask,
 } from '../../../utils/uploadQueue';
+import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
+
+// The API sends whole seconds; show m:ss.
+function formatDuration(seconds) {
+  const total = Math.round(Number(seconds));
+  if (!Number.isFinite(total) || total <= 0) return '';
+  return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
 
 // Mirrors apps.growth.views.MAX_SELF_TAPE_SIZE_MB. Kept in sync via
 // the /quota/ endpoint at runtime so this constant is just a sensible
@@ -334,6 +343,7 @@ function UploadModal({ onClose, onUploaded, onLocalEnqueued, quota }) {
 }
 
 function SubmitModal({ tape, onClose }) {
+  const dispatch = useDispatch();
   const [submittedTo, setSubmittedTo] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -347,8 +357,11 @@ function SubmitModal({ tape, onClose }) {
       });
       setDone(true);
       setTimeout(onClose, 1200);
-    } catch {
-      /* handle error */
+    } catch (err) {
+      dispatch(showSnackbar({
+        message: err?.response?.data?.message || "Couldn't mark this tape as submitted. Please try again.",
+        variant: 'error',
+      }));
     } finally {
       setSubmitting(false);
     }
@@ -488,6 +501,10 @@ export function TapeCard({
   onDelete, onRename, onReview, reviewBusy,
 }) {
   const isLocalOnly = !tape.id && !!tape.localId;
+  // The API sends thumbnail_url / duration_seconds; the old names are kept
+  // as fallbacks.
+  const thumbnail = tape.thumbnail_url || tape.thumbnail;
+  const duration = formatDuration(tape.duration_seconds) || tape.duration;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draftTitle, setDraftTitle] = useState(tape.title || '');
@@ -507,8 +524,8 @@ export function TapeCard({
         className="relative h-40 flex items-center justify-center"
         style={{ background: 'linear-gradient(135deg, rgba(167,236,218,0.20), rgba(240,208,151,0.24))' }}
       >
-        {tape.thumbnail ? (
-          <img src={tape.thumbnail} alt={tape.title} className="w-full h-full object-cover" />
+        {thumbnail ? (
+          <img src={thumbnail} alt={tape.title} className="w-full h-full object-cover" />
         ) : (
           <Film className="w-10 h-10" style={{ color: 'rgba(122,90,24,0.40)' }} />
         )}
@@ -566,11 +583,15 @@ export function TapeCard({
             <h3 className="text-sm font-semibold truncate flex-1" style={{ color: 'var(--aurora-text)' }}>
               {tape.title}
             </h3>
-            {!isLocalOnly && (
+            {/* A failed upload has no server row to rename, but it still needs
+                a way out of the list. */}
+            {(!isLocalOnly || syncState === 'failed') && (
               <div className="flex items-center gap-0.5 shrink-0">
-                <button type="button" title="Rename" onClick={() => setEditing(true)} onTouchEnd={(e) => { e.preventDefault(); setEditing(true); }} style={_iconBtn}>
-                  <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--aurora-dim)' }} />
-                </button>
+                {!isLocalOnly && (
+                  <button type="button" title="Rename" onClick={() => setEditing(true)} onTouchEnd={(e) => { e.preventDefault(); setEditing(true); }} style={_iconBtn}>
+                    <Pencil className="w-3.5 h-3.5" style={{ color: 'var(--aurora-dim)' }} />
+                  </button>
+                )}
                 <button type="button" title="Delete" onClick={() => setConfirmDelete(true)} onTouchEnd={(e) => { e.preventDefault(); setConfirmDelete(true); }} style={_iconBtn}>
                   <Trash2 className="w-3.5 h-3.5" style={{ color: 'var(--aurora-dim)' }} />
                 </button>
@@ -600,11 +621,11 @@ export function TapeCard({
         )}
 
         <div className="flex items-center gap-3 mt-2">
-          {tape.duration && (
+          {duration && (
             <div className="flex items-center gap-1">
               <Clock className="w-3 h-3" style={{ color: 'var(--aurora-dim)' }} />
                 <span className="aurora-mono text-[11px]" style={{ color: 'var(--aurora-dim)' }}>
-                {tape.duration}
+                {duration}
               </span>
             </div>
           )}
@@ -679,6 +700,7 @@ export default function SelfTapes() {
   };
   const [tapes, setTapes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [submitTape, setSubmitTape] = useState(null);
   const [quota, setQuota] = useState(null);
@@ -698,8 +720,9 @@ export default function SelfTapes() {
       .then((res) => {
         const arr = res.data?.data ?? res.data?.results ?? res.data;
         setTapes(Array.isArray(arr) ? arr : []);
+        setLoadError(false);
       })
-      .catch(() => {})
+      .catch(() => setLoadError(true))
       .finally(() => setLoading(false));
     // Reconcile the local-copy map against the on-device cache. The cache is
     // keyed by localTapeId, which equals a synced tape's idempotency_key, so
@@ -824,7 +847,16 @@ export default function SelfTapes() {
   };
 
   const handleDeleteTape = async (tape) => {
-    if (!tape.id) return; // local-only rows are handled by free-up-space
+    if (!tape.id) {
+      // A failed upload that never reached the server: drop the queue task,
+      // its on-device file and the row.
+      const localId = tape.localId;
+      if (!localId) return;
+      removeTask(localId);
+      try { await deleteLocalTape(localId); } catch { /* file already gone */ }
+      setLocalPending((cur) => cur.filter((p) => p.localId !== localId));
+      return;
+    }
     const prev = tapes;
     setTapes((cur) => cur.filter((t) => t.id !== tape.id)); // optimistic
     try {
@@ -890,6 +922,26 @@ export default function SelfTapes() {
         </button>
       </div>
 
+      {loadError && !loading && (
+        <div
+          role="alert"
+          className="aurora-card p-6 text-center"
+          style={{ background: 'var(--aurora-glass-strong)', borderColor: 'var(--aurora-glass-border)' }}
+        >
+          <AlertCircle className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--aurora-rose)' }} />
+          <p style={{ color: 'var(--aurora-text)', fontSize: 'var(--type-base)' }}>
+            We couldn&rsquo;t load your self-tapes. Check your connection and try again.
+          </p>
+          <button
+            onClick={fetchTapes}
+            className="mt-4 font-semibold px-5 py-2.5 rounded-xl transition-colors"
+            style={{ background: 'var(--dst-fill-ink)', color: 'var(--dst-on-fill-ink)', fontSize: 'var(--type-base)' }}
+          >
+            Try again
+          </button>
+        </div>
+      )}
+
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {[1, 2, 3].map((i) => (
@@ -901,6 +953,8 @@ export default function SelfTapes() {
           ))}
         </div>
       ) : mergedTapes.length === 0 ? (
+        // A failed load is not an empty library — the error card above speaks.
+        loadError ? null : (
         <div
           className="aurora-card p-12 text-center"
           style={{ background: 'var(--aurora-glass-strong)', borderColor: 'var(--aurora-glass-border)' }}
@@ -930,6 +984,7 @@ export default function SelfTapes() {
             </button>
           )}
         </div>
+        )
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {mergedTapes.map((tape) => {

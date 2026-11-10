@@ -62,7 +62,7 @@ const persistConfig = {
 };
 
 // Combine reducers
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
   auth: authSlice,
   snackbar: snackbarReducer,
   actorAuditions: actorAuditionsReducer,
@@ -89,6 +89,19 @@ const rootReducer = combineReducers({
   // Community leaderboard (Aurora v3) — community rank + your_rank
   leaderboard: leaderboardSlice,
 });
+
+// Sign-out, and a password reset (which also ends the session), return every
+// slice to its initial state. Otherwise the previous account's cached lists
+// stay in memory, get written back to storage after performLogout's purge, and
+// greet the next account on this device. Only the snackbar survives, so the
+// toast explaining the sign-out is not wiped with it. `_persist` is held by
+// persistReducer outside this reducer and is unaffected.
+const SESSION_END_ACTIONS = new Set(['auth/logoutUser', 'auth/resetPassword/fulfilled']);
+export const rootReducer = (state, action) =>
+  appReducer(
+    SESSION_END_ACTIONS.has(action.type) ? { snackbar: state?.snackbar } : state,
+    action
+  );
 
 // Create a persisted reducer
 const persistedReducer = persistReducer(persistConfig, rootReducer);

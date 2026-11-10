@@ -45,7 +45,7 @@ const DeleteAccountModal = ({ open, onClose }) => {
         data: { confirm_email: userEmail, current_password: password },
       });
       // Server has scrubbed + deleted the row; lock the client out too.
-      await dispatch(performLogout());
+      await dispatch(performLogout({ accountDeleted: true }));
       navigate('/login');
     } catch (err) {
       setError(

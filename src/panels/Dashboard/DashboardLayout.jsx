@@ -18,7 +18,10 @@ export default function DashboardLayout() {
   useEffect(() => { trackCampaignArrival(search); }, [search]);
 
   useEffect(() => {
-    if (isMobile || !Capacitor.isNativePlatform()) return;
+    if (isMobile) return;
+    // Desktop web needs this bridge too: goUpgrade, the socket's match
+    // auto-open and several CTAs only dispatch drst-navigate, and with no
+    // listener here every one of them was a dead button in a browser.
     // iPad mounts this Outlet, not MobileApp's tab-event receiver. Bridge only
     // the library's review destination to BrowserRouter's history listener;
     // native navigate() cannot be relied on, and a reload would lose Redux's
@@ -52,12 +55,14 @@ export default function DashboardLayout() {
       const path = (event.detail?.campaign_id && CAMPAIGN_ROUTES[event.detail.tab]) || routeFor(event.detail);
       if (!path) return;
       if (event.detail?.campaign_id) clearCampaignNavigation();
+      // A caller that also navigated itself must not leave two history entries.
+      if (path === window.location.pathname + window.location.search) return;
       const previous = window.history.state || {};
       window.history.pushState({ ...previous, idx: (previous.idx || 0) + 1 }, '', path);
       window.dispatchEvent(new PopStateEvent('popstate', { state: window.history.state }));
     };
     window.addEventListener('drst-navigate', onNavigate);
-    const pendingCampaign = takeCampaignNavigation(userId);
+    const pendingCampaign = Capacitor.isNativePlatform() ? takeCampaignNavigation(userId) : null;
     if (pendingCampaign) onNavigate({ detail: pendingCampaign });
     return () => window.removeEventListener('drst-navigate', onNavigate);
   }, [isMobile, userId]);

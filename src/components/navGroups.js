@@ -1,7 +1,7 @@
 import {
   Monitor, BookOpen, Target, Send, LayoutDashboard, Users2, MessageSquare,
   UserCircle, Clapperboard, Sparkles, Video, Crown, Film,
-  Brain, FileText, Trophy, Gift, Settings, Bell, BarChart3,
+  Brain, FileText, Trophy, Gift, Settings, Bell, BarChart3, Compass, Star,
 } from 'lucide-react';
 
 /* ── Grouped desktop navigation ──
@@ -42,6 +42,9 @@ export const NAV_GROUPS = [
       { label: 'Scene Study', path: '/dashboard/scene-study', icon: BookOpen },
       { label: 'Scripts', path: '/dashboard/scripts', icon: FileText },
       { label: 'Self-Tapes', path: '/dashboard/self-tapes', icon: Video },
+      // Routed but linked from nowhere on desktop (mobile reaches it from the
+      // Home teaser).
+      { label: 'Craft Journey', path: '/dashboard/craft-journey', icon: Compass },
     ],
   },
   {
@@ -53,6 +56,8 @@ export const NAV_GROUPS = [
       // stays as the conversations home. Marketplace returns with P4-02.
       { label: 'Readers', path: '/dashboard/readers', icon: Users2, badgeKey: 'find-a-reader' },
       { label: 'Green Room', path: '/dashboard/green-room', icon: MessageSquare },
+      // Same story: starring a reader saved them to a page nothing linked to.
+      { label: 'Favorites', path: '/dashboard/favorites', icon: Star },
     ],
   },
   {

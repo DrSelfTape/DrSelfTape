@@ -88,8 +88,14 @@ export const NOTIFICATION_CONFIG = {
   rehearsal_missed:    { route: '/dashboard/green-room' },
   room_invite:         { route: '/dashboard/green-room' },
   audition_update:     { route: '/dashboard/auditions' },
-  booking_confirmed:   { route: '/dashboard/marketplace' },
-  booking_cancelled:   { route: '/dashboard/marketplace' },
+  // Bookings are studio sessions; the marketplace route is retired and only
+  // redirects to the reader deck. Same targets as NotificationBell's DEST.
+  booking_confirmed:   { route: '/dashboard/my-studio' },
+  booking_cancelled:   { route: '/dashboard/my-studio' },
+  tape_review_complete:  { route: '/dashboard/jericho', search: '?tab=tape' },
+  headshot_nudge:        { route: '/dashboard/profile' },
+  studio_bridge:         { route: '/dashboard/submissions' },
+  reader_clips_received: { route: '/dashboard/scene-study' },
 
   // Actor's invitation was rejected by Coach - just show toast, no navigation
   script_share_rejected: {

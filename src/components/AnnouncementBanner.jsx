@@ -10,10 +10,12 @@ import { trackEvent } from '../utils/analytics';
 import { readStored, storeValue, rememberBannerAction } from '../utils/bannerState';
 import './banners.css';
 import { campaignReceipt, CAMPAIGN_ROUTES } from '../utils/communications';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const INTERNAL_TABS = new Set(['home', 'auditions', 'scenes', 'connect', 'tape-review', 'profile', 'more', 'live']);
 export default function AnnouncementBanner() {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const userId = useSelector(s => s.auth?.user?.id) || 'anonymous';
   const reviewed = useSelector(s => !!s.userSettings?.data?.tutorial_progress?.first_review);
   const key = `dst_announcement_dismissed:${userId}`;
@@ -92,7 +94,9 @@ export default function AnnouncementBanner() {
         if (await openExternal(url) === false) throw new Error('Could not open link');
       } else {
         rememberBannerAction(ann.id, url, userId);
-        if (Capacitor.isNativePlatform()) window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: url, campaign_id: ann.campaign_id } }));
+        // A phone browser renders the mobile shell with no router Outlet, so a
+        // route change there moves the URL and nothing else.
+        if (Capacitor.isNativePlatform() || isMobile) window.dispatchEvent(new CustomEvent('drst-navigate', { detail: { tab: url, campaign_id: ann.campaign_id } }));
         else navigate(CAMPAIGN_ROUTES[url]);
       }
       dismiss('action');

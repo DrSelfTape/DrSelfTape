@@ -74,6 +74,7 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
   const [cameraReady, setCameraReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
   const [recordError, setRecordError] = useState(null);
   const timerRef = useRef(null);
   const mimeTypeRef = useRef(getSupportedMimeType());
@@ -287,6 +288,7 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
     notesFiringRef.current = false;
     setTimer(0);
     setSaved(false);
+    setSaveError('');
     // Restart camera preview
     if (videoRef.current && streamRef.current) {
       videoRef.current.srcObject = streamRef.current;
@@ -296,6 +298,7 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
   const handleSave = async () => {
     if (!recordedBlob || saving) return;
     setSaving(true);
+    setSaveError('');
     try {
       const fd = new FormData();
       const ext = getFileExt(mimeTypeRef.current);
@@ -308,8 +311,11 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setSaved(true);
-    } catch {
-      alert('Failed to save. Please try again.');
+    } catch (err) {
+      // Shown inline, not as a toast or alert(): the toast layer sits under
+      // this full-screen recorder, and alert() is unreliable in the iOS
+      // webview. The server's message says why (e.g. the 402 tape limit).
+      setSaveError(err?.response?.data?.message || 'Failed to save. Please try again.');
     }
     setSaving(false);
   };
@@ -476,6 +482,12 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
             <Volume2 className="w-3.5 h-3.5" />
             {aiVoiceEnabled ? 'AI Voice: ON' : 'AI Voice: OFF'}
           </button>
+        )}
+
+        {recordedUrl && saveError && (
+          <p role="alert" className="text-center text-[13px] text-red-300 font-medium mb-3 px-4">
+            {saveError}
+          </p>
         )}
 
         <div className="flex items-center justify-center gap-8">

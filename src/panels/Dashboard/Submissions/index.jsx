@@ -13,6 +13,7 @@ import { fetchAuditionStatsThunk } from '../../../redux/features/auditions/audit
 import useAuditionNotification from '../../../hooks/useAuditionNotification';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { clearAuditionNotification } from '../../../utils/auditionNotification';
+import { toLocalInputValue, localInputToISO } from './dateTimeLocal';
 import '../studioScreens.css';
 
 // --- Constants ---
@@ -60,7 +61,7 @@ const EMPTY_FORM = {
   casting_office: '',
   casting_director: '',
   submitted_via: 'self_submitted',
-  submitted_at: new Date().toISOString().slice(0, 16),
+  submitted_at: toLocalInputValue(new Date()),
   deadline: '',
   video_url: '',
   status: 'sent',
@@ -197,7 +198,7 @@ export default function Submissions() {
     setEditingId(null);
     setForm({
       ...EMPTY_FORM,
-      submitted_at: new Date().toISOString().slice(0, 16),
+      submitted_at: toLocalInputValue(new Date()),
     });
     setShowModal(true);
   };
@@ -210,12 +211,12 @@ export default function Submissions() {
       casting_office: sub.casting_office || '',
       casting_director: sub.casting_director || '',
       submitted_via: sub.submitted_via || 'self_submitted',
-      submitted_at: sub.submitted_at ? sub.submitted_at.slice(0, 16) : '',
-      deadline: sub.deadline ? sub.deadline.slice(0, 16) : '',
+      submitted_at: toLocalInputValue(sub.submitted_at),
+      deadline: toLocalInputValue(sub.deadline),
       video_url: sub.video_url || '',
       status: sub.status || 'sent',
       notes: sub.notes || '',
-      follow_up_date: sub.follow_up_date ? sub.follow_up_date.slice(0, 16) : '',
+      follow_up_date: toLocalInputValue(sub.follow_up_date),
     });
     setShowModal(true);
   };
@@ -228,6 +229,10 @@ export default function Submissions() {
     if (!payload.deadline) delete payload.deadline;
     if (!payload.follow_up_date) delete payload.follow_up_date;
     if (!payload.video_url) delete payload.video_url;
+    // The inputs hold local wall time; send absolute instants.
+    for (const field of ['submitted_at', 'deadline', 'follow_up_date']) {
+      if (payload[field]) payload[field] = localInputToISO(payload[field]) ?? payload[field];
+    }
 
     let result;
     if (editingId) {

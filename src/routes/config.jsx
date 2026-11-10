@@ -112,18 +112,39 @@ const AdminCommunications = lazy(() => import('../panels/Admin/AdminCommunicatio
  * would bounce a signed-in actor who tapped a friend's link straight to
  * their own dashboard. So these routes are mounted bare.
  *
- * The scope of that decision is exactly this array, and the array holds
- * exactly one path. A route in here is reachable by anyone on the internet
- * with the URL, which is only acceptable because the token IS the
- * credential (32 bytes of entropy, 14-day expiry, revocable) and the page
- * renders nothing but the one scene that token buys. Nothing that reads
- * account state, Redux auth, or any other user's data belongs here.
+ * The scope of that decision is exactly this array. A route in here is
+ * reachable by anyone on the internet with the URL, which is only
+ * acceptable for /r/:token because the token IS the credential (32 bytes
+ * of entropy, 14-day expiry, revocable) and the page renders nothing but
+ * the one scene that token buys. Nothing that reads account state, Redux
+ * auth, or any other user's data belongs here.
+ *
+ * The other three were always public; they moved here because PublicRoutes
+ * bounced a signed-in user off them: the paywall's Terms/Privacy links open
+ * in a new tab mid-session, and a password-reset email is often opened on a
+ * device that is still signed in. The legal pages are static, and
+ * /reset-password is gated by its own emailed single-use token.
  * ══════════════════════════════════════════════════════════════════════ */
 export const openRoutes = [
   {
     path: '/r/:token',
     moduleName: 'ReaderInvite',
     element: <PublicRecord />,
+  },
+  {
+    path: '/reset-password',
+    moduleName: 'Reset Password',
+    element: <ResetPassword />,
+  },
+  {
+    path: '/terms',
+    moduleName: 'Terms of Service',
+    element: <TermsOfService />,
+  },
+  {
+    path: '/privacy',
+    moduleName: 'Privacy Policy',
+    element: <PrivacyPolicy />,
   },
 ];
 
@@ -383,11 +404,6 @@ export const authRoutes = [
     moduleName: 'Forgot password',
     element: <ForgotPassword />,
   },
-  {
-    path: '/reset-password',
-    moduleName: 'Reset Password',
-    element: <ResetPassword />,
-  },
   // Apple Services ID redirect URL — registered with Apple Developer
   // Portal for web Sign in with Apple. The popup loads this URL; the JS
   // SDK reads the result via postMessage and resolves on the opener.
@@ -401,16 +417,7 @@ export const authRoutes = [
     moduleName: 'JoinRoom',
     element: <JoinPage />,
   },
-  {
-    path: '/terms',
-    moduleName: 'Terms of Service',
-    element: <TermsOfService />,
-  },
-  {
-    path: '/privacy',
-    moduleName: 'Privacy Policy',
-    element: <PrivacyPolicy />,
-  },
+  // /terms, /privacy and /reset-password live in openRoutes above.
   // Backwards-compat: old placeholder route now redirects to /terms
   {
     path: '/term-and-conditions',

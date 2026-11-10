@@ -80,12 +80,11 @@ const FindAReader = ({ embedded = false }) => {
   // Hydrate saved filters from userSettings once it has loaded, then fetch.
   useEffect(() => {
     if (!settingsLoaded) return;
-    if (savedFilters && typeof savedFilters === 'object' && Object.keys(savedFilters).length > 0) {
-      dispatch(setFiltersLocal(savedFilters));
-      dispatch(fetchAvailableReaders(savedFilters));
-    } else {
-      dispatch(fetchAvailableReaders());
-    }
+    // Always write them, empty included: the fetches read filters from state,
+    // so skipping this on Reset left the old filters applied.
+    dispatch(setFiltersLocal(savedFilters && typeof savedFilters === 'object' ? savedFilters : {}));
+    dispatch(fetchAvailableReaders());
+    dispatch(fetchMatchingStats());
     // Depend on the filters' VALUE, not the object identity. patchUserSettings
     // mints a fresh object on both .pending and .fulfilled, so an identity dep
     // re-ran this twice per Apply — two more identical deck fetches.

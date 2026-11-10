@@ -176,7 +176,10 @@ const AskAFriendModal = ({
     }
   }, [minted, toast]);
 
-  const liveInvites = invites.filter((i) => !i.revoked && !i.expired);
+  const isLive = (i) => !i.revoked && !i.expired;
+  // A link that is off or past its 14 days stays listed while it holds takes:
+  // this list is the only place they play, and the backend keeps them on purpose.
+  const liveInvites = invites.filter((i) => isLive(i) || i.clips?.length > 0);
 
   return (
     <CustomModal
@@ -340,6 +343,7 @@ const AskAFriendModal = ({
                     </p>
                   )}
                 </div>
+                {isLive(inv) ? (
                 <button
                   type='button'
                   className='shrink-0 text-xs text-[var(--dst-ink-3)] underline disabled:opacity-50'
@@ -348,6 +352,11 @@ const AskAFriendModal = ({
                 >
                   Turn off
                 </button>
+                ) : (
+                  <span className='shrink-0 text-xs text-[var(--dst-ink-3)]'>
+                    {inv.revoked ? 'Link off' : 'Link expired'}
+                  </span>
+                )}
                 </div>
 
                 {openClipsFor === inv.id && (

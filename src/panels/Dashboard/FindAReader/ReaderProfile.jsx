@@ -10,6 +10,8 @@ import { hasAvatar } from '../../../components/Aurora/avatarStyle';
 import { swipeOnReader, fetchFavorites, fetchReaderById } from '../../../redux/features/readers/readersMatchSlice';
 import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import ReportBlockMenu from '../../../components/Shared/ReportBlockMenu';
+import { Capacitor } from '@capacitor/core';
+import { useIsMobile } from '../../../hooks/useIsMobile';
 
 function useReader(readerId) {
   const readers = useSelector((s) => s.readersMatch.readers || []);
@@ -87,15 +89,26 @@ const ReaderProfile = (props) => {
   const headshot = reader?.headshot || reader?.user_image;
   const hasPicture = headshot || hasAvatar(reader?.avatar_style);
 
+  // Same reason as handleBack: inside the mobile shell this panel is mounted
+  // bare and navigate() goes nowhere, so route through drst-navigate there.
+  const inShell = useIsMobile() || Capacitor.isNativePlatform();
+  const go = (detail, path) => {
+    if (inShell) window.dispatchEvent(new CustomEvent('drst-navigate', { detail }));
+    else navigate(path);
+  };
+
   const handleChat = () => {
     if (matchId) {
-      navigate(`/dashboard/green-room/${matchId}`);
+      go(
+        { panel: 'green-room', subPanel: 'green-room-chat', matchId: String(matchId) },
+        `/dashboard/green-room/${matchId}`,
+      );
     } else {
       dispatch(showSnackbar({
         message: 'You need to match with this reader before you can chat.',
         variant: 'info',
       }));
-      navigate('/dashboard/find-a-reader');
+      go({ panel: 'find-a-reader' }, '/dashboard/find-a-reader');
     }
   };
 
@@ -148,7 +161,7 @@ const ReaderProfile = (props) => {
       <div className="mx-auto max-w-lg">
         <button
           type="button"
-          onClick={() => navigate(-1)}
+          onClick={handleBack}
           className="mb-6 flex items-center gap-1.5 text-sm transition-colors"
           style={{ color: 'var(--aurora-sub)' }}
         >

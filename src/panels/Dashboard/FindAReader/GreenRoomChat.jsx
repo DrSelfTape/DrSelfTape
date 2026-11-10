@@ -10,9 +10,12 @@ import {
 import GreenRoomMessage from './components/GreenRoomMessage';
 import {
   fetchGreenRoomMessages,
+  fetchMatches,
   sendGreenRoomMessage,
   appendMessage,
+  removeMessage,
 } from '../../../redux/features/readers/readersMatchSlice';
+import { showSnackbar } from '../../../redux/features/snackbarSlice/snackbarSlice';
 import ReportBlockMenu from '../../../components/Shared/ReportBlockMenu';
 import axios from '../../../redux/http';
 import { baseURL } from '../../../redux/constant';
@@ -91,6 +94,10 @@ const GreenRoomChat = (props = {}) => {
 
   const otherActor = match?.other_actor || {};
   const isPaidReader = otherActor.is_paid_reader || false;
+  // Paid or not is the SERVER's answer (a Stripe-confirmed booking), and
+  // start-rehearsal enforces it. It used to be local state set by a
+  // `?booking=success` query parameter anyone could type.
+  const sessionBooked = Boolean(otherActor.session_booked);
   const readerRates = {
     15: otherActor.session_rate_15 || 0,
     30: otherActor.session_rate_30 || 0,
@@ -107,14 +114,16 @@ const GreenRoomChat = (props = {}) => {
   const [showBooking, setShowBooking] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState(30);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [sessionBooked, setSessionBooked] = useState(false);
+  const [bookingReturn, setBookingReturn] = useState(false); // back from Stripe checkout
+  const [bookedDismissed, setBookedDismissed] = useState(false);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const actionsRef = useRef(null);
 
   useEffect(() => {
     if (searchParams.get('booking') === 'success') {
-      setSessionBooked(true);
+      // Not proof of payment — only a cue to ask the server.
+      setBookingReturn(true);
       searchParams.delete('booking');
       setSearchParams(searchParams, { replace: true });
     }
@@ -167,8 +176,9 @@ const GreenRoomChat = (props = {}) => {
   }, []);
 
   const sendLocalMsg = (text, type = 'text', meta = {}) => {
+    const id = Date.now();
     dispatch(appendMessage({
-      id: Date.now(),
+      id,
       matchId,
       senderId: currentUser?.id || 'me',
       senderName: currentUser?.name || 'You',
@@ -178,19 +188,34 @@ const GreenRoomChat = (props = {}) => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       isMine: true,
     }));
+    return id;
+  };
+
+  // A failed send must not keep looking sent: pull the optimistic bubble and
+  // say so.
+  const failSend = (localId, err) => {
+    dispatch(removeMessage({ matchId, id: localId }));
+    dispatch(showSnackbar({
+      message: typeof err === 'string' && err ? `Message not sent: ${err}` : 'Message not sent. Check your connection and try again.',
+      variant: 'error',
+    }));
   };
 
   const handleSend = async (e) => {
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed || sending) return;
-    sendLocalMsg(trimmed);
+    const localId = sendLocalMsg(trimmed);
     setInput('');
     setSending(true);
     try {
       await dispatch(sendGreenRoomMessage({ match_id: matchId, content: trimmed })).unwrap();
       dispatch(fetchGreenRoomMessages(matchId));
-    } catch { /* local msg already shown */ } finally { setSending(false); }
+    } catch (err) {
+      failSend(localId, err);
+      // Hand the text back so it isn't lost (unless they've typed since).
+      setInput((cur) => cur || trimmed);
+    } finally { setSending(false); }
   };
 
   // Send a pre-written icebreaker on tap. Skips the input field so the
@@ -198,12 +223,12 @@ const GreenRoomChat = (props = {}) => {
   // messages over 7d) said the cold-start barrier was the killer.
   const sendIcebreaker = async (text) => {
     if (sending) return;
-    sendLocalMsg(text);
+    const localId = sendLocalMsg(text);
     setSending(true);
     try {
       await dispatch(sendGreenRoomMessage({ match_id: matchId, content: text })).unwrap();
       dispatch(fetchGreenRoomMessages(matchId));
-    } catch { /* local msg already shown */ } finally { setSending(false); }
+    } catch (err) { failSend(localId, err); } finally { setSending(false); }
   };
 
   const handleSidesUpload = async (e) => {
@@ -233,12 +258,12 @@ const GreenRoomChat = (props = {}) => {
           fileType: file.type,
         });
       }
-    } catch {
-      sendLocalMsg(`📄 Sides shared: ${file.name}`, 'file', {
-        fileName: file.name,
-        fileUrl: URL.createObjectURL(file),
-        fileType: file.type,
-      });
+    } catch (err) {
+      // No "Sides shared" bubble for an upload that did not happen.
+      const reason = err?.response?.status === 502
+        ? 'Sides must be a PDF, image, .txt or .fountain under 25 MB. If yours is, try again.'
+        : (err?.response?.data?.message || 'Check your connection and try again.');
+      dispatch(showSnackbar({ message: `Couldn't share ${file.name}. ${reason}`, variant: 'error' }));
     } finally {
       setUploadingFile(false);
       setSidesFile(null);
@@ -291,12 +316,22 @@ const GreenRoomChat = (props = {}) => {
     }
   };
 
+  // Back from checkout: Stripe's webhook confirms the booking a moment after
+  // the redirect, so re-ask the server a few times until it says so.
+  useEffect(() => {
+    if (!bookingReturn || sessionBooked) return undefined;
+    dispatch(fetchMatches());
+    let tries = 0;
+    const timer = setInterval(() => {
+      tries += 1;
+      if (tries >= 5) { clearInterval(timer); setBookingReturn(false); return; }
+      dispatch(fetchMatches());
+    }, 2000);
+    return () => clearInterval(timer);
+  }, [bookingReturn, sessionBooked, dispatch]);
+
   const handleStartRehearsal = async () => {
     if (startingRehearsal) return;
-    if (isPaidReader && !sessionBooked) {
-      setShowBooking(true);
-      return;
-    }
     setStartingRehearsal(true);
     setRehearsalError('');
     setShowActions(false);
@@ -342,6 +377,12 @@ const GreenRoomChat = (props = {}) => {
         },
       });
     } catch (err) {
+      // 402 = this is a paid reader and the server has no paid booking for us.
+      if (err?.response?.status === 402) {
+        setShowBooking(true);
+        dispatch(fetchMatches());
+        return;
+      }
       // Old code fell into a demo-rehearsal URL when start-rehearsal/
       // failed — that URL points at a Daily room that doesn't exist,
       // so the user landed in a black screen with no way out. Now we
@@ -491,14 +532,23 @@ const GreenRoomChat = (props = {}) => {
       )}
 
       {/* Session booked banner */}
-      {sessionBooked && (
+      {isPaidReader && sessionBooked && !bookedDismissed && (
         <div
           className="mx-4 mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold"
           style={{ background: 'rgba(159,230,180,0.18)', border: '1px solid rgba(159,230,180,0.40)', color: 'var(--dst-success)' }}
         >
           <Check size={14} />
           <span className="flex-1">Session booked! You can now start your rehearsal.</span>
-          <button onClick={() => setSessionBooked(false)}><X size={14} /></button>
+          <button onClick={() => setBookedDismissed(true)}><X size={14} /></button>
+        </div>
+      )}
+      {bookingReturn && !sessionBooked && (
+        <div
+          className="mx-4 mt-2 flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold"
+          style={{ background: 'rgba(252,224,114,0.16)', border: '1px solid rgba(252,224,114,0.32)', color: 'var(--aurora-sub)' }}
+        >
+          <Loader2 size={14} className="animate-spin" />
+          <span className="flex-1">Confirming your payment. This takes a few seconds.</span>
         </div>
       )}
 

@@ -101,6 +101,16 @@ const PLANS = [
   },
 ];
 
+/* One subscriber, one store. `status.store` is the store that bills the active
+ * plan ('app_store' | 'play_store' | 'stripe' | 'other' | '' when unknown).
+ * When that is not the store this screen sells through, the plan is described
+ * and nothing is sold: a second checkout would bill the same person twice. */
+const MANAGED_ELSEWHERE = {
+  app_store: ['is managed in the App Store', 'Change or cancel it in the Dr. Self Tape app on your iPhone or iPad, or in Apple Settings under Subscriptions.'],
+  play_store: ['is managed in Google Play', 'Change or cancel it in the Dr. Self Tape app on your Android device, or in Google Play under Subscriptions.'],
+  stripe: ['is billed on the web', 'Manage it at drselftape.app.'],
+};
+
 function introOfferLabel(intro) {
   if (!intro?.unit || !intro?.value) return null;
   const unitWord = { DAY: 'day', WEEK: 'week', MONTH: 'month', YEAR: 'year' }[intro.unit];
@@ -184,6 +194,14 @@ export default function Membership({ onClose }) {
   const [upgradeIntent, setUpgradeIntent] = useState(null);
   useEffect(() => {
     const intent = consumeUpgradeIntent();
+    // Top of the paywall funnel: without it "saw the paywall" could only be
+    // inferred from upgrade_intent, which direct visits never fire.
+    import('../../../utils/analytics').then(({ trackEvent }) => {
+      trackEvent('paywall_viewed', {
+        source: intent?.source || 'direct',
+        platform: isNativeStore() ? `${storePlatform()}_iap` : 'stripe_web',
+      });
+    }).catch(() => { /* swallow */ });
     if (!intent) return;
     setUpgradeIntent(intent);
     if (intent.plan && PLANS.some((p) => p.id === intent.plan)) setSelectedPlan(intent.plan);
@@ -212,6 +230,17 @@ export default function Membership({ onClose }) {
       if (i < attempts - 1) await new Promise((r) => setTimeout(r, delayMs));
     }
     return false;
+  };
+
+  // The grant normally arrives by RevenueCat webhook. If that webhook is lost,
+  // polling our own status forever finds nothing: ask the BE to re-read the
+  // store subscription from RevenueCat itself. The BE call is idempotent, but
+  // it is still sent ONCE and never retried here; a failure just leaves the
+  // caller to the status poll it was going to do anyway.
+  const reconcileEntitlement = async () => {
+    try {
+      await axiosInstance.post('/v1/subscriptions/reconcile/', {}, { timeout: 15000 });
+    } catch { /* not configured / provider down — the poll decides */ }
   };
 
   useEffect(() => {
@@ -265,12 +294,13 @@ export default function Membership({ onClose }) {
   }, [dispatch]);
 
   const handleSubscribe = async (planId) => {
-    // Apple 2.1(b) rejection: the trial button appeared unresponsive
-    // because checkoutLoading could get stuck forever if the IAP plugin
-    // hung. Belt-and-suspenders watchdog clears the disabled state
-    // after 12s so the user can always retry.
+    // Watchdog: clears the disabled state after 12s so a hung checkout
+    // request can always be retried. Web only. On a native store the await
+    // spans the store's own purchase sheet (Face ID, password, Ask to Buy),
+    // which routinely outlasts 12s: it showed an error over a live sheet and
+    // re-enabled the button for a second purchase.
     setCheckoutLoading(planId);
-    const watchdog = setTimeout(() => {
+    const watchdog = isNativeStore() ? null : setTimeout(() => {
       setCheckoutLoading((cur) => (cur === planId ? null : cur));
       dispatch(showSnackbar({
         message: 'Checkout is taking longer than expected. Please try again.',
@@ -348,15 +378,16 @@ export default function Membership({ onClose }) {
         // Sharing, billing retry) → "pending"; resolved-but-no-active-
         // entitlement yet → "finalizing"; only a confirmed active entitlement
         // earns "activated".
-        trackPurchase({ status: 'success' });
-
         // Pending purchases (ask-to-buy, Family Sharing, billing retry) never
         // grant immediately — tell the user and stop; polling/alerting would be
-        // a false alarm.
+        // a false alarm. Not a sale yet, so it must not count as 'success'.
         if (result.pending) {
+          trackPurchase({ status: 'pending' });
           dispatch(showSnackbar({ message: 'Your purchase is pending approval. We’ll unlock your plan once it’s approved.', variant: 'info' }));
           return;
         }
+
+        trackPurchase({ status: 'success' });
 
         // Don't claim "activated" off a resolved promise alone — the BE
         // entitlement is granted by the (laggy) webhook. Poll for it, and only
@@ -367,6 +398,12 @@ export default function Membership({ onClose }) {
         let granted = false;
         try {
           granted = await refreshStatusUntilActive({ expectedPlan: planId });
+          if (!granted) {
+            // The whole poll window passed with no webhook. Recover it now
+            // rather than leaving a charged user to find Restore Purchases.
+            await reconcileEntitlement();
+            granted = await refreshStatusUntilActive({ attempts: 1, expectedPlan: planId });
+          }
         } finally {
           setFinalizing(null);
         }
@@ -491,6 +528,8 @@ export default function Membership({ onClose }) {
       setFinalizing('restore');
       let granted = false;
       try {
+        // A user restoring is a user whose webhook may never have arrived.
+        await reconcileEntitlement();
         granted = await refreshStatusUntilActive();
       } finally {
         setFinalizing(null);
@@ -530,6 +569,22 @@ export default function Membership({ onClose }) {
   // every plan — the stores already block a re-used trial, so hide the badge
   // to match (showing "1 week free" to an existing subscriber is misleading).
   const hasActivePlan = isEntitledStatus(status?.status);
+  // The store this screen sells through, vs the one billing the active plan.
+  // A backend that does not send `store` yet (undefined) changes nothing. A
+  // blank store means "not Stripe, origin unknown": on the web that is still
+  // someone else's plan to manage; on a native store it is most likely this
+  // store's own older purchase, so the native flow is left alone.
+  const hereStore = Capacitor.isNativePlatform()
+    ? ({ ios: 'app_store', android: 'play_store' }[Capacitor.getPlatform()] || null)
+    : 'stripe';
+  const planStore = status?.store;
+  const managedElsewhere = hasActivePlan && planStore != null && hereStore != null
+    && planStore !== hereStore && (planStore !== '' || hereStore === 'stripe');
+  const currentPlanName = PLANS.find((p) => p.id === status?.plan)?.name || 'current';
+  const [managedWhere, managedHow] = MANAGED_ELSEWHERE[planStore] || [
+    hereStore === 'stripe' ? 'isn’t billed on the web' : 'isn’t billed through this store',
+    'Manage it where you subscribed, or contact support.',
+  ];
   const tokenBalance = status?.balance ?? 0;
   // Premium is the "Unlimited" tier — the BE flags it so we show "Unlimited"
   // rather than the frozen balance number (which never deducts for them).
@@ -676,7 +731,13 @@ export default function Membership({ onClose }) {
             The earlier floating button hit iOS WKWebView stacking-context
             bugs where the top bar / tab bar rendered above its tap area. */}
         <div className="studio-cta-block">
-          {isCurrent ? (
+          {managedElsewhere ? (
+            <p className="studio-trialnote" role="status" style={{ fontSize: 14 }}>
+              <strong>Your {currentPlanName} plan {managedWhere}.</strong>
+              <br />
+              {managedHow}
+            </p>
+          ) : isCurrent ? (
             <button
               type="button"
               className="studio-cta-ghost"
@@ -750,8 +811,17 @@ export default function Membership({ onClose }) {
 
         {/* Legal — full Apple-mandated disclosure block.
             Auto-renewal language + cancellation location + refund pointer
-            are all required for App Store review under guideline 3.1.2. */}
-        <p className="studio-legal">
+            are all required for App Store review under guideline 3.1.2.
+            iOS only: on web the charge is Stripe's, not Apple's. */}
+        {!isNativeIOS() && (
+          <p className="studio-legal">
+            Subscriptions auto-renew at the price shown until cancelled. You can
+            cancel anytime; cancellation takes effect at the end of the current
+            billing period.
+            {!Capacitor.isNativePlatform() && ' Payment is taken by card through Stripe at checkout. Once subscribed, manage or cancel with Manage Plan on this page.'}
+          </p>
+        )}
+        {isNativeIOS() && <p className="studio-legal">
           Subscriptions auto-renew at the price shown until cancelled in your
           Apple ID Subscription settings. You can cancel anytime; cancellation
           takes effect at the end of the current billing period. Payment is
@@ -767,7 +837,7 @@ export default function Membership({ onClose }) {
             reportaproblem.apple.com
           </a>
           .
-        </p>
+        </p>}
         <p className="studio-legal">
           <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/"
              target="_blank" rel="noopener noreferrer"

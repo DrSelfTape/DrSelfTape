@@ -1,16 +1,37 @@
-import { Suspense } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Sidebar from '../../components/Sidebar.jsx'
 import AnnouncementBanner from '../../components/AnnouncementBanner.jsx'
 import ConsoleCommandPalette from '../../components/ConsoleCommandPalette.jsx'
 import HelpSlideOver from '../../components/HelpSlideOver.jsx'
 import { consoleSurfaceEnabled } from '../../utils/consoleSurface';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import NoTokensModal from '../../components/NoTokensModal.jsx';
 
 const Spinner = () => (
   <div className="flex items-center justify-center h-screen">
     <div className="w-8 h-8 border-2 border-[#D4A85F] border-t-transparent rounded-full animate-spin" />
   </div>
 );
+
+// The 402 interceptor announces an empty balance with an `insufficient_tokens`
+// event and the panels clear their own error, trusting a modal to explain. Only
+// the mobile shell mounted one, so on desktop an out-of-tokens tap did nothing.
+function ConsoleNoTokens() {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener('insufficient_tokens', show);
+    return () => window.removeEventListener('insufficient_tokens', show);
+  }, []);
+  if (!open) return null;
+  return (
+    <NoTokensModal
+      onClose={() => setOpen(false)}
+      onUpgrade={() => { setOpen(false); navigate('/dashboard/membership'); }}
+    />
+  );
+}
 
 // V-02 (Ring 4): the desktop chrome, extracted from DashboardLayout so EVERY
 // desktop route renders inside the same console — the /dashboard Outlet and
@@ -28,6 +49,7 @@ export default function ConsoleFrame({ children }) {
       <div className="flex h-screen">
         <Sidebar />
         <ConsoleCommandPalette />
+        <ConsoleNoTokens />
         <HelpSlideOver />
         <main className="relative flex-1 ml-64 overflow-auto" style={{ background: 'var(--aurora-bg)' }}>
           {/* The one light source — upper region, ~5% gold, per the spec */}
@@ -55,6 +77,7 @@ export default function ConsoleFrame({ children }) {
     <div className="flex h-screen">
       <Sidebar />
       <ConsoleCommandPalette />
+      <ConsoleNoTokens />
       <main className="relative flex-1 ml-64 overflow-auto p-8 aurora-orbs aurora-orbs-live" style={{ background: 'var(--aurora-bg)' }}>
         {/* Subtle logo watermark */}
         <div

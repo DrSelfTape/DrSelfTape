@@ -29,7 +29,7 @@ const WhoWantsToRead = ({ onMatchNavigate, embedded = false } = {}) => {
       ).unwrap();
       if (result?.match && result?.match_details?.id) {
         // Hold on the celebration; navigate when burst finishes.
-        setCelebrating({ matchId: result.match_details.id });
+        setCelebrating({ matchId: result.match_details.id, actor });
       } else {
         dispatch(fetchWhoWantsToRead());
       }
@@ -113,7 +113,13 @@ const WhoWantsToRead = ({ onMatchNavigate, embedded = false } = {}) => {
       </div>
 
       {/* Match celebration overlay */}
-      {celebrating && <MatchCelebration onDone={onCelebrationDone} />}
+      {celebrating && (
+        <MatchCelebration
+          actor={celebrating.actor}
+          onConnect={onCelebrationDone}
+          onDismiss={() => { setCelebrating(null); dispatch(fetchWhoWantsToRead()); }}
+        />
+      )}
     </div>
   );
 };

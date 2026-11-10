@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import useHideMobileHeader from './Shared/useHideMobileHeader';
 import { trackEvent } from '../utils/analytics';
 import axiosInstance from '../redux/http';
+import { isNativeIOS } from '../utils/purchases';
 
 // The same 402 reaches a free user, a paying Basic/Plus user who spent their
 // monthly allowance, and a Premium user who hit the daily fair-use ceiling.
@@ -64,9 +65,11 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
         {showUpgrade && (
         <div className="text-left mb-5 rounded-2xl p-4" style={{ background: 'color-mix(in oklch, var(--aurora-heritage-gold, #D4A85F) 8%, transparent)', border: '1px solid var(--aurora-line)' }}>
           {[
-            ['Tape Reviews', 'Unlimited, with the full deep read'],
-            ['AI scene partner', 'Unlimited reads, any scene'],
+            ['Tape Reviews', 'The full deep read on every tape'],
+            ['AI scene partner', 'Run any scene, at your pace'],
             ['Compare Takes', 'Rank up to 4 takes, pick the send'],
+            // $9.99 is Basic (10 AI actions a month); only Premium is unlimited.
+            ['Allowance', 'From 10 AI actions a month · unlimited on Premium (150 a day fair use)'],
           ].map(([k, v]) => (
             <div key={k} className="flex items-start gap-2 py-1">
               <span style={{ color: '#22c55e', fontWeight: 700 }}>✓</span>
@@ -91,7 +94,7 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
           See plans — from $9.99/mo
         </button>
         <p className="text-[11px] mb-2" style={{ color: 'var(--aurora-dim, var(--aurora-sub))' }}>
-          Cancel anytime in the App Store.
+          {isNativeIOS() ? 'Cancel anytime in the App Store.' : 'Cancel anytime.'}
         </p>
         </>)}
         <button

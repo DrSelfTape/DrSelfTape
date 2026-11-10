@@ -42,6 +42,7 @@ import useAuditionNotification from '../../../hooks/useAuditionNotification';
 import { clearAuditionNotification, findNotifiedAudition } from '../../../utils/auditionNotification';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
 import { NoDataFound } from '../../../components/Shared/NoDataFound';
+import { toLocalInputValue, localInputToISO } from '../Submissions/dateTimeLocal';
 import '../studioScreens.css';
 
 /* ─── constants ─────────────────────────────────────────────────── */
@@ -300,7 +301,9 @@ function DetailPanel({ audition, onClose, onSave, onDelete, onStatusChange }) {
 
   useEffect(() => {
     if (audition) {
-      setForm({ ...audition });
+      // The datetime-local input needs local wall time, not the API's UTC ISO
+      // string (which it renders as blank).
+      setForm({ ...audition, callback_date: toLocalInputValue(audition.callback_date) });
       setEditing(false);
       setConfirmDelete(false);
     }
@@ -531,18 +534,9 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.project_title.trim() || submitting) return;
-    // Coerce any partial / invalid callback_date input to null rather than
-    // sending a string the BE can't parse. The datetime-local input is the
-    // primary defense; this is the belt around it.
-    let payload = { ...form };
-    if (payload.callback_date) {
-      const ts = new Date(payload.callback_date).getTime();
-      if (Number.isNaN(ts)) {
-        payload.callback_date = null;
-      }
-    } else {
-      payload.callback_date = null;
-    }
+    // The input holds local wall time; the API stores UTC and has no per-user
+    // timezone, so send the absolute instant (null when empty or invalid).
+    const payload = { ...form, callback_date: localInputToISO(form.callback_date) };
     setSubmitting(true);
     const result = await onSubmit(payload);
     setSubmitting(false);
@@ -617,8 +611,8 @@ function NewAuditionModal({ open, onClose, onSubmit }) {
       const parsed = data?.data || {};
       setForm((prev) => ({
         ...prev,
-        project: parsed.project || prev.project,
-        role: parsed.role || prev.role,
+        project_title: parsed.project || parsed.project_title || prev.project_title,
+        character: parsed.role || parsed.character || prev.character,
         casting_director: parsed.casting_director || prev.casting_director,
         agency: parsed.agency || prev.agency,
         project_type: parsed.project_type || prev.project_type,
@@ -935,7 +929,7 @@ export default function DashboardAuditions() {
         casting_director: form.casting_director || '',
         project_type: form.project_type,
         agency: form.agency || '',
-        callback_date: form.callback_date || null,
+        callback_date: localInputToISO(form.callback_date),
         notes: form.notes || '',
       };
       try {

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { navGroupsForRole } from './navGroups';
+import { consoleSurfaceEnabled } from '../utils/consoleSurface';
 
 /**
  * ⌘K command palette — the desktop jump list. Opens on Cmd/Ctrl+K or the
@@ -39,19 +40,23 @@ export default function ConsoleCommandPalette() {
     g.items.map((it) => ({ ...it, group: g.label || 'Studio' }))
   ), [role]);
 
+  // The help slide-over is mounted only on the console surface; off it the
+  // /shortcuts verb would dispatch an event nobody hears.
+  const helpMounted = consoleSurfaceEnabled();
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return commands;
     // A leading slash switches modes entirely: verbs only, no nav noise.
     if (q.startsWith('/')) {
       return SLASH_VERBS
+        .filter((v) => helpMounted || v.action !== 'help')
         .filter((v) => v.verb.startsWith(q) || v.label.toLowerCase().includes(q.slice(1)))
         .map((v) => ({ ...v, label: v.label, group: v.hint }));
     }
     return commands.filter((c) =>
       c.label.toLowerCase().includes(q) || c.group.toLowerCase().includes(q)
     );
-  }, [commands, query]);
+  }, [commands, query, helpMounted]);
 
   // Focus returns to the element that had it when the palette opened (a11y
   // dialog contract; the recap card and any other dialog rely on it).
@@ -151,7 +156,7 @@ export default function ConsoleCommandPalette() {
           {results.length === 0 && (
             <p style={{ padding: '14px 12px', fontSize: 13, color: 'var(--aurora-dim)', margin: 0 }}>
               {query.trim().startsWith('/')
-                ? <>No verb matches "{query}" — try /record, /review, /compare, /reader, /sides or /shortcuts</>
+                ? <>No verb matches "{query}" — try /record, /review, /compare, /reader{helpMounted ? ', /sides or /shortcuts' : ' or /sides'}</>
                 : <>Nothing matches "{query}"</>}
             </p>
           )}
@@ -168,7 +173,7 @@ export default function ConsoleCommandPalette() {
             const active = i === cursor;
             return (
               <button
-                key={cmd.path}
+                key={cmd.verb || cmd.path}
                 type="button"
                 onClick={() => go(cmd)}
                 onMouseEnter={() => setCursor(i)}
@@ -180,7 +185,9 @@ export default function ConsoleCommandPalette() {
                   color: 'var(--aurora-text)',
                 }}
               >
-                <Icon style={{ width: 15, height: 15, flexShrink: 0, color: active ? 'var(--aurora-heritage-gold)' : 'var(--aurora-dim)' }} />
+                {Icon
+                  ? <Icon style={{ width: 15, height: 15, flexShrink: 0, color: active ? 'var(--aurora-heritage-gold)' : 'var(--aurora-dim)' }} />
+                  : <span style={{ width: 15, flexShrink: 0, textAlign: 'center', fontFamily: 'var(--dst-font-mono)', color: active ? 'var(--aurora-heritage-gold)' : 'var(--aurora-dim)' }}>/</span>}
                 <span style={{ flex: 1, fontWeight: 500 }}>{cmd.label}</span>
                 <span style={{
                   fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontSize: 9,

@@ -95,11 +95,39 @@ test('hover scrub is bounded and never runs on touch, playing video or reduced m
   assert.equal(scrubTake(null, pointer), false);
 });
 
-// Theme colors may change; retain the original content, controls, and paid gating.
-const withoutPresentation = html => html.replace(/ (?:class|style)="[^"]*"/g, '');
-for (const [native, mobile] of [[false, true], [true, true], [true, false]]) for (const paid of [true, false]) test(`mobile compare retains content and controls (native=${native}, small=${mobile}, paid=${paid})`, () => {
+// The design-token pass swapped literal colours and fonts for tokens, so the
+// frozen baseline can no longer match byte for byte. Mask ONLY those values: a
+// colour inside a text-/bg-/border- utility, and paint declarations in inline
+// style. Every other class and every layout style must still match exactly.
+const COLOR_VALUE = String.raw`\[(?:#[0-9a-fA-F]{3,8}|rgba?\([^\]]*\)|var\(--dst-[\w-]+\))\]|white|black`;
+const COLOR_UTILITY = new RegExp(String.raw`(^|[\s:])(text|bg|border)-(?:${COLOR_VALUE})(?=[\s/]|$)`, 'g');
+const PAINT_PROPERTY = /^(?:color|background|background-color|border-color|font-family)$/;
+const normalisePresentation = html => html
+  .replace(/ class="([^"]*)"/g, (_, value) => ` class="${value.replace(COLOR_UTILITY, '$1$2-COLOR')}"`)
+  .replace(/ style="([^"]*)"/g, (_, value) => {
+    // Split on declaration ends, not on the ';' that closes an HTML entity.
+    const kept = value.split(/(?<!&#?\w+);/).filter(d => d && !PAINT_PROPERTY.test(d.slice(0, d.indexOf(':')).trim()));
+    return kept.length ? ` style="${kept.join(';')}"` : '';
+  });
+
+test('the baseline comparison masks colour values only, never structure', () => {
+  const same = (a, b) => assert.equal(normalisePresentation(a), normalisePresentation(b));
+  const differ = (a, b) => assert.notEqual(normalisePresentation(a), normalisePresentation(b));
+  same('<p class="text-sm text-[#0A0A0A] mb-1">', '<p class="text-sm text-[var(--dst-ink)] mb-1">');
+  same('<p class="bg-white hover:text-[rgba(10,10,10,0.6)]">', '<p class="bg-[var(--dst-surface)] hover:text-[var(--dst-ink-2)]">');
+  same('<p style="width:86%;background:linear-gradient(90deg, #D4A85F, #7A5A18)">', '<p style="width:86%;background:var(--dst-brass-ui)">');
+  same('<p style="font-family:&#x27;Playfair Display&#x27;, serif">', '<p style="font-family:var(--dst-font-serif)">');
+  differ('<p class="flex text-[#0A0A0A]">', '<p class="grid text-[#0A0A0A]">');
+  differ('<p class="text-sm text-[#0A0A0A]">', '<p class="text-xl text-[#0A0A0A]">');
+  differ('<p class="text-[11px]">', '<p class="text-[12px]">');
+  differ('<p class="bg-[#D4A85F]/15">', '<p class="bg-[#D4A85F]/20">');
+  differ('<p class="mb-1">', '<p>');
+  differ('<p style="width:86%;color:red">', '<p style="width:68%;color:red">');
+  differ('<p style="display:none">', '<p>');
+});
+for (const [native, mobile] of [[false, true], [true, true], [true, false]]) for (const paid of [true, false]) test(`mobile compare matches main apart from colour tokens (native=${native}, small=${mobile}, paid=${paid})`, () => {
   setupReviewRender({ native, mobile, paid, compare: result });
   const before = render(original.CompareTakes);
   setupReviewRender({ native, mobile, paid, compare: result });
-  assert.equal(withoutPresentation(render(current.CompareTakes)), withoutPresentation(before));
+  assert.equal(normalisePresentation(render(current.CompareTakes)), normalisePresentation(before));
 });

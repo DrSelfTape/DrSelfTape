@@ -7,6 +7,7 @@ import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Upload, X, FileText, CheckCircle, AlertCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import useHideMobileHeader from '../../../components/Shared/useHideMobileHeader';
+import { importSummary } from './importSummary';
 import {
   parseTalentReportThunk,
   importSubmissionsThunk,
@@ -122,7 +123,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
     const toImport = parsedReport.submissions.filter((_, i) => selectedIds.has(i));
     const result = await dispatch(importSubmissionsThunk(toImport));
     if (importSubmissionsThunk.fulfilled.match(result)) {
-      setImportDone(result.payload?.created || toImport.length);
+      setImportDone(importSummary(result.payload, toImport.length));
       dispatch(fetchSubmissionsThunk());
       setTimeout(() => {
         onImported?.();
@@ -159,7 +160,7 @@ export default function TalentReportImporter({ onClose, onImported }) {
                 <CheckCircle size={30} color="#5ee6b8" />
               </div>
               <h3 style={{ color: 'var(--dst-ink)', fontSize: 20, fontWeight: 700, margin: '0 0 8px' }}>Imported!</h3>
-              <p style={{ color: 'var(--dst-ink-2)', fontSize: 14, margin: 0 }}>{importDone} submissions added to your tracker</p>
+              <p style={{ color: 'var(--dst-ink-2)', fontSize: 14, margin: 0 }}>{importDone}</p>
             </div>
           )}
 
@@ -199,8 +200,8 @@ export default function TalentReportImporter({ onClose, onImported }) {
             </div>
           )}
 
-          {/* Error */}
-          {error && !parsedReport && (
+          {/* Error — also after a successful parse, when the import itself fails */}
+          {error && importDone === null && (
             <div style={{ background: 'rgba(255,100,100,0.08)', border: '1px solid rgba(255,100,100,0.2)', borderRadius: 12, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
               <AlertCircle size={18} color="#FF8280" />
               <p style={{ color: '#FF8280', fontSize: 13, margin: 0 }}>{error}</p>

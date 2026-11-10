@@ -4,10 +4,25 @@ import { baseURL } from '../../constant';
 
 // ========== Thunks ==========
 
+// Saved filters -> the query /matching/discover/ and /matching/stats/ accept.
+// These three are everything the server can filter a reader on; a "no
+// preference" value sends nothing.
+const UNION_PARAM = { 'SAG-AFTRA': 'sag-aftra', 'Non-Union': 'non-union' };
+export const deckFilterParams = (filters) => {
+  const params = {};
+  if (Array.isArray(filters?.genres) && filters.genres.length > 0) params.genres = filters.genres.join(',');
+  if (UNION_PARAM[filters?.union_status]) params.union = UNION_PARAM[filters.union_status];
+  if (filters?.availability === 'Online Now') params.online = 1;
+  return params;
+};
+
 export const fetchAvailableReaders = createAsyncThunk(
   'readersMatch/fetchAvailableReaders',
-  async (params = {}, { rejectWithValue }) => {
+  // Filters come from state, not the caller: Refresh, Try again and the
+  // post-block reload all dispatch this bare and must get the same deck.
+  async (_, { getState, rejectWithValue }) => {
     try {
+      const params = deckFilterParams(getState().readersMatch.filters);
       const { data } = await axios.get(`${baseURL}/v1/matching/discover/`, { params });
       return data?.data || [];
     } catch (error) {
@@ -162,25 +177,13 @@ export const fetchReaderById = createAsyncThunk(
   }
 );
 
-export const updateReaderFilters = createAsyncThunk(
-  'readersMatch/updateReaderFilters',
-  async (filters, { rejectWithValue }) => {
-    try {
-      const { data } = await axios.patch(`${baseURL}/v1/readers/filters/`, filters);
-      return data?.data || filters;
-    } catch (error) {
-      return rejectWithValue(
-        error?.response?.data?.message || error?.message || 'Failed to update filters'
-      );
-    }
-  }
-);
-
 export const fetchMatchingStats = createAsyncThunk(
   'readersMatch/fetchMatchingStats',
-  async (_, { rejectWithValue }) => {
+  async (_, { getState, rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${baseURL}/v1/matching/stats/`);
+      // Same filters as the deck request, so deck_count counts this deck.
+      const params = deckFilterParams(getState().readersMatch.filters);
+      const { data } = await axios.get(`${baseURL}/v1/matching/stats/`, { params });
       return data?.data || {};
     } catch (error) {
       return rejectWithValue(error?.response?.data?.message || 'Failed to fetch stats');
@@ -294,6 +297,13 @@ const readersMatchSlice = createSlice({
         state.greenRoomMessages[key] = [];
       }
       state.greenRoomMessages[key].push(msg);
+    },
+    // Drop an optimistic bubble whose send failed — it must not read as sent.
+    removeMessage: (state, action) => {
+      const { matchId, id } = action.payload || {};
+      const list = state.greenRoomMessages[matchId];
+      if (!Array.isArray(list)) return;
+      state.greenRoomMessages[matchId] = list.filter((m) => m.id !== id);
     },
   },
   extraReducers: (builder) => {
@@ -429,14 +439,6 @@ const readersMatchSlice = createSlice({
         state.error = action.payload;
       })
 
-      // updateReaderFilters
-      .addCase(updateReaderFilters.fulfilled, (state, action) => {
-        state.filters = action.payload;
-      })
-      .addCase(updateReaderFilters.rejected, (state, action) => {
-        state.error = action.payload;
-      })
-
       // fetchMatchingStats
       .addCase(fetchMatchingStats.pending, (state) => {
         state.matchingStatsError = null;
@@ -446,6 +448,12 @@ const readersMatchSlice = createSlice({
         // Keep the standalone mirror in step with the payload; it is the one
         // number allowed a live indicator, so it must never go stale.
         state.onlineCount = Number(action.payload?.online_count) || 0;
+        // Hydrate the toggle from the server (BE default is available=true);
+        // it used to sit at the initial `false` until the user tapped it.
+        // Skipped mid-toggle so a stats response can't undo the tap.
+        if (typeof action.payload?.is_available === 'boolean' && !state.availabilityToggling) {
+          state.isAvailable = action.payload.is_available;
+        }
         state.matchingStatsError = null;
       })
       .addCase(fetchMatchingStats.rejected, (state, action) => {
@@ -476,7 +484,7 @@ const readersMatchSlice = createSlice({
   },
 });
 
-export const { clearReadersMatchError, setFiltersLocal, appendMessage } =
+export const { clearReadersMatchError, setFiltersLocal, appendMessage, removeMessage } =
   readersMatchSlice.actions;
 
 export default readersMatchSlice.reducer;

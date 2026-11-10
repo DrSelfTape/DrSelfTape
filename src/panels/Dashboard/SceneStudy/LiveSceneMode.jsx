@@ -50,13 +50,13 @@ const TTS_CACHE_MAX = 8;
  * should not sound like one person doing all the parts, and the actor can
  * recast any of them before the scene starts.
  */
-function VoicePicker({ partnerCharacters, onSelect, onCancel, settings, onSettings }) {
+function VoicePicker({ partnerCharacters, primaryVoice = DEFAULT_PARTNER_VOICE, onSelect, onCancel, settings, onSettings }) {
   const roles = partnerCharacters.length > 0 ? partnerCharacters : ['Scene Partner'];
   // Default casting is derived, not frozen in state, so a script that finishes
   // parsing after this mounts still shows every character pre-cast. Only the
   // actor's explicit recasts live in state.
   const [picked, setPicked] = useState({});
-  const casting = assignPartnerVoices(roles, DEFAULT_PARTNER_VOICE, picked);
+  const casting = assignPartnerVoices(roles, primaryVoice, picked);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
@@ -1337,6 +1337,24 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       stopNativeListen();
       const text = liveTranscriptRef.current || expectedActorTurn();
       if (isActiveRef.current) handleActorLineComplete(text);
+    } else if (readerModeRef.current === 'voice') {
+      // Web voice mode has no actor-wait Promise to resolve, so advanceLine()
+      // did nothing and an unrecognised cue stranded the actor. Take the path a
+      // recognised cue takes (fire() in startRecognition). Handlers are
+      // detached first so the abandoned recognizer can't auto-restart or fire a
+      // late result into the next beat.
+      const recognition = recognitionRef.current;
+      if (recognition) {
+        recognition.onresult = null;
+        recognition.onerror = null;
+        recognition.onend = null;
+        try { recognition.stop(); } catch { /* already stopped */ }
+      }
+      if (cueConfirmRef.current) { clearTimeout(cueConfirmRef.current); cueConfirmRef.current = null; }
+      if (silenceTimerRef.current) { clearTimeout(silenceTimerRef.current); silenceTimerRef.current = null; }
+      // handleActorLineComplete drops whitespace-only text (a line that is only
+      // a parenthetical), so pass a token, as the native path does.
+      if (isActiveRef.current) handleActorLineComplete(expectedActorTurn().trim() || '(beat)');
     } else {
       advanceLine();
     }
@@ -1447,12 +1465,15 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     // every line — most users tap End Scene first and were left stuck
     // on the same node forever. The BE complete_node is idempotent, so
     // re-firing on a session the user already finished is harmless.
-    if (craftSkill && duration >= 15) {
+    // Not when the scene ran to its last line, though: the sceneComplete
+    // effect already dispatched, and a second response (already_done) would
+    // overwrite lastResult and swallow the Craft Journey celebration.
+    if (craftSkill && duration >= 15 && !sceneComplete) {
       dispatch(completeCraftNode({ node: craftSkill, stars: 2 }))
         .then(() => dispatch(fetchCraftJourney()));
     }
     onExit();
-  }, [onExit, dispatch, lines, userRole, craftSkill, stopNativeListen, stopCurrentAudio]);
+  }, [onExit, dispatch, lines, userRole, craftSkill, sceneComplete, stopNativeListen, stopCurrentAudio]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -1505,10 +1526,13 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
     return (
       <VoicePicker
         partnerCharacters={partnerCharacters}
+        primaryVoice={voice}
         settings={readerSettings}
         onSettings={updateReaderSettings}
         onSelect={onVoiceSelected}
-        onCancel={onExit}
+        // Opened from the start screen (a voice was already chosen in the role
+        // picker): Cancel goes back there instead of leaving the reader.
+        onCancel={initialVoice ? () => setShowVoicePicker(false) : onExit}
       />
     );
   }
@@ -1519,9 +1543,10 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
       <ModePicker
         prePauseSeconds={prePauseSeconds}
         setPrePauseSeconds={setPrePauseSeconds}
-        onPreTimed={() => startPreTimedScene(pendingVoice, prePauseSeconds)}
-        onVoice={() => startScene(pendingVoice)}
-        onBack={onExit}
+        onPreTimed={() => { primeAudio(); startPreTimedScene(pendingVoice || voice, prePauseSeconds); }}
+        // Only the voice reader needs the mic, so this is where it is asked for.
+        onVoice={() => { primeAudio(); setShowModePicker(false); setShowMicPermission(true); }}
+        onBack={() => setShowModePicker(false)}
       />
     );
   }
@@ -1577,6 +1602,8 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
         }}
         onDenied={() => {
           setShowMicPermission(false);
+          // No mic is not a dead end: the timed reader runs without one.
+          startPreTimedSceneRef.current?.(voice, prePauseSeconds);
         }}
       />
       {/* Top Bar */}
@@ -1694,6 +1721,14 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                     startPreTimedSceneRef.current?.(voice, prePauseSeconds);
                     return;
                   }
+                  // Web: choose the reader first (timed vs voice). Every mount
+                  // passes initialVoice, so the voice picker that used to lead
+                  // here never ran and the choice was unreachable. iOS keeps
+                  // its listen-by-default path.
+                  if (!isNativeIOS() && canListen) {
+                    setShowModePicker(true);
+                    return;
+                  }
                   setShowMicPermission(true);
                 }}
                 className="w-full bg-[#D4A85F] hover:bg-[#C09850] text-[#0A0A0A] px-8 py-3.5 rounded-full font-semibold text-base transition-colors cursor-pointer flex items-center justify-center gap-2.5"
@@ -1703,6 +1738,17 @@ export default function LiveSceneMode({ lines, userRole, characters, initialVoic
                 </svg>
                 Begin
               </button>
+              {/* Per-character casting: the picker's own gate (!initialVoice)
+                  never opens now that the role picker always supplies a voice. */}
+              {partnerCharacters.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setShowVoicePicker(true)}
+                  className="mt-4 min-h-[44px] px-3 text-sm text-[#7A5A18] underline cursor-pointer"
+                >
+                  Recast voices
+                </button>
+              )}
               <p className="text-[rgba(10,10,10,0.4)] text-xs mt-5 leading-relaxed">
                 {canHearActor
                   ? 'Say your line, then pause. The AI handles the rest.'

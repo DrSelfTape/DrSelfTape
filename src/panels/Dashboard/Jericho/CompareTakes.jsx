@@ -17,6 +17,7 @@ import { tapSelect, cheer, warn } from '../../../utils/haptics';
 import { useIsMobile } from '../../../hooks/useIsMobile';
 import { Capacitor } from '@capacitor/core';
 import DesktopCompareMatrix from './DesktopCompareMatrix';
+import { compareNotesPromise } from './compareCopy';
 
 const SURFACE = { background: 'var(--bg-surface, #1A1A2E)' };
 const GOLD = 'var(--dst-brass-ui)';
@@ -56,6 +57,7 @@ export default function CompareTakes({ seed = null }) {
   // paying user on loading/error) — mirrors the Tape Review gate.
   const { isPaid, loading: entitlementLoading, error: entitlementError, balance: tokenBalance } = useTokenBalance();
   const notesLocked = !entitlementLoading && !entitlementError && tokenBalance !== null && !isPaid;
+  const paidKnown = !entitlementLoading && !entitlementError && tokenBalance !== null && isPaid;
   const goPremium = () => goUpgrade({ source: 'compare_full_notes', returnTo: 'jericho' });
 
   // Two slots to start; up to four.
@@ -472,9 +474,8 @@ export default function CompareTakes({ seed = null }) {
           <Trophy size={15} /> {files.length >= 2 ? `Rank my ${files.length} takes` : 'Rank my takes'}
         </button>
         <p className="text-[10px] text-[var(--dst-ink-2)] text-center mt-2">
-          {files.length >= 2
-            ? `Uses ${files.length} tokens (1 per take) · each take gets full notes too`
-            : 'Uses 1 token per take · each take gets full notes too'}
+          {files.length >= 2 ? `Uses ${files.length} tokens (1 per take)` : 'Uses 1 token per take'}
+          {compareNotesPromise(notesLocked, paidKnown)}
         </p>
       </div>
     </div>

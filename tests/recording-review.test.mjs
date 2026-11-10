@@ -180,6 +180,7 @@ test('native iPad library action reaches the mounted desktop receiver; phone ret
     window.dispatchEvent = event => { globalThis.__navEvents.push(event); return events.dispatchEvent(event); };
     const paths = [];
     window.history = { state: { idx: 0 }, pushState: (state, unused, path) => paths.push(path) };
+    window.location = { pathname: '/dashboard/self-tapes', search: '' };
     let pops = 0;
     window.addEventListener('popstate', () => { pops++; });
     globalThis.PopStateEvent = class extends Event {

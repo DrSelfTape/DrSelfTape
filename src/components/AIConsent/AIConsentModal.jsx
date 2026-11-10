@@ -44,7 +44,9 @@ const PROVIDERS = [
 ];
 
 const PRIMARY_GOLD = '#D4A85F';
-const DEEP_GOLD = '#7A5A18';
+// Ink and brass come from the theme so the card reads on light and dark
+// --dst-paper alike. brass-deep is the text-safe rung in every theme.
+const DEEP_GOLD = 'var(--dst-brass-deep)';
 
 function ProviderRow({ p }) {
   return (
@@ -54,16 +56,16 @@ function ProviderRow({ p }) {
       background: 'rgba(212, 168, 95, 0.08)',
       border: '1px solid rgba(212, 168, 95, 0.2)',
     }}>
-      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 700, color: '#1A1612' }}>
+      <div style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 14, fontWeight: 700, color: 'var(--dst-ink)' }}>
         {p.name}
       </div>
-      <div style={{ marginTop: 4, fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'rgba(26,22,18,0.75)', lineHeight: 1.4 }}>
+      <div style={{ marginTop: 4, fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, color: 'var(--dst-ink-2)', lineHeight: 1.4 }}>
         {p.role}
       </div>
       <div style={{ marginTop: 6, fontFamily: "'JetBrains Mono', monospace", fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: DEEP_GOLD }}>
         DATA SENT
       </div>
-      <div style={{ marginTop: 2, fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'rgba(26,22,18,0.85)', lineHeight: 1.4 }}>
+      <div style={{ marginTop: 2, fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, color: 'var(--dst-ink-2)', lineHeight: 1.4 }}>
         {p.data}
       </div>
     </div>
@@ -161,14 +163,14 @@ export default function AIConsentModal() {
             margin: '6px 0 0',
             fontFamily: "'Space Grotesk', sans-serif",
             fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px',
-            color: '#1A1612', lineHeight: 1.2,
+            color: 'var(--dst-ink)', lineHeight: 1.2,
           }}>
             We send some of your data to AI providers. Okay?
           </h2>
           <p style={{
             margin: '10px 0 0',
             fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: 13, color: 'rgba(26,22,18,0.78)', lineHeight: 1.5,
+            fontSize: 13, color: 'var(--dst-ink-2)', lineHeight: 1.5,
           }}>
             Dr Self Tape uses third‑party AI services to power scene
             partners, coaching notes, and script analysis. Tap Agree to
@@ -186,7 +188,7 @@ export default function AIConsentModal() {
           <div style={{
             marginTop: 4,
             fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: 12, color: 'rgba(26,22,18,0.7)', lineHeight: 1.5,
+            fontSize: 12, color: 'var(--dst-ink-2)', lineHeight: 1.5,
           }}>
             When you run an AI feature like Tape Review, your tape&apos;s
             extracted frames, audio, and transcript are sent to the AI
@@ -204,7 +206,7 @@ export default function AIConsentModal() {
         </div>
 
         {error && (
-          <div style={{ padding: '0 22px 6px', color: '#B23A48', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13 }}>
+          <div style={{ padding: '0 22px 6px', color: 'var(--dst-danger)', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13 }}>
             {error}
           </div>
         )}
@@ -223,9 +225,9 @@ export default function AIConsentModal() {
               flex: 1, padding: '14px 0',
               borderRadius: 100,
               background: 'transparent',
-              border: '1.5px solid rgba(26,22,18,0.22)',
+              border: '1.5px solid var(--dst-line-strong)',
               fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: 14, fontWeight: 600, color: '#1A1612',
+              fontSize: 14, fontWeight: 600, color: 'var(--dst-ink)',
               cursor: submitting ? 'wait' : 'pointer',
               opacity: submitting ? 0.6 : 1,
             }}

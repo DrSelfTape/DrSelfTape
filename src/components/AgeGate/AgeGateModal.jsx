@@ -23,12 +23,14 @@ import { createPortal } from 'react-dom';
 import { useDispatch, useSelector } from 'react-redux';
 
 import axiosInstance from '../../redux/http';
-import { logoutUser, setDateOfBirth } from '../../redux/features/auth/authSlice';
+import { performLogout, setDateOfBirth } from '../../redux/features/auth/authSlice';
 import { MIN_SIGNUP_AGE, calculateAge, meetsMinAge } from '../../utils/age';
 import { isAgeGateHeld, subscribeAgeGateHold } from './ageGateHold';
 
 const PRIMARY_GOLD = '#D4A85F';
-const DEEP_GOLD = '#7A5A18';
+// Ink and brass come from the theme so the card reads on light and dark
+// --dst-paper alike. brass-deep is the text-safe rung in every theme.
+const DEEP_GOLD = 'var(--dst-brass-deep)';
 
 export default function AgeGateModal() {
   const dispatch = useDispatch();
@@ -85,7 +87,7 @@ export default function AgeGateModal() {
     }
   };
 
-  const onLogout = () => dispatch(logoutUser());
+  const onLogout = () => dispatch(performLogout());
 
   const node = (
     <div
@@ -120,14 +122,14 @@ export default function AgeGateModal() {
             margin: '6px 0 0',
             fontFamily: "'Space Grotesk', sans-serif",
             fontSize: 22, fontWeight: 700, letterSpacing: '-0.4px',
-            color: '#1A1612', lineHeight: 1.2,
+            color: 'var(--dst-ink)', lineHeight: 1.2,
           }}>
             Confirm your date of birth
           </h2>
           <p style={{
             margin: '10px 0 0',
             fontFamily: "'Space Grotesk', sans-serif",
-            fontSize: 13, color: 'rgba(26,22,18,0.78)', lineHeight: 1.5,
+            fontSize: 13, color: 'var(--dst-ink-2)', lineHeight: 1.5,
           }}>
             Dr Self Tape requires members to be at least {MIN_SIGNUP_AGE} years
             old. Enter your date of birth to continue. We only use it to verify
@@ -154,22 +156,22 @@ export default function AgeGateModal() {
               width: '100%', height: 48, padding: '0 14px',
               borderRadius: 12,
               border: '1px solid rgba(212, 168, 95, 0.4)',
-              background: '#fff',
+              background: 'var(--dst-surface)',
               fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: 15, color: '#1A1612',
+              fontSize: 15, color: 'var(--dst-ink)',
             }}
           />
           {dob && !Number.isNaN(calculateAge(dob)) && (
             <div style={{
               marginTop: 6,
               fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: 12, color: 'rgba(26,22,18,0.6)',
+              fontSize: 12, color: 'var(--dst-ink-3)',
             }}>Age: {calculateAge(dob)}</div>
           )}
         </div>
 
         {error && (
-          <div style={{ padding: '4px 22px 0', color: '#B23A48', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13 }}>
+          <div style={{ padding: '4px 22px 0', color: 'var(--dst-danger)', fontFamily: "'Space Grotesk', sans-serif", fontSize: 13 }}>
             {error}
           </div>
         )}
@@ -205,7 +207,7 @@ export default function AgeGateModal() {
               borderRadius: 100,
               background: 'transparent', border: 'none',
               fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: 13, fontWeight: 600, color: 'rgba(26,22,18,0.55)',
+              fontSize: 13, fontWeight: 600, color: 'var(--dst-ink-3)',
               cursor: submitting ? 'wait' : 'pointer',
             }}
           >Log out</button>

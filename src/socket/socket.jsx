@@ -12,7 +12,27 @@ import { getNotifications } from "../redux/features/notifications/notificationsS
 import { baseURL } from "../redux/constant";
 import axiosInstance from "../redux/http";
 
-const isMobile = () => window.innerWidth < 768;
+// Must match src/hooks/useIsMobile.js detect() exactly — that is what decides
+// whether the MobileApp shell (drst-navigate) or the router is mounted. The
+// old `innerWidth < 768` sent a narrow desktop window's events to a shell
+// that wasn't there, and a landscape phone's to a router that no-ops.
+const isMobile = () => {
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  const isSmallScreen = Math.min(window.innerWidth, window.innerHeight) < 768;
+  return isTouchDevice && isSmallScreen;
+};
+
+// Server-confirmed answer. Resolves false ONLY on 409 (ring already
+// cancelled/expired — joining would strand us alone in a dead room); a
+// network failure is not a cancel, so it still resolves true.
+const ackAnswered = async (matchId, ringId) => {
+  try {
+    await axiosInstance.post(`/v1/matching/matches/${matchId}/ring-ack/`, { action: 'answered', ring_id: ringId || undefined }, { timeout: 4000 });
+  } catch (err) {
+    if (err?.response?.status === 409) return false;
+  }
+  return true;
+};
 
 export const SocketProvider = ({ children }) => {
   const dispatch = useDispatch();
@@ -373,11 +393,7 @@ export const SocketProvider = ({ children }) => {
     // Server-confirmed answer BEFORE joining: if the caller's cancel already
     // won the race (409), joining would strand us alone in a dead room.
     // Network failure ≠ cancelled — on error we still join.
-    try {
-      await axiosInstance.post(`/v1/matching/matches/${matchId}/ring-ack/`, { action: 'answered', ring_id: ringId || undefined }, { timeout: 4000 });
-    } catch (err) {
-      if (err?.response?.status === 409) return; // ring already cancelled/expired
-    }
+    if (!(await ackAnswered(matchId, ringId))) return; // ring already cancelled/expired
     joinRoom(roomUrl, matchId);
   };
 
@@ -420,10 +436,11 @@ export const SocketProvider = ({ children }) => {
           // same ring — both surfaces show for a foreground ring, and the
           // modal otherwise sits on TOP of the meeting screen (z-index max).
           if (e?.callId) clearRing(e.callId);
-          if (mid) {
-            axiosInstance.post(`/v1/matching/matches/${mid}/ring-ack/`, { action: 'answered', ring_id: e?.callId || undefined }).catch(() => {});
+          // Join only once the server confirms the ring was still answerable.
+          if (e?.roomUrl) {
+            (mid ? ackAnswered(mid, e?.callId) : Promise.resolve(true))
+              .then((ok) => { if (ok) joinWhenVisible(e.roomUrl, mid); });
           }
-          if (e?.roomUrl) joinWhenVisible(e.roomUrl, mid);
           // End the CallKit call immediately — the real call lives in the Daily
           // room, so leaving it "active" would show a lingering iOS call bar.
           if (e?.callId) {
@@ -451,10 +468,9 @@ export const SocketProvider = ({ children }) => {
           const pmid = pending?.matchId
             || (/^\d+$/.test(String(pending?.callId || '')) ? pending.callId : null);
           if (pending?.callId) clearRing(pending.callId);
-          if (pmid) {
-            axiosInstance.post(`/v1/matching/matches/${pmid}/ring-ack/`, { action: 'answered', ring_id: pending?.callId || undefined }).catch(() => {});
+          if (!pmid || await ackAnswered(pmid, pending?.callId)) {
+            joinWhenVisible(pending.roomUrl, pmid);
           }
-          joinWhenVisible(pending.roomUrl, pmid);
         }
       } catch { /* plugin unavailable */ }
     })();

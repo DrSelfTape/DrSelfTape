@@ -142,7 +142,7 @@ function WarmupAndRuler({ mission, setMission, len, setLen }) {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{
-                  fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: on ? '#0E0D0A' : 'var(--dst-ink)',
+                  fontSize: 15, fontWeight: 700, letterSpacing: '-0.3px', color: on ? 'var(--dst-on-fill-ink)' : 'var(--dst-ink)',
                 }}>{m.label}</span>
                 {m.hot && (
                   <span style={{
@@ -152,7 +152,7 @@ function WarmupAndRuler({ mission, setMission, len, setLen }) {
                   }}>HOT</span>
                 )}
                 {on && (
-                  <span style={{ marginLeft: 'auto', color: '#0E0D0A' }}>
+                  <span style={{ marginLeft: 'auto', color: 'var(--dst-on-fill-ink)' }}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M5 12l5 5 9-11" />
                     </svg>
@@ -161,7 +161,8 @@ function WarmupAndRuler({ mission, setMission, len, setLen }) {
               </div>
               <div style={{
                 fontSize: 12, lineHeight: 1.35, marginTop: 4,
-                color: on ? 'rgba(14,13,10,0.7)' : 'var(--aurora-sub)',
+                color: on ? 'var(--dst-on-fill-ink)' : 'var(--aurora-sub)',
+                opacity: on ? 0.8 : 1,
               }}>{m.desc}</div>
             </button>
           );

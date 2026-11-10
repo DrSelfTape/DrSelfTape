@@ -27,6 +27,9 @@ import { clearMeetingHostFlag } from '../../utils/meeting';
 import axiosInstance from '../../redux/http';
 
 const PRIMARY_BG = '#0c0e14';
+// Give up a little BEFORE the server's 90s ring TTL so the cancel (which
+// writes the callee's missed-call note) lands while the ring is still live.
+const NO_ANSWER_MS = 85000;
 
 export default function MeetingRoom() {
   const navigate = useNavigate();
@@ -129,9 +132,9 @@ export default function MeetingRoom() {
     const prevTitle = document.title;
     document.title = 'Scene Read';
 
+    // Shown to the partner inside Daily — never fall back to the email.
     const userName =
       `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
-      user?.email ||
       'Actor';
 
     let call;
@@ -201,6 +204,15 @@ export default function MeetingRoom() {
     });
     call.on('left-meeting', () => {
       if (joinTimerRef.current) { clearTimeout(joinTimerRef.current); joinTimerRef.current = null; }
+      // Daily's own Leave button before anyone joined is a hang-up, not a
+      // session: stop the callee's ring and skip the "Great session" rating.
+      if (!reachedCallRef.current) {
+        // teardown() also triggers this event; that path is already navigating.
+        if (cleanupRanRef.current) return;
+        cancelRing();
+        navigate(matchId ? `/dashboard/green-room/${matchId}` : '/dashboard/green-room');
+        return;
+      }
       setStatus('left');
     });
     call.on('error', (e) => {
@@ -267,7 +279,7 @@ export default function MeetingRoom() {
         ringPhaseRef.current = 'noanswer';
         setRingPhase('noanswer');
       }
-    }, 90000);
+    }, NO_ANSWER_MS);
     return () => {
       window.removeEventListener('drst-ring-update', onRingUpdate);
       clearTimeout(noAnswerTimer);

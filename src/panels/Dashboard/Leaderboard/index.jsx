@@ -20,8 +20,8 @@ import '../studioScreens.css';
    ────────────────────────────────────────────────────────────────── */
 
 const META = {
-  xp:        { tab: 'Challenge XP', unit: 'XP', sub: 'Points from daily challenges this season', fmt: (v) => v.toLocaleString() },
-  callbacks: { tab: 'Callbacks', unit: 'CB',  sub: 'Callbacks logged this season',           fmt: (v) => String(v) },
+  xp:        { tab: 'Challenge XP', unit: 'XP', sub: 'Points from daily challenges, all time', fmt: (v) => v.toLocaleString() },
+  callbacks: { tab: 'Callbacks', unit: 'CB',  sub: 'Callbacks logged, all time',             fmt: (v) => String(v) },
   streak:    { tab: 'Streak',    unit: 'DAY', sub: 'Longest active practice streak',          fmt: (v) => `${v}d` },
 };
 
@@ -296,9 +296,11 @@ export default function Leaderboard({ embedded = false } = {}) {
           className="sx-card"
           style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}
         >
-          <span className="sx-eyebrow">THIS SEASON</span>
+          {/* The totals have no season window, and the count is every active
+              actor account — not people practising right now. */}
+          <span className="sx-eyebrow">ALL TIME</span>
           <span style={{ font: '400 19px/1.2 var(--sx-serif)', color: 'var(--sx-ink)' }}>
-            {liveSize || ranked.length} actors grinding with you.
+            {liveSize || ranked.length} actors on the board.
           </span>
         </div>
       </div>

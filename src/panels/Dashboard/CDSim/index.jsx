@@ -33,9 +33,11 @@ function AnalyzingPhase({ error, onRetry }) {
   }, [error]);
 
   const stages = [
-    { k: 0, label: 'Transcribing scene', detail: 'SPEECH-TO-TEXT · 16kHz' },
-    { k: 1, label: 'Comparing to sides', detail: 'WORD-LEVEL DIFF' },
-    { k: 2, label: 'Jericho is listening', detail: 'ACTING NOTES INCOMING' },
+    // Labels describe the one request this screen waits on: script text and
+    // role posted to the coach. No audio is sent and nothing is diffed.
+    { k: 0, label: 'Sending your sides', detail: 'SCRIPT TEXT · YOUR ROLE' },
+    { k: 1, label: 'Reading the scene', detail: 'FROM THE PAGE, NOT A RECORDING' },
+    { k: 2, label: 'Jericho is writing your notes', detail: 'ACTING NOTES INCOMING' },
   ];
 
   return (

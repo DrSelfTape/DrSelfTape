@@ -31,7 +31,7 @@ export async function loadRecordingReview({ realTokenBalance = false } = {}) {
     'TapeAnalyzerTutorial': 'export const TAPE_TUTORIAL_KEY = "tutorial"; export default function Tutorial() { return null; }',
     'selfTapeStore': `export const isIOSNative = () => false; export const saveLocalTape = () => {};
       export const deleteLocalTape = saveLocalTape, makeLocalTapeId = saveLocalTape; export const listLocalTapes = async () => [];`,
-    'uploadQueue': 'export const enqueueUpload = () => {}; export const subscribe = () => () => {}; export const getQueueSnapshot = () => [];',
+    'uploadQueue': 'export const enqueueUpload = () => {}; export const subscribe = () => () => {}; export const getQueueSnapshot = () => []; export const removeTask = () => {};',
     'openExternal': 'export const openExternal = () => {};',
     '@sentry/react': 'export const captureException = () => {};',
     '@capacitor/core': 'export const Capacitor = { isNativePlatform: () => !!globalThis.__native, getPlatform: () => globalThis.__native ? "ios" : "web" };',

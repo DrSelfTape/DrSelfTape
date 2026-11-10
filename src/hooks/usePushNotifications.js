@@ -99,6 +99,12 @@ function navDetailForPush(notif) {
       // the M/W/F re-engagement push (send_audition_nudge) that drives users to
       // the free first-review aha.
       return { tab: 'tape-review' };
+    case 'headshot_nudge':
+      return { panel: 'dash-profile' };
+    case 'studio_bridge':
+      return { panel: 'submissions' };
+    case 'reader_clips_received':
+      return { tab: 'scenes' };
     case 'callback_reminder':
     case 'callback-reminder':
     case 'audition_reminder':

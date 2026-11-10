@@ -58,7 +58,14 @@
 .future-review-loading{border-color:#7eaa80;box-shadow:0 0 45px #94eab71a,inset 0 1px 0 #dcffbf24}
 .future-review-loading progress{height:8px;box-shadow:0 0 18px #a9f2ba20}
 .future-home-feature{animation:future-panel-enter 550ms cubic-bezier(.16,1,.3,1) both}
-.future-theme .aurora-page-in,.future-theme .aurora-glass{animation:future-panel-enter 450ms cubic-bezier(.16,1,.3,1) both}
+/* No fill on the page wrapper: a filling transform animation keeps it a
+   containing block for position:fixed forever, which un-pins every full-screen
+   overlay mounted inside a tab (the reader, onboarding). And the rehearsal
+   carve-out from App.css has to be restated here, or this later rule of equal
+   specificity overrides it. */
+.future-theme .aurora-page-in{animation:future-panel-enter 450ms cubic-bezier(.16,1,.3,1)}
+.future-theme .aurora-page-in:has(.dst-rehearsal){animation:none}
+.future-theme .aurora-glass{animation:future-panel-enter 450ms cubic-bezier(.16,1,.3,1) both}
 .future-theme .aurora-glass:nth-child(even){animation-delay:60ms}
 .future-hero-card:before{border-color:#c8f6b678;box-shadow:0 0 0 22px #a8e9b018,0 0 0 44px #a8e9b010,0 0 0 66px #a8e9b008;animation:future-orbit-light 5s ease-in-out infinite alternate}
 .future-art-orbit{border-color:#d5efca5c;animation-duration:12s}.future-art-orbit:after{width:7px;height:7px;box-shadow:0 0 22px #c8fac6}.future-art-glow{background:radial-gradient(ellipse,#b6f2bd40,transparent 65%)}

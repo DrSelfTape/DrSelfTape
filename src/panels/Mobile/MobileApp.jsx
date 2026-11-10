@@ -237,7 +237,7 @@ function mapAudition(a) {
   return {
     id: a.id,
     project: a.project_title || a.project || "",
-    character: a.character || "",
+    character: a.character || a.role || "",
     cd: a.casting_director || a.cd || "",
     type: a.project_type || a.type || "",
     status: a.status === "reviewed" ? "in_review" : a.status === "audition" ? "audition" : (a.status || "submitted"),
@@ -441,13 +441,13 @@ function AuroraHeroRing({ stats, auditions }) {
   const hasLocal = Array.isArray(auditions) && auditions.length > 0;
   const total   = hasLocal
     ? auditions.length
-    : Math.max(stats?.total_auditions || 0, 0);
+    : Math.max(stats?.total || 0, 0);
   const cbCount = hasLocal
     ? auditions.filter(a => a.status === 'callback' || a.status === 'audition').length
-    : Math.max(stats?.callbacks || 0, 0);
+    : Math.max(stats?.pipeline?.reached_callback || 0, 0);
   const booked  = hasLocal
     ? auditions.filter(a => a.status === 'booked').length
-    : Math.max(stats?.total_booked || 0, 0);
+    : Math.max(stats?.pipeline?.reached_booked || 0, 0);
   const cbRate  = total > 0 ? Math.round((cbCount / total) * 100) : 0;
 
   // Use antique gold for the primary CB ring (matches the Aurora design ref).
@@ -703,7 +703,7 @@ function AuroraPipeline({ stats, auditions, setTab }) {
                 }}
               >
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'var(--dst-glass)' }} />
-                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--type-lg)', color: 'var(--dst-ink)', fontWeight: 600 }}>{b.val}</span>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: 'var(--type-lg)', color: 'var(--dst-on-fill-ink)', fontWeight: 600 }}>{b.val}</span>
               </div>
               <div
                 style={{
@@ -1000,7 +1000,7 @@ const MORE_FEATURES = [
   { id: "auditions", label: "Audition Tracker", desc: "Log and track every audition", emoji: "🎯", color: "#A7D6FF", section: "My Work" },
   { id: "my-studio", label: "My Studio", desc: "Your booked studio sessions & footage", emoji: "🎬", color: "#FCE072", section: "My Work" },
   { id: "submissions", label: "Submissions", desc: "Track every tape you send", emoji: "📤", color: "#5ee6b8", section: "My Work" },
-  { id: "leaderboard", label: "Ranks", desc: "See where you rank this season", emoji: "🏆", color: "#FCE072", section: "Community" },
+  { id: "leaderboard", label: "Ranks", desc: "See where you rank", emoji: "🏆", color: "#FCE072", section: "Community" },
   { id: "referral", label: "Invite Friends", desc: "Earn tokens by inviting actors", emoji: "🎁", color: "#A7ECDA", section: "Community" },
   { id: "dash-profile", label: "Edit Profile", desc: "Update your headshot, bio & info", emoji: "👤", color: "#A7ECDA", section: "Account" },
   // "Your plan & billing" described the invoice, not the offer. Say what is
@@ -1055,7 +1055,9 @@ const PANEL_LABELS = {
 /* ── Smart next step for mobile ── */
 function getMobileNextStep({ profile, stats, submissions, scripts, firstReviewPending }) {
   const hasHeadshot = profile?.actor_profile?.headshot;
-  const hasAuditions = (stats?.total_auditions || 0) > 0;
+  // The stats endpoint sends `total` and `pipeline.*`; `total_auditions` never
+  // existed, so this was false for everyone and the card never moved on.
+  const hasAuditions = (stats?.total || 0) > 0;
   const hasSubs = Array.isArray(submissions) && submissions.length > 0;
   const hasScripts = Array.isArray(scripts) && scripts.length > 0;
 
@@ -1369,7 +1371,7 @@ export function HomeScreen({ setTab, setCurrentPanel }) {
     prevBookedRef.current = bookedAuditionCount;
   }, [bookedAuditionCount, auditions.length]);
 
-  const hasStats = (s.total_auditions || 0) > 0 || (s.total_booked || 0) > 0;
+  const hasStats = (s.total || 0) > 0;
   const callbacks = auditions.filter(a => callbackBadge(a.callbackDate));
   const firstName = profile?.first_name || '';
   const hour = new Date().getHours();
@@ -1613,7 +1615,7 @@ export function HomeScreen({ setTab, setCurrentPanel }) {
             pointerEvents: 'none',
           }} />
           <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)' }}>NEXT CALLBACK</span>
+            <span className="aurora-micro" style={{ color: 'var(--dst-on-fill-ink)' }}>NEXT CALLBACK</span>
             <span className="aurora-mono" style={{
               fontSize: 'var(--type-sm)', padding: '4px 10px', borderRadius: 100,
               background: 'rgba(10,10,10,0.85)', color: '#fff',
@@ -1624,7 +1626,7 @@ export function HomeScreen({ setTab, setCurrentPanel }) {
           <div className="aurora-display" style={{ fontSize: 'var(--type-display)', color: '#0E0D0A', lineHeight: 1.2, marginBottom: 4 }}>
             {firstCallback.project} — {firstCallback.character}
           </div>
-          <div className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)', marginTop: 8 }}>
+          <div className="aurora-micro" style={{ color: 'var(--dst-on-fill-ink)', marginTop: 8 }}>
             {firstCallback.cd}
           </div>
         </button>
@@ -1733,7 +1735,7 @@ export function HomeScreen({ setTab, setCurrentPanel }) {
               marginTop: 4,
             }}
           >
-            See where you rank this season →
+            See where you rank →
           </div>
         </div>
       </button>
@@ -1778,7 +1780,7 @@ export function HomeScreen({ setTab, setCurrentPanel }) {
           >
             CRAFT JOURNEY
           </span>
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#0E0D0A', margin: 0 }}>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--dst-ink)', margin: 0 }}>
             Up next: <span style={{ color: 'var(--aurora-heritage-gold-deep)' }}>Anger Work</span>
           </p>
         </div>
@@ -1787,7 +1789,7 @@ export function HomeScreen({ setTab, setCurrentPanel }) {
           style={{
             fontSize: 'var(--type-sm)',
             fontWeight: 700,
-            color: '#0E0D0A',
+            color: 'var(--dst-ink)',
             background: 'var(--dst-glass)',
             padding: '6px 12px',
             borderRadius: 100,
@@ -1905,7 +1907,7 @@ export function HomeScreen({ setTab, setCurrentPanel }) {
               viewed: '#FFC9A3',
               callback: '#D4A85F',
               booked: '#9FE6B4',
-              passed: 'rgba(10,10,10,0.30)',
+              passed: 'var(--aurora-dim)',
             }[status] || '#A7D6FF';
             const statusLabel = status.replace('_', ' ').toUpperCase();
             const isLast = i === Math.min(submissions.length, 4) - 1;
@@ -2521,7 +2523,7 @@ export function AuditionsScreen() {
                   <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{sub.project_name || "Untitled"}</p>
                   <span className="aurora-mono" style={{
                     fontSize: 'var(--type-xs)', padding: "3px 10px", borderRadius: 100, marginLeft: 8,
-                    background: auroraColor, color: 'var(--dst-ink)',
+                    background: auroraColor, color: 'var(--dst-on-fill-ink)',
                     textTransform: "uppercase", whiteSpace: "nowrap", letterSpacing: '0.08em',
                   }}>{sub.status || "sent"}</span>
                 </div>
@@ -2609,7 +2611,7 @@ export function AuditionsScreen() {
                   <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, minWidth: 0 }}>{a.project}</p>
                   <span className="aurora-mono" style={{
                     fontSize: 'var(--type-xs)', padding: "3px 10px", borderRadius: 100,
-                    background: statusColor, color: 'var(--dst-ink)', textTransform: 'uppercase',
+                    background: statusColor, color: 'var(--dst-on-fill-ink)', textTransform: 'uppercase',
                     letterSpacing: '0.08em', marginLeft: 8, whiteSpace: 'nowrap', flexShrink: 0,
                   }}>{statusLabel}</span>
                 </div>
@@ -2686,8 +2688,8 @@ export function AuditionsScreen() {
               <span className="aurora-mono" style={{
                 display: "inline-block", marginTop: 10,
                 fontSize: 'var(--type-sm)', padding: "4px 12px", borderRadius: 100,
-                background: STATUS_COLORS[selected.status] || 'var(--aurora-line)',
-                color: 'var(--dst-ink)', textTransform: "uppercase", letterSpacing: '0.1em',
+                background: STATUS_COLORS[selected.status] || TEXT_MUTED,
+                color: 'var(--dst-on-fill-ink)', textTransform: "uppercase", letterSpacing: '0.1em',
               }}>{(selected.status || "").replace("_", " ")}</span>
             </div>
 
@@ -2703,7 +2705,7 @@ export function AuditionsScreen() {
                   position: 'absolute', top: -30, right: -30, width: 140, height: 140,
                   background: 'radial-gradient(circle, rgba(255,255,255,0.5), transparent 70%)',
                 }} />
-                <span className="aurora-micro" style={{ color: 'var(--aurora-heritage-gold-deep)', display: 'block' }}>
+                <span className="aurora-micro" style={{ color: 'var(--dst-on-fill-ink)', display: 'block' }}>
                   CALLBACK CONFIRMED
                 </span>
                 <p className="aurora-display" style={{ fontSize: 'var(--type-lg)', color: '#0E0D0A', margin: '4px 0 0' }}>
@@ -2740,7 +2742,7 @@ export function AuditionsScreen() {
                       onClick={async () => {
                         if (isActive) return;
                         try {
-                          await dispatch(updateAuditionThunk({ id: selected.id, data: { status: col.id } })).unwrap();
+                          await dispatch(updateAuditionThunk({ id: selected.id, data: { status: col.id === 'in_review' ? 'reviewed' : col.id } })).unwrap();
                           // Refresh both the audition list AND stats so the
                           // Home hero ring (callback rate / bookings) stays
                           // in sync immediately.
@@ -2843,6 +2845,26 @@ export function ScenesScreen({ setTab }) {
   const fileInputRef = useRef(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [selectedScript, setSelectedScript] = useState(null);
+  // Hand the script to SceneStudy (it reads + removes this on mount). Written
+  // once per launch, not during render: a render-time write re-created the
+  // entry after SceneStudy consumed it, and the leftover later pre-loaded CD
+  // Sim with this script and its Craft Journey skill.
+  const launchScript = (script) => {
+    try {
+      sessionStorage.setItem('preloadedScript', JSON.stringify({
+        scriptContent: script.content,
+        characters: Array.isArray(script.characters) ? script.characters : undefined,
+        // Pre-selected role from parsed sides → SceneStudy lands the actor on
+        // their part automatically (still changeable in the role picker).
+        role: script.role,
+        // Carry the Craft Journey skill tag through so SceneStudy can pass it
+        // to LiveSceneMode; without it the completion handler never fires
+        // completeCraftNode and progress looks frozen after a session.
+        craft_skill: script.craft_skill,
+      }));
+    } catch { /* storage unavailable — SceneStudy opens on its upload step */ }
+    setSelectedScript(script);
+  };
   const [deletingId, setDeletingId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null); // script object to confirm
   // Full-screen in-app recorder — script-less "Record a take" (Tier 2 item 4).
@@ -2862,7 +2884,7 @@ export function ScenesScreen({ setTab }) {
     const handler = (e) => {
       const { content, title, craft_skill } = e.detail || {};
       if (!content) return;
-      setSelectedScript({
+      launchScript({
         id: `virtual-${Date.now()}`,
         title: title || 'Practice Scene',
         content,
@@ -2890,15 +2912,15 @@ export function ScenesScreen({ setTab }) {
       if (!raw) return;
       const { scriptContent, scriptTitle, craft_skill } = JSON.parse(raw);
       if (scriptContent) {
-        setSelectedScript({
+        launchScript({
           id: `virtual-${Date.now()}`,
           title: scriptTitle || 'Practice Scene',
           content: scriptContent,
           craft_skill,
         });
       }
-      // Leave the sessionStorage value in place — SceneStudy/index.jsx
-      // reads + removes it on its own mount to set up characters.
+      // launchScript re-writes the entry; SceneStudy/index.jsx reads +
+      // removes it on its own mount to set up characters.
     } catch { /* swallow */ }
   }, []);
 
@@ -2976,22 +2998,14 @@ export function ScenesScreen({ setTab }) {
   };
 
   if (selectedScript) {
-    sessionStorage.setItem('preloadedScript', JSON.stringify({
-      scriptContent: selectedScript.content,
-      characters: Array.isArray(selectedScript.characters) ? selectedScript.characters : undefined,
-      // Pre-selected role from parsed sides → SceneStudy lands the actor on
-      // their part automatically (still changeable in the role picker).
-      role: selectedScript.role,
-      // Carry the Craft Journey skill tag through the rewrite so SceneStudy
-      // can pass it to LiveSceneMode; without this, the completion handler
-      // sees craftSkill='' and never fires completeCraftNode → progress
-      // mode looks frozen after a finished session.
-      craft_skill: selectedScript.craft_skill,
-    }));
     return (
       <div style={{ height: "calc(100vh - 64px)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", borderBottom: "1px solid var(--aurora-line)", flexShrink: 0 }}>
-          <button onClick={() => setSelectedScript(null)} style={{
+          <button onClick={() => {
+            // Backing out before SceneStudy mounted leaves the entry unread.
+            try { sessionStorage.removeItem('preloadedScript'); } catch { /* storage unavailable */ }
+            setSelectedScript(null);
+          }} style={{
             width: 36, height: 36, borderRadius: 10, background: 'var(--aurora-surface-solid)',
             border: "1px solid var(--aurora-line)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
           }}>
@@ -3038,7 +3052,7 @@ export function ScenesScreen({ setTab }) {
       {/* Bring-your-own audition sides — Actors Access PDF → AI reads the other part */}
       <SidesUpload
         onReady={({ scriptContent, characters, role, title }) => {
-          setSelectedScript({
+          launchScript({
             id: `sides-${Date.now()}`,
             title: title || 'Audition Sides',
             content: scriptContent,
@@ -3230,7 +3244,7 @@ export function ScenesScreen({ setTab }) {
           opacity: deletingId === sc.id ? 0.5 : 1,
           transition: "all 0.2s",
         }}>
-          <div onClick={() => setSelectedScript(sc)} style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, cursor: "pointer" }}>
+          <div onClick={() => launchScript(sc)} style={{ display: "flex", alignItems: "center", gap: 14, flex: 1, minWidth: 0, cursor: "pointer" }}>
             <ProgressRing pct={sc.progress} size={44} stroke={3} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--aurora-text)', margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{sc.title}</p>
@@ -3311,10 +3325,10 @@ function ProfileScreen({ setCurrentPanel }) {
   const initials = userName ? userName.charAt(0).toUpperCase() : "A";
   const auditionCount = auditionsList.length > 0
     ? auditionsList.length
-    : (statsData?.total_auditions || 0);
+    : (statsData?.total || 0);
   const bookedCount = auditionsList.length > 0
     ? auditionsList.filter(a => a.status === 'booked').length
-    : (statsData?.total_booked || 0);
+    : (statsData?.pipeline?.reached_booked || 0);
   const scriptsCount = scripts.length || 0;
 
   const headshot = profileData?.user_image || profileData?.headshot || null;

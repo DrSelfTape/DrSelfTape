@@ -304,8 +304,10 @@ const PublicRecord = () => {
         title={`Sent. ${actor} has your takes.`}
         body={
           sentCount === 1
-            ? `One line just landed in ${actor}'s rehearsal. They can run the scene against your voice now.`
-            : `${sentCount} lines just landed in ${actor}'s rehearsal. They can run the scene against your voice now.`
+            // Say only what is true: the takes are playable from the actor's
+            // links list; they do not read opposite the actor in rehearsal yet.
+            ? `One line just landed in ${actor}'s rehearsal. They can listen to your recording now.`
+            : `${sentCount} lines just landed in ${actor}'s rehearsal. They can listen to your recordings now.`
         }
         actionLabel={remaining > 0
           ? (remaining === 1 ? 'Record the last line' : `Record the other ${remaining} lines`)

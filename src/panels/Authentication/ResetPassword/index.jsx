@@ -9,7 +9,7 @@ import {
 } from '../../../utils/utils';
 import PasswordRequirements from '../../../components/Shared/PasswordRequirments';
 import { AuthLayout } from '../../../components/Auth/AuthLayout';
-import { resetPassword } from '../../../redux/features/auth/authSlice';
+import { resetPassword, performLogout } from '../../../redux/features/auth/authSlice';
 import { useSnackbar } from '../../../hooks/useSnackbar';
 
 export const ResetPassword = () => {
@@ -85,6 +85,13 @@ export const ResetPassword = () => {
       const result = await dispatch(resetPassword(resetPasswordPayload));
 
       if (result?.meta?.requestStatus === 'fulfilled') {
+        // The reset revoked every session for this account, and the reducer
+        // has already signed this browser out of redux. Finish the sign-out
+        // for what lives outside redux (axios bearer, entitlement cache,
+        // purchases identity, tapes on the device). accountDeleted skips the
+        // push-unregister call: it would go out under the revoked token. A
+        // cleanup failure must not turn a successful reset into an error.
+        await dispatch(performLogout({ accountDeleted: true })).catch(() => {});
         setLoading(false);
         setFormData({
           newPassword: '',

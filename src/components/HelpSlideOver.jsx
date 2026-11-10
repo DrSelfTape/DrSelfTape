@@ -62,6 +62,35 @@ function Section({ icon, title, children, defaultOpen = false }) {
   );
 }
 
+// Same ring as Shared/CustomModal: only genuinely tabbable, visible controls.
+const FOCUSABLE = [
+  'a[href]', 'button:not([disabled])', 'textarea:not([disabled])',
+  'input:not([disabled]):not([type="hidden"])', 'select:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(',');
+
+// aria-modal promises focus stays inside; without this Tab walked out of the
+// panel into the page behind the scrim.
+function trapTab(event, panel) {
+  if (!panel) return;
+  const items = Array.from(panel.querySelectorAll(FOCUSABLE))
+    .filter((el) => el.tabIndex >= 0 && (el.offsetParent !== null || el === document.activeElement));
+  if (!items.length) { event.preventDefault(); panel.focus(); return; }
+  const first = items[0];
+  const last = items[items.length - 1];
+  const active = document.activeElement;
+  if (!panel.contains(active) || active === panel) {
+    event.preventDefault();
+    (event.shiftKey ? last : first).focus();
+  } else if (event.shiftKey && active === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 export default function HelpSlideOver() {
   const [open, setOpen] = useState(false);
   const [reporting, setReporting] = useState(false);
@@ -72,7 +101,11 @@ export default function HelpSlideOver() {
 
   useEffect(() => {
     const onKey = (e) => {
+      // The report modal sits on top and owns the keyboard while it is up:
+      // Esc here used to close the panel under it and take the draft with it.
+      if (reporting) return;
       if (e.key === 'Escape' && open) { close(); return; }
+      if (e.key === 'Tab' && open) { trapTab(e, panelRef.current); return; }
       if (e.key !== '?') return;
       // Never steal "?" from someone typing it.
       const el = e.target;
@@ -89,7 +122,7 @@ export default function HelpSlideOver() {
       window.removeEventListener('keydown', onKey);
       window.removeEventListener('drst-open-help', onOpenEvent);
     };
-  }, [open, close]);
+  }, [open, close, reporting]);
 
   // Move focus in on open, and give it back to whatever had it on close.
   useEffect(() => {
@@ -98,13 +131,14 @@ export default function HelpSlideOver() {
     if (el && typeof el.focus === 'function') el.focus();
   }, [open]);
 
-  if (!open) return null;
-
   const reduce = typeof window !== 'undefined'
     && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
+  // The report modal renders outside the `open` gate, at a stable position,
+  // so a half-written report survives the panel closing.
   return (
     <>
+      {open && (<>
       <div
         aria-hidden="true"
         onClick={close}
@@ -218,6 +252,7 @@ export default function HelpSlideOver() {
           </button>
         </Section>
       </aside>
+      </>)}
 
       {reporting && (
         <Suspense fallback={null}>

@@ -54,7 +54,7 @@ export default function PermissionsModal({
     } catch (err) {
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
         setStatus('denied');
-        setErrorMsg('Permission denied. Please allow microphone access in your browser settings, then refresh.');
+        setErrorMsg(`Access was blocked. Allow ${requireCamera ? 'camera and microphone' : 'microphone'} access for this site in your browser settings, then tap Try Again.`);
       } else if (err.name === 'NotFoundError') {
         setStatus('error');
         setErrorMsg(`No ${requireCamera ? 'camera' : 'microphone'} found. Please check your device is connected.`);
@@ -119,7 +119,11 @@ export default function PermissionsModal({
           {/* Privacy note */}
           <div className="flex items-center gap-2 text-xs text-[rgba(10,10,10,0.4)] pt-1">
             <Shield className="w-3.5 h-3.5 flex-shrink-0" />
-            <span>Your recordings stay on your device. We never store or share your video.</span>
+            <span>
+              {requireCamera
+                ? 'Recording starts only when you press record. Tapes you save or send for review are uploaded to your account.'
+                : 'The microphone is used only while your scene is running.'}
+            </span>
           </div>
 
           {/* Error state */}
@@ -132,7 +136,7 @@ export default function PermissionsModal({
               {status === 'denied' && (
                 <div className="pl-6">
                   <p className="text-xs text-red-500 mb-2">
-                    Already changed your browser settings? You may need to refresh the page first.
+                    If Try Again does not bring the prompt back, refresh the page.
                   </p>
                   <button
                     onClick={() => window.location.reload()}
@@ -152,7 +156,7 @@ export default function PermissionsModal({
             onClick={handleDeny}
             className="flex-1 px-4 py-3 rounded-xl border border-[rgba(10,10,10,0.14)] text-[rgba(10,10,10,0.62)] font-medium hover:bg-[#F4F4EE] transition-colors text-sm"
           >
-            Not Now
+            {status === 'denied' && !requireCamera ? 'Continue without mic' : 'Not Now'}
           </button>
           <button
             onClick={handleAllow}

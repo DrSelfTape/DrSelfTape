@@ -441,9 +441,15 @@ export default function JerichoDashboard() {
   const settingsLoaded = useSelector((s) => !!s.userSettings?.loaded);
   const firstReviewDone = useSelector((s) => !!s.userSettings?.data?.tutorial_progress?.first_review);
   const [webFirstReview, setWebFirstReview] = useState(null); // null = undecided
+  // A subscriber who has never run a review is not in the free-first-review
+  // funnel: they would get their full read with "Unlock my full read" under it,
+  // and lose Compare and Next Take. Decide once the plan is known.
+  const { isPaid: firstReviewIsPaid, loading: firstReviewPlanLoading } = useTokenBalance();
   useEffect(() => {
-    if (webFirstReview === null && settingsLoaded) setWebFirstReview(!firstReviewDone);
-  }, [webFirstReview, settingsLoaded, firstReviewDone]);
+    if (webFirstReview === null && settingsLoaded && !firstReviewPlanLoading) {
+      setWebFirstReview(!firstReviewDone && !firstReviewIsPaid);
+    }
+  }, [webFirstReview, settingsLoaded, firstReviewDone, firstReviewIsPaid, firstReviewPlanLoading]);
   const [showStylePicker, setShowStylePicker] = useState(false);
   // Detail sheet — null when closed, or the session object to show.
   const [selectedSession, setSelectedSession] = useState(null);

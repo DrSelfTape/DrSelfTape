@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { patchUserSettings } from '../../redux/features/userSettings/userSettingsSlice';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { toggleAvailability } from '../../redux/features/readers/readersMatchSlice';
+import { showSnackbar } from '../../redux/features/snackbarSlice/snackbarSlice';
 
 const STEP_COLORS = ['#FF8280', '#A7ECDA', '#FFB49A', '#3b82f6', '#22c55e', '#FCE072', '#ef4444'];
 
@@ -31,6 +33,7 @@ export default function TutorialChecklist({ onNavigate }) {
   const profile = useSelector((s) => s.profile?.profile);
   const auditions = useSelector((s) => s.auditions?.data || []);
   const isAvailable = useSelector((s) => s.readersMatch?.isAvailable);
+  const availabilityToggling = useSelector((s) => s.readersMatch?.availabilityToggling);
   const progress = useSelector((s) => s.userSettings?.data?.tutorial_progress || {});
   const dismissed = useSelector((s) => !!s.userSettings?.data?.tutorial_complete);
   const settingsLoaded = useSelector((s) => !!s.userSettings?.loaded);
@@ -57,7 +60,16 @@ export default function TutorialChecklist({ onNavigate }) {
 
   const handleGo = useCallback((step) => {
     if (step.action === 'toggle_available') {
-      window.dispatchEvent(new CustomEvent('drst-tutorial-toggle-available'));
+      // Toggle here rather than through an event: the only listener lives in
+      // AvailabilityToggle, which the mobile shell never mounts.
+      if (!isAvailable && !availabilityToggling) {
+        dispatch(toggleAvailability(true)).unwrap().catch((err) => {
+          dispatch(showSnackbar({
+            message: (typeof err === 'string' && err) || err?.message || "Couldn't update availability. Please try again.",
+            variant: 'error',
+          }));
+        });
+      }
       return;
     }
     if (isMobile && onNavigate) {
@@ -66,7 +78,7 @@ export default function TutorialChecklist({ onNavigate }) {
     } else if (step.route) {
       navigate(step.route);
     }
-  }, [isMobile, onNavigate, navigate]);
+  }, [isMobile, onNavigate, navigate, dispatch, isAvailable, availabilityToggling]);
 
   // Don't render anything until userSettings has loaded from the server.
   // Otherwise the checklist briefly flashes on every reload because the

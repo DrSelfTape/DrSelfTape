@@ -123,6 +123,23 @@
   gap: var(--dst-space-xl);
 }
 
+/* The cards below the hero sit in a wrapper, so .dst-home's gap no longer
+   reaches them; the wrapper has to carry the same column itself. */
+.dst-home > .future-home-support {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dst-space-xl);
+}
+
+/* The wrapper's sheet look (inset, fill, rounded top) belongs to the native
+   hero surface only. On the console the cards sit straight on the page. */
+.dst-home:not(.future-home-surface) > .future-home-support {
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border-radius: 0;
+}
+
 .dst-home-head {
   display: flex;
   align-items: flex-start;

@@ -11,10 +11,22 @@ const axiosInstance = axios.create({
   baseURL,
 });
 
+// Sign-outs this module has seen. Each request is stamped with the count it
+// was issued under, so a 401 that comes home after the session it belonged to
+// was deliberately ended is not mistaken for the current session expiring —
+// even when the same user has already signed back in.
+let authEpoch = 0;
+// Set when the server confirms the account was deleted, cleared by the
+// sign-out that follows. In between, the user is still in the store and every
+// request as them 401s; none of those is an expired session.
+let accountGone = false;
+
 export const setAuthToken = (token) => {
   if (token) {
     axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
+    authEpoch += 1;
+    accountGone = false;
     delete axiosInstance.defaults.headers.common['Authorization'];
   }
 };
@@ -46,6 +58,7 @@ axiosInstance.interceptors.request.use(async (config) => {
     assertRequestUser(config, store);
   } else {
     config._authUserId = store.getState().auth?.user?.id ?? null;
+    config._authEpoch = authEpoch;
   }
   try {
     const id = getDeviceId();
@@ -152,9 +165,40 @@ const trySessionRefresh = async (failedConfig) => {
   return axiosInstance(retryConfig);
 };
 
+// A 401 for a bearer this session has since replaced (a password change, or a
+// refresh another request already won) says nothing about the live token.
+// Replay once under the live one rather than rotating it again or logging out.
+const retryUnderCurrentToken = (config, store) => {
+  const current = store.getState().auth?.user?.token;
+  if (!config || config._authRebased || !current) return null;
+  if (config.headers?.Authorization === `Bearer ${current}`) return null;
+  return axiosInstance({
+    ...config,
+    _authRebased: true,
+    headers: { ...(config.headers || {}), Authorization: `Bearer ${current}` },
+  });
+};
+
+// Which endpoint hit the wall, in a form the telemetry scrubber keeps: it
+// rewrites any full URL to "origin/[redacted]", so send the pathname alone,
+// with ids collapsed so one feature is one value.
+export const telemetryPath = (url) => {
+  if (typeof url !== 'string' || !url) return undefined;
+  let path = url;
+  try { path = new URL(url, 'http://x').pathname; } catch { path = url.split(/[?#]/)[0]; }
+  return path
+    .replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ':id')
+    .replace(/\/\d+(?=\/|$)/g, '/:id');
+};
+
 // Response Interceptor
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config?.method === 'delete' && /\/v1\/users\/account\/$/.test(response.config.url || '')) {
+      accountGone = true;
+    }
+    return response;
+  },
   async (error) => {
     if (!navigator.onLine) {
       console.log('No internet connection');
@@ -167,7 +211,7 @@ axiosInstance.interceptors.response.use(
       // Lazy import so analytics never delays a 402 response handling.
       import('../utils/analytics').then(({ trackEvent }) => {
         trackEvent('insufficient_tokens', {
-          path: error?.config?.url,
+          path: telemetryPath(error?.config?.url),
           method: error?.config?.method,
         });
       }).catch(() => { /* swallow */ });
@@ -199,6 +243,11 @@ axiosInstance.interceptors.response.use(
       // Only treat 401 as session-expired when the caller was actually
       // authenticated AND wasn't hitting a public auth endpoint.
       if (hadAuthHeader && !isPublicAuth && !sessionExpiredHandled) {
+        if (accountGone || error.config._authEpoch !== authEpoch) {
+          return Promise.reject(new axios.AxiosError('Request belongs to an ended session; not applied.', STALE_AUTH_REQUEST, error.config));
+        }
+        const underCurrentToken = retryUnderCurrentToken(error.config, store);
+        if (underCurrentToken) return underCurrentToken;
         // First line of defense: the access token likely just expired
         // (60-min lifetime). Try one silent refresh + retry of the failed
         // request. Only when THAT fails (refresh token expired/blacklisted/
@@ -212,6 +261,10 @@ axiosInstance.interceptors.response.use(
           } catch (refreshError) {
             if (refreshError?.code === STALE_AUTH_REQUEST) return Promise.reject(refreshError);
             assertRequestUser(error.config, store);
+            // The token may have been swapped while the refresh was failing
+            // (the 401 beat the password-change response home).
+            const afterSwap = retryUnderCurrentToken(error.config, store);
+            if (afterSwap) return afterSwap;
             // Refresh failed for the same actor — fall through to logout.
           }
         }

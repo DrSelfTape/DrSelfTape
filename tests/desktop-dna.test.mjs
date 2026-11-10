@@ -75,10 +75,23 @@ test('real DNA renderer labels all vertices without an invented ideal control', 
 });
 
 const original = await loadDesktopReview({ baseline: true });
-const withoutPresentation = html => html.replace(/ (?:class|style)="[^"]*"/g, '');
-for (const [native, mobile] of [[false, true], [true, true], [true, false]]) test(`mobile DNA overview retains content and controls (native=${native}, small=${mobile})`, () => {
+// The design-token pass swapped literal colours and fonts for tokens, so the
+// frozen baseline can no longer match byte for byte. Mask ONLY those values: a
+// colour inside a text-/bg-/border- utility, and paint declarations in inline
+// style. Every other class and every layout style must still match exactly.
+const COLOR_VALUE = String.raw`\[(?:#[0-9a-fA-F]{3,8}|rgba?\([^\]]*\)|var\(--dst-[\w-]+\))\]|white|black`;
+const COLOR_UTILITY = new RegExp(String.raw`(^|[\s:])(text|bg|border)-(?:${COLOR_VALUE})(?=[\s/]|$)`, 'g');
+const PAINT_PROPERTY = /^(?:color|background|background-color|border-color|font-family)$/;
+const normalisePresentation = html => html
+  .replace(/ class="([^"]*)"/g, (_, value) => ` class="${value.replace(COLOR_UTILITY, '$1$2-COLOR')}"`)
+  .replace(/ style="([^"]*)"/g, (_, value) => {
+    // Split on declaration ends, not on the ';' that closes an HTML entity.
+    const kept = value.split(/(?<!&#?\w+);/).filter(d => d && !PAINT_PROPERTY.test(d.slice(0, d.indexOf(':')).trim()));
+    return kept.length ? ` style="${kept.join(';')}"` : '';
+  });
+for (const [native, mobile] of [[false, true], [true, true], [true, false]]) test(`mobile DNA overview matches main apart from colour tokens (native=${native}, small=${mobile})`, () => {
   setupReviewRender({ native, mobile });
   const before = renderToStaticMarkup(createElement(original.JerichoDashboard));
   setupReviewRender({ native, mobile });
-  assert.equal(withoutPresentation(renderToStaticMarkup(createElement(current.JerichoDashboard))), withoutPresentation(before));
+  assert.equal(normalisePresentation(renderToStaticMarkup(createElement(current.JerichoDashboard))), normalisePresentation(before));
 });

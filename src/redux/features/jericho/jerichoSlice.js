@@ -35,6 +35,12 @@ function aiErrorMessage(err, fallback) {
   return msg || fallback;
 }
 
+// The http interceptor already opens the out-of-tokens modal for this exact
+// response, so an inline banner would say it twice and offer a "Try again"
+// that can only 402 again. Same test as CDSim/CDReport's isTokenGate.
+export const isTokenGate = (err) =>
+  err?.response?.status === 402 && err?.response?.data?.code === 'insufficient_tokens';
+
 const _sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Session persistence is best effort; keep the job identity for record deltas
@@ -130,8 +136,10 @@ async function pollAnalysisJob(jobId, { interval = 2500, timeoutMs = 600000, sig
 
 // A gateway/server error is not proof of settlement. Only an explicit failed
 // job or a definitive refusal lets a later attempt retire its action key.
-function shouldReuseKey(err) {
+export function shouldReuseKey(err) {
   if (err?.settled) return false;
+  // The server refunded this failure, so it is settled even though it is a 5xx.
+  if (err?.response?.data?.charge_refunded === true) return false;
   return err?.response == null || err?.unknownOutcome === true || err?.response?.status >= 500 || err?.response?.data?.code === 'review_in_progress';
 }
 
@@ -452,7 +460,7 @@ export const reviewTape = createAsyncThunk(
       return result;
     } catch (err) {
       captureUploadFailure('tape_review_upload', err, startedAt, lastLoaded, lastTotal, 900000);
-      return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: shouldReuseKey(err), stillWorking: !!err?.stillWorking });
+      return rejectWithValue({ message: aiErrorMessage(err, 'Tape review failed'), reuseKey: shouldReuseKey(err), stillWorking: !!err?.stillWorking, tokenGate: isTokenGate(err) });
     }
   })
 );
@@ -492,7 +500,7 @@ export const compareTakes = createAsyncThunk(
       return result;
     } catch (err) {
       captureUploadFailure('compare_takes_upload', err, startedAt, lastLoaded, lastTotal, 900000);
-      return rejectWithValue({ message: aiErrorMessage(err, 'Take comparison failed'), reuseKey: shouldReuseKey(err) });
+      return rejectWithValue({ message: aiErrorMessage(err, 'Take comparison failed'), reuseKey: shouldReuseKey(err), tokenGate: isTokenGate(err) });
     }
   })
 );
@@ -802,6 +810,8 @@ const jerichoSlice = createSlice({
         if (action.payload?.stillWorking) {
           state.tapeReviewPending = action.payload.message;
           state.tapeReviewError = null;
+        } else if (action.payload?.tokenGate) {
+          state.tapeReviewError = null; // the modal is the message
         } else {
           state.tapeReviewError = action.payload?.message || action.payload || 'Tape review failed';
         }
@@ -821,7 +831,8 @@ const jerichoSlice = createSlice({
       .addCase(compareTakes.rejected, (state, action) => {
         if (action.payload?.stale) return; // completed for a user who is gone
         state.compareLoading = false;
-        state.compareError = action.payload?.message || action.payload || 'Take comparison failed';
+        state.compareError = action.payload?.tokenGate ? null // the modal is the message
+          : action.payload?.message || action.payload || 'Take comparison failed';
         state.uploadProgress = 0;
       })
 

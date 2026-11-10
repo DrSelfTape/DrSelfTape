@@ -2,7 +2,7 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 // Local Imports
-import axios from '../../http';
+import axios, { setAuthToken } from '../../http';
 import { plainBody } from '../../../utils/plainBody';
 import endPoints from '../../constant';
 
@@ -162,11 +162,20 @@ export const resetPassword = createAsyncThunk(
 // Update Password API Function
 export const updatePassword = createAsyncThunk(
   'auth/updatePassword',
-  async (values, { rejectWithValue }) => {
+  async (values, { rejectWithValue, dispatch, getState }) => {
     try {
+      const userId = getState().auth?.user?.id;
       const { data } = await axios.post(endPoints.updatePassword, {
         ...values,
       });
+      // The server rejects every token issued before the change, this
+      // session's included, and returns a pair minted after it. Without the
+      // swap the next request 401s into "Your session has expired".
+      const pair = data?.data?.token;
+      if (pair?.access && userId && getState().auth?.user?.id === userId) {
+        dispatch(authSlice.actions.setTokens(pair));
+        setAuthToken(pair.access);
+      }
       return data;
     } catch (error) {
       return rejectWithValue(handleApiError(error));
@@ -290,6 +299,7 @@ export const authSlice = createSlice({
           is_reset_password: src?.is_reset_password,
           is_staff: src?.is_staff,
           date_of_birth: src?.date_of_birth,
+          ai_consent_accepted_at: src?.ai_consent_accepted_at || null,
         };
         state.loading = false;
         // Password resets now go through the emailed token-based /reset-password
@@ -326,6 +336,9 @@ export const authSlice = createSlice({
           is_reset_password: action.payload?.is_reset_password,
           is_staff: action.payload?.is_staff,
           date_of_birth: action.payload?.date_of_birth,
+          // Without this the consent the server already holds is forgotten at
+          // every login and the AI consent sheet comes back.
+          ai_consent_accepted_at: action.payload?.ai_consent_accepted_at || null,
         };
         // Password resets now go through the emailed token-based /reset-password
         // flow, so a successful login always carries a usable session. Never null
@@ -364,6 +377,9 @@ export const authSlice = createSlice({
           is_reset_password: action.payload?.is_reset_password,
           is_staff: action.payload?.is_staff,
           date_of_birth: action.payload?.date_of_birth,
+          // Without this the consent the server already holds is forgotten at
+          // every login and the AI consent sheet comes back.
+          ai_consent_accepted_at: action.payload?.ai_consent_accepted_at || null,
         };
         state.user = userData;
         state.error = null;
@@ -483,14 +499,19 @@ export const { logoutUser, clearTempSession, setAiConsentAcceptedAt, setDateOfBi
 // Logout that ALSO clears persisted data slices (auditions, submissions,
 // scripts, etc.) so the next user on this device starts clean. Call this
 // instead of `logoutUser` at user-facing sign-out points.
-export const performLogout = () => async (dispatch) => {
+export const performLogout = ({ accountDeleted = false } = {}) => async (dispatch) => {
   // De-register this device's push token FIRST, while the auth header is
   // still present, so the orphaned APNs/VoIP token stops mapping this device
   // to the logged-out user (next user's pushes could otherwise misroute).
-  try {
-    const { unregisterPushToken } = await import('../../../hooks/usePushNotifications');
-    await unregisterPushToken();
-  } catch { /* push util unavailable — don't block logout */ }
+  // Skipped after account deletion: the server already removed the account's
+  // device tokens with it, and the call would 401 as the deleted user, which
+  // http.js answers with a hard reload before the local tapes below are wiped.
+  if (!accountDeleted) {
+    try {
+      const { unregisterPushToken } = await import('../../../hooks/usePushNotifications');
+      await unregisterPushToken();
+    } catch { /* push util unavailable — don't block logout */ }
+  }
   // Tear down the RevenueCat identity so the next user on this device isn't
   // bound to this user's RC account (otherwise initPurchases early-returns on
   // the stale `configured` flag and B's purchases attribute to A). Best-effort
@@ -518,6 +539,9 @@ export const performLogout = () => async (dispatch) => {
   // user-scoped, so leaving them carries another user's state forward.
   try {
     window.localStorage.removeItem('dst_onb_step');
+    // The live key is versioned (AuroraOnboarding STORAGE_STEP); leaving it
+    // behind dropped the next account on this device mid-onboarding.
+    window.localStorage.removeItem('dst_onb_step_v3');
     window.localStorage.removeItem('dst_onb_data');
     window.localStorage.removeItem('updateBannerDismissed');
   } catch { /* storage unavailable */ }

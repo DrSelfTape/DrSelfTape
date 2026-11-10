@@ -673,10 +673,8 @@ const Profile = () => {
       });
       toast.success('Password updated', 'success');
     } else {
-      toast.error(
-        result?.payload?.response?.data?.message[0]?.current_password ||
-          'Failed to change password'
-      );
+      // The rejected payload is already the server's message as a string.
+      toast.error(result?.payload || 'Failed to change password');
     }
   };
   const onCropDone = (blob) => {

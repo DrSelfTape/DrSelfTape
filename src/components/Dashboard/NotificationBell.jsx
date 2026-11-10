@@ -206,6 +206,12 @@ export default function NotificationBell({ onNavigate }) {
         // no collaboration panel, so those clicks just mark read there.
         script_share_invite:   { web: '/collaboration?tab=1' },
         script_share_accepted: { web: '/scene-study/live-rehearsal' },
+        // Types the server sends that had no entry, so the tap marked them read
+        // and went nowhere — "Your casting notes are ready" included.
+        tape_review_complete:  { web: '/dashboard/jericho?tab=tape',  mobile: { tab: 'tape-review' } },
+        headshot_nudge:        { web: '/dashboard/profile',           mobile: { panel: 'dash-profile' } },
+        studio_bridge:         { web: '/dashboard/submissions',       mobile: { panel: 'submissions' } },
+        reader_clips_received: { web: '/dashboard/scene-study',       mobile: { tab: 'scenes' } },
       };
       const dest = DEST[notif.type];
       if (dest) {

@@ -55,7 +55,7 @@ export default function DesktopTapeReport({ review, headlineScore, band, firstNa
             : 'Generation date unavailable'}</p>
         </div>
         <div className="nr-actions">
-          {onReset && <button type="button" onClick={onReset}>Re-run review</button>}
+          {onReset && <button type="button" onClick={onReset}>Review another take</button>}
           <button type="button" onClick={() => onShare('story')} disabled={sharing || !canShare}>{sharing ? 'Preparing…' : 'Share to Story'}</button>
           <button type="button" onClick={() => onShare('square')} disabled={sharing || !canShare}>Square post</button>
         </div>
