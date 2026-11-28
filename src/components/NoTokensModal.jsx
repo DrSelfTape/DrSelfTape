@@ -38,6 +38,7 @@ export default function NoTokensModal({ onClose, onUpgrade }) {
   return (
     <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-4" style={{
       background: 'rgba(10,10,10,0.45)',
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
       backdropFilter: 'blur(10px)',
       WebkitBackdropFilter: 'blur(10px)',
     }}>

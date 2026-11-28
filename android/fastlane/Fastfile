@@ -1,0 +1,42 @@
+default_platform(:android)
+
+# Dr Self Tape — Google Play upload lanes.
+# Package + key path come from the Appfile. These lanes upload ONLY the signed
+# binary to a testing track — never metadata, listing, images, or pricing.
+
+platform :android do
+  desc "Upload the current signed release AAB to the Play INTERNAL testing track (status: completed)."
+  desc "Usage: fastlane android internal            # uses the gradle release output"
+  desc "       fastlane android internal aab:/abs/path/to.aab   # explicit file"
+  lane :internal do |options|
+    # Lanes run with cwd = android/fastlane; resolve a relative aab: from android/.
+    android_dir = File.expand_path("..", __dir__)
+    aab = options[:aab] ? File.expand_path(options[:aab], android_dir) :
+          File.join(android_dir, "app/build/outputs/bundle/release/app-release.aab")
+
+    UI.user_error!(
+      "AAB not found at #{aab}\n" \
+      "Build it first:  yarn build && yarn sync:android && (cd android && ./gradlew :app:bundleRelease)\n" \
+      "or pass one:     fastlane android internal aab:/abs/path/to.aab"
+    ) unless File.exist?(aab)
+
+    key = File.expand_path("~/.dst-signing/play-service-account.json")
+    UI.user_error!(
+      "Play service-account key missing: #{key}\n" \
+      "Complete the one-time setup in fastlane/SETUP.md (Google Cloud service account + Play Console -> Users and permissions)."
+    ) unless File.exist?(key)
+
+    UI.message("Uploading #{File.basename(aab)} to the internal track...")
+    upload_to_play_store(
+      track: "internal",
+      release_status: "completed",
+      aab: aab,
+      # binary only — leave the store listing untouched
+      skip_upload_apk: true,
+      skip_upload_metadata: true,
+      skip_upload_images: true,
+      skip_upload_screenshots: true,
+      skip_upload_changelogs: true,
+    )
+  end
+end

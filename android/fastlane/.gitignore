@@ -1,0 +1,6 @@
+# fastlane run artifacts
+report.xml
+Preview.html
+screenshots/
+# never commit a service-account key if one is ever dropped here by mistake
+*.json

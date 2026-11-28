@@ -18,9 +18,13 @@
       "style": "DARK",
       "backgroundColor": "#0B1516"
     },
+    "SystemBars": {
+      "style": "DARK",
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    },
     "Keyboard": {
-      "resize": "native",
-      "resizeOnFullScreen": true
+      "resize": "native"
     },
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]

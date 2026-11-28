@@ -1,0 +1,5 @@
+# fastlane Appfile — Dr Self Tape Android (Google Play upload)
+# The service-account key is machine-local and gitignored; it lives with the
+# keystore in ~/.dst-signing. It is NOT created yet — see fastlane/SETUP.md.
+json_key_file(File.expand_path("~/.dst-signing/play-service-account.json"))
+package_name("com.drselftape.app")
