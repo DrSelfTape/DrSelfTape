@@ -19,6 +19,7 @@ import './components/FutureStudio/future-studio.css';
 
 // The native app has one theme, including authentication and body-level portals.
 if (Capacitor.isNativePlatform()) document.documentElement.classList.add('future-theme');
+if (Capacitor.getPlatform() === 'android') document.documentElement.classList.add('android-bars');
 
 // Kick off Sentry init (dynamically loads the SDK only when a DSN is set, so it
 // stays out of the boot chunk). Fire-and-forget — capture* helpers load the SDK

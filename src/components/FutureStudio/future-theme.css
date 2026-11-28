@@ -122,3 +122,9 @@
 .studio-mobile-shell button[aria-label="Ask Slate"]::after{content:'✦';color:#1d3d2d;font-size:27px;line-height:1}
 .studio-app-header button[aria-label*="otification"]{background:#213432!important;border-color:#4b6255!important}
 .future-theme .future-sides-upload{background:linear-gradient(125deg,#263d35,#182829)!important;border-color:#486c53!important}
+/* Android draws the page under the system bars, whose icons are always light.
+   Dark strips keep them readable over light surfaces (Slate, the update gate).
+   env() is 0 where Capacitor pads the WebView natively, so nothing draws there. */
+.android-bars::before,.android-bars::after{content:'';position:fixed;left:0;right:0;z-index:2147483647;background:#0b1516;pointer-events:none}
+.android-bars::before{top:0;height:env(safe-area-inset-top,0px)}
+.android-bars::after{bottom:0;height:env(safe-area-inset-bottom,0px)}

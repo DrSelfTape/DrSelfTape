@@ -76,7 +76,7 @@ const ReaderFilters = ({ onClose }) => {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md rounded-t-2xl bg-white px-5 pb-5 pt-4 sm:rounded-2xl sm:p-6">
+      <div className="relative w-full max-w-md rounded-t-2xl bg-white px-5 pb-[calc(env(safe-area-inset-bottom,0px)_+_1.25rem)] pt-4 sm:rounded-2xl sm:p-6">
         {/* Header */}
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-bold text-[#0A0A0A] sm:text-lg">Filters</h2>

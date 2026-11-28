@@ -374,7 +374,7 @@ export default function SelfTapeRecorder({ lines = [], userRole, onClose }) {
   return (
     <div className="fixed inset-0 z-[9999] bg-black flex flex-col">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-3 bg-black/80 z-10">
+      <div className="flex items-center justify-between px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)_+_0.75rem)] bg-black/80 z-10">
         <button onClick={onClose} className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
           <X className="w-5 h-5 text-white" />
         </button>

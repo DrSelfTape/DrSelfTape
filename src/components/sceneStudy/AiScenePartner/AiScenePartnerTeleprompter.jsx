@@ -49,7 +49,7 @@ const AiScenePartnerTeleprompter = ({
 
   return (
     <div className='w-full h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white flex flex-col fixed inset-0 z-50'>
-      <div className='flex items-center justify-between px-4 py-3 bg-black/70 border-b border-white/10 backdrop-blur'>
+      <div className='flex items-center justify-between px-4 pb-3 pt-[calc(env(safe-area-inset-top,0px)_+_0.75rem)] bg-black/70 border-b border-white/10 backdrop-blur'>
         <div className='flex items-center gap-3'>
           <div className='text-sm uppercase tracking-wide text-white/80'>Teleprompter</div>
           {reviewMode && (
@@ -145,7 +145,7 @@ const AiScenePartnerTeleprompter = ({
         </div>
       </div>
 
-      <div className='w-full bg-black/85 border-t border-white/10 backdrop-blur px-4 py-3'>
+      <div className='w-full bg-black/85 border-t border-white/10 backdrop-blur px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)_+_0.75rem)]'>
         <div className='max-w-4xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
           <div className='flex flex-wrap justify-center gap-2 sm:gap-3'>
             <Button

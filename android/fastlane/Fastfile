@@ -23,7 +23,7 @@ platform :android do
     key = File.expand_path("~/.dst-signing/play-service-account.json")
     UI.user_error!(
       "Play service-account key missing: #{key}\n" \
-      "Complete the one-time setup in fastlane/SETUP.md (Play Console -> Setup -> API access)."
+      "Complete the one-time setup in fastlane/SETUP.md (Google Cloud service account + Play Console -> Users and permissions)."
     ) unless File.exist?(key)
 
     UI.message("Uploading #{File.basename(aab)} to the internal track...")
