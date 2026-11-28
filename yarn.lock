@@ -335,10 +335,10 @@
   resolved "https://registry.npmjs.org/@capacitor/ios/-/ios-8.5.3.tgz"
   integrity sha512-HnnV92Jl8+3x0JUloXUMjFcUsQI8wHFVsKwkLn72DfRZXYGZW11tQbmNOWOnRTljaU18FdI1b9ipT09SzzPDNw==
 
-"@capacitor/keyboard@^8.0.2":
-  version "8.0.2"
-  resolved "https://registry.npmjs.org/@capacitor/keyboard/-/keyboard-8.0.2.tgz"
-  integrity sha512-he6xKmTBp5AhVrWJeEi6RYkJ25FjLLdNruBU2wafpITk3Nb7UdzOj96x3K6etFuEj8/rtn9WXBTs1o2XA86A1A==
+"@capacitor/keyboard@^8.0.6":
+  version "8.0.6"
+  resolved "https://registry.npmjs.org/@capacitor/keyboard/-/keyboard-8.0.6.tgz"
+  integrity sha512-Bbe+9V0qaT6dzEFJEK7BUWR01l2+vZE8FM5ITF/WgKtx+G6eGZ6d5+YiSMRJBAK0VGjdO59v8yiQ10Doa5KyvQ==
 
 "@capacitor/push-notifications@^8.0.3":
   version "8.0.3"

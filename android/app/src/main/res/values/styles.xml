@@ -13,6 +13,10 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
+        <!-- On WebViews below 140 SystemBars pads the window natively; these two
+             colour the padded status/nav strips to match the app chrome. -->
+        <item name="android:windowBackground">#0B1516</item>
+        <item name="android:windowBackgroundFallback">#0B1516</item>
     </style>
 
 

@@ -1,12 +1,13 @@
 ext {
     minSdkVersion = 24
     compileSdkVersion = 36
-    // Target 35 (not 36) so the Android-15 edge-to-edge opt-out below actually
-    // applies — apps targeting 36 cannot opt out and would force edge-to-edge,
-    // which our WebView layout hasn't been device-verified against yet. 35 is
-    // still Play-compliant (>= the required min). Revisit with a real Android
-    // 15/16 device to support true edge-to-edge, then bump back to 36.
-    targetSdkVersion = 35
+    // Target 36 (Play requires it as of Nov 2026). Android 16 ignores the
+    // edge-to-edge opt-out, so the values-v35 opt-out theme was removed to keep
+    // Android 15 on the same path. We handle insets the Capacitor-8 way: SystemBars
+    // insetsHandling (capacitor.config.json) + EdgeToEdge.enable() in
+    // MainActivity, with the FE's existing env(safe-area-inset-*) CSS +
+    // viewport-fit=cover doing the padding. See docs: capacitorjs.com/docs/apis/system-bars.
+    targetSdkVersion = 36
     androidxActivityVersion = '1.11.0'
     androidxAppCompatVersion = '1.7.1'
     androidxCoordinatorLayoutVersion = '1.3.0'
